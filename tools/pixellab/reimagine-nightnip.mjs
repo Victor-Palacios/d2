@@ -10,9 +10,11 @@
 //   open out/preview.html      # original 16x16  vs.  the PixelLab render
 //
 // Nightnip = impish bat rookie, assassin / dark. We force the sprite's real
-// palette so the reimagining stays consistent with the rest of the roster.
+// palette (via a synthesized swatch image — pixflux's `color_image` input) and
+// pick style options that match the roster's flat, black-outlined look.
 
 import { writeFileSync, mkdirSync } from "node:fs";
+import { deflateSync } from "node:zlib";
 
 const KEY = process.env.PIXEL_LAB_API_KEY;
 if (!KEY) {
@@ -22,30 +24,65 @@ if (!KEY) {
 
 // --- Tunables --------------------------------------------------------------
 const SIZE = Number(process.env.SIZE) || 64; // px, square. Try SIZE=32 for a closer 16x16 drop-in.
+const FORCE_PALETTE = process.env.FORCE_PALETTE !== "0"; // set FORCE_PALETTE=0 to let PixelLab pick colors.
 const DESCRIPTION =
-  "a small impish bat creature, front view, dark violet fur, wide spread " +
-  "membrane wings, big glowing amber eyes, tiny fangs, mischievous pose, " +
-  "clean 1px dark outline, flat shading, retro RPG monster sprite";
+  "a small impish bat creature, dark violet fur, wide spread membrane wings, " +
+  "big glowing amber eyes, tiny fangs, mischievous pose, retro RPG monster sprite";
 
 // Nightnip's canonical palette (from art.ts): outline, body, highlight, eyes, wing-shade.
 const PALETTE = ["#1a1024", "#6b4d9e", "#f2e8ff", "#ffd166", "#3c2b5c"];
 // ---------------------------------------------------------------------------
 
+// --- Minimal dependency-free truecolor PNG encoder (for the palette swatch) ---
+function crc32(buf) {
+  let c = ~0;
+  for (let i = 0; i < buf.length; i++) {
+    c ^= buf[i];
+    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xedb88320 & -(c & 1));
+  }
+  return (~c) >>> 0;
+}
+function chunk(type, data) {
+  const len = Buffer.alloc(4); len.writeUInt32BE(data.length, 0);
+  const typeBuf = Buffer.from(type, "ascii");
+  const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(Buffer.concat([typeBuf, data])), 0);
+  return Buffer.concat([len, typeBuf, data, crc]);
+}
+function pngFromColors(hexes) {
+  const cell = 8, h = cell, w = cell * hexes.length;
+  const rgb = hexes.map((x) => [parseInt(x.slice(1, 3), 16), parseInt(x.slice(3, 5), 16), parseInt(x.slice(5, 7), 16)]);
+  const raw = Buffer.alloc((w * 3 + 1) * h);
+  let o = 0;
+  for (let y = 0; y < h; y++) {
+    raw[o++] = 0; // filter: none
+    for (let x = 0; x < w; x++) { const [r, g, b] = rgb[Math.floor(x / cell)]; raw[o++] = r; raw[o++] = g; raw[o++] = b; }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8; ihdr[9] = 2; // 8-bit, truecolor RGB
+  const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  return Buffer.concat([sig, chunk("IHDR", ihdr), chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
+}
+
 const body = {
   description: DESCRIPTION,
   image_size: { width: SIZE, height: SIZE },
   no_background: true,
-  palette: PALETTE,
+  outline: "single color black outline",
+  shading: "flat shading",
+  detail: "low detail",
+  direction: "south",
 };
+if (FORCE_PALETTE) {
+  const swatch = "data:image/png;base64," + pngFromColors(PALETTE).toString("base64");
+  body.color_image = { base64: swatch };
+}
 
-console.log(`→ POST /create-image-pixflux  (${SIZE}x${SIZE}, ${PALETTE.length}-color forced palette)`);
+console.log(`→ POST /create-image-pixflux  (${SIZE}x${SIZE}, forced palette: ${FORCE_PALETTE ? PALETTE.length + " colors" : "off"})`);
 
 const res = await fetch("https://api.pixellab.ai/v2/create-image-pixflux", {
   method: "POST",
-  headers: {
-    Authorization: `Bearer ${KEY}`,
-    "Content-Type": "application/json",
-  },
+  headers: { Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
   body: JSON.stringify(body),
 });
 
@@ -72,10 +109,7 @@ const ORIGINAL = {
   rows: ["................","..k..........k..","..kk........kk..","..kwk......kwk..","...kkkkkkkkkk...","..kddddddddddk..","..kdeeddddeedk..","..kddddddddddk..","..kddwwddwwddk..","...kkkkkkkkkk...",".kWWkddddddkWWk.","kWWWkddddddkWWWk","kWWWkddddddkWWWk",".kkkkddddddkkkk.","....kdd..ddk....","....kkk..kkk...."],
 };
 const cells = ORIGINAL.rows.map((row, y) =>
-  [...row].map((ch, x) => {
-    const c = ORIGINAL.pal[ch];
-    return c ? `<rect x="${x}" y="${y}" width="1" height="1" fill="${c}"/>` : "";
-  }).join("")
+  [...row].map((ch, x) => { const c = ORIGINAL.pal[ch]; return c ? `<rect x="${x}" y="${y}" width="1" height="1" fill="${c}"/>` : ""; }).join("")
 ).join("");
 const origSvg = `<svg viewBox="0 0 16 16" width="256" height="256" style="image-rendering:pixelated">${cells}</svg>`;
 
