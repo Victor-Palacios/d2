@@ -61,12 +61,23 @@ recorded in §6.
 
 ---
 
-## 3. Owner items — done
+## 3. Owner items
 
-- **Default branch flipped to `main`.** Pages now deploys from `main` on push
-  (the old `claude/new-session-r77q12` default is gone). Work happens directly on
-  `main` — no feature branches (see [CLAUDE.md](CLAUDE.md)).
-- **Pages enabled** (done earlier).
+- **Default branch flipped to `main`** ✅ (the old `claude/new-session-r77q12`
+  default is gone). Work happens directly on `main` — no feature branches
+  (see [CLAUDE.md](CLAUDE.md)).
+- **Pages enabled** ✅ (done earlier).
+- **⚠️ Pages still not publishing — one owner setting left.** A push to `main`
+  now runs the **build** job to success and uploads the artifact, but the
+  **deploy** job fails in ~1 s having run **zero steps** (its log 404s — nothing
+  ran). That is the `github-pages` *environment* rejecting the deployment: its
+  **deployment-branch policy** still doesn't permit `main` (flipping the repo
+  default did not update the environment's own allow-list). Fix, owner-only:
+  **Settings → Environments → `github-pages` → Deployment branches and tags →**
+  set **"No restriction"**, or add `main` and drop the stale old-default entry.
+  (Re-selecting Settings → Pages → Source: "GitHub Actions" also resets this.)
+  Verified on run #8 for commit `95ad947`: build ✅, deploy ✗ (0 steps). CI itself
+  needs no change.
 - Still worth having on hand: the original plan doc `DW2firsthourHD2Dplan.md` is
   **not in the repo** — ask the owner for it if you need to confirm the audit in
   `docs/PLAN_AUDIT.md` against the source text.
