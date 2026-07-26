@@ -48,14 +48,15 @@ function chunk(type, data) {
   const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(Buffer.concat([typeBuf, data])), 0);
   return Buffer.concat([len, typeBuf, data, crc]);
 }
-function pngFromColors(hexes) {
-  const cell = 8, h = cell, w = cell * hexes.length;
+function pngFromColors(hexes, w = 64, h = 64) {
+  // A normal square image split into vertical stripes of each palette colour.
   const rgb = hexes.map((x) => [parseInt(x.slice(1, 3), 16), parseInt(x.slice(3, 5), 16), parseInt(x.slice(5, 7), 16)]);
+  const stripe = Math.ceil(w / hexes.length);
   const raw = Buffer.alloc((w * 3 + 1) * h);
   let o = 0;
   for (let y = 0; y < h; y++) {
     raw[o++] = 0; // filter: none
-    for (let x = 0; x < w; x++) { const [r, g, b] = rgb[Math.floor(x / cell)]; raw[o++] = r; raw[o++] = g; raw[o++] = b; }
+    for (let x = 0; x < w; x++) { const [r, g, b] = rgb[Math.min(hexes.length - 1, Math.floor(x / stripe))]; raw[o++] = r; raw[o++] = g; raw[o++] = b; }
   }
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4);
@@ -64,7 +65,7 @@ function pngFromColors(hexes) {
   return Buffer.concat([sig, chunk("IHDR", ihdr), chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
 }
 
-const body = {
+const BASE = {
   description: DESCRIPTION,
   image_size: { width: SIZE, height: SIZE },
   no_background: true,
@@ -73,18 +74,30 @@ const body = {
   detail: "low detail",
   direction: "south",
 };
-if (FORCE_PALETTE) {
-  const swatch = "data:image/png;base64," + pngFromColors(PALETTE).toString("base64");
-  body.color_image = { base64: swatch };
+
+const SWATCH_B64 = pngFromColors(PALETTE).toString("base64"); // raw base64, no data-URL prefix
+
+function post(withPalette) {
+  const body = { ...BASE };
+  if (withPalette) body.color_image = { type: "base64", base64: SWATCH_B64, format: "png" };
+  return fetch("https://api.pixellab.ai/v2/create-image-pixflux", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 }
 
+// Try with the forced palette; if the server errors on it, fall back to a
+// plain generation so we still get a sprite to review.
+let usedPalette = FORCE_PALETTE;
 console.log(`→ POST /create-image-pixflux  (${SIZE}x${SIZE}, forced palette: ${FORCE_PALETTE ? PALETTE.length + " colors" : "off"})`);
-
-const res = await fetch("https://api.pixellab.ai/v2/create-image-pixflux", {
-  method: "POST",
-  headers: { Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
-  body: JSON.stringify(body),
-});
+let res = await post(FORCE_PALETTE);
+if (!res.ok && FORCE_PALETTE) {
+  const first = await res.text().catch(() => "");
+  console.warn(`⚠ forced-palette attempt failed (HTTP ${res.status}: ${first.slice(0, 120)}); retrying without color_image`);
+  usedPalette = false;
+  res = await post(false);
+}
 
 if (!res.ok) {
   const text = await res.text().catch(() => "");
@@ -121,6 +134,6 @@ writeFileSync("out/preview.html", `<!doctype html><meta charset="utf8">
 <img src="nightnip-pixellab.png" width="256" height="256" style="image-rendering:pixelated" alt="PixelLab Nightnip"></figure>
 </body>`);
 
-console.log(`✓ Saved out/nightnip-pixellab.png`);
+console.log(`✓ Saved out/nightnip-pixellab.png  (forced palette: ${usedPalette ? "yes" : "no"})`);
 console.log(`✓ Saved out/preview.html  (open to compare)`);
 if (json.usage?.usd != null) console.log(`  cost: $${json.usage.usd}`);
