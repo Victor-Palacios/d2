@@ -16,6 +16,9 @@ import { game } from '../systems/party/gameState';
 import { DungeonHUD } from '../ui/DungeonHUD';
 import { DialogueBox } from '../ui/DialogueBox';
 import { toast } from '../ui/Toast';
+import { Menu } from '../ui/Menu';
+import { el } from '../ui/dom';
+import { saveSuspend } from '../systems/party/saveGame';
 import { say } from '../systems/dialogue/script';
 import type { BattleSceneParams } from './BattleScene';
 
@@ -69,6 +72,7 @@ export class DungeonScene extends GameScene {
   private busy = false;
   private leaving = false;
   private legend!: HTMLElement;
+  private unsubInput: (() => void) | null = null;
 
   constructor(ctx: SceneContext) {
     super(ctx);
@@ -223,6 +227,47 @@ export class DungeonScene extends GameScene {
     });
   }
 
+  /**
+   * Pause menu. The suspend save exists so a crawl can be put down mid-floor;
+   * it is deleted the instant it is loaded, so it is a bookmark rather than a
+   * checkpoint you could farm to retry a bad fight.
+   */
+  private async openPauseMenu() {
+    if (this.busy || this.leaving || this.moving) return;
+    this.busy = true;
+    audio.sfx('confirm');
+
+    const host = el('div', 'panel');
+    host.id = 'pause-menu';
+    host.appendChild(el('h2', undefined, 'Paused'));
+    const menu = new Menu(host, [
+      { value: 'resume', label: 'Resume crawl' },
+      { value: 'suspend', label: 'Suspend & quit', note: 'temp' },
+    ], { cancellable: true });
+    this.ctx.ui.appendChild(host);
+
+    const choice = await menu.open();
+    menu.destroy();
+    host.remove();
+
+    if (choice === 'suspend') {
+      this.leaving = true;
+      const ok = saveSuspend('dungeon', this.floor.name);
+      if (!ok) {
+        toast(this.ctx.ui, '<span class="danger">Could not write the save.</span>', 2400);
+        this.leaving = false;
+        this.busy = false;
+        return;
+      }
+      toast(this.ctx.ui, '<span class="accent">Suspended.</span> Pick Continue on the title.', 2000);
+      await sleep(1200);
+      await this.ctx.go('intro');
+      return;
+    }
+
+    this.busy = false;
+  }
+
   private buildUI() {
     this.hud = new DungeonHUD(this.ctx.ui);
     this.hud.setFloor(this.floor.name);
@@ -231,8 +276,13 @@ export class DungeonScene extends GameScene {
     this.dialogue = new DialogueBox(this.ctx.ui);
     this.legend = document.createElement('div');
     this.legend.id = 'legend';
-    this.legend.innerHTML = 'MOVE arrows/WASD · CONFIRM Z/Enter · ` debug panel · M mute';
+    this.legend.innerHTML =
+      'MOVE arrows/WASD · ESC pause &amp; suspend · ` debug panel · M mute';
     this.ctx.ui.appendChild(this.legend);
+
+    this.unsubInput = input.onAction((a) => {
+      if (a === 'cancel') void this.openPauseMenu();
+    });
   }
 
   // --- movement ------------------------------------------------------------
@@ -572,6 +622,8 @@ export class DungeonScene extends GameScene {
   }
 
   async exit() {
+    this.unsubInput?.();
+    this.unsubInput = null;
     this.hud.destroy();
     this.dialogue.destroy();
     this.legend.remove();

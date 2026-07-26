@@ -11,6 +11,7 @@ import { speciesArt, species } from '../data/creatures';
 import { TEAMS, team } from '../data/teams';
 import { ATTRIBUTES } from '../data/elements';
 import { game } from '../systems/party/gameState';
+import { saveAuto } from '../systems/party/saveGame';
 import { makeCreature, fullRestore } from '../systems/party/creature';
 import { DialogueBox } from '../ui/DialogueBox';
 import { CardSelect } from '../ui/CardSelect';
@@ -168,6 +169,7 @@ export class HubScene extends GameScene {
 
   private async arrival(kind: HubSceneParams['arrival']) {
     await sleep(280);
+    if (this.disposed) return;
     this.busy = true;
 
     if (kind === 'first') {
@@ -197,6 +199,14 @@ export class HubScene extends GameScene {
     }
 
     this.busy = false;
+    if (this.disposed) return;
+
+    // Autosave point: the city is the one place the run is unambiguously safe,
+    // and saving here keeps the out-of-EP tow a real cost rather than something
+    // you reload away.
+    if (game.has('prologueDone') && saveAuto('hub', 'Digital City')) {
+      toast(this.ctx.ui, '<span class="dim">Game saved</span>', 1400);
+    }
   }
 
   private async licenseCeremony() {
@@ -340,7 +350,7 @@ export class HubScene extends GameScene {
           return say(
             'Dr. Halden',
             'Ground rules. Attack is free, Techniques cost MP, Guard halves the hit and gives MP back.',
-            'Alpha beats Gamma. Gamma beats Beta. Beta beats Alpha. Element plates buff whoever matches them.',
+            'Assassin beats Mage. Mage beats Hero. Hero beats Assassin. Element plates buff whoever matches them.',
             'Every step in the domain costs 1 EP. Fuel canisters are worth the detour.',
           );
         }

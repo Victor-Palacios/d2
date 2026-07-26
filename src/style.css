@@ -381,10 +381,10 @@ body {
   background: linear-gradient(90deg, #4ad6ff, #7bdc8a);
 }
 .bar.hp > i {
-  background: linear-gradient(90deg, #ff7a5c, #ffd166);
+  background: linear-gradient(90deg, #3fbf62, #7bdc8a);
 }
 .bar.mp > i {
-  background: linear-gradient(90deg, #6f8cff, #b48cff);
+  background: linear-gradient(90deg, #3f6ecb, #6fb7ff);
 }
 .bar.low > i {
   background: linear-gradient(90deg, #ff3b3b, #ff8f6b);
@@ -397,7 +397,10 @@ body {
 }
 
 #dungeon-hud .member {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  padding-left: 7px;
+  --class-color: var(--edge);
+  border-left: 3px solid var(--class-color);
 }
 
 #dungeon-hud .member .nm {
@@ -477,13 +480,20 @@ body {
   width: 186px;
   font-size: 12px;
   padding: 9px 11px;
+  /* Class colour, set per card from ATTRIBUTES[].color. */
+  --class-color: var(--edge);
+  border-color: var(--class-color);
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 0, 0, 0.55),
+    inset 3px 0 0 0 var(--class-color),
+    0 6px 26px rgba(0, 0, 0, 0.6);
 }
 
 .fighter.active {
-  border-color: var(--accent);
   box-shadow:
     inset 0 0 0 2px rgba(0, 0, 0, 0.55),
-    0 0 18px rgba(255, 209, 102, 0.35);
+    inset 3px 0 0 0 var(--class-color),
+    0 0 20px var(--class-color);
 }
 
 .fighter.down {
@@ -497,15 +507,8 @@ body {
   margin-bottom: 3px;
 }
 
-.fighter .sub {
-  font-size: 10.5px;
-  color: var(--ink-dim);
-  letter-spacing: 0.06em;
-}
-
-.fighter .bar {
-  height: 8px;
-  margin: 3px 0 5px;
+.fighter .meter {
+  margin: 3px 0;
 }
 
 #action-menu {
@@ -623,6 +626,66 @@ body {
   }
 }
 
+/* --- labelled meters ------------------------------------------------------ */
+
+.meter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  line-height: 1;
+  margin: 4px 0;
+}
+
+.meter-label {
+  width: 18px;
+  flex: none;
+  letter-spacing: 0.06em;
+  color: var(--ink-dim);
+}
+
+.meter.hp .meter-label {
+  color: var(--ok);
+}
+
+.meter.mp .meter-label {
+  color: #6f8cff;
+}
+
+.meter .bar {
+  flex: 1;
+  height: 9px;
+  margin: 0;
+}
+
+.meter-value {
+  flex: none;
+  min-width: 52px;
+  text-align: right;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.meter.low .meter-value {
+  color: var(--danger);
+}
+
+/* Element dot beside a creature's name, and the "on a plate" marker. */
+.elem-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+}
+
+.plate-mark {
+  margin-left: 5px;
+  font-style: normal;
+  font-size: 10px;
+}
+
 /* --- keyboard legend ----------------------------------------------------- */
 
 #legend {
@@ -634,4 +697,15 @@ body {
   letter-spacing: 0.1em;
   text-align: right;
   pointer-events: none;
+}
+
+/* --- pause menu ----------------------------------------------------------- */
+
+#pause-menu {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 240px;
+  text-align: left;
 }

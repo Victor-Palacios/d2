@@ -5,6 +5,7 @@ import { ParticleField } from '../engine/fx';
 import { floorTexture } from '../engine/pixel';
 import { audio } from '../engine/Audio';
 import { game } from '../systems/party/gameState';
+import { saveAuto } from '../systems/party/saveGame';
 import { BOOT_DOMAIN } from '../data/bootDomain';
 import { CardSelect } from '../ui/CardSelect';
 import type { Card } from '../ui/CardSelect';
@@ -40,6 +41,8 @@ export class WorldMapScene extends GameScene {
     this.ctx.hd2d.focusTarget.set(0, 0.6, 0);
     this.ctx.hd2d.snapCamera();
     audio.music('hub');
+    // Safe zone, so it is an autosave point like the city.
+    if (game.has('prologueDone')) saveAuto('worldmap', 'Domain map');
 
     void this.choose();
   }

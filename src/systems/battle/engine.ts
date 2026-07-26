@@ -184,8 +184,8 @@ export class Battle {
       result.hits.push({ targetUid: t.creature.uid, damage: breakdown.amount, heal: 0, fainted, breakdown });
 
       if (breakdown.attackerTileBonus) result.log.push(`The ${actor.tile} plate amplifies it!`);
-      if (breakdown.effectiveness === 'super') result.log.push('Attribute advantage — it hits hard!');
-      else if (breakdown.effectiveness === 'weak') result.log.push('Attribute disadvantage — it is resisted.');
+      if (breakdown.effectiveness === 'super') result.log.push('Class advantage — it hits hard!');
+      else if (breakdown.effectiveness === 'weak') result.log.push('Class disadvantage — it is resisted.');
       if (breakdown.guarded) result.log.push(`${t.creature.name} guards against it.`);
       if (fainted) result.log.push(`${t.creature.name} is knocked out!`);
     }

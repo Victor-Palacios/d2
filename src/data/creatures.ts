@@ -46,7 +46,7 @@ export const SPECIES: Record<string, Species> = {
   emberling: {
     id: 'emberling',
     name: 'Emberling',
-    attribute: 'alpha',
+    attribute: 'hero',
     element: 'fire',
     art: 'lizard',
     height: 1.35,
@@ -59,7 +59,7 @@ export const SPECIES: Record<string, Species> = {
   glidefang: {
     id: 'glidefang',
     name: 'Glidefang',
-    attribute: 'beta',
+    attribute: 'mage',
     element: 'water',
     art: 'wing',
     height: 1.3,
@@ -72,7 +72,7 @@ export const SPECIES: Record<string, Species> = {
   nightnip: {
     id: 'nightnip',
     name: 'Nightnip',
-    attribute: 'gamma',
+    attribute: 'assassin',
     element: 'dark',
     art: 'bat',
     height: 1.3,
@@ -85,7 +85,7 @@ export const SPECIES: Record<string, Species> = {
   sprigling: {
     id: 'sprigling',
     name: 'Sprigling',
-    attribute: 'beta',
+    attribute: 'hero',
     element: 'nature',
     art: 'plant',
     height: 1.25,
@@ -97,7 +97,7 @@ export const SPECIES: Record<string, Species> = {
   cogling: {
     id: 'cogling',
     name: 'Cogling',
-    attribute: 'alpha',
+    attribute: 'hero',
     element: 'machine',
     art: 'bot',
     height: 1.3,
@@ -109,7 +109,7 @@ export const SPECIES: Record<string, Species> = {
   dropletta: {
     id: 'dropletta',
     name: 'Dropletta',
-    attribute: 'beta',
+    attribute: 'mage',
     element: 'water',
     art: 'slime',
     height: 1.15,
@@ -121,7 +121,7 @@ export const SPECIES: Record<string, Species> = {
   gloomote: {
     id: 'gloomote',
     name: 'Gloomote',
-    attribute: 'gamma',
+    attribute: 'mage',
     element: 'dark',
     art: 'wisp',
     height: 1.25,
@@ -134,7 +134,7 @@ export const SPECIES: Record<string, Species> = {
   bulwarq: {
     id: 'bulwarq',
     name: 'Bulwarq',
-    attribute: 'alpha',
+    attribute: 'hero',
     element: 'machine',
     art: 'knight',
     height: 1.5,
@@ -146,7 +146,7 @@ export const SPECIES: Record<string, Species> = {
   fenrix: {
     id: 'fenrix',
     name: 'Fenrix',
-    attribute: 'beta',
+    attribute: 'assassin',
     element: 'nature',
     art: 'wolf',
     height: 1.4,
@@ -158,7 +158,7 @@ export const SPECIES: Record<string, Species> = {
   mitebug: {
     id: 'mitebug',
     name: 'Mitebug',
-    attribute: 'gamma',
+    attribute: 'assassin',
     element: 'nature',
     art: 'bug',
     height: 1.0,
@@ -170,7 +170,7 @@ export const SPECIES: Record<string, Species> = {
   scrapmite: {
     id: 'scrapmite',
     name: 'Scrapmite',
-    attribute: 'alpha',
+    attribute: 'hero',
     element: 'machine',
     art: 'scrap',
     height: 1.05,
@@ -184,7 +184,7 @@ export const SPECIES: Record<string, Species> = {
   regalion: {
     id: 'regalion',
     name: 'Regalion',
-    attribute: 'alpha',
+    attribute: 'hero',
     element: 'fire',
     art: 'lion',
     height: 2.2,

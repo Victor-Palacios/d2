@@ -16,6 +16,14 @@ export interface SceneContext {
 }
 
 export abstract class GameScene {
+  /**
+   * Set by `SceneManager` immediately before `exit()`. Scenes kick off detached
+   * work (`void this.arrival()`, `void this.run()`), and that work can still be
+   * mid-`await` when the scene is torn down — it must check this before
+   * touching UI or writing state, or it will act on behalf of a dead scene.
+   */
+  disposed = false;
+
   constructor(protected ctx: SceneContext) {}
   /**
    * Build the scene and return. `go()` awaits this and holds the manager busy
@@ -38,7 +46,8 @@ export class SceneManager {
   private activeName = '';
   private fadeEl: HTMLElement;
   private ctx: SceneContext;
-  private busy = false;
+  /** Serialises scene transitions so none are dropped. */
+  private queue: Promise<void> = Promise.resolve();
 
   constructor(hd2d: HD2DRenderer, ui: HTMLElement, fadeEl: HTMLElement) {
     this.fadeEl = fadeEl;
@@ -74,21 +83,31 @@ export class SceneManager {
     await this.fade(false, ms);
   }
 
-  async go(name: string, params?: unknown) {
-    if (this.busy) return;
+  /**
+   * Switches scenes. Transitions are serialised rather than dropped: a `go()`
+   * issued while another is mid-fade waits its turn instead of silently doing
+   * nothing, which is a bug that is very hard to see from the outside.
+   *
+   * A scene's `enter()` must still never await a transition of its own — see
+   * the note on `GameScene.enter`.
+   */
+  go(name: string, params?: unknown): Promise<void> {
+    this.queue = this.queue.then(() => this.runTransition(name, params));
+    return this.queue;
+  }
+
+  private async runTransition(name: string, params?: unknown) {
     const factory = this.scenes.get(name);
     if (!factory) throw new Error(`Unknown scene: ${name}`);
-    this.busy = true;
-    try {
-      await this.fade(true);
-      if (this.active) await this.active.exit();
-      this.active = factory(this.ctx);
-      this.activeName = name;
-      await this.active.enter(params);
-      await this.fade(false);
-    } finally {
-      this.busy = false;
+    await this.fade(true);
+    if (this.active) {
+      this.active.disposed = true;
+      await this.active.exit();
     }
+    this.active = factory(this.ctx);
+    this.activeName = name;
+    await this.active.enter(params);
+    await this.fade(false);
   }
 
   update(dt: number, time: number) {

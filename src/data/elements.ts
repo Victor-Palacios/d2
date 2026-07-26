@@ -3,7 +3,7 @@
  * they are meant to be tuned for feel, not to match any published table.
  */
 
-export type AttributeId = 'alpha' | 'beta' | 'gamma';
+export type AttributeId = 'assassin' | 'mage' | 'hero';
 
 export interface AttributeDef {
   id: AttributeId;
@@ -14,11 +14,34 @@ export interface AttributeDef {
   blurb: string;
 }
 
-/** Alpha > Gamma > Beta > Alpha. */
+/**
+ * The class triangle: **Assassin > Mage > Hero > Assassin**.
+ *
+ * Read it as: an Assassin gets past a Mage before the spell lands, a Mage
+ * outranges a Hero's blade, and a Hero's armour shrugs off an Assassin.
+ */
 export const ATTRIBUTES: Record<AttributeId, AttributeDef> = {
-  alpha: { id: 'alpha', name: 'Alpha', beats: 'gamma', color: '#ffd166', blurb: 'Ordered code. Strong against Gamma.' },
-  beta: { id: 'beta', name: 'Beta', beats: 'alpha', color: '#6fb7ff', blurb: 'Adaptive code. Strong against Alpha.' },
-  gamma: { id: 'gamma', name: 'Gamma', beats: 'beta', color: '#c77dff', blurb: 'Corrupt code. Strong against Beta.' },
+  assassin: {
+    id: 'assassin',
+    name: 'Assassin',
+    beats: 'mage',
+    color: '#c77dff',
+    blurb: 'Strikes before the spell lands. Strong against Mage.',
+  },
+  mage: {
+    id: 'mage',
+    name: 'Mage',
+    beats: 'hero',
+    color: '#6fb7ff',
+    blurb: 'Outranges the blade. Strong against Hero.',
+  },
+  hero: {
+    id: 'hero',
+    name: 'Hero',
+    beats: 'assassin',
+    color: '#ffd166',
+    blurb: 'Armour turns the knife. Strong against Assassin.',
+  },
 };
 
 /** Damage multiplier for an attacker attribute against a defender attribute. */

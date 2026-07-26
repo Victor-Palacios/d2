@@ -7,6 +7,8 @@ export interface MenuItem {
   label: string;
   /** Right-aligned note, e.g. an MP cost. */
   note?: string;
+  /** Tints the label — used to colour techniques by their element. */
+  color?: string;
   disabled?: boolean;
 }
 
@@ -49,7 +51,9 @@ export class Menu {
   private build() {
     this.nodes = this.items.map((item, i) => {
       const li = el('li');
-      li.innerHTML = esc(item.label) + (item.note ? `<span class="cost">${esc(item.note)}</span>` : '');
+      li.innerHTML =
+        (item.color ? `<span style="color:${item.color}">${esc(item.label)}</span>` : esc(item.label)) +
+        (item.note ? `<span class="cost">${esc(item.note)}</span>` : '');
       if (item.disabled) li.setAttribute('aria-disabled', 'true');
       li.addEventListener('mouseenter', () => {
         if (!item.disabled) this.moveTo(i, false);

@@ -1,7 +1,7 @@
-import { bar, el, esc, remove } from './dom';
+import { bar, el, esc, meter, remove } from './dom';
 import type { CreatureInstance } from '../systems/party/creature';
 import { game } from '../systems/party/gameState';
-import { ATTRIBUTES } from '../data/elements';
+import { ATTRIBUTES, ELEMENTS } from '../data/elements';
 
 /** Crawl HUD: floor, fuel/EP meter, credits and the lent party's condition. */
 export class DungeonHUD {
@@ -11,7 +11,10 @@ export class DungeonHUD {
   private setEp: (p: number) => void;
   private partyEl: HTMLElement;
   private creditsEl: HTMLElement;
-  private memberBars = new Map<string, { hp: (p: number) => void; mp: (p: number) => void; label: HTMLElement }>();
+  private memberBars = new Map<
+    string,
+    { hp: (cur: number, max: number) => void; mp: (cur: number, max: number) => void; label: HTMLElement }
+  >();
 
   constructor(private parent: HTMLElement) {
     this.root = el('div', 'panel');
@@ -48,14 +51,20 @@ export class DungeonHUD {
     this.partyEl.innerHTML = '';
     this.memberBars.clear();
     for (const c of party) {
+      const attr = ATTRIBUTES[c.attribute];
+      const elem = ELEMENTS[c.element];
+      // Class rides on the border colour, element on the dot — no text line.
       const wrap = el('div', 'member');
+      wrap.style.setProperty('--class-color', attr.color);
+      wrap.title = `${attr.name} · ${elem.name}`;
       const nm = el('div', 'nm');
-      const label = el('span', undefined, esc(c.name));
-      const lv = el('span', 'dim', `${ATTRIBUTES[c.attribute].name} · Lv${c.level}`);
+      const label = el('span');
+      label.innerHTML = `<i class="elem-dot" style="background:${elem.color}"></i>${esc(c.name)}`;
+      const lv = el('span', 'dim', `Lv${c.level}`);
       nm.append(label, lv);
       wrap.appendChild(nm);
-      const hp = bar(wrap, 'hp');
-      const mp = bar(wrap, 'mp');
+      const hp = meter(wrap, 'hp', 'HP');
+      const mp = meter(wrap, 'mp', 'MP');
       this.partyEl.appendChild(wrap);
       this.memberBars.set(c.uid, { hp, mp, label });
     }
@@ -68,9 +77,11 @@ export class DungeonHUD {
     for (const c of party) {
       const b = this.memberBars.get(c.uid);
       if (!b) continue;
-      b.hp(c.hp / c.maxHp);
-      b.mp(c.mp / Math.max(1, c.maxMp));
-      b.label.innerHTML = c.hp > 0 ? esc(c.name) : `<span class="danger">${esc(c.name)}</span>`;
+      b.hp(c.hp, c.maxHp);
+      b.mp(c.mp, c.maxMp);
+      const dot = `<i class="elem-dot" style="background:${ELEMENTS[c.element].color}"></i>`;
+      b.label.innerHTML =
+        c.hp > 0 ? `${dot}${esc(c.name)}` : `${dot}<span class="danger">${esc(c.name)}</span>`;
     }
   }
 

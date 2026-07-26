@@ -12,6 +12,7 @@ import { BattleScene } from './scenes/BattleScene';
 import { GameOverScene } from './scenes/GameOverScene';
 import { toast } from './ui/Toast';
 import { game } from './systems/party/gameState';
+import * as saves from './systems/party/saveGame';
 
 const canvas = document.getElementById('gl') as HTMLCanvasElement;
 const ui = document.getElementById('ui') as HTMLElement;
@@ -53,7 +54,7 @@ const stats = { frames: 0, fps: 0 };
 
 // Handy for poking at a running build from the console (and for automated
 // smoke tests): current scene, run state and every HD-2D parameter.
-(window as unknown as Record<string, unknown>).hd2dGame = { manager, hd2d, game, debug, stats };
+(window as unknown as Record<string, unknown>).hd2dGame = { manager, hd2d, game, debug, stats, saves };
 
 void manager.go('intro');
 

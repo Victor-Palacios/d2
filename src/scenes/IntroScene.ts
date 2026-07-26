@@ -9,6 +9,9 @@ import { audio } from '../engine/Audio';
 import { input } from '../engine/Input';
 import { game } from '../systems/party/gameState';
 import { el, remove } from '../ui/dom';
+import { Menu } from '../ui/Menu';
+import type { MenuItem } from '../ui/Menu';
+import { applySave, bestSave, clearSuspend, describeSave } from '../systems/party/saveGame';
 import { NameEntry } from '../ui/NameEntry';
 import { DialogueBox } from '../ui/DialogueBox';
 import { narrate, say } from '../systems/dialogue/script';
@@ -104,7 +107,6 @@ export class IntroScene extends GameScene {
     stack.append(
       el('h1', 'title-main', 'BOOT DOMAIN'),
       el('p', 'title-sub', 'a first-hour HD-2D vertical slice'),
-      el('div', 'hint', 'PRESS Z / ENTER TO START'),
       el(
         'div',
         'hint dim',
@@ -114,33 +116,60 @@ export class IntroScene extends GameScene {
     this.screen.appendChild(stack);
     this.ctx.ui.appendChild(this.screen);
 
-    let started = false;
-    const start = () => {
-      if (started) return;
-      started = true;
-      audio.unlock();
-      audio.sfx('confirm');
-      this.unsub?.();
-      this.unsub = null;
-      void this.beginNameEntry();
-    };
-    this.unsub = input.onAction((a) => {
-      if (a === 'confirm') start();
-    });
-    this.screen.addEventListener('click', () => {
-      audio.unlock();
-      start();
-    });
+    // Any input unlocks audio; the menu itself drives the rest.
+    this.unsub = input.onAction(() => audio.unlock());
+    this.screen.addEventListener('click', () => audio.unlock());
     audio.music('hub');
+
+    void this.titleMenu(stack);
+  }
+
+  private async titleMenu(stack: HTMLElement) {
+    if (this.disposed) return;
+    const save = bestSave();
+    const host = el('div', 'panel');
+    host.style.minWidth = '260px';
+    stack.appendChild(host);
+
+    const items: MenuItem[] = [{ value: 'new', label: 'New Game' }];
+    if (save) {
+      items.unshift({
+        value: 'continue',
+        label: save.kind === 'suspend' ? 'Continue (suspended)' : 'Continue',
+        note: describeSave(save),
+      });
+    }
+
+    const menu = new Menu(host, items);
+    const choice = await menu.open();
+    menu.destroy();
+    if (this.disposed) return;
+    this.unsub?.();
+    this.unsub = null;
+
+    if (choice === 'continue' && save) {
+      audio.unlock();
+      // Loading a suspend save consumes it — see saveGame.ts.
+      applySave(save);
+      await this.ctx.go(save.scene, save.scene === 'dungeon' ? { resume: true } : undefined);
+      return;
+    }
+
+    audio.unlock();
+    // A fresh run must not leave a stale bookmark behind.
+    clearSuspend();
+    void this.beginNameEntry();
   }
 
   private async beginNameEntry() {
+    if (this.disposed) return;
     remove(this.screen);
     this.screen = null;
     this.nameEntry = new NameEntry(this.ctx.ui, game.playerName);
     const name = await this.nameEntry.open();
     this.nameEntry.destroy();
     this.nameEntry = null;
+    if (this.disposed) return;
     game.playerName = name;
 
     await sleep(200);

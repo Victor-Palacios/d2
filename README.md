@@ -36,6 +36,9 @@ Two things to know before you click:
   feels sluggish, press `` ` `` and pull **supersample** down toward 1.0;
   `window.hd2dGame.stats.fps` reports the real frame rate.
 
+Picking this up fresh, or handing it to someone else? See **[HANDOFF.md](HANDOFF.md)**
+for current state, the one open bug, and the environment traps.
+
 ## Run it locally
 
 ```bash
@@ -121,7 +124,7 @@ choice → rival intro → supply bay → Mission 2 briefing.
   boss floor whose accent walls telegraph what is coming.
 - **Battle**: turn-based 3v3. Turn order by Speed with a random tiebreak band.
   Attack / Technique / Guard / **Auto**, MP costs, AoE and heal techniques,
-  attribute triangle (Alpha > Gamma > Beta > Alpha, ×1.25 / ×0.8), element-plate
+  class triangle (Assassin > Mage > Hero > Assassin, ×1.25 / ×0.8), element-plate
   buffs (×1.2), damage variance, faint / victory / defeat, and an enemy AI that
   prefers advantageous targets and finishes off the wounded.
 - **Auto-battle**: pick **Auto** and the party keeps swinging with the free
@@ -129,8 +132,24 @@ choice → rival intro → supply bay → Mission 2 briefing.
   deliberately never spends MP, uses techniques or touches items, so leaving it
   on cannot burn anything you were saving for the boss.
 - **Progression**: the mentor's borrowed trio for the tutorial, then a licence,
-  your own vehicle, and one of three Guard Teams — which sets your attribute
+  your own vehicle, and one of three Guard Teams — which sets your class
   and your first own creature.
+
+## Saving
+
+Two kinds, deliberately different in weight:
+
+- **Autosave** — written whenever you reach Digital City or the domain map.
+  This is your progress; it survives everything.
+- **Suspend save** — press **Esc** mid-crawl and pick *Suspend & quit*. It puts
+  the run down exactly where you stand, and is **deleted the moment you load
+  it**. It is a bookmark for taking a break, not a checkpoint: you cannot reload
+  it to retry a fight that went badly, which is what keeps running out of EP a
+  real cost.
+
+Both live in `localStorage`, so a save made on the live site is separate from
+one made on `localhost`. `src/systems/party/saveGame.ts` carries a `version`
+field — bump it and stale saves are discarded rather than half-restored.
 
 ## Project layout
 
@@ -216,7 +235,7 @@ Everything is behind a data layer, so swapping art is a data edit:
 | To replace | Edit |
 |---|---|
 | A creature's sprite | the pixel map in `src/assets/art.ts` (`CREATURES`) |
-| A creature's stats, attribute, element, techniques | `src/data/creatures.ts` |
+| A creature's stats, class, element, techniques | `src/data/creatures.ts` |
 | Techniques / damage numbers | `src/data/techniques.ts`, `src/systems/battle/formula.ts` |
 | NPCs and the vehicle | `HUMANS` / `VEHICLE` in `src/assets/art.ts` |
 | Dungeon layouts, encounters, dialogue | `src/data/bootDomain.ts` |
@@ -242,7 +261,7 @@ Floor layouts use this legend (see `src/engine/TileGrid.ts`):
 
 | Constant | Where |
 |---|---|
-| Attribute advantage / disadvantage (×1.25 / ×0.8) | `data/elements.ts` |
+| Class advantage / disadvantage (×1.25 / ×0.8) | `data/elements.ts` |
 | Element plate bonus (×1.2) | `data/elements.ts` |
 | Guard damage reduction & MP refund | `systems/battle/formula.ts` |
 | Damage curve and variance | `systems/battle/formula.ts` |

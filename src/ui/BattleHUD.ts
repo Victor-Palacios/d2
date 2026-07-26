@@ -1,4 +1,4 @@
-import { bar, el, esc, remove } from './dom';
+import { el, esc, meter, remove } from './dom';
 import { Menu } from './Menu';
 import type { MenuItem } from './Menu';
 import type { Battle, BattleAction, Battler } from '../systems/battle/engine';
@@ -8,9 +8,8 @@ import { audio } from '../engine/Audio';
 
 interface FighterCard {
   root: HTMLElement;
-  hp: (p: number) => void;
-  mp: (p: number) => void;
-  hpText: HTMLElement;
+  hp: (cur: number, max: number) => void;
+  mp: (cur: number, max: number) => void;
 }
 
 /** What the action menu can resolve to — a real action, or "go auto". */
@@ -67,28 +66,34 @@ export class BattleHUD {
     this.refresh(battle);
   }
 
+  /**
+   * A fighter card. The class is carried by the card's border colour rather
+   * than a text line, and the element by a small dot next to the name — that
+   * keeps the card to two lines so the fighters behind it stay visible.
+   */
   private makeCard(b: Battler): FighterCard {
     const c = b.creature;
-    const root = el('div', 'panel fighter');
-    const nm = el('div', 'nm');
-    nm.append(el('span', undefined, esc(c.name)), el('span', 'dim', `Lv${c.level}`));
-    root.appendChild(nm);
-
-    const sub = el('div', 'sub');
     const attr = ATTRIBUTES[c.attribute];
     const elem = ELEMENTS[c.element];
-    sub.innerHTML =
-      `<span style="color:${attr.color}">${attr.name}</span> · ` +
-      `<span style="color:${elem.color}">${elem.name}</span>` +
-      (b.tile ? ` · <span style="color:${ELEMENTS[b.tile].color}" title="standing on a ${ELEMENTS[b.tile].name} plate">▲${ELEMENTS[b.tile].name}</span>` : '');
-    root.appendChild(sub);
 
-    const hpText = el('div', 'sub');
-    root.appendChild(hpText);
-    const hp = bar(root, 'hp');
-    const mp = bar(root, 'mp');
+    const root = el('div', 'panel fighter');
+    root.style.setProperty('--class-color', attr.color);
+    root.title = `${attr.name} · ${elem.name}${b.tile ? ` · on a ${ELEMENTS[b.tile].name} plate` : ''}`;
 
-    const card: FighterCard = { root, hp, mp, hpText };
+    const nm = el('div', 'nm');
+    const name = el('span');
+    name.innerHTML =
+      `<i class="elem-dot" style="background:${elem.color}"></i>${esc(c.name)}` +
+      (b.tile
+        ? `<i class="plate-mark" style="color:${ELEMENTS[b.tile].color}" title="standing on a ${ELEMENTS[b.tile].name} plate">▲</i>`
+        : '');
+    nm.append(name, el('span', 'dim', `Lv${c.level}`));
+    root.appendChild(nm);
+
+    const hp = meter(root, 'hp', 'HP');
+    const mp = meter(root, 'mp', 'MP');
+
+    const card: FighterCard = { root, hp, mp };
     this.cards.set(c.uid, card);
     return card;
   }
@@ -98,9 +103,8 @@ export class BattleHUD {
       const card = this.cards.get(b.creature.uid);
       if (!card) continue;
       const c = b.creature;
-      card.hp(c.hp / c.maxHp);
-      card.mp(c.mp / Math.max(1, c.maxMp));
-      card.hpText.textContent = `HP ${c.hp}/${c.maxHp}   MP ${c.mp}/${c.maxMp}`;
+      card.hp(c.hp, c.maxHp);
+      card.mp(c.mp, c.maxMp);
       card.root.classList.toggle('down', c.hp <= 0);
       if (c.guarding) card.root.classList.add('guarding');
     }
@@ -182,6 +186,9 @@ export class BattleHUD {
           return {
             value: id,
             label: t.name,
+            // Techniques are tinted by their element so the plate bonus and the
+            // resistance you are about to hit are readable at a glance.
+            color: ELEMENTS[t.element].color,
             note: `${t.mpCost} MP`,
             disabled: c.mp < t.mpCost,
           };

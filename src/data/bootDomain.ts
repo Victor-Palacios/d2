@@ -146,7 +146,7 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
             'Those glowing plates are element tiles — Water, Fire, Nature, Machine, Dark.',
             'Fight while your team is standing on its own element and every hit lands harder.',
           ),
-          ...say(MENTOR, 'Attribute matters more. Alpha beats Gamma, Gamma beats Beta, Beta beats Alpha.'),
+          ...say(MENTOR, 'Class matters more. Assassin beats Mage, Mage beats Hero, Hero beats Assassin.'),
         ],
       },
       '2': {
@@ -199,7 +199,7 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
         script: [
           ...say(MENTOR, 'Stop. Those walls are warden-marked, and the hall ahead is lit for a reason.'),
           ...narrate('Something heavy shifts at the far end of the hallway.'),
-          ...say(MENTOR, 'It is an Alpha. Beta hits it hardest. Fenrix is your opener.'),
+          ...say(MENTOR, 'It is a Hero — armoured, and it knows it. A Mage cuts straight through that. Gloomote opens.'),
         ],
       },
       '1': {

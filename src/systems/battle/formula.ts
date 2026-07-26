@@ -6,7 +6,7 @@ import { ELEMENT_TILE_BONUS, attributeMultiplier } from '../../data/elements';
 /**
  * Damage / healing maths (plan §5.2).
  *
- * Deterministic base (Offense vs Defense), then attribute and element-tile
+ * Deterministic base (Offense vs Defense), then class and element-tile
  * multipliers, then a small variance so repeated fights are not identical.
  * All constants are tunable and intentionally readable.
  */

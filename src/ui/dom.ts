@@ -36,3 +36,30 @@ export function bar(parent: HTMLElement, kind: 'hp' | 'mp' | 'ep'): (pct: number
     wrap.classList.toggle('low', p <= 0.25);
   };
 }
+
+/**
+ * A labelled meter: `HP ▓▓▓▓░░ 41/59`. Returns a setter taking current/max.
+ * The label sits beside the bar rather than above it so a fighter card reads in
+ * two lines instead of five.
+ */
+export function meter(
+  parent: HTMLElement,
+  kind: 'hp' | 'mp' | 'ep',
+  label: string,
+): (cur: number, max: number) => void {
+  const row = el('div', `meter ${kind}`);
+  row.appendChild(el('span', 'meter-label', label));
+  const wrap = el('div', `bar ${kind}`);
+  const fill = el('i');
+  wrap.appendChild(fill);
+  row.appendChild(wrap);
+  const value = el('span', 'meter-value');
+  row.appendChild(value);
+  parent.appendChild(row);
+  return (cur: number, max: number) => {
+    const p = Math.max(0, Math.min(1, max > 0 ? cur / max : 0));
+    fill.style.width = `${p * 100}%`;
+    row.classList.toggle('low', p <= 0.25);
+    value.textContent = `${Math.max(0, Math.round(cur))}/${Math.round(max)}`;
+  };
+}

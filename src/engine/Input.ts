@@ -108,7 +108,11 @@ export class Input {
   /** Raises an action as if a key had just been pressed. */
   private fire(a: GameAction) {
     this.edge.add(a);
-    if (this.enabled) for (const l of this.listeners) l(a);
+    if (!this.enabled) return;
+    // Iterate a copy: handlers routinely open a menu, which subscribes another
+    // listener. Without the copy that new listener receives the very event that
+    // opened it — a pause menu would cancel itself the instant Escape opened it.
+    for (const l of [...this.listeners]) l(a);
   }
 
   /**
