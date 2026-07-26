@@ -8,13 +8,23 @@ import { HUMANS, VEHICLE } from '../assets/art';
 import { audio } from '../engine/Audio';
 import { input } from '../engine/Input';
 import { game } from '../systems/party/gameState';
-import { el, remove } from '../ui/dom';
+import { makeCreature } from '../systems/party/creature';
+import { species, speciesArt } from '../data/creatures';
+import { ATTRIBUTES, ELEMENTS } from '../data/elements';
+import { el, esc, remove } from '../ui/dom';
 import { Menu } from '../ui/Menu';
 import type { MenuItem } from '../ui/Menu';
+import { CardSelect } from '../ui/CardSelect';
+import type { Card } from '../ui/CardSelect';
 import { applySave, bestSave, clearSuspend, describeSave } from '../systems/party/saveGame';
 import { NameEntry } from '../ui/NameEntry';
 import { DialogueBox } from '../ui/DialogueBox';
 import { narrate, say } from '../systems/dialogue/script';
+
+/** The three partner monsters offered at the start — one per class. */
+const PARTNER_CHOICES = ['emberling', 'glidefang', 'nightnip'];
+/** Level a starting partner begins at. */
+const PARTNER_LEVEL = 1;
 
 /**
  * Title + name entry (plan §2.1, M4).
@@ -181,14 +191,50 @@ export class IntroScene extends GameScene {
       ...say(
         'Dr. Halden',
         `You must be ${name}. Good. Sit down, sign nothing yet.`,
-        'The Guard needs drivers. Drivers need a licence, and a licence needs one clean run through the Boot Domain.',
-        'I will lend you three of mine for the trip. Try to bring them back.',
+        'The Guard needs drivers, and every driver bonds one partner soul to start.',
+        'Pick the one that answers you. It fights; you decide how.',
       ),
     ]);
 
-    game.lendTutorialParty();
+    await this.partnerSelect();
+
     game.set('prologueDone');
     await this.ctx.go('hub', { arrival: 'first' });
+  }
+
+  /** Choose the starting partner monster — one per class. Sets the party. */
+  private async partnerSelect() {
+    if (this.disposed) return;
+    const cards: Card[] = PARTNER_CHOICES.map((id) => {
+      const s = species(id);
+      const attr = ATTRIBUTES[s.attribute];
+      const elem = ELEMENTS[s.element];
+      return {
+        value: id,
+        title: s.name,
+        tag: `${attr.name} · ${elem.name}`,
+        tagColor: attr.color,
+        body: `<em>${esc(s.blurb)}</em><br><br><span class="dim">${attr.blurb}</span>`,
+        art: speciesArt(id),
+        artScale: 4,
+      };
+    });
+    const select = new CardSelect(this.ctx.ui, cards, {
+      heading: 'CHOOSE YOUR PARTNER',
+      subheading: 'The soul you bond first',
+    });
+    const choice = (await select.open()) ?? PARTNER_CHOICES[0];
+    select.destroy();
+    if (this.disposed) return;
+
+    const s = species(choice);
+    game.party = [makeCreature(choice, PARTNER_LEVEL)];
+    game.teamAttribute = s.attribute;
+
+    await this.dialogue.play([
+      ...say('Dr. Halden', `${s.name}. A fine bond. It is yours now — raise it well.`),
+      ...narrate(`${s.name} joined your party.`),
+    ]);
   }
 
   override update(dt: number, time: number) {

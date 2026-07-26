@@ -63,6 +63,13 @@ const waitScene = async (name, ms = 45000) => {
 };
 
 console.log('=== SESSION 1: fresh start ===');
+const pickPartner = async () => {
+  for (let i = 0; i < 50; i++) {
+    if (await page.locator('.card', { hasText: 'Emberling' }).count()) { await page.locator('.card', { hasText: 'Emberling' }).click(); await page.waitForTimeout(300); return; }
+    await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+  }
+};
+
 await page.goto((process.env.URL ?? 'http://localhost:5199/'), { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 await cheap();
@@ -74,6 +81,7 @@ await page.keyboard.press('Enter');
 await page.waitForTimeout(800);
 await page.locator('.keyboard button', { hasText: /^OK$/ }).click();
 await page.waitForTimeout(600);
+  await pickPartner();
 await waitScene('hub');
 let s = await st();
 console.log('in hub     :', JSON.stringify({ scene: s.scene, saves: s.saves }));

@@ -296,7 +296,7 @@ export const SPECIES: Record<string, Species> = {
     base: { hp: 78, mp: 40, off: 16, def: 22, spd: 14 },
     growth: { hp: 9, mp: 3, off: 2.2, def: 2, spd: 1.4 },
     techniques: ['sunClaw', 'regalRoar'],
-    blurb: 'Warden of the Boot Domain. It does not consider you a threat.',
+    blurb: 'Warden of the Quiet Crossing. It does not consider you a threat.',
   },
 };
 

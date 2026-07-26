@@ -35,6 +35,13 @@ const press = async (k, n = 1, gap = 300) => { for (let i = 0; i < n; i++) { awa
 const clearDlg = async (m = 60) => { for (let i = 0; i < m; i++) { if (!(await st()).dlg) return; await page.keyboard.press('Enter'); await page.waitForTimeout(160); } };
 const waitScene = async (name, ms = 40000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if ((await st()).scene === name) return true; await page.waitForTimeout(200); } console.log('  !! timeout for', name); return false; };
 
+const pickPartner = async () => {
+  for (let i = 0; i < 50; i++) {
+    if (await page.locator('.card', { hasText: 'Emberling' }).count()) { await page.locator('.card', { hasText: 'Emberling' }).click(); await page.waitForTimeout(300); return; }
+    await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+  }
+};
+
 await page.goto(process.env.URL ?? 'http://localhost:4188/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const g = window.hd2dGame; const p = g.hd2d.params;
@@ -44,6 +51,7 @@ await page.waitForTimeout(1500);
 
 await page.keyboard.press('Enter'); await page.waitForTimeout(800);
 await page.locator('.keyboard button', { hasText: /^OK$/ }).click(); await page.waitForTimeout(600);
+ await pickPartner();
 await clearDlg(); await waitScene('hub'); await page.waitForTimeout(700); await clearDlg();
 
 // TEST 1: R1 (E key) opens the Soul menu; its first item opens the Soularium.

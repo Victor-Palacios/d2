@@ -51,6 +51,13 @@ const winBattle = async (ms = 90000) => {
   return (await st()).scene === 'dungeon';
 };
 
+const pickPartner = async () => {
+  for (let i = 0; i < 50; i++) {
+    if (await page.locator('.card', { hasText: 'Emberling' }).count()) { await page.locator('.card', { hasText: 'Emberling' }).click(); await page.waitForTimeout(300); return; }
+    await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+  }
+};
+
 await page.goto(process.env.URL ?? 'http://localhost:4185/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const g = window.hd2dGame; const p = g.hd2d.params;
@@ -61,6 +68,7 @@ await page.waitForTimeout(1500);
 // Prologue -> hub -> world map.
 await page.keyboard.press('Enter'); await page.waitForTimeout(800);
 await page.locator('.keyboard button', { hasText: /^OK$/ }).click(); await page.waitForTimeout(600);
+ await pickPartner();
 await clearDlg(); await waitScene('hub'); await page.waitForTimeout(700); await clearDlg();
 await press('ArrowDown', 5); await press('ArrowLeft', 3); await press('ArrowDown', 2);
 await waitScene('worldmap'); await page.waitForTimeout(800);

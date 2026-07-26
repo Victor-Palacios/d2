@@ -20,7 +20,7 @@ export class DungeonHUD {
     this.root = el('div', 'panel');
     this.root.id = 'dungeon-hud';
 
-    this.floorEl = el('h2', undefined, 'Boot Domain');
+    this.floorEl = el('h2', undefined, 'The Quiet Crossing');
     this.root.appendChild(this.floorEl);
 
     const epRow = el('div', 'row');

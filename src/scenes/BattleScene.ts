@@ -22,6 +22,9 @@ import { toast } from '../ui/Toast';
 import type { DialogueScript } from '../systems/dialogue/script';
 import type { DungeonSceneParams } from './DungeonScene';
 
+/** Monsters fielded on screen at once (the rest of the party are reserves). */
+const ACTIVE_PARTY = 3;
+
 export interface BattleSceneParams {
   enemies: EnemySpec[];
   isBoss?: boolean;
@@ -81,8 +84,11 @@ export class BattleScene extends GameScene {
     this.params = params as BattleSceneParams;
 
     const enemies = this.makeEnemies(this.params.enemies);
+    // Only the first three living party members deploy — the rest are reserves
+    // (kept in game.party, not fielded). Combat is 3v3 on screen.
+    const active = game.party.filter(isUp).slice(0, ACTIVE_PARTY);
     this.battle = new Battle({
-      party: game.party,
+      party: active,
       enemies,
       partyTiles: this.params.partyTiles,
       enemyTiles: this.params.enemyTiles,

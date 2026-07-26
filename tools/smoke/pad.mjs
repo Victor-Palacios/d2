@@ -67,6 +67,12 @@ for (let i = 0; i < 40; i++) {
   if (!open) break;
   await tap(0, 120);
 }
+// Confirm the partner CardSelect with A (default highlight), then continue.
+for (let i = 0; i < 20; i++) {
+  const card = await page.evaluate(() => !!document.querySelector('.card'));
+  if (!card) break;
+  await tap(0, 150);
+}
 // Wait until the hub is actually accepting input (arrival dialogue finished).
 for (let i = 0; i < 60; i++) {
   const st = await page.evaluate(() => {

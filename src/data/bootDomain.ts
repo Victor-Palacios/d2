@@ -43,7 +43,7 @@ const THEME_BOSS: TileTheme = {
 export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
   {
     id: 'boot-1',
-    name: 'Boot Domain — Surface Cache',
+    name: 'The Quiet Crossing — Surface Cache',
     theme: THEME_UPPER,
     rows: [
       '#################',
@@ -67,20 +67,18 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
         script: [
           ...say(
             MENTOR,
-            'Radio check. You are driving a training beetle through the Boot Domain.',
+            'Radio check. You are driving a training beetle through the Quiet Crossing.',
             'Arrow keys or WASD move you one tile at a time. Every step burns 1 EP — watch the meter.',
             'Run dry and the tow line drags you home with nothing to show for it.',
           ),
-          ...say(MENTOR, 'The three creatures I lent you are in the back. They fight; you decide how.'),
+          ...say(MENTOR, 'Your partner rides in the back. It fights; you decide how.'),
+          ...say(MENTOR, 'Syphon anything you meet — hit a wild soul and it logs to your Soularium.'),
         ],
       },
       '2': {
         kind: 'battle',
-        enemies: [
-          { species: 'mitebug', level: 6 },
-          { species: 'mitebug', level: 6 },
-        ],
-        intro: say(MENTOR, 'Two mitebugs. Perfect. Open with Attack and watch what the numbers do.'),
+        enemies: [{ species: 'mitebug', level: 1 }],
+        intro: say(MENTOR, 'One mitebug. Open with Attack and watch what the numbers do.'),
         outro: say(MENTOR, 'Clean. Attack costs nothing; Techniques cost MP but hit far harder.'),
       },
     },
@@ -93,7 +91,7 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
 
   {
     id: 'boot-2',
-    name: 'Boot Domain — Element Strata',
+    name: 'The Quiet Crossing — Element Strata',
     theme: THEME_DEEP,
     fog: 1.25,
     rows: [
@@ -126,12 +124,8 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
       },
       '2': {
         kind: 'battle',
-        enemies: [
-          { species: 'scrapmite', level: 7 },
-          { species: 'sprigling', level: 7 },
-          { species: 'mitebug', level: 6 },
-        ],
-        intro: say(MENTOR, 'Three of them. Guard when a creature is about to drop — it soaks the hit and recovers MP.'),
+        enemies: [{ species: 'sprigling', level: 1 }],
+        intro: say(MENTOR, 'Guard when a creature is about to drop — it soaks the hit and recovers MP.'),
         outro: say(MENTOR, 'Good. The descent portal is south-east. The warden is on the next floor down.'),
       },
     },
@@ -140,16 +134,15 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'mitebug', level: 6 }] },
-      { weight: 3, enemies: [{ species: 'scrapmite', level: 7 }] },
-      { weight: 2, enemies: [{ species: 'mitebug', level: 6 }, { species: 'scrapmite', level: 6 }] },
-      { weight: 1, enemies: [{ species: 'sprigling', level: 8 }] },
+      { weight: 3, enemies: [{ species: 'mitebug', level: 1 }] },
+      { weight: 3, enemies: [{ species: 'scrapmite', level: 1 }] },
+      { weight: 1, enemies: [{ species: 'sprigling', level: 1 }] },
     ],
   },
 
   {
     id: 'boot-3',
-    name: 'Boot Domain — Warden Hall',
+    name: 'The Quiet Crossing — Warden Hall',
     theme: THEME_BOSS,
     fog: 1.5,
     rows: [
@@ -174,12 +167,12 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
         script: [
           ...say(MENTOR, 'Stop. Those walls are warden-marked, and the hall ahead is lit for a reason.'),
           ...narrate('Something heavy shifts at the far end of the hallway.'),
-          ...say(MENTOR, 'It is a Hero — armoured, and it knows it. A Mage cuts straight through that. Gloomote opens.'),
+          ...say(MENTOR, 'It is a Hero — armoured, and it knows it. A Mage cuts straight through that; lead with one if your team has it.'),
         ],
       },
       '1': {
         kind: 'boss',
-        enemies: [{ species: 'regalion', level: 13 }],
+        enemies: [{ species: 'regalion', level: 2 }],
         intro: [
           ...narrate('The warden rises out of the dark and fills the hallway.'),
           ...say('Regalion', 'A training beetle. In MY domain.'),
@@ -193,26 +186,20 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
     chests: {},
     encounterRate: 0.04,
     encounters: [
-      { weight: 2, enemies: [{ species: 'gloomote', level: 8 }] },
-      { weight: 2, enemies: [{ species: 'mitebug', level: 7 }, { species: 'mitebug', level: 7 }] },
-      { weight: 1, enemies: [{ species: 'dropletta', level: 9 }] },
+      { weight: 2, enemies: [{ species: 'gloomote', level: 1 }] },
+      { weight: 2, enemies: [{ species: 'mitebug', level: 1 }] },
+      { weight: 1, enemies: [{ species: 'dropletta', level: 1 }] },
     ],
   },
 ];
 
 export const BOOT_DOMAIN: Domain = {
   id: 'boot',
-  name: 'Boot Domain',
+  name: 'The Quiet Crossing',
   blurb: 'Training sector. Low corruption, one registered warden. Every licence starts here.',
   color: '#ffa64d',
   floors: BOOT_DOMAIN_FLOORS,
   startingFuel: 120,
   music: 'dungeon',
   onClear: { flag: 'bootDomainCleared', licenseCeremony: true },
-  /** The trio the mentor lends you for the tutorial crawl (plan §5.5). */
-  borrowedParty: [
-    { species: 'bulwarq', level: 12 },
-    { species: 'fenrix', level: 12 },
-    { species: 'gloomote', level: 11 },
-  ],
 };

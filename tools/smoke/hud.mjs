@@ -17,7 +17,10 @@ await page.evaluate(() => {
 await page.waitForTimeout(1200);
 await page.evaluate(async () => {
   const g = window.hd2dGame;
-  g.game.lendTutorialParty();
+  // Build a three-member party for the HUD shot (lendTutorialParty was removed
+  // when the opening switched to a chosen partner).
+  g.game.party = [];
+  ['bulwarq', 'fenrix', 'gloomote'].forEach((id) => g.game.captureSpecies(id, 8));
   await g.manager.go('battle', {
     enemies: [{ species: 'mitebug', level: 6 }, { species: 'scrapmite', level: 7 }, { species: 'sprigling', level: 7 }],
     partyTiles: ['dark', undefined, 'dark'],

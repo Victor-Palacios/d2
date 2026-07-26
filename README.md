@@ -129,10 +129,10 @@ only thing still keyboard-only is the `` ` `` debug panel.
 
 ## What's in the slice
 
-Title → name entry → prologue → Digital City hub → world map → **Boot Domain**
-(3 floors: crawl, chests, element plates, draining EP, two scripted fights,
-random encounters, and the warden boss) → licence + own vehicle → Guard Team
-choice → rival intro → supply bay → Mission 2 briefing.
+Title → name entry → **pick your partner** → Digital City hub → world map → **The Quiet Crossing**
+(3 floors: crawl, chests, element plates, draining EP, scripted fights,
+random encounters, and the warden boss) → licence + own vehicle → rival intro →
+supply bay → Mission 2 briefing.
 
 - **Crawl**: tile-by-tile movement with wall collision, camera follow, treasure
   chests, five kinds of emissive element floor plates, an EP meter that drains
@@ -147,10 +147,11 @@ choice → rival intro → supply bay → Mission 2 briefing.
   basic Attack, targeting the weakest living foe, until you press **Esc**. It
   deliberately never spends MP, uses techniques or touches items, so leaving it
   on cannot burn anything you were saving for the boss.
-- **Progression**: the mentor's borrowed trio for the tutorial, then a licence,
-  your own vehicle, and one of three Guard Teams — which sets your class
-  and your first own creature.
-- **More domains**: the world map is free-select — beyond the Boot Domain it
+- **Progression**: choose one of three partner monsters right after New Game
+  (Emberling / Glidefang / Nightnip — one per class), then build a team by
+  **capturing** more (see below), earning a licence and your own vehicle after
+  the warden falls.
+- **More domains**: the world map is free-select — beyond The Quiet Crossing it
   offers the **Crystal Cavern** (Water/Machine, warden Glaciark) and the
   **Haunted Dungeon** (Dark/Nature, warden Revenance), each with its own
   monster roster, tile theme and ambience. Adding another is a data file

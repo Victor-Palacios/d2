@@ -155,11 +155,6 @@ export class GameState {
     return true;
   }
 
-  /** Loads the mentor's borrowed trio for the tutorial crawl. */
-  lendTutorialParty() {
-    this.party = (BOOT_DOMAIN.borrowedParty ?? []).map((e) => makeCreature(e.species, e.level));
-  }
-
   addItem(id: string, n = 1) {
     this.bag[id] = (this.bag[id] ?? 0) + n;
   }

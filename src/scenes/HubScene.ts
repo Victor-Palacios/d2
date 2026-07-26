@@ -7,14 +7,11 @@ import { ParticleField, Portal, Torch } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { HUMANS } from '../assets/art';
-import { speciesArt, species } from '../data/creatures';
 import { TEAMS, team } from '../data/teams';
-import { ATTRIBUTES } from '../data/elements';
 import { game } from '../systems/party/gameState';
 import { saveAuto } from '../systems/party/saveGame';
-import { makeCreature, fullRestore } from '../systems/party/creature';
+import { fullRestore } from '../systems/party/creature';
 import { DialogueBox } from '../ui/DialogueBox';
-import { CardSelect } from '../ui/CardSelect';
 import { openShop } from '../ui/ShopScreen';
 import { openSoulMenu } from '../ui/SoulMenu';
 import { openSoulStore } from '../ui/SoulStore';
@@ -194,9 +191,9 @@ export class HubScene extends GameScene {
         ...say(
           'Chief Marrow',
           `${game.playerName}. Halden vouched for you, so here is the short version.`,
-          'Take a training beetle into the Boot Domain, clear it, come back breathing. Then you get a licence.',
+          'Take a training beetle into the Quiet Crossing, clear it, come back breathing. Then you get a licence.',
         ),
-        ...say('Dr. Halden', 'Bulwarq, Fenrix and Gloomote are loaded in the back. They are on loan, not a gift.'),
+        ...say('Dr. Halden', `${game.party[0]?.name ?? 'Your partner'} rides with you — and syphon whatever else you meet in there.`),
         ...narrate('The south portal leads to the domain map.'),
       ]);
     } else if (kind === 'towed') {
@@ -229,69 +226,23 @@ export class HubScene extends GameScene {
   private async licenseCeremony() {
     fullRestore(game.party);
     await this.dialogue.play([
-      ...narrate('The Boot Domain closes behind you. The beetle is scorched but intact.'),
+      ...narrate('The Quiet Crossing closes behind you. The beetle is scorched but intact.'),
       ...say(
         'Chief Marrow',
         'Warden down on a training run. That is either talent or luck, and I take both.',
         `Licence approved, driver ${game.playerName}.`,
       ),
-      ...say('Dr. Halden', 'And the beetle is yours now. Do not make me regret the paperwork.'),
+      ...say('Dr. Halden', 'The beetle is yours now, and your partner has earned its keep. Do not make me regret the paperwork.'),
     ]);
     game.hasLicense = true;
     game.hasOwnVehicle = true;
     game.set('licensed');
     toast(this.ctx.ui, '<span class="accent">Licence acquired · Own vehicle acquired</span>', 2600);
-    await sleep(1400);
+    await sleep(1200);
 
-    await this.dialogue.play(
-      say('Chief Marrow', 'One thing left. Every driver runs with a Guard Team. Pick yours — it decides who trains you, and what you start with.'),
-    );
-    await this.teamSelect();
-  }
-
-  private async teamSelect() {
-    const cards = TEAMS.map((t) => {
-      const starter = species(t.starter);
-      const attr = ATTRIBUTES[t.attribute];
-      return {
-        value: t.id,
-        title: t.name,
-        tag: `${attr.name} · ${t.leaderName}`,
-        tagColor: t.color,
-        body:
-          `<em>"${t.pitch}"</em><br><br>` +
-          `<strong style="color:${t.color}">Starter:</strong> ${starter.name} — ${starter.blurb}<br>` +
-          `<span class="dim">${t.perk}</span><br><span class="dim">${attr.blurb}</span>`,
-        art: speciesArt(t.starter),
-        artScale: 4,
-      };
-    });
-
-    const select = new CardSelect(this.ctx.ui, cards, {
-      heading: 'GUARD TEAMS',
-      subheading: 'Choose the team you will run with',
-    });
-    const choice = (await select.open()) ?? TEAMS[0].id;
-    select.destroy();
-
-    const chosen = team(choice);
-    game.teamId = chosen.id;
-    game.teamAttribute = chosen.attribute;
-
-    // The lent trio goes back to Halden; you keep your own starter.
-    const starter = makeCreature(chosen.starter, 10);
-    game.party = [starter];
-    game.set('teamChosen');
-
-    await this.dialogue.play([
-      ...say(chosen.leaderName, chosen.pitch, `Welcome to the ${chosen.name}, ${game.playerName}.`),
-      ...say('Dr. Halden', 'My three come home with me. This one is yours from here on.'),
-      ...narrate(`${starter.name} joined your party.`),
-    ]);
-    toast(this.ctx.ui, `<span class="accent">${chosen.name}</span> — ${starter.name} joined`, 2600);
-
-    // Rebuild so the rival is standing in the room for the next beat.
-    await this.ctx.go('hub', { arrival: 'teamChosen' } satisfies HubSceneParams);
+    // The rival is already standing in the room (build() shows them once the
+    // Boot Domain is cleared), so go straight into the next story beat.
+    await this.rivalAndBriefing();
   }
 
   private async rivalAndBriefing() {
@@ -328,7 +279,7 @@ export class HubScene extends GameScene {
     this.banner.innerHTML =
       '<h2>End of the first hour</h2>' +
       '<p class="dim">Mission 2 — <span class="accent">Cache Domain</span> — is the hook the slice ends on.<br>' +
-      'The city, the shop and the Boot Domain stay open: walk into the vendor to buy, or take the south portal to crawl again.</p>';
+      'The city, the shop and the Quiet Crossing stay open: walk into the vendor to buy, or take the south portal to crawl again.</p>';
     this.ctx.ui.appendChild(this.banner);
   }
 
@@ -359,7 +310,7 @@ export class HubScene extends GameScene {
         if (!game.hasLicense) {
           return say(
             'Chief Marrow',
-            'Boot Domain. Three floors, one warden. Take the south portal when you are ready.',
+            'The Quiet Crossing. Three floors, one warden. Take the south portal when you are ready.',
             'And Halden will not stop asking, so: bring his creatures back.',
           );
         }

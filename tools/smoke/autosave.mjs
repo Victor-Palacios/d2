@@ -13,6 +13,13 @@ const info = () => page.evaluate(() => ({
   auto: JSON.parse(localStorage.getItem('hd2d.save.auto') || 'null'),
 }));
 
+const pickPartner = async () => {
+  for (let i = 0; i < 50; i++) {
+    if (await page.locator('.card', { hasText: 'Emberling' }).count()) { await page.locator('.card', { hasText: 'Emberling' }).click(); await page.waitForTimeout(300); return; }
+    await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+  }
+};
+
 await page.goto((process.env.URL ?? 'http://localhost:5199/'), { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const g = window.hd2dGame; const p = g.hd2d.params;
@@ -24,6 +31,7 @@ await page.keyboard.press('Enter');           // New Game
 await page.waitForTimeout(800);
 await page.locator('.keyboard button', { hasText: /^OK$/ }).click();
 await page.waitForTimeout(600);
+  await pickPartner();
 // Advance the intro prologue and get into the hub, advancing every line.
 // NOTE: the hub's arrival() opens with `await sleep(280)` during which the
 // scene is 'hub' but no dialogue is up yet and busy is still false. Breaking on

@@ -51,6 +51,13 @@ const clearDialogue = async (max = 80) => {
   }
 };
 
+const pickPartner = async () => {
+  for (let i = 0; i < 50; i++) {
+    if (await page.locator('.card', { hasText: 'Emberling' }).count()) { await page.locator('.card', { hasText: 'Emberling' }).click(); await page.waitForTimeout(300); return; }
+    await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+  }
+};
+
 await page.goto((process.env.URL ?? 'http://localhost:5199/'), { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 await page.evaluate(() => {
@@ -67,22 +74,15 @@ await page.waitForTimeout(900);
 await shot('10-name-entry');
 await page.locator('.keyboard button', { hasText: /^OK$/ }).click();
 await page.waitForTimeout(700);
+  await pickPartner();
 await clearDialogue();
 await waitScene('hub');
 await page.waitForTimeout(700);
 await clearDialogue();
 console.log('HUB:', JSON.stringify(await state()));
 
-// --- hub: bump into the mentor, then take the south portal -----------------
-await press('ArrowUp', 2);
-await press('ArrowRight', 3);
-await page.waitForTimeout(400);
-await clearDialogue();
-console.log('after mentor talk:', JSON.stringify(await state()));
-
-await press('ArrowDown', 5);
-await press('ArrowLeft', 3);
-await press('ArrowDown', 2);
+// --- hub: take the south portal (straight down; up bumps the Soul Store) ----
+await press('ArrowDown', 3);
 await waitScene('worldmap');
 await page.waitForTimeout(600);
 await shot('13-worldmap');
