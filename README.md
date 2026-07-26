@@ -93,7 +93,7 @@ fails with `Resource not accessible by integration`. Until Pages is on, the
 | Z / Enter / Space | Confirm, advance dialogue |
 | X / Esc | Cancel, back out of a menu, **stop auto** |
 | Q | **Toggle auto** — auto-read dialogue, or auto-battle in combat |
-| E | **Soularium** — open the capture dex (town and crawl) |
+| E | **Soul menu** — Soularium (capture dex) + Soul Sanctuary (party/reserve) |
 | `` ` `` | Toggle the HD-2D debug panel |
 | M | Mute / unmute |
 
@@ -114,7 +114,7 @@ mapping screen.
 | A / ✕ — or Y / △, Start | Confirm, advance dialogue |
 | B / ○ — or X / □, Select | Cancel, back out, **stop auto** |
 | **L1 / LB** | **Toggle auto** — hands-free dialogue reading, or auto-battle in combat |
-| **R1 / RB** | Open the **Soularium** (capture dex) |
+| **R1 / RB** | Open the **Soul menu** (Soularium + Soul Sanctuary) |
 
 **Auto, on one button.** `L1` turns hands-free reading on and off while a
 dialogue box is up, and starts (or stops) auto-battle during a fight — the same
@@ -166,13 +166,19 @@ Recruiting works by draining a wild monster's soul over the course of battle:
   captures the monster **even if the blow knocks it out**.
 - A capture grants a **free copy** (into your party, or the **Soul Sanctuary**
   reserve if the party is full) and logs the species in the **Soularium**, the
-  capture dex — press **E** / **R1** to browse it anytime in town or the crawl.
+  capture dex.
 - Once a species is logged it shows a **★** instead of a syphon meter: you can no
-  longer capture it in battle, but you'll be able to buy more copies from the
-  **Soul Store** (coming in the next update, along with party-slot upgrades and
-  Soul Sanctuary management).
+  longer capture it in battle, but you can buy more copies from the **Soul
+  Store**.
 
-Party size starts at **4** and will grow to **10** via upgrades.
+Press **E** / **R1** to open the **Soul menu** anytime in town or the crawl — it
+opens the **Soularium** (dex) or the **Soul Sanctuary**, where you move monsters
+between your active party and the reserve.
+
+The **Soul Store** (a vendor in Digital City — talk to Soul Broker Vex, the tile
+just above where you start) sells copies of any species you've logged (priced by
+power) and **party-capacity upgrades**: party size starts at **4** and grows one
+slot at a time to **10**. Monsters that don't fit go to the Soul Sanctuary.
 
 ## Saving
 

@@ -100,13 +100,17 @@ mechanic instead of a capture item.
   at 4 (`START_PARTY_CAP`), max 10 (`MAX_PARTY_CAP`). Covered by
   `tools/smoke/capture.mjs`. Syphon gains (`SYPHON_PRIME` / `SYPHON_HIT`) are the
   tuning knobs — per-species rates later let rarer monsters need more.
-- **Phase 2 (next):**
-  - **Soul Store** vendor in the hub: buy logged species (priced by power) and
-    **+1 party-slot** upgrades (4→10). Reuse the `ShopScreen` pattern.
-  - **Soul Sanctuary** management screen: move monsters between party and
-    reserve (reuse `ui/Menu.ts` / `CardSelect.ts`).
-  - Polish: float the syphon meter / ★ above the sprite's head (project the
-    billboard's world position to screen) rather than only on the HUD card.
+- ✅ **Phase 2 done:**
+  - **Soul Store** vendor in the hub (Soul Broker Vex, a new NPC): summon logged
+    species (priced by power, `soulPrice`) into the party/Sanctuary, and buy **+1
+    party-slot** upgrades 4→10 (`ui/SoulStore.ts`).
+  - **Soul Sanctuary** management (`ui/SanctuaryScreen.ts`): move monsters between
+    party (capped) and reserve; the party can't be emptied.
+  - **Soul menu** (`ui/SoulMenu.ts`) on R1 / E gathers the Soularium + Sanctuary.
+  - Covered by `tools/smoke/store.mjs`.
+- **Still to do (polish):** float the syphon meter / ★ above the sprite's head
+  (project the billboard's world position to screen) rather than only on the HUD
+  card; and battle should draw at most 3 active party monsters (3-on-screen).
 
 ## M9 — DNA Digivolution (cash the §5.6 stub)
 

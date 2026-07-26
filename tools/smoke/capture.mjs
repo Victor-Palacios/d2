@@ -46,11 +46,12 @@ await page.keyboard.press('Enter'); await page.waitForTimeout(800);
 await page.locator('.keyboard button', { hasText: /^OK$/ }).click(); await page.waitForTimeout(600);
 await clearDlg(); await waitScene('hub'); await page.waitForTimeout(700); await clearDlg();
 
-// TEST 1: R1 (E key) opens the Soularium in town, X closes it.
-await page.keyboard.press('e'); await page.waitForTimeout(600);
-console.log('R1 opens Soularium in hub :', (await st()).soulOpen);
+// TEST 1: R1 (E key) opens the Soul menu; its first item opens the Soularium.
+await page.keyboard.press('e'); await page.waitForTimeout(500);       // Soul menu
+await page.keyboard.press('Enter'); await page.waitForTimeout(500);   // -> Soularium
+console.log('R1 -> Soularium in hub :', (await st()).soulOpen);
 await page.keyboard.press('x'); await page.waitForTimeout(500);
-console.log('X closes it              :', !(await st()).soulOpen);
+console.log('X closes it            :', !(await st()).soulOpen);
 
 // Head to Crystal Cavern.
 await press('ArrowDown', 5); await press('ArrowLeft', 3); await press('ArrowDown', 2);
@@ -87,9 +88,10 @@ console.log('  in sanctuary       :', post.sanctuary.includes('shardling'));
 console.log('  souls logged       :', post.logged);
 
 // TEST: R1 works mid-crawl too, and the dex now shows a logged soul.
-await page.keyboard.press('e'); await page.waitForTimeout(600);
+await page.keyboard.press('e'); await page.waitForTimeout(500);       // Soul menu
+await page.keyboard.press('Enter'); await page.waitForTimeout(500);   // -> Soularium
 const dex = await st();
-console.log('R1 opens Soularium in dungeon :', dex.soulOpen);
+console.log('R1 -> Soularium in dungeon :', dex.soulOpen);
 await page.keyboard.press('x'); await page.waitForTimeout(400);
 
 const captured = post.entry?.captured && (post.party.includes('shardling') || post.sanctuary.includes('shardling'));

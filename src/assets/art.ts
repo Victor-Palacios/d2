@@ -78,6 +78,7 @@ export const HUMANS: Record<string, PixelArt> = {
   chief: human({ hair: '#2a2a33', coat: '#2b3346', coatHi: '#49577a', pants: '#1c2030', hat: '#8f9bbd' }, 'cap'),
   rival: human({ hair: '#d94f3d', coat: '#8a2b28', coatHi: '#d8503f', pants: '#2c2432' }, 'spiky'),
   vendor: human({ hair: '#6b4a2f', coat: '#4f7a4a', coatHi: '#79b06a', pants: '#3a3020', hat: '#d8c48a' }, 'cap'),
+  soulkeeper: human({ hair: '#c77dff', coat: '#3f2a63', coatHi: '#9d6fd8', pants: '#241a33', hat: '#c9b0ef' }, 'cap'),
   leaderGold: human({ hair: '#e2c76a', coat: '#8a6f1f', coatHi: '#e6c65a', pants: '#3a2f14' }),
   leaderBlue: human({ hair: '#7fa9e8', coat: '#25467f', coatHi: '#5f9adf', pants: '#1d2740' }),
   leaderBlack: human({ hair: '#2b2438', coat: '#2a2334', coatHi: '#57446e', pants: '#191322' }, 'spiky'),

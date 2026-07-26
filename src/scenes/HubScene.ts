@@ -16,7 +16,8 @@ import { makeCreature, fullRestore } from '../systems/party/creature';
 import { DialogueBox } from '../ui/DialogueBox';
 import { CardSelect } from '../ui/CardSelect';
 import { openShop } from '../ui/ShopScreen';
-import { openSoularium } from '../ui/SoulariumScreen';
+import { openSoulMenu } from '../ui/SoulMenu';
+import { openSoulStore } from '../ui/SoulStore';
 import { toast } from '../ui/Toast';
 import { el, remove } from '../ui/dom';
 import { narrate, say } from '../systems/dialogue/script';
@@ -28,7 +29,7 @@ const HUB_ROWS = [
   '#############',
   '#...........#',
   '#..1.....2..#',
-  '#...........#',
+  '#.....5.....#',
   '#.....S.....#',
   '#...........#',
   '#..3.....4..#',
@@ -113,17 +114,17 @@ export class HubScene extends GameScene {
 
     void this.arrival(p.arrival);
 
-    // R1 / E opens the Soularium from town too.
+    // R1 / E opens the Soul menu (Soularium + Sanctuary) from town too.
     this.unsubInput = input.onAction((a) => {
-      if (a === 'menu') void this.openSoularium();
+      if (a === 'menu') void this.openSoulMenu();
     });
   }
 
-  /** R1 / E: browse the Soularium in town. Blocks movement while open. */
-  private async openSoularium() {
+  /** R1 / E: Soularium + Sanctuary. Blocks movement while open. */
+  private async openSoulMenu() {
     if (this.busy || this.leaving || this.moving) return;
     this.busy = true;
-    await openSoularium(this.ctx.ui);
+    await openSoulMenu(this.ctx.ui);
     this.busy = false;
   }
 
@@ -146,6 +147,7 @@ export class HubScene extends GameScene {
       { id: 'mentor', art: 'mentor', char: '2' },
       { id: 'vendor', art: 'vendor', char: '3' },
       { id: 'rival', art: 'rival', char: '4' },
+      { id: 'soulstore', art: 'soulkeeper', char: '5' },
     ];
 
     this.grid.forEach((t) => {
@@ -342,6 +344,12 @@ export class HubScene extends GameScene {
       await openShop(this.ctx.ui);
       this.busy = false;
     }
+
+    if (npc.id === 'soulstore') {
+      this.busy = true;
+      await openSoulStore(this.ctx.ui);
+      this.busy = false;
+    }
   }
 
   private scriptFor(npc: Npc): DialogueScript {
@@ -379,6 +387,12 @@ export class HubScene extends GameScene {
           return say('Quartermaster Ilsa', 'Supply bay is for licensed drivers. Come back with a licence and credits.');
         }
         return say('Quartermaster Ilsa', 'Licensed, then. Take a look — the bay is open.');
+      case 'soulstore':
+        return say(
+          'Soul Broker Vex',
+          'Welcome to the Soul Store. Syphon a soul in the field and I can conjure you a copy — for a price.',
+          'I also sell capacity: more room in your active party. Souls you cannot carry rest in the Sanctuary.',
+        );
       case 'rival':
         return say(
           'Kade',

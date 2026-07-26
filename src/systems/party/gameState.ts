@@ -116,10 +116,36 @@ export class GameState {
     e.seen = true;
     e.syphon = 100;
     const creature = makeCreature(speciesId, level);
-    const toParty = this.party.length < this.partyCap;
-    if (toParty) this.party.push(creature);
-    else this.sanctuary.push(creature);
+    const toParty = this.addMonster(creature);
     return { speciesId, creature, toParty };
+  }
+
+  /** Adds a creature to the party if there's room, else the Sanctuary. */
+  addMonster(c: CreatureInstance): boolean {
+    if (this.party.length < this.partyCap) {
+      this.party.push(c);
+      return true;
+    }
+    this.sanctuary.push(c);
+    return false;
+  }
+
+  /** Send a party member to the Sanctuary. Refuses to empty the party. */
+  partyToSanctuary(uid: string): boolean {
+    if (this.party.length <= 1) return false;
+    const i = this.party.findIndex((c) => c.uid === uid);
+    if (i < 0) return false;
+    this.sanctuary.push(this.party.splice(i, 1)[0]);
+    return true;
+  }
+
+  /** Bring a Sanctuary member into the party, if there's a free slot. */
+  sanctuaryToParty(uid: string): boolean {
+    if (this.party.length >= this.partyCap) return false;
+    const i = this.sanctuary.findIndex((c) => c.uid === uid);
+    if (i < 0) return false;
+    this.party.push(this.sanctuary.splice(i, 1)[0]);
+    return true;
   }
 
   /** Buy one more party slot, up to the cap. Returns false if already maxed. */

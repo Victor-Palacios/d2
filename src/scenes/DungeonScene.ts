@@ -18,7 +18,7 @@ import { DungeonHUD } from '../ui/DungeonHUD';
 import { DialogueBox } from '../ui/DialogueBox';
 import { toast } from '../ui/Toast';
 import { Menu } from '../ui/Menu';
-import { openSoularium } from '../ui/SoulariumScreen';
+import { openSoulMenu } from '../ui/SoulMenu';
 import { el } from '../ui/dom';
 import { saveSuspend } from '../systems/party/saveGame';
 import { say } from '../systems/dialogue/script';
@@ -285,15 +285,15 @@ export class DungeonScene extends GameScene {
 
     this.unsubInput = input.onAction((a) => {
       if (a === 'cancel') void this.openPauseMenu();
-      else if (a === 'menu') void this.openSoularium();
+      else if (a === 'menu') void this.openSoulMenu();
     });
   }
 
-  /** R1 / E: browse the Soularium mid-crawl. Blocks movement while open. */
-  private async openSoularium() {
+  /** R1 / E: Soularium + Sanctuary mid-crawl. Blocks movement while open. */
+  private async openSoulMenu() {
     if (this.busy || this.leaving || this.moving) return;
     this.busy = true;
-    await openSoularium(this.ctx.ui);
+    await openSoulMenu(this.ctx.ui);
     this.busy = false;
   }
 
