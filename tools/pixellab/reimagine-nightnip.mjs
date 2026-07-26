@@ -26,8 +26,9 @@ if (!KEY) {
 const SIZE = Number(process.env.SIZE) || 64; // px, square. Try SIZE=32 for a closer 16x16 drop-in.
 const FORCE_PALETTE = process.env.FORCE_PALETTE !== "0"; // set FORCE_PALETTE=0 to let PixelLab pick colors.
 const DESCRIPTION =
-  "a small impish bat creature, dark violet fur, wide spread membrane wings, " +
-  "big glowing amber eyes, tiny fangs, mischievous pose, retro RPG monster sprite";
+  "a gaunt towering demon, pitch-black skin, long ragged tattered bat wings, " +
+  "curved horns, long clawed fingers, glowing sinister eyes, fanged snarl, " +
+  "menacing sinister pose, evil dark-fantasy RPG boss monster sprite";
 
 // Nightnip's canonical palette (from art.ts): outline, body, highlight, eyes, wing-shade.
 const PALETTE = ["#1a1024", "#6b4d9e", "#f2e8ff", "#ffd166", "#3c2b5c"];
