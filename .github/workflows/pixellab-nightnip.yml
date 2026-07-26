@@ -1,11 +1,12 @@
-name: PixelLab — reimagine Nightnip
+name: PixelLab — evolution stages
 
 # Runs the staging generator in tools/pixellab against the PixelLab API using
 # the PIXEL_LAB_API_KEY repository secret, then uploads the result as a build
 # artifact for review. It does NOT commit anything — the repo stays asset-free.
 #
 # It fires on pushes to the working branch (so it runs as soon as the tool
-# lands) and can be re-run manually from the Actions tab via workflow_dispatch.
+# lands) and can be re-run manually from the Actions tab via workflow_dispatch,
+# where you can pick which creature and evolution stage to generate.
 on:
   push:
     branches: [claude/monster-creation-management-x9x72z]
@@ -14,10 +15,14 @@ on:
       - ".github/workflows/pixellab-nightnip.yml"
   workflow_dispatch:
     inputs:
-      size:
-        description: "Sprite size in px (square). 64 = detailed, 32 = closer to a 16x16 drop-in."
+      creature:
+        description: "Creature line id (from CREATURES in evolve.mjs)."
         required: false
-        default: "64"
+        default: "nightnip"
+      stage:
+        description: "Evolution stage: wisp | shade | revenant | beyond."
+        required: false
+        default: "wisp"
 
 permissions:
   contents: read
@@ -42,15 +47,16 @@ jobs:
           fi
           echo "PIXEL_LAB_API_KEY is configured."
 
-      - name: Reimagine Nightnip
+      - name: Generate stage sprite
         env:
           PIXEL_LAB_API_KEY: ${{ secrets.PIXEL_LAB_API_KEY }}
-          SIZE: ${{ github.event.inputs.size || '64' }}
-        run: node tools/pixellab/reimagine-nightnip.mjs
+          CREATURE: ${{ github.event.inputs.creature || 'nightnip' }}
+          STAGE: ${{ github.event.inputs.stage || 'wisp' }}
+        run: node tools/pixellab/evolve.mjs
 
       - name: Upload sprite for review
         uses: actions/upload-artifact@v4
         with:
-          name: nightnip-pixellab
+          name: pixellab-sprites
           path: out/
           if-no-files-found: error
