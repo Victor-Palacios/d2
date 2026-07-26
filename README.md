@@ -21,13 +21,6 @@ runtime from data in `src/assets/` and `src/engine/`.
 
 **https://victor-palacios.github.io/d2/**
 
-> ⚠️ **One-time setup needed before this URL works.** GitHub Pages has to be
-> switched on by a repo admin — the Actions token is not allowed to create the
-> Pages site (`Resource not accessible by integration`). Go to
-> **Settings → Pages → Build and deployment** and set **Source** to
-> **GitHub Actions**, then re-run the "Deploy to GitHub Pages" workflow from the
-> Actions tab. Every push after that publishes automatically.
-
 Nothing to install. Click the page once when it loads — browsers block audio
 until you interact with the page.
 
@@ -35,9 +28,13 @@ Two things to know before you click:
 
 - **You need a keyboard.** Menus and dialogue take mouse clicks and taps, but
   moving around the world is keys-only, so this is not playable on a phone yet.
-- **You need WebGL2 and a reasonably real GPU.** The post stack is not cheap.
-  If it feels sluggish, press `` ` `` and pull **supersample** down toward 1.0;
-  `window.hd2dGame.stats.fps` in the console reports the actual frame rate.
+- **You need WebGL2** — that is any browser since ~2017 (Safari 15+). Any GPU
+  from roughly the last decade is plenty, including Apple Silicon and integrated
+  Intel/AMD; there is no discrete-GPU requirement. The only thing that genuinely
+  falls over is a *software* rasterizer with no GPU at all (headless CI, some
+  VMs and remote desktops), where the post stack drops to a slideshow. If it
+  feels sluggish, press `` ` `` and pull **supersample** down toward 1.0;
+  `window.hd2dGame.stats.fps` reports the real frame rate.
 
 ## Run it locally
 
@@ -68,11 +65,14 @@ rather than publishing a broken bundle.
 
 There is deliberately no `actions/configure-pages` step: its purpose is to feed
 the published base path into the build, and `vite.config.ts` already uses a
-relative base (`'./'`) that works from any subpath. It also cannot enable Pages
-from CI — that API rejects the workflow token — which is why the one-time
-**Settings → Pages → Source: GitHub Actions** step above is required. Until it
-is done, the `deploy` job fails with a missing-Pages-site error; afterwards it
-just works.
+relative base (`'./'`) that works from any subpath.
+
+Note for anyone re-creating this setup on a fresh repo: **Pages has to be
+enabled once by a repo admin** (Settings → Pages → Source: "GitHub Actions").
+CI cannot do it — creating a Pages site needs `administration: write`, which the
+Actions token is never granted, so `configure-pages` with `enablement: true`
+fails with `Resource not accessible by integration`. Until Pages is on, the
+`deploy` job fails with a 404 on the missing Pages site.
 
 ## Controls
 
