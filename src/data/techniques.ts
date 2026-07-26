@@ -141,6 +141,66 @@ export const TECHNIQUES: Record<string, Technique> = {
     element: 'machine',
     desc: 'A howl that rattles armour plating.',
   },
+  // --- Crystal Cavern -----------------------------------------------------
+  frostLance: {
+    id: 'frostLance',
+    name: 'Frost Lance',
+    kind: 'damage',
+    mpCost: 7,
+    power: 47,
+    element: 'water',
+    desc: 'A spear of supercooled data-ice.',
+  },
+  prismStorm: {
+    id: 'prismStorm',
+    name: 'Prism Storm',
+    kind: 'damage',
+    mpCost: 16,
+    power: 37,
+    element: 'water',
+    aoe: true,
+    desc: 'Refracted light shreds the whole formation.',
+  },
+  quakeCore: {
+    id: 'quakeCore',
+    name: 'Quake Core',
+    kind: 'damage',
+    mpCost: 9,
+    power: 53,
+    element: 'machine',
+    desc: 'Overloads its core into a grinding slam.',
+  },
+
+  // --- Haunted Dungeon ----------------------------------------------------
+  hexBolt: {
+    id: 'hexBolt',
+    name: 'Hex Bolt',
+    kind: 'damage',
+    mpCost: 7,
+    power: 48,
+    element: 'dark',
+    desc: 'A bolt of corrupted, whispering code.',
+  },
+  graveRot: {
+    id: 'graveRot',
+    name: 'Grave Rot',
+    kind: 'damage',
+    mpCost: 8,
+    power: 46,
+    element: 'nature',
+    desc: 'Creeping decay that eats through armour.',
+  },
+  dirge: {
+    id: 'dirge',
+    name: 'Dirge',
+    kind: 'damage',
+    mpCost: 17,
+    power: 38,
+    element: 'dark',
+    aoe: true,
+    desc: 'A mourning wail that rolls over every foe.',
+  },
+
   // Boss
   regalRoar: {
     id: 'regalRoar',

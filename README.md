@@ -148,6 +148,11 @@ choice → rival intro → supply bay → Mission 2 briefing.
 - **Progression**: the mentor's borrowed trio for the tutorial, then a licence,
   your own vehicle, and one of three Guard Teams — which sets your class
   and your first own creature.
+- **More domains**: the world map is free-select — beyond the Boot Domain it
+  offers the **Crystal Cavern** (Water/Machine, warden Glaciark) and the
+  **Haunted Dungeon** (Dark/Nature, warden Revenance), each with its own
+  monster roster, tile theme and ambience. Adding another is a data file
+  registered in `src/data/domains.ts` — no scene code changes.
 
 ## Saving
 
@@ -252,7 +257,8 @@ Everything is behind a data layer, so swapping art is a data edit:
 | A creature's stats, class, element, techniques | `src/data/creatures.ts` |
 | Techniques / damage numbers | `src/data/techniques.ts`, `src/systems/battle/formula.ts` |
 | NPCs and the vehicle | `HUMANS` / `VEHICLE` in `src/assets/art.ts` |
-| Dungeon layouts, encounters, dialogue | `src/data/bootDomain.ts` |
+| A whole new dungeon | a new `src/data/<name>.ts` exporting a `Domain`, registered in `src/data/domains.ts` |
+| Dungeon layouts, encounters, dialogue | `src/data/bootDomain.ts`, `crystalCavern.ts`, `hauntedDungeon.ts` |
 | Guard teams and starters | `src/data/teams.ts` |
 | Shop stock | `src/data/items.ts` |
 | Tile / wall textures | the generators in `src/engine/pixel.ts` |

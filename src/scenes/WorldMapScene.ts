@@ -6,7 +6,7 @@ import { floorTexture } from '../engine/pixel';
 import { audio } from '../engine/Audio';
 import { game } from '../systems/party/gameState';
 import { saveAuto } from '../systems/party/saveGame';
-import { BOOT_DOMAIN } from '../data/bootDomain';
+import { DOMAIN_ORDER, domain } from '../data/domains';
 import { CardSelect } from '../ui/CardSelect';
 import type { Card } from '../ui/CardSelect';
 
@@ -85,19 +85,28 @@ export class WorldMapScene extends GameScene {
       this.nodes.push({ mesh, light, x });
     };
 
-    makeNode(-4.2, 0x6fd3ff, 1.5);
-    makeNode(4.2, 0xffa64d, 2.1);
+    // One node for Digital City, then one per registered domain.
+    const count = DOMAIN_ORDER.length + 1;
+    const span = 9;
+    const xAt = (i: number) => (count > 1 ? -span / 2 + (span * i) / (count - 1) : 0);
+    makeNode(xAt(0), 0x6fd3ff, 1.5);
+    DOMAIN_ORDER.forEach((id, i) => {
+      const color = parseInt(domain(id).color.slice(1), 16);
+      makeNode(xAt(i + 1), color, 1.7 + (i % 2) * 0.4);
+    });
 
-    // A dotted route between the two nodes.
+    // A dotted route running through all the nodes.
     const dotGeo = new THREE.SphereGeometry(0.12, 8, 6);
     const dotMat = new THREE.MeshStandardMaterial({
       color: 0x101828,
       emissive: 0x8fb8ff,
       emissiveIntensity: 1.4,
     });
-    for (let i = 1; i < 9; i++) {
+    const x0 = xAt(0);
+    const x1 = xAt(count - 1);
+    for (let i = 1; i < 12; i++) {
       const d = new THREE.Mesh(dotGeo, dotMat);
-      d.position.set(-4.2 + (8.4 * i) / 9, 0.15, 0);
+      d.position.set(x0 + ((x1 - x0) * i) / 12, 0.15, 0);
       this.scene.add(d);
     }
   }
@@ -111,13 +120,18 @@ export class WorldMapScene extends GameScene {
         tagColor: '#6fd3ff',
         body: 'Licence office, supply bay, and everyone who wants something from you. Go back inside.',
       },
-      {
-        value: 'boot',
-        title: BOOT_DOMAIN.name,
-        tag: game.has('bootDomainCleared') ? 'Cleared' : 'Mission 1',
-        tagColor: '#ffa64d',
-        body: `${BOOT_DOMAIN.blurb}<br><br><span class="dim">3 floors · warden present · EP ${game.maxFuel}</span>`,
-      },
+      ...DOMAIN_ORDER.map((id): Card => {
+        const d = domain(id);
+        const cleared = game.has(d.onClear.flag);
+        const tag = id === 'boot' && !cleared ? 'Mission 1' : cleared ? 'Cleared' : 'Open';
+        return {
+          value: id,
+          title: d.name,
+          tag,
+          tagColor: d.color,
+          body: `${d.blurb}<br><br><span class="dim">${d.floors.length} floors · EP ${d.startingFuel}</span>`,
+        };
+      }),
     ];
 
     this.select = new CardSelect(this.ctx.ui, cards, {
@@ -128,7 +142,10 @@ export class WorldMapScene extends GameScene {
     this.select.destroy();
     this.select = null;
 
-    if (choice === 'boot') {
+    if (choice && choice !== 'city') {
+      game.activeDomainId = choice;
+      const d = domain(choice);
+      game.maxFuel = d.startingFuel;
       game.resetCrawl();
       await this.ctx.go('dungeon');
     } else {

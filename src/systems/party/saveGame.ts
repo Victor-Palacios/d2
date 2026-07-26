@@ -19,7 +19,7 @@ import type { AttributeId } from '../../data/elements';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 const AUTO_KEY = 'hd2d.save.auto';
 const SUSPEND_KEY = 'hd2d.save.suspend';
@@ -45,6 +45,7 @@ export interface SaveData {
     hasOwnVehicle: boolean;
     teamId: string | null;
     teamAttribute: AttributeId | null;
+    activeDomainId: string;
     floorIndex: number;
     crawl: typeof game.crawl;
     usedEvents: string[];
@@ -81,6 +82,7 @@ export function snapshot(kind: SaveKind, scene: SaveData['scene'], label: string
       hasOwnVehicle: game.hasOwnVehicle,
       teamId: game.teamId,
       teamAttribute: game.teamAttribute,
+      activeDomainId: game.activeDomainId,
       floorIndex: game.floorIndex,
       crawl: { ...game.crawl },
       usedEvents: [...game.usedEvents],
@@ -162,6 +164,7 @@ export function applySave(data: SaveData) {
   game.hasOwnVehicle = s.hasOwnVehicle;
   game.teamId = s.teamId;
   game.teamAttribute = s.teamAttribute;
+  game.activeDomainId = s.activeDomainId ?? 'boot';
   game.floorIndex = s.floorIndex;
   game.crawl = { ...s.crawl };
   game.usedEvents = new Set(s.usedEvents);

@@ -113,14 +113,21 @@ The data model is **already there**: `canDigivolveTo` on every `Species`
 
 One tutorial dungeon becomes several servers/domains.
 
-- `bootDomain.ts` is already a generic `DungeonFloor[]` shape — add 2–3 more
-  domain data files behind the existing `WorldMapScene` picker (which already
-  supports a node list).
-- **Procedural floor generator** for replayable grinding: emit the same `rows`
-  string format `TileGrid` already parses, so nothing downstream changes. Gate
-  boss floors as hand-authored.
-- Per-domain encounter tables, element theming, and a difficulty curve tied to
-  the M7 level math.
+- ✅ **Done (partial):** the singleton `BOOT_DOMAIN` is now a **registry**
+  (`src/data/domains.ts` + `domain(id)`); `game.activeDomainId` drives the crawl,
+  and the world map free-selects any registered domain. Two hand-authored
+  domains shipped — **Crystal Cavern** (`crystalCavern.ts`) and **Haunted
+  Dungeon** (`hauntedDungeon.ts`) — each with its own roster, theme and ambience
+  track. Adding another is a data file + one registry line; no scene changes.
+  Covered by `tools/smoke/domains.mjs`.
+- **⚠️ Depends on M8 (recruiting).** These domains are wired and winnable, but a
+  post-boot party is a **single starter**, which cannot realistically clear a
+  3-enemy floor or a warden. Until recruiting/party-building lands, they are
+  balanced only for a full party (e.g. the borrowed trio). Recruiting is the
+  gating feature that makes the extra domains actually playable — do M8 next.
+- **Still to do:** a **procedural floor generator** for replayable grinding
+  (emit the same `rows` format `TileGrid` parses; hand-author boss floors), and
+  a difficulty curve tied to the M7 level math.
 
 ## M11 — Story + tamer battles across missions
 

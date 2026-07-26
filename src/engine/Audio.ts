@@ -91,7 +91,7 @@ const SFX: Record<SfxName, Note[]> = {
   ],
 };
 
-export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | null;
+export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | 'crystal' | 'haunted' | null;
 
 /** Simple looping bass/arp patterns, one per mood. Semitone offsets from root. */
 const TRACKS: Record<Exclude<MusicTrack, null>, { root: number; bpm: number; bass: number[]; arp: number[] }> = {
@@ -99,6 +99,10 @@ const TRACKS: Record<Exclude<MusicTrack, null>, { root: number; bpm: number; bas
   dungeon: { root: 130.8, bpm: 84, bass: [0, 0, -2, 3], arp: [12, 15, 19, 15, 12, 19, 22, 19] },
   battle: { root: 146.8, bpm: 148, bass: [0, 0, 5, 3], arp: [12, 15, 19, 24, 19, 15, 12, 15] },
   boss: { root: 110, bpm: 160, bass: [0, -1, 0, -3], arp: [12, 13, 19, 20, 12, 13, 24, 20] },
+  // Crystal Cavern: bright, airy, major — a high shimmering arp over a slow root.
+  crystal: { root: 164.8, bpm: 80, bass: [0, 4, 7, 4], arp: [19, 24, 28, 24, 19, 24, 31, 28] },
+  // Haunted Dungeon: low, minor, unsettled — a dragging tritone-leaning bass.
+  haunted: { root: 98, bpm: 72, bass: [0, 0, -1, -6], arp: [12, 15, 18, 15, 12, 18, 15, 11] },
 };
 
 class AudioEngine {

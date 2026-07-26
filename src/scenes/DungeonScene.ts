@@ -8,11 +8,12 @@ import { ParticleField, Portal, Torch } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { HUMANS, PROPS, VEHICLE } from '../assets/art';
-import { BOOT_DOMAIN } from '../data/bootDomain';
-import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/bootDomain';
+import { domain } from '../data/domains';
+import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
 import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
 import { game } from '../systems/party/gameState';
+import { fullRestore } from '../systems/party/creature';
 import { DungeonHUD } from '../ui/DungeonHUD';
 import { DialogueBox } from '../ui/DialogueBox';
 import { toast } from '../ui/Toast';
@@ -83,7 +84,8 @@ export class DungeonScene extends GameScene {
   async enter(params?: unknown) {
     const p = (params ?? {}) as DungeonSceneParams;
 
-    this.floor = BOOT_DOMAIN.floors[game.floorIndex];
+    const dom = domain(game.activeDomainId);
+    this.floor = dom.floors[game.floorIndex];
     this.grid = new TileGrid(this.floor.rows, this.floor.theme);
 
     this.buildScene();
@@ -107,7 +109,7 @@ export class DungeonScene extends GameScene {
     this.ctx.hd2d.applyFog(this.scene, this.floor.fog ?? 1);
     this.ctx.hd2d.snapCamera();
     this.syncCamera();
-    audio.music('dungeon');
+    audio.music(dom.music);
 
     // Post-battle bookkeeping happens after the fade so the outro reads well.
     if (p.battleResult === 'victory' && p.eventId) {
@@ -500,7 +502,7 @@ export class DungeonScene extends GameScene {
     if (this.leaving) return;
     this.leaving = true;
     audio.sfx('portal');
-    game.floorIndex = Math.min(BOOT_DOMAIN.floors.length - 1, game.floorIndex + 1);
+    game.floorIndex = Math.min(domain(game.activeDomainId).floors.length - 1, game.floorIndex + 1);
     game.crawl.initialized = false;
     await this.ctx.go('dungeon');
   }
@@ -533,8 +535,16 @@ export class DungeonScene extends GameScene {
     if (this.leaving) return;
     this.leaving = true;
     audio.sfx('portal');
-    game.set('bootDomainCleared');
-    await this.ctx.go('hub', { arrival: 'domainCleared' });
+    const dom = domain(game.activeDomainId);
+    game.set(dom.onClear.flag);
+    if (dom.onClear.licenseCeremony) {
+      // Boot Domain only: the licence + Guard-Team ceremony.
+      await this.ctx.go('hub', { arrival: 'domainCleared' });
+    } else {
+      // Any other domain: you're back in the safe city, patched up.
+      fullRestore(game.party);
+      await this.ctx.go('hub');
+    }
   }
 
   private async outOfFuel() {

@@ -31,7 +31,8 @@ Environment variables:
 | `save.mjs` | Autosave, suspend save, Continue, and that a suspend save is **consumed** on load (three simulated sessions across page reloads) |
 | `pad.mjs` | Controller support, using a synthetic standard-mapping gamepad injected via `addInitScript` |
 | `hud.mjs` | Battle HUD screenshots — class-coloured borders, HP/MP meters, element-tinted techniques |
-| `autosave.mjs` | Focused check that the hub autosave writes (see the known bug in `HANDOFF.md`) |
+| `autosave.mjs` | Focused check that the hub autosave writes (arrival race, resolved) |
+| `domains.mjs` | Free-select world map → Crystal Cavern (floor + boss + clear) and Haunted Dungeon (floor); proves the domain registry, per-domain data/art/music. Boosts the party via the debug API so fights resolve deterministically (this checks flow, not balance). |
 
 ## Two environment traps that cost real time
 

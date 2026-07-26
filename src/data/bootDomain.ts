@@ -1,43 +1,18 @@
 import type { TileTheme } from '../engine/TileGrid';
-import type { DialogueScript } from '../systems/dialogue/script';
 import { narrate, say } from '../systems/dialogue/script';
+import type { Domain, DungeonFloor } from './dungeon';
 
 /**
  * The Boot Domain — the tutorial dungeon (plan §5.5).
  *
  * Three small floors: a teaching floor, an element-tile floor, and a boss
  * floor whose accent walls and glowing hallway telegraph what is waiting.
- * See `TileGrid` for the layout legend.
+ * See `TileGrid` for the layout legend. The reusable data model lives in
+ * `dungeon.ts`; this is just one `Domain`.
  */
 
-export interface EnemySpec {
-  species: string;
-  level: number;
-}
-
-export type FloorEvent =
-  | { kind: 'dialogue'; script: DialogueScript; once?: boolean }
-  | { kind: 'battle'; enemies: EnemySpec[]; intro?: DialogueScript; outro?: DialogueScript }
-  | { kind: 'boss'; enemies: EnemySpec[]; intro?: DialogueScript; outro?: DialogueScript };
-
-export interface EncounterEntry {
-  weight: number;
-  enemies: EnemySpec[];
-}
-
-export interface DungeonFloor {
-  id: string;
-  name: string;
-  rows: string[];
-  theme: TileTheme;
-  events: Record<string, FloorEvent>;
-  chests: Record<string, { credits?: number; item?: string; note: string }>;
-  /** Chance per step of a random encounter (0 disables). */
-  encounterRate: number;
-  encounters: EncounterEntry[];
-  /** Fog density multiplier, so deeper floors feel heavier. */
-  fog?: number;
-}
+// Re-exported for the many modules that still import these from here.
+export type { EnemySpec, FloorEvent, EncounterEntry, DungeonFloor } from './dungeon';
 
 const MENTOR = 'Dr. Halden';
 
@@ -225,16 +200,19 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
   },
 ];
 
-export const BOOT_DOMAIN = {
+export const BOOT_DOMAIN: Domain = {
   id: 'boot',
   name: 'Boot Domain',
   blurb: 'Training sector. Low corruption, one registered warden. Every licence starts here.',
+  color: '#ffa64d',
   floors: BOOT_DOMAIN_FLOORS,
+  startingFuel: 120,
+  music: 'dungeon',
+  onClear: { flag: 'bootDomainCleared', licenseCeremony: true },
   /** The trio the mentor lends you for the tutorial crawl (plan §5.5). */
   borrowedParty: [
     { species: 'bulwarq', level: 12 },
     { species: 'fenrix', level: 12 },
     { species: 'gloomote', level: 11 },
-  ] as EnemySpec[],
-  startingFuel: 120,
+  ],
 };
