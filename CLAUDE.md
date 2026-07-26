@@ -50,3 +50,11 @@ URL=http://localhost:4173/ node tools/smoke/save.mjs
 Source layout, the HD-2D recipe, the debug panel and the asset-swap points are
 all documented in [README.md](README.md). Battle maths, the plan audit and the
 roadmap are in [docs/](docs/).
+
+## Adding a monster
+
+Creating a new creature sprite follows a fixed workflow — define it in the
+`tools/pixellab/` registry, generate via the PixelLab CI workflow, convert the
+PNG into a `{ palette, rows }` map, and paste that into `src/assets/art.ts`
+(never commit the PNG — the repo stays asset-free). The full rule, including how
+to write the prompt, is in [docs/adding-monsters.md](docs/adding-monsters.md).

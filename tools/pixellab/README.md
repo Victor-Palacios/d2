@@ -1,50 +1,35 @@
-# PixelLab sprite staging
+# PixelLab sprite tooling
 
-Ad-hoc tooling for generating creature sprites with the
-[PixelLab API](https://www.pixellab.ai/pixellab-api). **Nothing here is wired
-into the game.** It writes candidate art to `out/` (git-ignored) so we can
-review sprites *before* deciding whether to hand-convert them into the
-`{ palette, rows }` form in `src/assets/art.ts`. The repo stays asset-free —
-no generated PNG is committed.
+Turns a text idea into an on-roster creature sprite. **Nothing here is wired
+into the game and no PNG is committed** — the deliverable is a
+`{ palette, rows }` map for `src/assets/art.ts` (the repo stays asset-free).
+The end-to-end rule lives in [`docs/adding-monsters.md`](../../docs/adding-monsters.md).
 
-## `evolve.mjs` — standardized evolution stages
+## Files
 
-Every creature evolves through the same four-stage ladder:
+- **`monsters.mjs`** — the registry. Each monster is `{ palette, size, prompt }`.
+  Evolution lines are expanded from the standardized `STAGES` ladder
+  (Wisp → Shade → Revenant → Beyond) via `line()`; one-off monsters get a
+  single hand-written prompt. Add a monster here.
+- **`generate.mjs`** — `MONSTER=<id> node generate.mjs` → calls the PixelLab
+  pixflux API (forced palette + shared style options) → `out/<id>.png`.
+- **`png-to-pixelart.mjs`** — `MONSTER=<id> node png-to-pixelart.mjs [size]` →
+  decodes/downscales/snaps to the registry palette → `out/<id>.art.txt`
+  (paste-ready literal) + `out/<id>-pixelart.png` (preview).
 
-| stage | role | look |
-| ----- | ---- | ---- |
-| **Wisp** | rookie (lowest) | small, round, chibi — cute but on-theme |
-| **Shade** | middle | lean, upright, mildly menacing |
-| **Revenant** | advanced | gaunt towering demon |
-| **Beyond** | ultimate | colossal, ornate, godlike final form |
-
-Each prompt is composed the same way so a line stays visually consistent:
-
-```
-<STAGE vibe> , <CREATURE theme> , <shared STYLE> , <STAGE tone>
-```
-
-- **`STAGES`** hold the stage vibe/tone/size/detail and are creature-agnostic —
-  reuse them for any line.
-- **`CREATURES`** hold the recurring motif + a forced palette (Nightnip: its
-  canonical 5 colours from `art.ts`), so every stage shares colours.
-
-### Run it
+## Run it
 
 Needs `PIXEL_LAB_API_KEY`. Node 18+ (global `fetch`), no dependencies.
 
 ```bash
-PIXEL_LAB_API_KEY=... CREATURE=nightnip STAGE=wisp node tools/pixellab/evolve.mjs
-open out/nightnip-wisp.html
+PIXEL_LAB_API_KEY=... MONSTER=lastlight node tools/pixellab/generate.mjs
+MONSTER=lastlight node tools/pixellab/png-to-pixelart.mjs 24
+open out/lastlight-pixelart.png
 ```
 
-Produces `out/<creature>-<stage>.png` (transparent) and a preview `.html`.
-`FORCE_PALETTE=0` lets PixelLab pick colours instead of the forced palette.
+## Run it in CI
 
-### Run it in CI
-
-The **`pixellab-nightnip.yml`** workflow runs this on the
-`claude/monster-creation-management-x9x72z` branch and on manual dispatch
-(where you pick `creature` and `stage`), reading `PIXEL_LAB_API_KEY` from
-repository secrets. The result is uploaded as the **`pixellab-sprites`**
-artifact — download it, unzip, open the `.html`.
+The **`pixellab-nightnip.yml`** workflow (*PixelLab — monster sprites*) runs
+both steps on manual dispatch (pick `monster` + `target`) or on push to the
+working branch, reading `PIXEL_LAB_API_KEY` from repository secrets, and uploads
+`out/` as the **`pixellab-sprites`** artifact.

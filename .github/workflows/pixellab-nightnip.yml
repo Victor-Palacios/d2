@@ -1,12 +1,12 @@
-name: PixelLab — evolution stages
+name: PixelLab — monster sprites
 
-# Runs the staging generator in tools/pixellab against the PixelLab API using
-# the PIXEL_LAB_API_KEY repository secret, then uploads the result as a build
-# artifact for review. It does NOT commit anything — the repo stays asset-free.
+# Generates a monster sprite from the tools/pixellab registry against the
+# PixelLab API (PIXEL_LAB_API_KEY secret), converts it into the repo's
+# { palette, rows } form, and uploads both for review. It does NOT commit
+# anything — the repo stays asset-free. See docs/adding-monsters.md.
 #
-# It fires on pushes to the working branch (so it runs as soon as the tool
-# lands) and can be re-run manually from the Actions tab via workflow_dispatch,
-# where you can pick which creature and evolution stage to generate.
+# Fires on pushes to the working branch (so it runs as soon as the tooling
+# lands) and on manual dispatch, where you pick which monster to generate.
 on:
   push:
     branches: [claude/monster-creation-management-x9x72z]
@@ -15,14 +15,14 @@ on:
       - ".github/workflows/pixellab-nightnip.yml"
   workflow_dispatch:
     inputs:
-      creature:
-        description: "Creature line id (from CREATURES in evolve.mjs)."
+      monster:
+        description: "Monster id from MONSTERS in tools/pixellab/monsters.mjs (e.g. lastlight, nightnip-wisp)."
         required: false
-        default: "nightnip"
-      stage:
-        description: "Evolution stage: wisp | shade | revenant | beyond."
+        default: "lastlight"
+      target:
+        description: "Pixel-art downscale size (square)."
         required: false
-        default: "wisp"
+        default: "24"
 
 permissions:
   contents: read
@@ -30,6 +30,8 @@ permissions:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    env:
+      MONSTER: ${{ github.event.inputs.monster || 'lastlight' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -47,12 +49,13 @@ jobs:
           fi
           echo "PIXEL_LAB_API_KEY is configured."
 
-      - name: Generate stage sprite
+      - name: Generate sprite
         env:
           PIXEL_LAB_API_KEY: ${{ secrets.PIXEL_LAB_API_KEY }}
-          CREATURE: ${{ github.event.inputs.creature || 'nightnip' }}
-          STAGE: ${{ github.event.inputs.stage || 'wisp' }}
-        run: node tools/pixellab/evolve.mjs
+        run: node tools/pixellab/generate.mjs
+
+      - name: Convert to pixel-art { palette, rows }
+        run: node tools/pixellab/png-to-pixelart.mjs "${{ github.event.inputs.target || '24' }}"
 
       - name: Upload sprite for review
         uses: actions/upload-artifact@v4
