@@ -119,7 +119,7 @@ export class CardSelect {
       this.unsub = input.onAction((a) => {
         if (a === 'left') this.step(-1);
         else if (a === 'right') this.step(1);
-        else if (a === 'confirm') this.choose();
+        else if (a === 'confirm' || a === 'start') this.choose();
         else if (a === 'cancel' && this.opts.cancellable) {
           audio.sfx('cancel');
           this.finish(null);

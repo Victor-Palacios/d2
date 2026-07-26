@@ -150,7 +150,7 @@ export class DialogueBox {
           this.setAuto(false);
           return;
         }
-        if (a !== 'confirm' && a !== 'cancel') return;
+        if (a !== 'confirm' && a !== 'cancel' && a !== 'start') return;
         if (!done) complete();
         else {
           audio.sfx('blip');

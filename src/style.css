@@ -312,9 +312,15 @@ body {
 }
 
 .keyboard button.wide {
-  grid-column: span 2;
+  grid-column: span 5;
   font-size: 12px;
   letter-spacing: 0.1em;
+}
+
+/* DEL starts a fresh row so DEL + OK share their own row below the characters,
+   matching the keyboard's navigation grid (Down reaches them, no wrap). */
+.keyboard button.wide.del {
+  grid-column: 1 / span 5;
 }
 
 .keyboard button.sel {

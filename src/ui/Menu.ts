@@ -122,7 +122,7 @@ export class Menu {
       this.unsub = input.onAction((a) => {
         if (a === prev) this.step(-1);
         else if (a === next) this.step(1);
-        else if (a === 'confirm') this.choose();
+        else if (a === 'confirm' || a === 'start') this.choose();
         else if (a === 'auto') {
           // L1 shortcut: activate an 'auto' item if this menu offers one
           // (the battle action menu does; other menus simply ignore it).

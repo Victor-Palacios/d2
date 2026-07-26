@@ -13,6 +13,7 @@ export type GameAction =
   | 'cancel'
   | 'auto'
   | 'menu'
+  | 'start'
   | 'debug'
   | 'mute';
 
@@ -53,7 +54,7 @@ const PAD_BUTTONS: Record<number, GameAction> = {
   4: 'auto', // L1 / LB — toggles auto-read (dialogue) and auto-battle (combat)
   5: 'menu', // R1 / RB — opens the Soularium (capture dex)
   8: 'cancel', // select / share
-  9: 'confirm', // start / options
+  9: 'start', // start / options — confirms menus, and submits the name screen
   12: 'up',
   13: 'down',
   14: 'left',

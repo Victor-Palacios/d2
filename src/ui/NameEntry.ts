@@ -14,6 +14,8 @@ export class NameEntry {
   private root: HTMLElement;
   private slots: HTMLElement[] = [];
   private keys: HTMLElement[] = [];
+  /** Navigation grid: each row is the key indices in that visual row. */
+  private grid: number[][] = [];
   private index = 0;
   private value: string;
   private unsubs: (() => void)[] = [];
@@ -44,8 +46,8 @@ export class NameEntry {
       this.keys.push(b);
     }
     for (const [label, cls] of [
-      ['DEL', 'wide'],
-      ['OK', 'wide'],
+      ['DEL', 'wide del'],
+      ['OK', 'wide ok'],
     ] as const) {
       const b = el('button', cls, label);
       b.addEventListener('click', () => {
@@ -56,9 +58,28 @@ export class NameEntry {
       this.keys.push(b);
     }
     this.root.appendChild(kb);
-    this.root.appendChild(el('div', 'hint', 'ARROWS move · Z/ENTER select · X deletes · or just type'));
+    this.root.appendChild(el('div', 'hint', 'ARROWS move · Z/ENTER select · START to confirm · X deletes · or type'));
     this.parent.appendChild(this.root);
+
+    // Build the navigation grid: whole rows of characters, then the DEL/OK row.
+    // This matches the visual layout (DEL/OK sit on their own row), so pressing
+    // Down from the bottom character row lands on DEL/OK rather than wrapping.
+    for (let i = 0; i < CHARS.length; i += COLS) {
+      const row: number[] = [];
+      for (let j = i; j < Math.min(i + COLS, CHARS.length); j++) row.push(j);
+      this.grid.push(row);
+    }
+    this.grid.push([CHARS.length, CHARS.length + 1]); // DEL, OK
+
     this.refresh();
+  }
+
+  private pos(index: number): { r: number; c: number } {
+    for (let r = 0; r < this.grid.length; r++) {
+      const c = this.grid[r].indexOf(index);
+      if (c >= 0) return { r, c };
+    }
+    return { r: 0, c: 0 };
   }
 
   private label(i: number): string {
@@ -74,11 +95,19 @@ export class NameEntry {
   }
 
   private move(dx: number, dy: number) {
-    const n = this.keys.length;
-    let i = this.index + dx + dy * COLS;
-    if (i < 0) i += n;
-    if (i >= n) i -= n;
-    this.index = i;
+    let { r, c } = this.pos(this.index);
+    if (dy !== 0) {
+      // Vertical: clamp between rows (so Down off the bottom char row lands on
+      // the DEL/OK row instead of wrapping to the top), keeping the column.
+      r = Math.max(0, Math.min(this.grid.length - 1, r + dy));
+      c = Math.min(c, this.grid[r].length - 1);
+    }
+    if (dx !== 0) {
+      // Horizontal: wrap within the current row.
+      const len = this.grid[r].length;
+      c = (c + dx + len) % len;
+    }
+    this.index = this.grid[r][c];
     audio.sfx('blip');
     this.refresh();
   }
@@ -122,6 +151,7 @@ export class NameEntry {
           else if (a === 'up') this.move(0, -1);
           else if (a === 'down') this.move(0, 1);
           else if (a === 'confirm') this.press();
+          else if (a === 'start') this.confirm(); // Start / Options submits the name
           else if (a === 'cancel') this.backspace();
         }),
       );
