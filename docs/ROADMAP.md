@@ -86,15 +86,27 @@ The single biggest gap: **there is no XP / level-up today** (`docs/SYSTEMS.md`
 *Why first:* every later system (recruiting, digivolution, harder domains)
 assumes creatures get stronger. Build the spine before the limbs.
 
-## M8 — Recruiting / capturing
+## M8 — Recruiting / capturing (Soul Syphon)
 
-DW2 fills your roster from the dungeon.
+DW2 fills your roster from the dungeon. This game uses a custom **Soul Syphon**
+mechanic instead of a capture item.
 
-- Post-battle "recruit?" chance on defeated wild creatures (scaled by remaining
-  HP, à la the classic capture curve).
-- Party-vs-reserve management UI (the party is already a plain
-  `CreatureInstance[]` in `GameState` — add a `reserve[]`).
-- A "swap in town" screen, reusing `ui/CardSelect.ts`.
+- ✅ **Phase 1 done:** Soul Syphon capture — encountering a wild species primes
+  its meter, a hit fills it to 100% and captures it (a free copy to the party, or
+  the **Soul Sanctuary** reserve if full), even if the hit KOs it. Captures are
+  logged in the **Soularium** dex (R1 / E), which shows a ★ for logged species so
+  they can't be re-captured. Data + save in `gameState.ts` / `saveGame.ts` (v3);
+  battle UI in `BattleHUD.ts`; dex in `ui/SoulariumScreen.ts`. Party cap starts
+  at 4 (`START_PARTY_CAP`), max 10 (`MAX_PARTY_CAP`). Covered by
+  `tools/smoke/capture.mjs`. Syphon gains (`SYPHON_PRIME` / `SYPHON_HIT`) are the
+  tuning knobs — per-species rates later let rarer monsters need more.
+- **Phase 2 (next):**
+  - **Soul Store** vendor in the hub: buy logged species (priced by power) and
+    **+1 party-slot** upgrades (4→10). Reuse the `ShopScreen` pattern.
+  - **Soul Sanctuary** management screen: move monsters between party and
+    reserve (reuse `ui/Menu.ts` / `CardSelect.ts`).
+  - Polish: float the syphon meter / ★ above the sprite's head (project the
+    billboard's world position to screen) rather than only on the HUD card.
 
 ## M9 — DNA Digivolution (cash the §5.6 stub)
 

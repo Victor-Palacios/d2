@@ -538,6 +538,38 @@ body {
   margin: 3px 0;
 }
 
+/* Soul Syphon meter on enemy cards (and the ★ once a species is logged). */
+.fighter .syphon {
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.fighter .syphon b {
+  color: var(--accent);
+}
+.fighter .syphon .syphon-bar {
+  flex: 1;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--edge);
+  display: block;
+}
+.fighter .syphon .syphon-bar > i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #6fb7ff, #c77dff);
+}
+.fighter .syphon.captured {
+  color: var(--accent);
+  font-weight: 700;
+}
+.fighter .syphon .star {
+  color: var(--accent);
+}
+
 #action-menu {
   position: absolute;
   right: 14px;

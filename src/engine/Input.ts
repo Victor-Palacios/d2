@@ -12,6 +12,7 @@ export type GameAction =
   | 'confirm'
   | 'cancel'
   | 'auto'
+  | 'menu'
   | 'debug'
   | 'mute';
 
@@ -31,6 +32,7 @@ const KEY_MAP: Record<string, GameAction> = {
   KeyX: 'cancel',
   Backspace: 'cancel',
   KeyQ: 'auto', // keyboard mirror of the controller's L1 auto toggle
+  KeyE: 'menu', // keyboard mirror of the controller's R1 Soularium menu
   Backquote: 'debug',
   KeyM: 'mute',
 };
@@ -49,6 +51,7 @@ const PAD_BUTTONS: Record<number, GameAction> = {
   2: 'cancel', // X / square
   3: 'confirm', // Y / triangle
   4: 'auto', // L1 / LB — toggles auto-read (dialogue) and auto-battle (combat)
+  5: 'menu', // R1 / RB — opens the Soularium (capture dex)
   8: 'cancel', // select / share
   9: 'confirm', // start / options
   12: 'up',

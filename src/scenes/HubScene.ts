@@ -16,6 +16,7 @@ import { makeCreature, fullRestore } from '../systems/party/creature';
 import { DialogueBox } from '../ui/DialogueBox';
 import { CardSelect } from '../ui/CardSelect';
 import { openShop } from '../ui/ShopScreen';
+import { openSoularium } from '../ui/SoulariumScreen';
 import { toast } from '../ui/Toast';
 import { el, remove } from '../ui/dom';
 import { narrate, say } from '../systems/dialogue/script';
@@ -84,6 +85,7 @@ export class HubScene extends GameScene {
   private buffered: Facing | null = null;
   private busy = false;
   private leaving = false;
+  private unsubInput: (() => void) | null = null;
 
   constructor(ctx: SceneContext) {
     super(ctx);
@@ -110,6 +112,19 @@ export class HubScene extends GameScene {
     audio.music('hub');
 
     void this.arrival(p.arrival);
+
+    // R1 / E opens the Soularium from town too.
+    this.unsubInput = input.onAction((a) => {
+      if (a === 'menu') void this.openSoularium();
+    });
+  }
+
+  /** R1 / E: browse the Soularium in town. Blocks movement while open. */
+  private async openSoularium() {
+    if (this.busy || this.leaving || this.moving) return;
+    this.busy = true;
+    await openSoularium(this.ctx.ui);
+    this.busy = false;
   }
 
   // --- world ---------------------------------------------------------------
@@ -448,6 +463,8 @@ export class HubScene extends GameScene {
   }
 
   async exit() {
+    this.unsubInput?.();
+    this.unsubInput = null;
     this.dialogue.destroy();
     remove(this.legend);
     remove(this.banner);

@@ -1,5 +1,5 @@
 import type { CreatureInstance } from './creature';
-import { game } from './gameState';
+import { game, START_PARTY_CAP } from './gameState';
 import type { AttributeId } from '../../data/elements';
 
 /**
@@ -19,7 +19,7 @@ import type { AttributeId } from '../../data/elements';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 const AUTO_KEY = 'hd2d.save.auto';
 const SUSPEND_KEY = 'hd2d.save.suspend';
@@ -51,6 +51,9 @@ export interface SaveData {
     usedEvents: string[];
     openedChests: string[];
     takenPickups: string[];
+    soularium: typeof game.soularium;
+    partyCap: number;
+    sanctuary: CreatureInstance[];
   };
 }
 
@@ -88,6 +91,9 @@ export function snapshot(kind: SaveKind, scene: SaveData['scene'], label: string
       usedEvents: [...game.usedEvents],
       openedChests: [...game.openedChests],
       takenPickups: [...game.takenPickups],
+      soularium: JSON.parse(JSON.stringify(game.soularium)),
+      partyCap: game.partyCap,
+      sanctuary: JSON.parse(JSON.stringify(game.sanctuary)) as CreatureInstance[],
     },
   };
 }
@@ -170,6 +176,9 @@ export function applySave(data: SaveData) {
   game.usedEvents = new Set(s.usedEvents);
   game.openedChests = new Set(s.openedChests);
   game.takenPickups = new Set(s.takenPickups);
+  game.soularium = s.soularium ?? {};
+  game.partyCap = s.partyCap ?? START_PARTY_CAP;
+  game.sanctuary = s.sanctuary ?? [];
 
   // A suspend save is a bookmark, not a checkpoint: consume it on load so it
   // cannot be reloaded to undo whatever happens next.

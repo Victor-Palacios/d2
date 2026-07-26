@@ -5,11 +5,14 @@ import type { Battle, BattleAction, Battler } from '../systems/battle/engine';
 import { technique } from '../data/techniques';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
 import { audio } from '../engine/Audio';
+import { game } from '../systems/party/gameState';
 
 interface FighterCard {
   root: HTMLElement;
   hp: (cur: number, max: number) => void;
   mp: (cur: number, max: number) => void;
+  /** Enemy cards only: refresh the Soul Syphon meter / captured star. */
+  syphon?: () => void;
 }
 
 /** What the action menu can resolve to — a real action, or "go auto". */
@@ -94,6 +97,27 @@ export class BattleHUD {
     const mp = meter(root, 'mp', 'MP');
 
     const card: FighterCard = { root, hp, mp };
+
+    // Enemy cards carry a Soul Syphon meter (or a captured ★) so the player can
+    // read how close a wild monster is to being logged in the Soularium.
+    if (b.side === 'enemy') {
+      const syphon = el('div', 'syphon');
+      root.appendChild(syphon);
+      card.syphon = () => {
+        const e = game.soul(c.speciesId);
+        if (e.captured) {
+          syphon.className = 'syphon captured';
+          syphon.innerHTML = '<span class="star">★</span> Soul logged';
+        } else {
+          const pct = Math.round(e.syphon);
+          syphon.className = 'syphon';
+          syphon.innerHTML =
+            `<span class="dim">Soul Syphon</span> <b>${pct}%</b>` +
+            `<i class="syphon-bar"><i style="width:${pct}%"></i></i>`;
+        }
+      };
+    }
+
     this.cards.set(c.uid, card);
     return card;
   }
@@ -105,6 +129,7 @@ export class BattleHUD {
       const c = b.creature;
       card.hp(c.hp, c.maxHp);
       card.mp(c.mp, c.maxMp);
+      card.syphon?.();
       card.root.classList.toggle('down', c.hp <= 0);
       if (c.guarding) card.root.classList.add('guarding');
     }

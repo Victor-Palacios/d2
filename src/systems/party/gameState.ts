@@ -4,6 +4,37 @@ import { BOOT_DOMAIN } from '../../data/bootDomain';
 import type { AttributeId } from '../../data/elements';
 
 /**
+ * Soul Syphon capture tuning. An *encounter* primes a wild species to
+ * SYPHON_PRIME; a *hit* adds SYPHON_HIT. Capture triggers when a hit pushes the
+ * total to 100. For now every monster needs one encounter + one hit — later,
+ * rarer species can lower these gains so they take more of both. These are the
+ * only knobs; nothing else hard-codes the numbers.
+ */
+export const SYPHON_PRIME = 50;
+export const SYPHON_HIT = 50;
+/** Party size: starts here, upgradeable one slot at a time up to the cap. */
+export const START_PARTY_CAP = 4;
+export const MAX_PARTY_CAP = 10;
+
+/** A species' entry in the Soularium (the capture dex). */
+export interface SoulEntry {
+  /** 0..100. At 100 the species is captured. */
+  syphon: number;
+  /** Logged: you have syphoned it once and can now buy it at the Soul Store. */
+  captured: boolean;
+  /** Encountered at least once (shows in the dex even before capture). */
+  seen: boolean;
+}
+
+/** What a capture produced, so the battle scene can announce it. */
+export interface CaptureResult {
+  speciesId: string;
+  creature: CreatureInstance;
+  /** false when the party was full and it went to the Soul Sanctuary. */
+  toParty: boolean;
+}
+
+/**
  * The single mutable run state. Scenes read and write this; it is deliberately
  * plain data so a save/load layer would be a JSON round-trip.
  */
@@ -41,6 +72,62 @@ export class GameState {
   openedChests = new Set<string>();
   /** Collected fuel cans, keyed `floorId:x,z`. */
   takenPickups = new Set<string>();
+
+  /** The Soularium — per-species capture progress (the game's "pokedex"). */
+  soularium: Record<string, SoulEntry> = {};
+  /** How many monsters fit in the active party. Upgradeable at the Soul Store. */
+  partyCap = START_PARTY_CAP;
+  /** Reserve monsters (the Soul Sanctuary): captured but not in the party. */
+  sanctuary: CreatureInstance[] = [];
+
+  // --- Soularium / capture ------------------------------------------------
+
+  /** The entry for a species, creating a blank one on first access. */
+  soul(speciesId: string): SoulEntry {
+    return (this.soularium[speciesId] ??= { syphon: 0, captured: false, seen: false });
+  }
+
+  /** Encountering a wild species primes its syphon (never captures on its own). */
+  noteEncounter(speciesId: string) {
+    const e = this.soul(speciesId);
+    if (e.captured) return;
+    e.seen = true;
+    e.syphon = Math.max(e.syphon, SYPHON_PRIME);
+  }
+
+  /**
+   * A hit on a wild species raises its syphon; at 100 it is captured and a free
+   * copy is granted (party if there's room, else the Sanctuary). Returns the
+   * capture if one just happened, so the scene can announce it.
+   */
+  syphonHit(speciesId: string, level: number): CaptureResult | null {
+    const e = this.soul(speciesId);
+    if (e.captured) return null;
+    e.seen = true;
+    e.syphon = Math.min(100, e.syphon + SYPHON_HIT);
+    if (e.syphon < 100) return null;
+    return this.captureSpecies(speciesId, level);
+  }
+
+  /** Logs a species as captured and grants one free copy. */
+  captureSpecies(speciesId: string, level: number): CaptureResult {
+    const e = this.soul(speciesId);
+    e.captured = true;
+    e.seen = true;
+    e.syphon = 100;
+    const creature = makeCreature(speciesId, level);
+    const toParty = this.party.length < this.partyCap;
+    if (toParty) this.party.push(creature);
+    else this.sanctuary.push(creature);
+    return { speciesId, creature, toParty };
+  }
+
+  /** Buy one more party slot, up to the cap. Returns false if already maxed. */
+  gainPartySlot(): boolean {
+    if (this.partyCap >= MAX_PARTY_CAP) return false;
+    this.partyCap++;
+    return true;
+  }
 
   /** Loads the mentor's borrowed trio for the tutorial crawl. */
   lendTutorialParty() {

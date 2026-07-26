@@ -18,6 +18,7 @@ import type { CreatureInstance } from '../systems/party/creature';
 import { game } from '../systems/party/gameState';
 import { BattleHUD } from '../ui/BattleHUD';
 import { DialogueBox } from '../ui/DialogueBox';
+import { toast } from '../ui/Toast';
 import type { DialogueScript } from '../systems/dialogue/script';
 import type { DungeonSceneParams } from './DungeonScene';
 
@@ -87,6 +88,10 @@ export class BattleScene extends GameScene {
       enemyTiles: this.params.enemyTiles,
       isBoss: this.params.isBoss,
     });
+
+    // Encountering a wild species primes its Soul Syphon (before the HUD builds
+    // so the meter already reads its primed value).
+    for (const b of this.battle.side('enemy')) game.noteEncounter(b.creature.speciesId);
 
     this.buildArena();
     this.buildFighters();
@@ -298,6 +303,7 @@ export class BattleScene extends GameScene {
             }
           }
           result = this.battle.perform(actor, action);
+          this.syphonFromHits(result);
         } else {
           this.hud.setLog(`${actor.creature.name} is deciding...`);
           await sleep(480);
@@ -326,6 +332,26 @@ export class BattleScene extends GameScene {
     if (!foes.length) return { type: 'guard' };
     const target = foes.reduce((weakest, f) => (f.creature.hp < weakest.creature.hp ? f : weakest), foes[0]);
     return { type: 'attack', targetUid: target.creature.uid };
+  }
+
+  /**
+   * Soul Syphon: every damaging hit the party lands on a wild (un-logged)
+   * species raises its syphon; the hit that reaches 100% captures it and grants
+   * a free copy — even if the same hit knocks it out. Logged species (★) are
+   * skipped, so you can't re-capture what you already have.
+   */
+  private syphonFromHits(result: TurnResult) {
+    for (const h of result.hits) {
+      if (h.damage <= 0) continue;
+      const target = this.battle.find(h.targetUid);
+      if (!target || target.side !== 'enemy') continue;
+      const cap = game.syphonHit(target.creature.speciesId, target.creature.level);
+      if (!cap) continue;
+      audio.sfx('chest');
+      const where = cap.toParty ? 'joined your party' : 'sent to the Soul Sanctuary';
+      this.hud.setLog(`Soul Syphon complete — ${cap.creature.name} ${where}!`);
+      toast(this.ctx.ui, `<span class="accent">★ ${cap.creature.name} captured</span> — ${where}`, 2800);
+    }
   }
 
   private setAuto(on: boolean) {

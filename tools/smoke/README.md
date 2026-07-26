@@ -33,6 +33,7 @@ Environment variables:
 | `hud.mjs` | Battle HUD screenshots — class-coloured borders, HP/MP meters, element-tinted techniques |
 | `autosave.mjs` | Focused check that the hub autosave writes (arrival race, resolved) |
 | `domains.mjs` | Free-select world map → Crystal Cavern (floor + boss + clear) and Haunted Dungeon (floor); proves the domain registry, per-domain data/art/music. Boosts the party via the debug API so fights resolve deterministically (this checks flow, not balance). |
+| `capture.mjs` | Soul Syphon capture loop: R1 opens the Soularium; an encounter primes syphon to 50%, a hit captures at 100% and grants a free copy; the species logs in the dex. Boosts the party for a deterministic win. |
 
 ## Two environment traps that cost real time
 

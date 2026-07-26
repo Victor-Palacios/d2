@@ -18,6 +18,7 @@ import { DungeonHUD } from '../ui/DungeonHUD';
 import { DialogueBox } from '../ui/DialogueBox';
 import { toast } from '../ui/Toast';
 import { Menu } from '../ui/Menu';
+import { openSoularium } from '../ui/SoulariumScreen';
 import { el } from '../ui/dom';
 import { saveSuspend } from '../systems/party/saveGame';
 import { say } from '../systems/dialogue/script';
@@ -279,12 +280,21 @@ export class DungeonScene extends GameScene {
     this.legend = document.createElement('div');
     this.legend.id = 'legend';
     this.legend.innerHTML =
-      'MOVE arrows/WASD · ESC pause &amp; suspend · ` debug panel · M mute';
+      'MOVE arrows/WASD · ESC pause &amp; suspend · E/R1 Soularium · ` debug · M mute';
     this.ctx.ui.appendChild(this.legend);
 
     this.unsubInput = input.onAction((a) => {
       if (a === 'cancel') void this.openPauseMenu();
+      else if (a === 'menu') void this.openSoularium();
     });
+  }
+
+  /** R1 / E: browse the Soularium mid-crawl. Blocks movement while open. */
+  private async openSoularium() {
+    if (this.busy || this.leaving || this.moving) return;
+    this.busy = true;
+    await openSoularium(this.ctx.ui);
+    this.busy = false;
   }
 
   // --- movement ------------------------------------------------------------

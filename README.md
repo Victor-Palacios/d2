@@ -93,6 +93,7 @@ fails with `Resource not accessible by integration`. Until Pages is on, the
 | Z / Enter / Space | Confirm, advance dialogue |
 | X / Esc | Cancel, back out of a menu, **stop auto** |
 | Q | **Toggle auto** — auto-read dialogue, or auto-battle in combat |
+| E | **Soularium** — open the capture dex (town and crawl) |
 | `` ` `` | Toggle the HD-2D debug panel |
 | M | Mute / unmute |
 
@@ -113,6 +114,7 @@ mapping screen.
 | A / ✕ — or Y / △, Start | Confirm, advance dialogue |
 | B / ○ — or X / □, Select | Cancel, back out, **stop auto** |
 | **L1 / LB** | **Toggle auto** — hands-free dialogue reading, or auto-battle in combat |
+| **R1 / RB** | Open the **Soularium** (capture dex) |
 
 **Auto, on one button.** `L1` turns hands-free reading on and off while a
 dialogue box is up, and starts (or stops) auto-battle during a fight — the same
@@ -153,6 +155,24 @@ choice → rival intro → supply bay → Mission 2 briefing.
   **Haunted Dungeon** (Dark/Nature, warden Revenance), each with its own
   monster roster, tile theme and ambience. Adding another is a data file
   registered in `src/data/domains.ts` — no scene code changes.
+
+## Capturing monsters — Soul Syphon
+
+Recruiting works by draining a wild monster's soul over the course of battle:
+
+- Every monster carries a **Soul Syphon** meter (shown on its battle card).
+  **Encountering** it primes the meter; **hitting** it fills the rest. Right now
+  one encounter + one hit reaches **100%** — and the hit that tops it out
+  captures the monster **even if the blow knocks it out**.
+- A capture grants a **free copy** (into your party, or the **Soul Sanctuary**
+  reserve if the party is full) and logs the species in the **Soularium**, the
+  capture dex — press **E** / **R1** to browse it anytime in town or the crawl.
+- Once a species is logged it shows a **★** instead of a syphon meter: you can no
+  longer capture it in battle, but you'll be able to buy more copies from the
+  **Soul Store** (coming in the next update, along with party-slot upgrades and
+  Soul Sanctuary management).
+
+Party size starts at **4** and will grow to **10** via upgrades.
 
 ## Saving
 
