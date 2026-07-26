@@ -33,6 +33,13 @@ const unlock = () => audio.unlock();
 window.addEventListener('pointerdown', unlock, { once: true });
 window.addEventListener('keydown', unlock, { once: true });
 
+// Browsers only reveal a gamepad once the player presses something on it.
+window.addEventListener('gamepadconnected', (e) => {
+  const pad = (e as GamepadEvent).gamepad;
+  toast(ui, `Controller connected — <span class="dim">${pad.id.slice(0, 40)}</span>`, 2400);
+  audio.unlock();
+});
+
 input.onAction((a) => {
   if (a === 'debug') debug.toggle();
   if (a === 'mute') {
@@ -61,6 +68,8 @@ function frame(now: number) {
   last = now;
   elapsed += dt;
 
+  // Gamepads are polled, not evented — read them before scenes look at input.
+  input.poll();
   manager.update(dt, elapsed);
   hd2d.render(dt);
   input.endFrame();

@@ -87,6 +87,27 @@ fails with `Resource not accessible by integration`. Until Pages is on, the
 Walk **into** an NPC to talk to them. In the crawl, drive into chests, fuel
 canisters and portals. Menus also respond to the mouse.
 
+### Using a controller
+
+**There is no setup.** Plug in (or Bluetooth-pair) any controller, open the
+game, and **press a button on the pad** — browsers deliberately hide gamepads
+until you do, so the first press is what makes it appear. A
+"Controller connected" toast confirms it. Nothing to configure, no driver, no
+mapping screen.
+
+| Pad | Does |
+|---|---|
+| D-pad **or** left stick | Move one tile, navigate menus |
+| A / ✕ — or Y / △, Start | Confirm, advance dialogue |
+| B / ○ — or X / □, Select | Cancel, back out, **stop auto-battle** |
+
+Works with Xbox, DualShock/DualSense, and Switch Pro pads — anything the
+browser reports in the standard mapping, wired or wireless. The stick is
+treated as a d-pad (deadzone 0.55) because movement is grid-based.
+
+Keyboard and pad are live at the same time, so you can mix them freely. The
+only thing still keyboard-only is the `` ` `` debug panel.
+
 ## What's in the slice
 
 Title → name entry → prologue → Digital City hub → world map → **Boot Domain**

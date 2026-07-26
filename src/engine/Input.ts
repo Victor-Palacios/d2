@@ -35,9 +35,35 @@ const KEY_MAP: Record<string, GameAction> = {
 
 const DIRECTIONS: GameAction[] = ['up', 'down', 'left', 'right'];
 
+/**
+ * Gamepad button indices in the W3C "standard" mapping, which is what an Xbox,
+ * DualShock/DualSense, or Switch Pro pad reports in every current browser.
+ * Anything reporting a non-standard mapping still works for the face buttons
+ * and d-pad, which is all this game needs.
+ */
+const PAD_BUTTONS: Record<number, GameAction> = {
+  0: 'confirm', // A / cross
+  1: 'cancel', // B / circle
+  2: 'cancel', // X / square
+  3: 'confirm', // Y / triangle
+  8: 'cancel', // select / share
+  9: 'confirm', // start / options
+  12: 'up',
+  13: 'down',
+  14: 'left',
+  15: 'right',
+};
+
+/** Stick travel before it counts as a direction. Grid movement wants digital. */
+const STICK_DEADZONE = 0.55;
+
 export class Input {
   private down = new Set<GameAction>();
   private edge = new Set<GameAction>();
+  /** Actions currently held on a gamepad, kept apart from keyboard state. */
+  private padDown = new Set<GameAction>();
+  /** True once any gamepad has reported input. Drives the UI hint. */
+  gamepadConnected = false;
   private listeners: ((a: GameAction) => void)[] = [];
   /** Raw printable key presses, for the name-entry screen. */
   private textListeners: ((key: string) => void)[] = [];
@@ -53,6 +79,7 @@ export class Input {
     target.addEventListener('keyup', (e) => this.onKey(e as KeyboardEvent, false));
     window.addEventListener('blur', () => {
       this.down.clear();
+      this.padDown.clear();
       this.edge.clear();
     });
   }
@@ -63,10 +90,7 @@ export class Input {
       // Arrows/space would scroll the page.
       e.preventDefault();
       if (isDown) {
-        if (!e.repeat) {
-          this.edge.add(action);
-          if (this.enabled) for (const l of this.listeners) l(action);
-        }
+        if (!e.repeat) this.fire(action);
         this.down.add(action);
       } else {
         this.down.delete(action);
@@ -78,7 +102,58 @@ export class Input {
   }
 
   held(a: GameAction): boolean {
-    return this.enabled && this.down.has(a);
+    return this.enabled && (this.down.has(a) || this.padDown.has(a));
+  }
+
+  /** Raises an action as if a key had just been pressed. */
+  private fire(a: GameAction) {
+    this.edge.add(a);
+    if (this.enabled) for (const l of this.listeners) l(a);
+  }
+
+  /**
+   * Reads every connected gamepad and turns it into the same actions the
+   * keyboard produces.
+   *
+   * The Gamepad API has no events for button presses — it must be polled — so
+   * `main.ts` calls this once per frame *before* scenes update, and edges are
+   * derived by diffing against the previous poll. Because every screen in the
+   * game consumes `onAction`/`stepDirection` rather than raw keys, this single
+   * function is the whole of controller support: menus, dialogue, name entry
+   * and grid movement all start working at once.
+   *
+   * Note browsers deliberately hide gamepads until the player presses a button
+   * on one, so this quietly reads nothing until that happens.
+   */
+  poll() {
+    const getPads = navigator.getGamepads?.bind(navigator);
+    if (!getPads) return;
+
+    const now = new Set<GameAction>();
+    let present = false;
+
+    for (const pad of getPads()) {
+      if (!pad || !pad.connected) continue;
+      present = true;
+
+      for (const [index, action] of Object.entries(PAD_BUTTONS)) {
+        if (pad.buttons[Number(index)]?.pressed) now.add(action);
+      }
+
+      // Left stick doubles as a d-pad.
+      const x = pad.axes[0] ?? 0;
+      const y = pad.axes[1] ?? 0;
+      if (x <= -STICK_DEADZONE) now.add('left');
+      else if (x >= STICK_DEADZONE) now.add('right');
+      if (y <= -STICK_DEADZONE) now.add('up');
+      else if (y >= STICK_DEADZONE) now.add('down');
+    }
+
+    this.gamepadConnected = present;
+    for (const a of now) {
+      if (!this.padDown.has(a)) this.fire(a);
+    }
+    this.padDown = now;
   }
 
   anyDirection(): GameAction | null {
