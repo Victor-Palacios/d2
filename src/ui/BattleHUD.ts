@@ -46,7 +46,7 @@ export class BattleHUD {
     // Shown only while auto-battle is running, so the way out is always visible.
     this.autoChip = el('div', 'panel');
     this.autoChip.id = 'auto-chip';
-    this.autoChip.innerHTML = '<span class="accent">AUTO</span> — press ESC to take over';
+    this.autoChip.innerHTML = '<span class="accent">AUTO</span> — press ESC or L1 to take over';
     this.autoChip.style.display = 'none';
 
     this.root.append(this.banner, this.log, this.enemyWrap, this.partyWrap, this.menuHost, this.autoChip);
@@ -166,7 +166,7 @@ export class BattleHUD {
         { value: 'attack', label: 'Attack' },
         { value: 'technique', label: 'Technique', disabled: c.techniques.length === 0 },
         { value: 'guard', label: 'Guard' },
-        { value: 'auto', label: 'Auto', note: 'ESC' },
+        { value: 'auto', label: 'Auto', note: 'L1' },
         { value: 'item', label: 'Item', disabled: true, note: '—' },
       ]);
 

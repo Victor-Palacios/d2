@@ -104,10 +104,11 @@ export class BattleScene extends GameScene {
 
     audio.music(this.params.isBoss ? 'boss' : 'battle');
 
-    // Escape drops out of auto-battle. Registered scene-wide rather than on the
-    // menu, because while auto is running no menu is open to receive the key.
+    // Escape / L1 drops out of auto-battle. Registered scene-wide rather than on
+    // the menu, because while auto is running no menu is open to receive the key.
+    // (L1 *starts* auto via the action menu's 'auto' item; here it stops it.)
     this.unsubInput = input.onAction((a) => {
-      if (a === 'cancel' && this.autoBattle) this.setAuto(false);
+      if ((a === 'cancel' || a === 'auto') && this.autoBattle) this.setAuto(false);
     });
 
     void this.run();

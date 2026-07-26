@@ -91,7 +91,8 @@ fails with `Resource not accessible by integration`. Until Pages is on, the
 |---|---|
 | Arrow keys / WASD | Move one tile, navigate menus |
 | Z / Enter / Space | Confirm, advance dialogue |
-| X / Esc | Cancel, back out of a menu, **stop auto-battle** |
+| X / Esc | Cancel, back out of a menu, **stop auto** |
+| Q | **Toggle auto** — auto-read dialogue, or auto-battle in combat |
 | `` ` `` | Toggle the HD-2D debug panel |
 | M | Mute / unmute |
 
@@ -110,7 +111,12 @@ mapping screen.
 |---|---|
 | D-pad **or** left stick | Move one tile, navigate menus |
 | A / ✕ — or Y / △, Start | Confirm, advance dialogue |
-| B / ○ — or X / □, Select | Cancel, back out, **stop auto-battle** |
+| B / ○ — or X / □, Select | Cancel, back out, **stop auto** |
+| **L1 / LB** | **Toggle auto** — hands-free dialogue reading, or auto-battle in combat |
+
+**Auto, on one button.** `L1` turns hands-free reading on and off while a
+dialogue box is up, and starts (or stops) auto-battle during a fight — the same
+toggle in both places. The `` ` `` debug panel is still keyboard-only.
 
 Works with Xbox, DualShock/DualSense, and Switch Pro pads — anything the
 browser reports in the standard mapping, wired or wireless. The stick is

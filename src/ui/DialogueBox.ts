@@ -44,7 +44,7 @@ export class DialogueBox {
 
     this.autoBtn = el('button', 'auto-toggle');
     this.autoBtn.type = 'button';
-    this.autoBtn.title = 'Auto-advance text (Esc to stop)';
+    this.autoBtn.title = 'Auto-advance text — L1 / Q toggles, Esc stops';
     this.autoBtn.onclick = (e) => {
       e.stopPropagation();
       this.setAuto(!this.auto);
@@ -140,6 +140,11 @@ export class DialogueBox {
       this.current = controller;
 
       this.unsub = input.onAction((a) => {
+        // L1 (or Q) toggles hands-free reading on/off.
+        if (a === 'auto') {
+          this.setAuto(!this.auto);
+          return;
+        }
         // Esc cancels auto mode rather than skipping the line.
         if (a === 'cancel' && this.auto) {
           this.setAuto(false);

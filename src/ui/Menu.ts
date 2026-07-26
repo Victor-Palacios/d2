@@ -123,7 +123,12 @@ export class Menu {
         if (a === prev) this.step(-1);
         else if (a === next) this.step(1);
         else if (a === 'confirm') this.choose();
-        else if (a === 'cancel' && this.opts.cancellable) {
+        else if (a === 'auto') {
+          // L1 shortcut: activate an 'auto' item if this menu offers one
+          // (the battle action menu does; other menus simply ignore it).
+          const i = this.items.findIndex((it) => it.value === 'auto' && !it.disabled);
+          if (i >= 0) { this.moveTo(i, false); this.choose(); }
+        } else if (a === 'cancel' && this.opts.cancellable) {
           audio.sfx('cancel');
           this.finish(null);
         }
