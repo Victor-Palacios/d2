@@ -96,17 +96,24 @@ export class GameState {
   }
 
   /**
-   * A hit on a wild species raises its syphon; at 100 it is captured and a free
-   * copy is granted (party if there's room, else the Sanctuary). Returns the
-   * capture if one just happened, so the scene can announce it.
+   * A hit on a wild species raises its syphon meter. The *capture* itself is
+   * only finalized on victory (see `finalizeCaptures`), so losing the fight
+   * means you claim nothing. Returns true if this hit just filled the meter to
+   * 100% (ready to claim), so the scene can announce it.
    */
-  syphonHit(speciesId: string, level: number): CaptureResult | null {
+  syphonHit(speciesId: string): boolean {
     const e = this.soul(speciesId);
-    if (e.captured) return null;
+    if (e.captured) return false;
+    const was = e.syphon;
     e.seen = true;
     e.syphon = Math.min(100, e.syphon + SYPHON_HIT);
-    if (e.syphon < 100) return null;
-    return this.captureSpecies(speciesId, level);
+    return was < 100 && e.syphon >= 100;
+  }
+
+  /** True once a wild species' syphon is full but it hasn't been claimed yet. */
+  syphonReady(speciesId: string): boolean {
+    const e = this.soul(speciesId);
+    return !e.captured && e.syphon >= 100;
   }
 
   /** Logs a species as captured and grants one free copy. */

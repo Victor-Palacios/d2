@@ -108,6 +108,10 @@ export class BattleHUD {
         if (e.captured) {
           syphon.className = 'syphon captured';
           syphon.innerHTML = '<span class="star">★</span> Soul logged';
+        } else if (e.syphon >= 100) {
+          // Full, but only claimed if you win the fight.
+          syphon.className = 'syphon captured';
+          syphon.innerHTML = '<span class="star">◆</span> Soul full — win to claim';
         } else {
           const pct = Math.round(e.syphon);
           syphon.className = 'syphon';
@@ -187,9 +191,11 @@ export class BattleHUD {
     const c = actor.creature;
 
     for (;;) {
+      // Technique is greyed out unless the creature can afford at least one.
+      const canTechnique = c.techniques.some((id) => c.mp >= technique(id).mpCost);
       const root = await this.runMenu([
         { value: 'attack', label: 'Attack' },
-        { value: 'technique', label: 'Technique', disabled: c.techniques.length === 0 },
+        { value: 'technique', label: 'Technique', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
         { value: 'guard', label: 'Guard' },
         { value: 'auto', label: 'Auto', note: 'L1' },
         { value: 'item', label: 'Item', disabled: true, note: '—' },

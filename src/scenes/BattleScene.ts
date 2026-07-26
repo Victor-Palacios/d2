@@ -342,22 +342,34 @@ export class BattleScene extends GameScene {
 
   /**
    * Soul Syphon: every damaging hit the party lands on a wild (un-logged)
-   * species raises its syphon; the hit that reaches 100% captures it and grants
-   * a free copy — even if the same hit knocks it out. Logged species (★) are
-   * skipped, so you can't re-capture what you already have.
+   * species raises its syphon meter. The capture is *not* granted here — it is
+   * finalized only if you win (`finalizeCaptures`), so a wipe claims nothing.
    */
   private syphonFromHits(result: TurnResult) {
     for (const h of result.hits) {
       if (h.damage <= 0) continue;
       const target = this.battle.find(h.targetUid);
       if (!target || target.side !== 'enemy') continue;
-      const cap = game.syphonHit(target.creature.speciesId, target.creature.level);
-      if (!cap) continue;
-      audio.sfx('chest');
-      const where = cap.toParty ? 'joined your party' : 'sent to the Soul Sanctuary';
-      this.hud.setLog(`Soul Syphon complete — ${cap.creature.name} ${where}!`);
-      toast(this.ctx.ui, `<span class="accent">★ ${cap.creature.name} captured</span> — ${where}`, 2800);
+      if (game.syphonHit(target.creature.speciesId)) {
+        audio.sfx('blip');
+        this.hud.setLog(`${target.creature.name}'s soul is full — win the fight to claim it!`);
+      }
     }
+  }
+
+  /**
+   * Claim every wild species whose syphon filled this battle (a free copy to the
+   * party, or the Sanctuary if full). Called on victory only — losing forfeits
+   * the souls you drained. Announced after the win banner.
+   */
+  private finalizeCaptures(): { name: string; where: string }[] {
+    const claimed: { name: string; where: string }[] = [];
+    for (const b of this.battle.side('enemy')) {
+      if (!game.syphonReady(b.creature.speciesId)) continue;
+      const cap = game.captureSpecies(b.creature.speciesId, b.creature.level);
+      claimed.push({ name: cap.creature.name, where: cap.toParty ? 'joined your party' : 'sent to the Soul Sanctuary' });
+    }
+    return claimed;
   }
 
   private setAuto(on: boolean) {
@@ -500,6 +512,14 @@ export class BattleScene extends GameScene {
 
     this.hud.setLog(`The data dissolves. +${reward} credits.`);
     await sleep(1500);
+
+    // Claim any souls drained to 100% this fight (victory only).
+    for (const c of this.finalizeCaptures()) {
+      audio.sfx('chest');
+      this.hud.setLog(`Soul claimed — ${c.name} ${c.where}!`);
+      toast(this.ctx.ui, `<span class="accent">★ ${c.name} captured</span> — ${c.where}`, 2600);
+      await sleep(1500);
+    }
 
     const params: DungeonSceneParams = {
       resume: true,
