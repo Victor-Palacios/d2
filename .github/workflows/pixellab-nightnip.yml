@@ -1,0 +1,56 @@
+name: PixelLab — reimagine Nightnip
+
+# Runs the staging generator in tools/pixellab against the PixelLab API using
+# the PIXEL_LAB_API_KEY repository secret, then uploads the result as a build
+# artifact for review. It does NOT commit anything — the repo stays asset-free.
+#
+# It fires on pushes to the working branch (so it runs as soon as the tool
+# lands) and can be re-run manually from the Actions tab via workflow_dispatch.
+on:
+  push:
+    branches: [claude/monster-creation-management-x9x72z]
+    paths:
+      - "tools/pixellab/**"
+      - ".github/workflows/pixellab-nightnip.yml"
+  workflow_dispatch:
+    inputs:
+      size:
+        description: "Sprite size in px (square). 64 = detailed, 32 = closer to a 16x16 drop-in."
+        required: false
+        default: "64"
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check secret is configured
+        env:
+          PIXEL_LAB_API_KEY: ${{ secrets.PIXEL_LAB_API_KEY }}
+        run: |
+          if [ -z "$PIXEL_LAB_API_KEY" ]; then
+            echo "::error::PIXEL_LAB_API_KEY secret is not set for this repository."
+            exit 1
+          fi
+          echo "PIXEL_LAB_API_KEY is configured."
+
+      - name: Reimagine Nightnip
+        env:
+          PIXEL_LAB_API_KEY: ${{ secrets.PIXEL_LAB_API_KEY }}
+          SIZE: ${{ github.event.inputs.size || '64' }}
+        run: node tools/pixellab/reimagine-nightnip.mjs
+
+      - name: Upload sprite for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightnip-pixellab
+          path: out/
+          if-no-files-found: error
