@@ -20,10 +20,11 @@ const fielded = () => page.evaluate(() => window.hd2dGame.manager.activeScene?.b
 const clearDlg = async (m = 60) => { for (let i = 0; i < m; i++) { if (!(await dlg())) return; await page.keyboard.press('Enter'); await page.waitForTimeout(150); } };
 const waitScene = async (n, ms = 40000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if ((await scene()) === n) return true; await page.waitForTimeout(200); } return false; };
 const press = async (k, n = 1, gap = 300) => { for (let i = 0; i < n; i++) { await page.keyboard.press(k); await page.waitForTimeout(gap); } };
-const winBattle = async (ms = 90000) => { const t0 = Date.now();
+const winBattle = async (ms = 90000) => { const t0 = Date.now(); let sawBattle = false;
   while (Date.now() - t0 < ms && (await scene()) !== 'battle') { await page.keyboard.press('Enter'); await page.waitForTimeout(200); }
-  while (Date.now() - t0 < ms && (await scene()) === 'battle') { await page.keyboard.press('Enter'); await page.waitForTimeout(320); }
-  return (await scene()) === 'dungeon'; };
+  while (Date.now() - t0 < ms && (await scene()) === 'battle') { sawBattle = true; await page.keyboard.press('Enter'); await page.waitForTimeout(320); }
+  // A run that never entered battle is not a win — guard against silent false positives.
+  return sawBattle && (await scene()) === 'dungeon'; };
 
 await page.goto(process.env.URL ?? 'http://localhost:4195/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
@@ -64,6 +65,9 @@ for (let i = 0; i < 8 && (await scene()) === 'dungeon'; i++) { await page.keyboa
 await waitScene('battle', 20000); await page.waitForTimeout(800);
 console.log('fielded in battle :', await fielded(), '| capped at 3 =', (await fielded()) === 3);
 console.log('floor-1 fight won (Lv1 enemies) :', await winBattle());
+await waitScene('dungeon'); await page.waitForTimeout(400); await clearDlg();
+const xp = await page.evaluate(() => window.hd2dGame.game.party.slice(0, 3).map((c) => `${c.speciesId} L${c.level} xp${c.xp}`));
+console.log('party XP after fight :', JSON.stringify(xp), '| gained XP =', xp.some((s) => !s.endsWith('xp0')));
 
 // Boss winnability at low level: a realistic small party, no god-mode boost.
 await page.evaluate(() => {
@@ -77,8 +81,14 @@ await page.evaluate(() => {
 });
 await page.evaluate(async () => { await window.hd2dGame.manager.go('dungeon'); });
 await waitScene('dungeon'); await page.waitForTimeout(800); await clearDlg();
-await press('ArrowUp', 3);
+// Warden Hall: spawn at (7,11); the inner room's only gap is at x=8, so step
+// right first, then climb up through the warning tile into the boss.
+await press('ArrowRight', 1);
+for (let i = 0; i < 6 && (await scene()) === 'dungeon'; i++) { await page.keyboard.press('ArrowUp'); await page.waitForTimeout(340); if (await dlg()) await clearDlg(); }
 console.log('boss (regalion Lv2) beaten by Lv1 party (Attack-only) :', await winBattle(120000));
+await waitScene('dungeon'); await page.waitForTimeout(500); await clearDlg();
+const afterBoss = await page.evaluate(() => window.hd2dGame.game.party.map((c) => `${c.speciesId} L${c.level} xp${c.xp}`));
+console.log('party after boss :', JSON.stringify(afterBoss), '| leveled up =', afterBoss.some((s) => !/ L1 /.test(` ${s} `)));
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();

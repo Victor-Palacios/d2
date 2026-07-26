@@ -17,6 +17,8 @@ export interface CreatureInstance {
   off: number;
   def: number;
   spd: number;
+  /** EXP banked toward the next level (see `xpToNext`). */
+  xp: number;
   techniques: string[];
   /** Set while the creature is guarding this round. */
   guarding: boolean;
@@ -52,6 +54,7 @@ export function makeCreature(speciesId: string, level: number, nickname?: string
     off: st.off,
     def: st.def,
     spd: st.spd,
+    xp: 0,
     techniques: s.techniques.slice(),
     guarding: false,
   };
@@ -59,6 +62,49 @@ export function makeCreature(speciesId: string, level: number, nickname?: string
 
 export const isDown = (c: CreatureInstance): boolean => c.hp <= 0;
 export const isUp = (c: CreatureInstance): boolean => c.hp > 0;
+
+/** EXP needed to advance from `level` to the next. A gentle super-linear curve. */
+export function xpToNext(level: number): number {
+  return Math.round(12 * Math.pow(level, 1.5));
+}
+
+/**
+ * EXP a single defeated enemy yields to one party monster, scaled by the level
+ * gap: a lower-level monster earns more, a higher-level one earns less. Each
+ * monster is scored independently against the enemy it helped defeat.
+ */
+export function xpFromEnemy(monsterLevel: number, enemyLevel: number): number {
+  const base = enemyLevel * 8;
+  const scale = Math.min(4, Math.max(0.25, Math.pow(2, (enemyLevel - monsterLevel) / 3)));
+  return Math.max(1, Math.round(base * scale));
+}
+
+/**
+ * Grants EXP to one creature, applying any level-ups. Stats are recomputed from
+ * the species growth curve; a level-up raises max HP/MP and heals the gain.
+ * Returns the new level if it changed, else null.
+ */
+export function grantXp(c: CreatureInstance, amount: number): number | null {
+  const s = species(c.speciesId);
+  c.xp = (c.xp ?? 0) + amount;
+  let leveled = false;
+  while (c.xp >= xpToNext(c.level)) {
+    c.xp -= xpToNext(c.level);
+    c.level++;
+    const st = statsAt(s, c.level);
+    const dHp = Math.max(0, st.hp - c.maxHp);
+    const dMp = Math.max(0, st.mp - c.maxMp);
+    c.maxHp = st.hp;
+    c.maxMp = st.mp;
+    if (isUp(c)) c.hp = Math.min(c.maxHp, c.hp + dHp); // level-up heals the delta
+    c.mp = Math.min(c.maxMp, c.mp + dMp);
+    c.off = st.off;
+    c.def = st.def;
+    c.spd = st.spd;
+    leveled = true;
+  }
+  return leveled ? c.level : null;
+}
 
 export function fullRestore(party: CreatureInstance[]) {
   for (const c of party) {

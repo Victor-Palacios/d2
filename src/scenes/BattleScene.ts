@@ -13,7 +13,7 @@ import type { EnemySpec } from '../data/bootDomain';
 import { technique } from '../data/techniques';
 import { Battle } from '../systems/battle/engine';
 import type { BattleAction, Battler, TurnResult } from '../systems/battle/engine';
-import { makeCreature, isUp, reviveFainted } from '../systems/party/creature';
+import { makeCreature, isUp, reviveFainted, grantXp, xpFromEnemy } from '../systems/party/creature';
 import type { CreatureInstance } from '../systems/party/creature';
 import { game } from '../systems/party/gameState';
 import { BattleHUD } from '../ui/BattleHUD';
@@ -510,8 +510,28 @@ export class BattleScene extends GameScene {
       c.guarding = false;
     }
 
+    // EXP: each monster that fought earns from every defeated enemy, scaled
+    // independently by its own level gap (under-levelled gain more).
+    const enemies = this.battle.side('enemy');
+    const levelUps: string[] = [];
+    for (const b of this.battle.side('party')) {
+      const c = b.creature;
+      let gained = 0;
+      for (const e of enemies) gained += xpFromEnemy(c.level, e.creature.level);
+      const nl = grantXp(c, gained);
+      if (nl !== null) levelUps.push(`${c.name} → Lv${nl}`);
+    }
+
     this.hud.setLog(`The data dissolves. +${reward} credits.`);
     await sleep(1500);
+
+    for (const msg of levelUps) {
+      audio.sfx('heal');
+      this.hud.refresh(this.battle);
+      this.hud.setLog(`Level up! ${msg}`);
+      toast(this.ctx.ui, `<span class="accent">Level up!</span> ${msg}`, 2200);
+      await sleep(1400);
+    }
 
     // Claim any souls drained to 100% this fight (victory only).
     for (const c of this.finalizeCaptures()) {
