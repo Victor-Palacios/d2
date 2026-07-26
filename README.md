@@ -79,7 +79,6 @@ src/
   scenes/             Intro, Hub, WorldMap, Dungeon, Battle, GameOver
   systems/
     battle/           headless battle model + damage formula
-    dungeon/          (crawl logic lives in DungeonScene)
     dialogue/         dialogue script data
     party/            creature instances + the run's GameState
   data/               creatures, techniques, elements, teams, items, bootDomain
@@ -88,7 +87,13 @@ src/
 ```
 
 The battle model in `systems/battle/engine.ts` has no Three.js or DOM imports —
-it is pure rules, driven one action at a time by `BattleScene`.
+it is pure rules, driven one action at a time by `BattleScene`. Crawl logic
+(movement, tile interactions, encounters, EP) lives in `scenes/DungeonScene.ts`
+alongside its presentation.
+
+One invariant worth knowing: a scene's `enter()` must not await player input.
+`SceneManager.go()` awaits it and stays busy until it resolves, so anything
+interactive is kicked off detached (`void this.run()`).
 
 ## The HD-2D recipe
 

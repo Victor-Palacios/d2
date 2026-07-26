@@ -32,8 +32,22 @@ export interface BattleSceneParams {
 }
 
 const SLOT_X = [-2.4, 0, 2.4];
-const PARTY_Z = 2.6;
-const ENEMY_Z = -2.6;
+const PARTY_Z = 2.2;
+const ENEMY_Z = -3;
+/**
+ * The camera looks slightly past the party so the near row sits above the
+ * bottom-left HUD panels instead of behind them.
+ */
+const CAMERA_BIAS_Z = 0.9;
+
+/**
+ * Depth of a slot. The outer slots are staggered so overlapping billboards
+ * still separate visually.
+ */
+function slotZ(side: 'party' | 'enemy', slot: number): number {
+  const base = side === 'party' ? PARTY_Z : ENEMY_Z;
+  return base + (slot - 1) * (side === 'party' ? 0.55 : -0.55);
+}
 
 /**
  * Turn-based 3v3 battle (plan §5.3, M2).
@@ -79,9 +93,9 @@ export class BattleScene extends GameScene {
 
     this.ctx.hd2d.setScene(this.scene);
     this.ctx.hd2d.applyFog(this.scene, 1.6);
-    this.ctx.hd2d.cameraTarget.set(0, 0, 0);
+    this.ctx.hd2d.cameraTarget.set(0, 0, CAMERA_BIAS_Z);
     this.ctx.hd2d.lightTarget.set(0, 0, 0.5);
-    this.ctx.hd2d.focusTarget.set(0, 0.9, 0);
+    this.ctx.hd2d.focusTarget.set(0, 0.9, 0.4);
     this.ctx.hd2d.snapCamera();
 
     audio.music(this.params.isBoss ? 'boss' : 'battle');
@@ -169,7 +183,8 @@ export class BattleScene extends GameScene {
     wallInst.instanceMatrix.needsUpdate = true;
     this.scene.add(wallInst);
 
-    // Element plates under any slot that carries a tile buff.
+    // Element plates go under the slots that carry a tile buff, using the same
+    // staggered positions as the fighters so a plate is always underfoot.
     const plate = (x: number, z: number, element: ElementId) => {
       const def = ELEMENTS[element];
       const geo = new THREE.PlaneGeometry(2, 2);
@@ -178,19 +193,22 @@ export class BattleScene extends GameScene {
         map: elementTileTexture(element, '#332c46', def.color),
         emissiveMap: elementGlowTexture(element, def.color),
         emissive: new THREE.Color(def.color),
-        emissiveIntensity: 1.8,
+        emissiveIntensity: 1.3,
         roughness: 0.6,
       });
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(x, 0.012, z);
       mesh.receiveShadow = true;
       this.scene.add(mesh);
-      const light = new THREE.PointLight(def.light, 4, 5.5, 1.8);
-      light.position.set(x, 0.7, z);
+      // Kept dim and low: an accent light feeding the bloom, not a second key.
+      // Any brighter and it bleaches the sprite standing on top of it.
+      const light = new THREE.PointLight(def.light, 0.85, 4, 1.6);
+      light.position.set(x, 0.28, z);
       this.scene.add(light);
     };
-    this.battle.side('party').forEach((b) => b.tile && plate(SLOT_X[b.slot], PARTY_Z, b.tile));
-    this.battle.side('enemy').forEach((b) => b.tile && plate(SLOT_X[b.slot], ENEMY_Z, b.tile));
+    for (const b of this.battle.battlers) {
+      if (b.tile) plate(SLOT_X[b.slot], slotZ(b.side, b.slot), b.tile);
+    }
 
     // Two torches frame the arena and feed the bloom.
     for (const x of [-7, 7]) {
@@ -213,10 +231,7 @@ export class BattleScene extends GameScene {
         hover: sp.hover ?? 0,
         emissive: 0.08,
       });
-      const z = b.side === 'party' ? PARTY_Z : ENEMY_Z;
-      const pos = new THREE.Vector3(SLOT_X[b.slot], 0, z);
-      // Stagger depth slightly so overlapping sprites still separate.
-      pos.z += (b.slot - 1) * (b.side === 'party' ? 0.55 : -0.55);
+      const pos = new THREE.Vector3(SLOT_X[b.slot], 0, slotZ(b.side, b.slot));
       bb.object.position.copy(pos);
       this.homePos.set(b.creature.uid, pos.clone());
       this.scene.add(bb.object);
@@ -433,7 +448,11 @@ export class BattleScene extends GameScene {
     for (const t of this.torches) t.update(dt, this.ctx.hd2d.camera, time);
     this.particles.update(dt);
     // Slow drift keeps the arena from feeling like a static screenshot.
-    this.ctx.hd2d.cameraTarget.set(Math.sin(time * 0.25) * 0.35, 0, Math.cos(time * 0.2) * 0.2);
+    this.ctx.hd2d.cameraTarget.set(
+      Math.sin(time * 0.25) * 0.35,
+      0,
+      CAMERA_BIAS_Z + Math.cos(time * 0.2) * 0.2,
+    );
   }
 
   async exit() {

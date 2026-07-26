@@ -66,7 +66,7 @@ export class BattleHUD {
     sub.innerHTML =
       `<span style="color:${attr.color}">${attr.name}</span> · ` +
       `<span style="color:${elem.color}">${elem.name}</span>` +
-      (b.tile ? ` · <span style="color:${ELEMENTS[b.tile].color}">${ELEMENTS[b.tile].name} plate</span>` : '');
+      (b.tile ? ` · <span style="color:${ELEMENTS[b.tile].color}" title="standing on a ${ELEMENTS[b.tile].name} plate">▲${ELEMENTS[b.tile].name}</span>` : '');
     root.appendChild(sub);
 
     const hpText = el('div', 'sub');

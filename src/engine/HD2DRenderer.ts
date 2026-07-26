@@ -38,6 +38,10 @@ export interface HD2DParams {
   keyIntensity: number;
   keyColor: string;
   keyHeight: number;
+  /** Lateral offset of the key light from the party — this is what makes the
+   *  shadow fall to one side instead of hiding underneath the sprite. */
+  keyOffsetX: number;
+  keyOffsetZ: number;
   keyDistance: number;
   keyDecay: number;
   ambientIntensity: number;
@@ -77,9 +81,11 @@ export const DEFAULT_PARAMS: HD2DParams = {
   distance: 13.5,
   height: 0.9,
 
-  keyIntensity: 38,
+  keyIntensity: 34,
   keyColor: '#ffcc99',
-  keyHeight: 4.4,
+  keyHeight: 4.2,
+  keyOffsetX: 2.1,
+  keyOffsetZ: -1.5,
   keyDistance: 24,
   keyDecay: 1.45,
   ambientIntensity: 0.62,
@@ -393,11 +399,12 @@ export class HD2DRenderer {
   render(dt: number) {
     this.updateCamera(dt);
 
-    // Key light rides above the party so shadows always fan out from it.
+    // Key light rides above and to one side of the party, so shadows fan out
+    // across the floor toward the camera instead of hiding under the sprites.
     this.lights.key.position.set(
-      this.lightTarget.x,
+      this.lightTarget.x + this.params.keyOffsetX,
       this.lightTarget.y + this.params.keyHeight,
-      this.lightTarget.z + 1.2,
+      this.lightTarget.z + this.params.keyOffsetZ,
     );
 
     this.composer.render(dt);

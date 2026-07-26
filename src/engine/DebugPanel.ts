@@ -28,6 +28,8 @@ export class DebugPanel {
     light.addColor(p, 'keyColor').onChange(apply);
     light.add(p, 'keyIntensity', 0, 160, 1).onChange(apply);
     light.add(p, 'keyHeight', 0.5, 10, 0.1);
+    light.add(p, 'keyOffsetX', -6, 6, 0.1);
+    light.add(p, 'keyOffsetZ', -6, 6, 0.1);
     light.add(p, 'keyDistance', 5, 60, 1).onChange(apply);
     light.add(p, 'keyDecay', 0.5, 3, 0.05).onChange(apply);
     light.add(p, 'ambientIntensity', 0, 2.5, 0.01).onChange(apply);

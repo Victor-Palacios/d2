@@ -17,6 +17,11 @@ export interface SceneContext {
 
 export abstract class GameScene {
   constructor(protected ctx: SceneContext) {}
+  /**
+   * Build the scene and return. `go()` awaits this and holds the manager busy
+   * until it resolves, so `enter()` must never await player input — kick off
+   * anything interactive with `void this.something()` instead.
+   */
   abstract enter(params?: unknown): Promise<void> | void;
   abstract exit(): Promise<void> | void;
   /** Called every frame while active. */

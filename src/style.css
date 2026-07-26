@@ -188,6 +188,13 @@ body {
   margin-left: 10px;
 }
 
+/* Right-aligned note on a menu row: MP cost, price, HP readout. */
+.menu .cost {
+  float: right;
+  color: var(--ink-dim);
+  margin-left: 18px;
+}
+
 /* --- full-screen scenes (title, name entry, world map, team select, shop) - */
 
 .screen {
@@ -197,7 +204,11 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* `safe` keeps the top reachable when the content is taller than the view. */
+  justify-content: safe center;
   gap: 22px;
+  padding: 20px 16px;
+  overflow-y: auto;
   background: radial-gradient(ellipse at 50% 45%, rgba(24, 34, 78, 0.55), rgba(3, 5, 12, 0.94));
   text-align: center;
 }
@@ -291,6 +302,7 @@ body {
   gap: 18px;
   flex-wrap: wrap;
   justify-content: center;
+  max-width: 100%;
 }
 
 .card {
@@ -503,11 +515,7 @@ body {
   min-width: 210px;
 }
 
-#action-menu .cost {
-  float: right;
-  color: var(--ink-dim);
-  margin-left: 14px;
-}
+/* --- misc ---------------------------------------------------------------- */
 
 .dmg-float {
   position: absolute;

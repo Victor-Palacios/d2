@@ -19,6 +19,14 @@ export class GameOverScene extends GameScene {
   }
 
   async enter() {
+    // NB: `enter()` must not block on player input. `SceneManager.go()` awaits
+    // it, and the manager stays busy (refusing further transitions) until it
+    // resolves — so the menu runs detached.
+    this.buildScreen();
+    void this.run();
+  }
+
+  private buildScreen() {
     audio.music(null);
     this.screen = el('div', 'screen');
     this.screen.append(
@@ -37,6 +45,10 @@ export class GameOverScene extends GameScene {
       { value: 'retry', label: 'Repair and try again' },
       { value: 'hub', label: 'Return to Digital City' },
     ]);
+  }
+
+  private async run() {
+    if (!this.menu) return;
     const choice = await this.menu.open();
     this.menu.destroy();
     this.menu = null;
