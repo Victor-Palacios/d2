@@ -47,6 +47,14 @@ export const MONSTERS = {
     prompt: `${STAGES.wisp.vibe}, ${NIGHTNIP_THEME}, ${STYLE}, ${STAGES.wisp.tone}`,
   },
 
+  // Extra-large (128px) — demonstrates the upper end; past the practical
+  // sweet spot for this roster, but well within the API's 400px max.
+  "nightnip-xl": {
+    palette: NIGHTNIP_PALETTE,
+    size: 128,
+    prompt: `${STAGES.wisp.vibe}, ${NIGHTNIP_THEME}, ${STYLE}, ${STAGES.wisp.tone}`,
+  },
+
   // --- Standalone monsters (no ladder) — write the full prompt directly ----
   // The Last Light: a soul almost ready to move on, a trembling flame in a
   // cracked lantern with little ash legs. Fragile and sorrowful, not scary.
