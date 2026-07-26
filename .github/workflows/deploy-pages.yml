@@ -38,13 +38,12 @@ jobs:
       - name: Build
         run: npm run build
 
-      # `enablement: true` turns Pages on via the API on the first run. If it
-      # fails, enable it by hand: Settings -> Pages -> Source: "GitHub Actions".
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
+      # No `actions/configure-pages` step on purpose. Its only real job is to
+      # inject the published base path into the build, and vite.config.ts already
+      # uses a relative base ('./') that works from any subpath. It also cannot
+      # create the Pages site from here: the workflow token gets "Resource not
+      # accessible by integration" on that API, so Pages has to be switched on
+      # once by hand (Settings -> Pages -> Source: "GitHub Actions").
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

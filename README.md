@@ -21,6 +21,13 @@ runtime from data in `src/assets/` and `src/engine/`.
 
 **https://victor-palacios.github.io/d2/**
 
+> ⚠️ **One-time setup needed before this URL works.** GitHub Pages has to be
+> switched on by a repo admin — the Actions token is not allowed to create the
+> Pages site (`Resource not accessible by integration`). Go to
+> **Settings → Pages → Build and deployment** and set **Source** to
+> **GitHub Actions**, then re-run the "Deploy to GitHub Pages" workflow from the
+> Actions tab. Every push after that publishes automatically.
+
 Nothing to install. Click the page once when it loads — browsers block audio
 until you interact with the page.
 
@@ -59,9 +66,13 @@ merging the work elsewhere does not break it.
 `npm run build` runs `tsc --noEmit` first, so a type error fails the deploy
 rather than publishing a broken bundle.
 
-One-time setup, if the workflow's `Configure Pages` step reports that it could
-not enable Pages: go to **Settings → Pages → Build and deployment** and set
-**Source** to **GitHub Actions**, then re-run the workflow.
+There is deliberately no `actions/configure-pages` step: its purpose is to feed
+the published base path into the build, and `vite.config.ts` already uses a
+relative base (`'./'`) that works from any subpath. It also cannot enable Pages
+from CI — that API rejects the workflow token — which is why the one-time
+**Settings → Pages → Source: GitHub Actions** step above is required. Until it
+is done, the `deploy` job fails with a missing-Pages-site error; afterwards it
+just works.
 
 ## Controls
 
