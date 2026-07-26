@@ -93,15 +93,14 @@ await waitScene('dungeon');
 await page.waitForTimeout(1200);
 console.log('DUNGEON:', JSON.stringify(await state()));
 
-// --- floor 1: mentor tip, then the first scripted battle -------------------
-await press('ArrowDown', 2);
-await page.waitForTimeout(500);
-await clearDialogue();
+// --- floor 1: cross the gateway — a radio tip fires, then the first fight ----
+await press('ArrowDown', 4);            // down to the gateway row
+for (let i = 0; i < 8 && (await state()).scene === 'dungeon'; i++) {
+  await page.keyboard.press('ArrowRight'); // into the gate: tip, then the fight
+  await page.waitForTimeout(360);
+  await clearDialogue();
+}
 console.log('after tip:', JSON.stringify(await state()));
-
-await press('ArrowDown', 4);
-await page.waitForTimeout(600);
-await clearDialogue();
 await waitScene('battle');
 await page.waitForTimeout(1500);
 console.log('BATTLE:', JSON.stringify(await state()));

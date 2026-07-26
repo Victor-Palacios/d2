@@ -58,8 +58,9 @@ await press('ArrowDown', 5); await press('ArrowLeft', 3); await press('ArrowDown
 await waitScene('worldmap'); await page.waitForTimeout(600);
 await page.locator('.card', { hasText: 'The Quiet Crossing' }).click();
 await waitScene('dungeon'); await page.waitForTimeout(900); await clearDlg();
-// Down the left column: event '1' (tip) then event '2' (battle).
-for (let i = 0; i < 8 && (await scene()) === 'dungeon'; i++) { await page.keyboard.press('ArrowDown'); await page.waitForTimeout(320); if (await dlg()) await clearDlg(); }
+// Cross the gateway: a radio tip fires, then the first fight is forced.
+await press('ArrowDown', 4);
+for (let i = 0; i < 8 && (await scene()) === 'dungeon'; i++) { await page.keyboard.press('ArrowRight'); await page.waitForTimeout(320); if (await dlg()) await clearDlg(); }
 await waitScene('battle', 20000); await page.waitForTimeout(800);
 console.log('fielded in battle :', await fielded(), '| capped at 3 =', (await fielded()) === 3);
 console.log('floor-1 fight won (Lv1 enemies) :', await winBattle());

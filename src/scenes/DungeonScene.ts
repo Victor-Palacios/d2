@@ -7,7 +7,7 @@ import { Billboard } from '../engine/Billboard';
 import { ParticleField, Portal, Torch } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
-import { HUMANS, PROPS, VEHICLE } from '../assets/art';
+import { PROPS, VEHICLE } from '../assets/art';
 import { domain } from '../data/domains';
 import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
 import { ELEMENTS } from '../data/elements';
@@ -66,7 +66,6 @@ export class DungeonScene extends GameScene {
   private torches: Torch[] = [];
   private portals: { portal: Portal; x: number; z: number }[] = [];
   private props = new Map<string, Billboard>();
-  private mentorSprites: { billboard: Billboard; x: number; z: number }[] = [];
   private elementLights: THREE.PointLight[] = [];
   private elementMeshes = new Map<string, THREE.Mesh>();
 
@@ -187,18 +186,9 @@ export class DungeonScene extends GameScene {
         portal.object.position.copy(world);
         this.scene.add(portal.object);
         this.portals.push({ portal, x: t.x, z: t.z });
-      } else if (t.kind === 'event') {
-        const ev = this.floor.events[t.eventId!];
-        if (ev?.kind === 'dialogue' && !game.usedEvents.has(`${this.floor.id}:${t.eventId}`)) {
-          // A mentor hologram marks a tip so the tip has a source on screen.
-          const b = new Billboard(HUMANS.mentor, 'human:mentor', { height: 1.6, emissive: 0.55 });
-          b.setOpacity(0.85);
-          b.bob = 0.05;
-          b.object.position.copy(world);
-          this.scene.add(b.object);
-          this.mentorSprites.push({ billboard: b, x: t.x, z: t.z });
-        }
       }
+      // Dialogue events are radio calls now — no on-screen NPC to drive into.
+      // They fire when the player crosses the tile (placed at map chokepoints).
     });
 
     this.placeTorches();
@@ -468,13 +458,6 @@ export class DungeonScene extends GameScene {
       this.busy = true;
       await this.dialogue.play(ev.script);
       this.busy = false;
-      // The hologram fades once its tip has been delivered.
-      const m = this.mentorSprites.find((s) => s.x === tile.x && s.z === tile.z);
-      if (m) {
-        this.scene.remove(m.billboard.object);
-        m.billboard.dispose();
-        this.mentorSprites = this.mentorSprites.filter((s) => s !== m);
-      }
       return;
     }
 
@@ -635,7 +618,6 @@ export class DungeonScene extends GameScene {
     for (const t of this.torches) t.update(dt, this.ctx.hd2d.camera, time);
     for (const p of this.portals) p.portal.update(dt, time);
     for (const b of this.props.values()) b.update(dt, this.ctx.hd2d.camera, time);
-    for (const m of this.mentorSprites) m.billboard.update(dt, this.ctx.hd2d.camera, time);
     this.particles.update(dt);
     this.updateElementLights();
     this.syncCamera();
@@ -649,7 +631,6 @@ export class DungeonScene extends GameScene {
     this.legend.remove();
     this.player.dispose();
     for (const b of this.props.values()) b.dispose();
-    for (const m of this.mentorSprites) m.billboard.dispose();
     this.particles.dispose();
     this.scene.clear();
   }
