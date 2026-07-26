@@ -17,7 +17,22 @@ runtime from data in `src/assets/` and `src/engine/`.
 
 ---
 
-## Run it
+## ▶ Play it
+
+**https://victor-palacios.github.io/d2/**
+
+Nothing to install. Click the page once when it loads — browsers block audio
+until you interact with the page.
+
+Two things to know before you click:
+
+- **You need a keyboard.** Menus and dialogue take mouse clicks and taps, but
+  moving around the world is keys-only, so this is not playable on a phone yet.
+- **You need WebGL2 and a reasonably real GPU.** The post stack is not cheap.
+  If it feels sluggish, press `` ` `` and pull **supersample** down toward 1.0;
+  `window.hd2dGame.stats.fps` in the console reports the actual frame rate.
+
+## Run it locally
 
 ```bash
 npm install
@@ -29,8 +44,24 @@ npm run build      # typecheck + static build into dist/
 npm run preview    # serve the built files
 ```
 
-The build is fully static (`base: './'`), so `dist/` can be dropped straight
-onto GitHub Pages, itch.io, or any static host.
+The build is fully static and uses relative asset paths (`base: './'`), so
+`dist/` can be dropped straight onto GitHub Pages, itch.io, or any static host —
+including from a subdirectory.
+
+## Deployment
+
+`.github/workflows/deploy-pages.yml` builds and publishes to GitHub Pages on
+every push to the repository's **default branch**, and can also be run by hand
+from the Actions tab (`Run workflow`) on any branch. The workflow gates on
+`github.event.repository.default_branch`, so renaming the default branch or
+merging the work elsewhere does not break it.
+
+`npm run build` runs `tsc --noEmit` first, so a type error fails the deploy
+rather than publishing a broken bundle.
+
+One-time setup, if the workflow's `Configure Pages` step reports that it could
+not enable Pages: go to **Settings → Pages → Build and deployment** and set
+**Source** to **GitHub Actions**, then re-run the workflow.
 
 ## Controls
 

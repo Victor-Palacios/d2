@@ -1,0 +1,61 @@
+name: Deploy to GitHub Pages
+
+# Runs on any push, but the jobs below only do work on the repository's default
+# branch — so this keeps working if the default branch is later renamed or the
+# work is merged elsewhere. `workflow_dispatch` allows a manual run from any
+# branch via the Actions tab.
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deployment finish rather than cancelling it half-published.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # `npm run build` is `tsc --noEmit && vite build`, so a type error fails
+      # the deploy instead of publishing a broken bundle.
+      - name: Build
+        run: npm run build
+
+      # `enablement: true` turns Pages on via the API on the first run. If it
+      # fails, enable it by hand: Settings -> Pages -> Source: "GitHub Actions".
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
