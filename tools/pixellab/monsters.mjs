@@ -45,11 +45,12 @@ export const MONSTERS = {
   // The Last Light: a soul almost ready to move on, a trembling flame in a
   // cracked lantern with little ash legs. Fragile and sorrowful, not scary.
   lastlight: {
-    palette: ["#141018", "#4a4660", "#9a93b0", "#ff8a3c", "#ffe8a8"],
+    palette: ["#14121c", "#e8e6f0", "#b7b4cc", "#8a8fd6", "#d6dcf5", "#ffd166"],
     size: 64,
     prompt:
-      "a tiny trembling warm candle flame glowing softly inside a small cracked black iron lantern, " +
-      "little wispy legs made of drifting grey ash and smoke, fragile ghostly and sorrowful, timid, " +
-      `${STYLE}, melancholic dark-fantasy RPG spirit sprite`,
+      "a small cute rounded candle spirit, soft pale melting wax body with little wax drips at the base, " +
+      "a simple sweet face with a big round glowing eye and a tiny smile, topped by a gentle teardrop " +
+      "blue-violet flame, its lower body cradled inside a small cracked black lantern, soft and ghostly, " +
+      `${STYLE}, cute charming dark-fantasy RPG spirit sprite`,
   },
 };
