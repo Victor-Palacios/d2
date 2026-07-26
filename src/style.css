@@ -146,6 +146,33 @@ body {
   font-size: 13px;
 }
 
+#dialogue .auto-toggle {
+  position: absolute;
+  top: -14px;
+  right: 12px;
+  font-family: var(--ui-font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  background: var(--box-b);
+  border: 2px solid var(--edge);
+  padding: 3px 9px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+#dialogue .auto-toggle:hover {
+  color: var(--edge-hi);
+}
+
+#dialogue .auto-toggle.on {
+  color: #241a00;
+  background: var(--accent);
+  border-color: #2b2000;
+}
+
 @keyframes blink {
   50% {
     opacity: 0.15;

@@ -24,12 +24,28 @@ await page.keyboard.press('Enter');           // New Game
 await page.waitForTimeout(800);
 await page.locator('.keyboard button', { hasText: /^OK$/ }).click();
 await page.waitForTimeout(600);
-// Play through every line of dialogue, then just stand in the hub.
-for (let i = 0; i < 120; i++) {
-  if (await dlg()) { await page.keyboard.press('Enter'); await page.waitForTimeout(200); }
-  else { const s = await info(); if (s.scene === 'hub') break; await page.waitForTimeout(250); }
+// Advance the intro prologue and get into the hub, advancing every line.
+// NOTE: the hub's arrival() opens with `await sleep(280)` during which the
+// scene is 'hub' but no dialogue is up yet and busy is still false. Breaking on
+// "scene===hub && !dlg" here is the classic race that made autosave *look*
+// broken — you leave (or stop advancing) before arrival() reaches its save
+// call. So: first wait for arrival to actually START, then run it to idle.
+const busy = () => page.evaluate(() => !!window.hd2dGame.manager.activeScene?.busy);
+let started = false;
+for (let i = 0; i < 200; i++) {
+  const s = await info();
+  if (s.scene === 'hub' && (await dlg() || await busy())) { started = true; break; }
+  if (await dlg()) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
+  else await page.waitForTimeout(150);
 }
-await page.waitForTimeout(3000);
+if (!started) console.log('!! hub arrival never started');
+// Now advance the arrival dialogue to completion (busy clears, no box open).
+for (let i = 0; i < 200; i++) {
+  if (!(await dlg()) && !(await busy())) break;
+  if (await dlg()) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
+  else await page.waitForTimeout(120);
+}
+await page.waitForTimeout(800);
 const probe = await page.evaluate(() => {
   const sc = window.hd2dGame.manager.activeScene;
   return { disposed: sc.disposed, busy: sc.busy, hasFlag: window.hd2dGame.game.has('prologueDone'),
@@ -42,5 +58,6 @@ console.log('autosave kind :', s.auto?.kind, '| label:', s.auto?.label, '| scene
 console.log('name/credits  :', s.auto?.state?.playerName, s.auto?.state?.credits);
 console.log('party saved   :', s.auto?.state?.party?.map((c) => `${c.name} ${c.attribute}`).join(', '));
 console.log('flags         :', s.auto?.state?.flags?.join(','));
+console.log('VERDICT       :', s.auto ? 'PASS — hub autosave written' : 'FAIL — no autosave after arrival');
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();

@@ -43,10 +43,17 @@ const idle = async (n = 80) => {
   return st();
 };
 // Advances dialogue while waiting, and waits for the scene to be idle.
+// A scene's arrival() opens with `await sleep(280)` — during that window the
+// scene matches but is momentarily idle (busy false, no dialogue yet) before
+// its opening dialogue appears. Returning then is a race that skips the
+// arrival (and its autosave), so after the scene first matches we give it a
+// beat to kick its arrival off before trusting an idle reading.
 const waitScene = async (name, ms = 45000) => {
   const t0 = Date.now();
+  let settled = false;
   while (Date.now() - t0 < ms) {
     const s = await st();
+    if (s.scene === name && !settled) { settled = true; await page.waitForTimeout(500); continue; }
     if (s.scene === name && !s.dlg && !s.busy) return true;
     if (s.dlg) { await page.keyboard.press('Enter'); await page.waitForTimeout(200); }
     else await page.waitForTimeout(220);

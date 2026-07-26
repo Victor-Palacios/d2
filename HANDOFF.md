@@ -1,10 +1,11 @@
 # Handoff
 
-Written for whoever picks this up next. Covers where the project stands, the one
-bug left mid-investigation, what the owner asked for that is still unbuilt, and
-the environment traps that will otherwise waste your first hour.
+Written for whoever picks this up next. Covers where the project stands, what
+has recently been resolved, what is left to build, and the environment traps
+that will otherwise waste your first hour.
 
-**Repo:** `Victor-Palacios/d2` · **Working branch:** `main` · **Live:**
+**Repo:** `Victor-Palacios/d2` · **Default & working branch:** `main` (work
+directly on it — see [CLAUDE.md](CLAUDE.md)) · **Live:**
 https://victor-palacios.github.io/d2/
 
 ---
@@ -38,85 +39,58 @@ content). Keep it that way.
 | Auto-battle | basic Attack only, weakest target, Esc to stop; verified it spends **no MP** over 14 s hands-off |
 | Controller | Gamepad API polled in `Input.poll()`; verified with a synthetic pad |
 | Suspend save | verified across three page reloads, and that loading **consumes** it |
-| GitHub Pages | deploys on push via `.github/workflows/deploy-pages.yml` |
+| Autosave | **verified** — writes on hub arrival and world map (`tools/smoke/autosave.mjs` passes; see resolved note below) |
+| Dialogue auto-read | ▶ button (top-right of the box) toggles hands-free advance; **Esc** stops it. `src/ui/DialogueBox.ts` |
+| GitHub Pages | deploys on push to `main` via `.github/workflows/deploy-pages.yml` |
 
-### Known bug — hub autosave does not fire
+### Resolved — the "hub autosave does not fire" bug was a test race, not a game bug
 
-**Symptom:** after a normal playthrough into Digital City, `localStorage`
-`hd2d.save.auto` is never written, so the title screen offers no "Continue"
-unless a *suspend* save exists.
+A full play-through **does** write `hd2d.save.auto`. The earlier symptom came
+from the smoke tests, not the game: `HubScene.arrival()` opens with
+`await sleep(280)`, during which the scene is already `'hub'` but no dialogue is
+up and `busy` is still `false`. The old test loops broke on
+"`scene === 'hub' && !dialogue`" in exactly that window, so they stopped
+advancing (or jumped to the dungeon) before `arrival()` reached its autosave
+call — and then reported `auto:false`.
 
-**Not the cause:** the save API itself is fine. Called straight from the console
-it returns `true` and the entry appears:
-
-```js
-hd2dGame.game.set('prologueDone');
-hd2dGame.saves.saveAuto('hub', 'Digital City');   // → true, localStorage written
-```
-
-**Where it is:** `HubScene.arrival()` (`src/scenes/HubScene.ts`, ~line 200) runs
-detached and ends with the autosave call. Something returns before it. The two
-candidates are the `if (this.disposed) return;` guards added late in the session,
-or `arrival()` never completing its dialogue await.
-
-**Next step:** `tools/smoke/autosave.mjs` already plays into the hub and dwells.
-Add a probe for `manager.activeScene.disposed`, `.busy`, and
-`game.has('prologueDone')` at that moment — that will pin it in one run. I was
-one probe away when the session ended.
-
-**Note:** the suspend save is unaffected and fully working; this is autosave only.
+Fix was in the tests, not the game (game code was correct all along):
+`tools/smoke/autosave.mjs` and `save.mjs` now wait for arrival to actually
+**start** (dialogue up or `busy` true) and then run it to idle before checking.
+Both pass; `autosave.mjs` prints `VERDICT: PASS`. The general lesson is now
+recorded in §6.
 
 ---
 
-## 3. Waiting on the owner
+## 3. Owner items — done
 
-**The default branch is still `claude/new-session-r77q12`.** `main` has all the
-work and is what to push to, but the repo default was never flipped, and this is
-not cosmetic:
-
-- The `github-pages` environment pins deployments to the default branch, so a
-  push to `main` produces a `deploy` job that fails having run **zero steps** —
-  an environment rejection, not a build failure. The build job succeeds and
-  uploads the artifact; only publishing is blocked.
-- Fix: **Settings → Branches → default = `main`**, or
-  `gh api -X PATCH repos/Victor-Palacios/d2 -f default_branch=main`. Then delete
-  the old branch.
-- The workflow already accepts both `main` and the default branch, so nothing in
-  CI needs changing afterwards.
-
-This needs repo-admin rights, which neither the Actions token nor the session's
-GitHub integration has. Same wall as enabling Pages (which the owner has now
-done).
+- **Default branch flipped to `main`.** Pages now deploys from `main` on push
+  (the old `claude/new-session-r77q12` default is gone). Work happens directly on
+  `main` — no feature branches (see [CLAUDE.md](CLAUDE.md)).
+- **Pages enabled** (done earlier).
+- Still worth having on hand: the original plan doc `DW2firsthourHD2Dplan.md` is
+  **not in the repo** — ask the owner for it if you need to confirm the audit in
+  `docs/PLAN_AUDIT.md` against the source text.
 
 ---
 
-## 4. Requested but not built
+## 4. Requested docs — delivered
 
-The owner asked for these, in this order, before the session ran out. Three of
-four are documents.
+The four items the owner asked for are written and live in [`docs/`](docs/):
 
-1. **Audit the original plan** — walk `DW2firsthourHD2Dplan.md` section by
-   section and report implemented / partial / missing. My read is that §1–§7 and
-   milestones M0–M6 are all covered, with §5.6 (digivolution) deliberately a
-   data stub (`canDigivolveTo` on each species, no UI) exactly as the plan
-   specifies — but this was never written up properly.
-2. **A roadmap MD** for extending toward *Digimon World 2*'s first ~5 hours.
-3. **Trim scope while doing it** — they explicitly want **fewer element types**
-   (currently five: Water/Fire/Nature/Machine/Dark). Worth folding into the
-   roadmap: three elements would halve the plate art, the technique table and
-   the teaching load, and would pair cleanly with the three-class triangle.
-4. **A systems explainer MD** — how types, advantage, damage, guard, EP and
-   rewards actually play out, with worked numbers. Source of truth is
-   `src/systems/battle/formula.ts` and `src/data/elements.ts`.
+1. **Plan audit** — [`docs/PLAN_AUDIT.md`](docs/PLAN_AUDIT.md): the original plan
+   walked section by section (reconstructed from the `plan §…` markers in the
+   code, since the plan doc itself isn't in the repo), implemented / partial /
+   missing.
+2. **Roadmap** — [`docs/ROADMAP.md`](docs/ROADMAP.md): a path toward *Digimon
+   World 2*'s first ~5 hours (XP loop, recruiting, digivolution, more domains).
+3. **Scope trim (five elements → three)** — folded into the roadmap as the first,
+   cheapest task, with rationale and an exact edit list.
+4. **Systems explainer** — [`docs/SYSTEMS.md`](docs/SYSTEMS.md): types, class
+   advantage, damage, guard, EP and rewards with worked numbers.
 
-Task list state at handoff: #1 controller and #2 saves done (bar the bug above);
-#3 audit, #4 roadmap, #5 systems doc not started.
-
-**Update:** #3, #4 and #5 are now written and live in [`docs/`](docs/) —
-[`PLAN_AUDIT.md`](docs/PLAN_AUDIT.md) (§4.1), [`ROADMAP.md`](docs/ROADMAP.md)
-(§4.2, with the element trim from §4.3 folded in as the first task) and
-[`SYSTEMS.md`](docs/SYSTEMS.md) (§4.4). The autosave bug above and the
-default-branch flip (§3) are still open.
+**Next actual build work** (all code) is the roadmap's M7 onward — start with the
+element trim and the XP/level loop. Nothing from the original doc-request list is
+outstanding.
 
 ---
 
@@ -154,6 +128,14 @@ These were each learned by shipping the bug first.
    which silently swallowed transitions.
 5. **Grid movement buffers input.** Taps that start and end between frames still
    register; a direction pressed mid-step is remembered.
+6. **A scene matching is not a scene being ready** (testing gotcha). `arrival()`
+   opens with `await sleep(280)`, so the scene reads `'hub'` while momentarily
+   idle *before* its opening dialogue. Wait for arrival to actually start
+   (dialogue up or `busy` true) then run it to idle — otherwise you race past it.
+   This is what made autosave look broken (see §2). Also: `input.onAction`/
+   per-line UI state must be **line-local** — a completed line's `requestAnimation
+   Frame` loop can otherwise be resurrected by the next line resetting a shared
+   flag (bit the dialogue auto-advance mode until each line kept its own state).
 
 ## 7. Environment traps
 
