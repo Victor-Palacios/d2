@@ -112,6 +112,12 @@ four are documents.
 Task list state at handoff: #1 controller and #2 saves done (bar the bug above);
 #3 audit, #4 roadmap, #5 systems doc not started.
 
+**Update:** #3, #4 and #5 are now written and live in [`docs/`](docs/) —
+[`PLAN_AUDIT.md`](docs/PLAN_AUDIT.md) (§4.1), [`ROADMAP.md`](docs/ROADMAP.md)
+(§4.2, with the element trim from §4.3 folded in as the first task) and
+[`SYSTEMS.md`](docs/SYSTEMS.md) (§4.4). The autosave bug above and the
+default-branch flip (§3) are still open.
+
 ---
 
 ## 5. Design decisions worth not re-litigating

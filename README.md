@@ -37,7 +37,15 @@ Two things to know before you click:
   `window.hd2dGame.stats.fps` reports the real frame rate.
 
 Picking this up fresh, or handing it to someone else? See **[HANDOFF.md](HANDOFF.md)**
-for current state, the one open bug, and the environment traps.
+for current state, the one open bug, and the environment traps. Deeper docs live
+in [`docs/`](docs/):
+
+- **[docs/SYSTEMS.md](docs/SYSTEMS.md)** — how the battle numbers actually work
+  (classes, elements, damage, guard, EP, rewards), with worked examples.
+- **[docs/PLAN_AUDIT.md](docs/PLAN_AUDIT.md)** — the original design plan audited
+  section by section: implemented / partial / missing.
+- **[docs/ROADMAP.md](docs/ROADMAP.md)** — the path from this first-hour slice
+  toward *Digimon World 2*'s first five hours, including the element-count trim.
 
 ## Run it locally
 
