@@ -20,6 +20,12 @@ import type { AttributeId } from '../../data/elements';
  */
 
 export const SAVE_VERSION = 3;
+/**
+ * Oldest save this build can still read. Because every change so far is additive
+ * and `applySave` defaults missing fields, all versions from 1 up migrate
+ * forward — so raise this only on a genuinely breaking change.
+ */
+export const MIN_SAVE_VERSION = 1;
 
 const AUTO_KEY = 'hd2d.save.auto';
 const SUSPEND_KEY = 'hd2d.save.suspend';
@@ -116,8 +122,13 @@ function read(key: string): SaveData | null {
     const raw = s.getItem(key);
     if (!raw) return null;
     const data = JSON.parse(raw) as SaveData;
-    // Schema drift: drop the save rather than half-restore it.
-    if (data?.version !== SAVE_VERSION) {
+    // Migrate forward, don't discard. Every schema change so far has been
+    // additive, and `applySave` fills any missing field with a sensible default
+    // — so an older save loads fine. Only drop a save that is corrupt/unversioned
+    // or was written by a *newer* build than this one (which we can't safely
+    // read). Bumping SAVE_VERSION for an additive change must NOT wipe progress.
+    const v = data?.version;
+    if (typeof v !== 'number' || v < MIN_SAVE_VERSION || v > SAVE_VERSION) {
       s.removeItem(key);
       return null;
     }

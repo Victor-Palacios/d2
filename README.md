@@ -188,7 +188,10 @@ Two kinds, deliberately different in weight:
 
 Both live in `localStorage`, so a save made on the live site is separate from
 one made on `localhost`. `src/systems/party/saveGame.ts` carries a `version`
-field — bump it and stale saves are discarded rather than half-restored.
+field. Older saves **migrate forward** — `applySave` defaults any field a newer
+build added — so shipping additive changes never wipes a player's progress.
+Only a save from a *newer* build, or a corrupt one, is discarded; a genuinely
+breaking change raises `MIN_SAVE_VERSION`.
 
 ## Project layout
 
