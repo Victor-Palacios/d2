@@ -32,14 +32,20 @@ export function line(id, theme, palette) {
   return out;
 }
 
+const NIGHTNIP_THEME = "a dark violet-black bat-demon, leathery membrane bat wings, big amber eyes, impish devil motif";
+const NIGHTNIP_PALETTE = ["#1a1024", "#6b4d9e", "#f2e8ff", "#ffd166", "#3c2b5c"];
+
 export const MONSTERS = {
   // --- Evolution lines ----------------------------------------------------
   // Nightnip's demonic bat line: Wisp -> Shade -> Revenant -> Beyond.
-  ...line(
-    "nightnip",
-    "a dark violet-black bat-demon, leathery membrane bat wings, big amber eyes, impish devil motif",
-    ["#1a1024", "#6b4d9e", "#f2e8ff", "#ffd166", "#3c2b5c"],
-  ),
+  ...line("nightnip", NIGHTNIP_THEME, NIGHTNIP_PALETTE),
+
+  // High-res (64px) take on Nightnip's rookie — same look, more fidelity.
+  "nightnip-hd": {
+    palette: NIGHTNIP_PALETTE,
+    size: 64,
+    prompt: `${STAGES.wisp.vibe}, ${NIGHTNIP_THEME}, ${STYLE}, ${STAGES.wisp.tone}`,
+  },
 
   // --- Standalone monsters (no ladder) — write the full prompt directly ----
   // The Last Light: a soul almost ready to move on, a trembling flame in a
