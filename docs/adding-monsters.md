@@ -8,6 +8,17 @@ keeping the repo **asset-free** — the sprite ships as a hand-format
 Tooling lives in [`tools/pixellab/`](../tools/pixellab/); the API key is the
 `PIXEL_LAB_API_KEY` GitHub Actions secret.
 
+## Standing rules
+
+- **Generate everything at 64px.** All new/regenerated art is produced *and*
+  converted at 64×64 (`SIZE` in `monsters.mjs`). We are migrating the whole
+  roster to PixelLab sprites at this size, so 64px is the standard — do not
+  hand-pick smaller sizes for new work.
+- **The registry is the canonical prompt record.** Every monster's exact
+  prompt + palette lives in `tools/pixellab/monsters.mjs`. Never generate from
+  an ad-hoc prompt that isn't recorded there — if you try a prompt, add it as a
+  registry entry so anyone can later see how a monster was generated.
+
 ## The pipeline
 
 ```
@@ -68,11 +79,10 @@ MONSTER=<id> node tools/pixellab/png-to-pixelart.mjs 24   # target size
 
 ### 4. Convert & review
 
-`png-to-pixelart.mjs` decodes the PNG, downscales (default 24×24), and snaps
-each pixel to the registry palette. **Look at the preview** — if the downscale
-muddied key features (small bright eyes, highlights), bump the target size or
-hand-touch a few characters in the literal. 16px suits simple rookies; 24px
-keeps small details.
+`png-to-pixelart.mjs` decodes the PNG, downscales (default **64×64**, the
+standard), and snaps each pixel to the registry palette. **Look at the
+preview** — if a feature dropped out, hand-touch a few characters in the
+literal. (Lower sizes exist for one-offs but 64px is the roster standard.)
 
 ### 5. Integrate into the game
 

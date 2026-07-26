@@ -18,11 +18,11 @@ on:
       monster:
         description: "Monster id from MONSTERS in tools/pixellab/monsters.mjs (e.g. lastlight, nightnip-wisp)."
         required: false
-        default: "nightnip-xl"
+        default: "lastlight-candle,lastlight-lantern,lastlight-wisp"
       target:
         description: "Pixel-art downscale size (square)."
         required: false
-        default: "128"
+        default: "64"
 
 permissions:
   contents: read
@@ -31,7 +31,7 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     env:
-      MONSTER: ${{ github.event.inputs.monster || 'nightnip-xl' }}
+      MONSTER: ${{ github.event.inputs.monster || 'lastlight-candle,lastlight-lantern,lastlight-wisp' }}
     steps:
       - uses: actions/checkout@v4
 
