@@ -1,9 +1,9 @@
 name: Deploy to GitHub Pages
 
-# Runs on any push, but the jobs below only do work on the repository's default
-# branch — so this keeps working if the default branch is later renamed or the
-# work is merged elsewhere. `workflow_dispatch` allows a manual run from any
-# branch via the Actions tab.
+# `main` is the trunk: work lands there directly and every push publishes.
+# Also accepts the repository's default branch, so the deploy keeps working
+# during a branch rename. `workflow_dispatch` allows a manual run from the
+# Actions tab.
 on:
   push:
   workflow_dispatch:
@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.event_name == 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,7 +49,7 @@ jobs:
           path: dist
 
   deploy:
-    if: github.event_name == 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || github.ref_name == github.event.repository.default_branch
     needs: build
     runs-on: ubuntu-latest
     environment:

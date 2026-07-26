@@ -4,6 +4,7 @@ import type { SceneContext } from '../engine/SceneManager';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Torch } from '../engine/fx';
 import { audio } from '../engine/Audio';
+import { input } from '../engine/Input';
 import { elementGlowTexture, elementTileTexture, floorTexture, wallTexture } from '../engine/pixel';
 import { speciesArt, species } from '../data/creatures';
 import { ELEMENTS } from '../data/elements';
@@ -11,7 +12,7 @@ import type { ElementId } from '../data/elements';
 import type { EnemySpec } from '../data/bootDomain';
 import { technique } from '../data/techniques';
 import { Battle } from '../systems/battle/engine';
-import type { Battler, TurnResult } from '../systems/battle/engine';
+import type { BattleAction, Battler, TurnResult } from '../systems/battle/engine';
 import { makeCreature, isUp, reviveFainted } from '../systems/party/creature';
 import type { CreatureInstance } from '../systems/party/creature';
 import { game } from '../systems/party/gameState';
@@ -67,6 +68,9 @@ export class BattleScene extends GameScene {
   private homePos = new Map<string, THREE.Vector3>();
   private highlight: THREE.PointLight | null = null;
   private finished = false;
+  /** Auto-battle: party members take the basic Attack until the player cancels. */
+  private autoBattle = false;
+  private unsubInput: (() => void) | null = null;
 
   constructor(ctx: SceneContext) {
     super(ctx);
@@ -99,6 +103,12 @@ export class BattleScene extends GameScene {
     this.ctx.hd2d.snapCamera();
 
     audio.music(this.params.isBoss ? 'boss' : 'battle');
+
+    // Escape drops out of auto-battle. Registered scene-wide rather than on the
+    // menu, because while auto is running no menu is open to receive the key.
+    this.unsubInput = input.onAction((a) => {
+      if (a === 'cancel' && this.autoBattle) this.setAuto(false);
+    });
 
     void this.run();
   }
@@ -270,8 +280,22 @@ export class BattleScene extends GameScene {
 
         let result: TurnResult;
         if (actor.side === 'party') {
-          this.hud.setLog(`${actor.creature.name}'s turn.`);
-          const action = await this.hud.chooseAction(this.battle, actor, (uid) => this.hoverTarget(uid));
+          let action: BattleAction;
+          if (this.autoBattle) {
+            this.hud.setLog(`${actor.creature.name} attacks on its own.`);
+            await sleep(320);
+            action = this.autoAction();
+          } else {
+            this.hud.setLog(`${actor.creature.name}'s turn.`);
+            const choice = await this.hud.chooseAction(this.battle, actor, (uid) => this.hoverTarget(uid));
+            if (choice.type === 'auto') {
+              this.setAuto(true);
+              await sleep(200);
+              action = this.autoAction();
+            } else {
+              action = choice;
+            }
+          }
           result = this.battle.perform(actor, action);
         } else {
           this.hud.setLog(`${actor.creature.name} is deciding...`);
@@ -288,6 +312,27 @@ export class BattleScene extends GameScene {
 
     if (this.battle.outcome === 'victory') await this.onVictory();
     else await this.onDefeat();
+  }
+
+  /**
+   * Auto-battle (plan-adjacent QoL): the party keeps swinging with the free
+   * basic Attack — no MP spent, no techniques, no items — so leaving it on can
+   * never burn resources you were saving. It targets the weakest living foe so
+   * turns are not wasted overkilling something already on its last legs.
+   */
+  private autoAction(): BattleAction {
+    const foes = this.battle.living('enemy');
+    if (!foes.length) return { type: 'guard' };
+    const target = foes.reduce((weakest, f) => (f.creature.hp < weakest.creature.hp ? f : weakest), foes[0]);
+    return { type: 'attack', targetUid: target.creature.uid };
+  }
+
+  private setAuto(on: boolean) {
+    if (this.autoBattle === on) return;
+    this.autoBattle = on;
+    this.hud.setAuto(on);
+    audio.sfx(on ? 'confirm' : 'cancel');
+    if (!on) this.hud.setLog('Auto off — you have the controls.');
   }
 
   private pulse(actor: Battler) {
@@ -457,6 +502,8 @@ export class BattleScene extends GameScene {
 
   async exit() {
     this.finished = true;
+    this.unsubInput?.();
+    this.unsubInput = null;
     this.hud.destroy();
     this.dialogue.destroy();
     for (const bb of this.sprites.values()) bb.dispose();

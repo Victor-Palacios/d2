@@ -13,6 +13,9 @@ interface FighterCard {
   hpText: HTMLElement;
 }
 
+/** What the action menu can resolve to — a real action, or "go auto". */
+export type MenuChoice = BattleAction | { type: 'auto' };
+
 /** Battle DOM overlay: HP/MP panels, turn banner, log and the action menu. */
 export class BattleHUD {
   private root: HTMLElement;
@@ -21,6 +24,7 @@ export class BattleHUD {
   private enemyWrap: HTMLElement;
   private partyWrap: HTMLElement;
   private menuHost: HTMLElement;
+  private autoChip: HTMLElement;
   private cards = new Map<string, FighterCard>();
   private menu: Menu | null = null;
 
@@ -40,8 +44,18 @@ export class BattleHUD {
     this.menuHost.id = 'action-menu';
     this.menuHost.style.display = 'none';
 
-    this.root.append(this.banner, this.log, this.enemyWrap, this.partyWrap, this.menuHost);
+    // Shown only while auto-battle is running, so the way out is always visible.
+    this.autoChip = el('div', 'panel');
+    this.autoChip.id = 'auto-chip';
+    this.autoChip.innerHTML = '<span class="accent">AUTO</span> — press ESC to take over';
+    this.autoChip.style.display = 'none';
+
+    this.root.append(this.banner, this.log, this.enemyWrap, this.partyWrap, this.menuHost, this.autoChip);
     this.parent.appendChild(this.root);
+  }
+
+  setAuto(on: boolean) {
+    this.autoChip.style.display = on ? '' : 'none';
   }
 
   build(battle: Battle) {
@@ -132,12 +146,15 @@ export class BattleHUD {
   /**
    * Runs the player's action selection for one battler.
    * `onTargetHover` lets the scene highlight the targeted sprite in 3D.
+   *
+   * Resolves either a concrete action, or `{ type: 'auto' }` when the player
+   * hands the fight over to auto-battle.
    */
   async chooseAction(
     battle: Battle,
     actor: Battler,
     onTargetHover?: (uid: string | null) => void,
-  ): Promise<BattleAction> {
+  ): Promise<MenuChoice> {
     const c = actor.creature;
 
     for (;;) {
@@ -145,8 +162,11 @@ export class BattleHUD {
         { value: 'attack', label: 'Attack' },
         { value: 'technique', label: 'Technique', disabled: c.techniques.length === 0 },
         { value: 'guard', label: 'Guard' },
+        { value: 'auto', label: 'Auto', note: 'ESC' },
         { value: 'item', label: 'Item', disabled: true, note: '—' },
       ]);
+
+      if (root === 'auto') return { type: 'auto' };
 
       if (root === 'guard') return { type: 'guard' };
 

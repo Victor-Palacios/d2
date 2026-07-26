@@ -80,7 +80,7 @@ fails with `Resource not accessible by integration`. Until Pages is on, the
 |---|---|
 | Arrow keys / WASD | Move one tile, navigate menus |
 | Z / Enter / Space | Confirm, advance dialogue |
-| X / Esc | Cancel, back out of a menu |
+| X / Esc | Cancel, back out of a menu, **stop auto-battle** |
 | `` ` `` | Toggle the HD-2D debug panel |
 | M | Mute / unmute |
 
@@ -99,10 +99,14 @@ choice → rival intro → supply bay → Mission 2 briefing.
   one point per step (hit zero and you get towed home), descent portals, and a
   boss floor whose accent walls telegraph what is coming.
 - **Battle**: turn-based 3v3. Turn order by Speed with a random tiebreak band.
-  Attack / Technique / Guard, MP costs, AoE and heal techniques, attribute
-  triangle (Alpha > Gamma > Beta > Alpha, ×1.25 / ×0.8), element-plate buffs
-  (×1.2), damage variance, faint / victory / defeat, and an enemy AI that
+  Attack / Technique / Guard / **Auto**, MP costs, AoE and heal techniques,
+  attribute triangle (Alpha > Gamma > Beta > Alpha, ×1.25 / ×0.8), element-plate
+  buffs (×1.2), damage variance, faint / victory / defeat, and an enemy AI that
   prefers advantageous targets and finishes off the wounded.
+- **Auto-battle**: pick **Auto** and the party keeps swinging with the free
+  basic Attack, targeting the weakest living foe, until you press **Esc**. It
+  deliberately never spends MP, uses techniques or touches items, so leaving it
+  on cannot burn anything you were saving for the boss.
 - **Progression**: the mentor's borrowed trio for the tutorial, then a licence,
   your own vehicle, and one of three Guard Teams — which sets your attribute
   and your first own creature.
