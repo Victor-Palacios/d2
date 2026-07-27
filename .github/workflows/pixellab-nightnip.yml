@@ -31,7 +31,7 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     env:
-      MONSTER: ${{ github.event.inputs.monster || 'bug,scrap,bot' }}
+      MONSTER: ${{ github.event.inputs.monster || 'wisp,knight,wolf,crystalSlime,prismMoth,geodeGolem,wraithWisp,graveCrawler,cursedArmor' }}
     steps:
       - uses: actions/checkout@v4
 
