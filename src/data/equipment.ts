@@ -55,6 +55,13 @@ export const EQUIPMENT: Record<string, Equipment> = {
     effect: 'crit',
     desc: 'A whole life, remembered. The wearer lands only criticals for a battle\'s first three rounds.',
   },
+  haldensSerial: {
+    id: 'haldensSerial',
+    name: "Halden's Serial",
+    slot: 'memento',
+    def: 5,
+    desc: 'A dog-eared detective pulp, its last chapter unread. The comfort of an unfinished story. +5 DEF.',
+  },
 };
 
 export function equipment(id: string): Equipment {

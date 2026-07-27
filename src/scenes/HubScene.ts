@@ -12,6 +12,7 @@ import { game } from '../systems/party/gameState';
 import { saveAuto } from '../systems/party/saveGame';
 import { fullRestore } from '../systems/party/creature';
 import { DialogueBox } from '../ui/DialogueBox';
+import { Menu } from '../ui/Menu';
 import { openShop } from '../ui/ShopScreen';
 import { openSoulMenu } from '../ui/SoulMenu';
 import { openSoulStore } from '../ui/SoulStore';
@@ -212,6 +213,17 @@ export class HubScene extends GameScene {
       await this.rivalAndBriefing();
     }
 
+    // Midpoint: once all three reaches are quiet, the one death the Keeping
+    // cannot answer. Fires once, whenever the player next stands in the Everwake.
+    if (
+      game.has('bootDomainCleared') &&
+      game.has('crystalCleared') &&
+      game.has('hauntedCleared') &&
+      !game.has('midpointDone')
+    ) {
+      await this.midpoint();
+    }
+
     this.busy = false;
     if (this.disposed) return;
 
@@ -243,6 +255,80 @@ export class HubScene extends GameScene {
     // The rival is already standing in the room (build() shows them once the
     // Boot Domain is cleared), so go straight into the next story beat.
     await this.rivalAndBriefing();
+  }
+
+  /**
+   * The midpoint (design framework §11.4 / docs/NARRATIVE.md): the unanswerable
+   * death. Halden dies the ordinary way — a whole life the lantern cannot keep —
+   * and the player authors what is preserved. Then every philosophy hardens
+   * (§11.3): the Defier turns coercive, the Bereaved turns captive, and the
+   * Unfinished must face what all their Keeping has really been.
+   */
+  private async midpoint() {
+    game.set('midpointDone');
+    game.set('haldenGone');
+
+    await this.dialogue.play([
+      ...narrate('You come back to the Everwake with all three reaches quiet behind you. The lanterns are lit. Halden is not at his radio.'),
+      ...narrate('You find him in the back, his detective serial still murmuring a chapter from the end. He is not an echo. He is a person, and he is dying the ordinary way.'),
+      ...say('Halden', `Ah. ${game.playerName}. I hoped it would be you who found me. Sit down. You do not have to fix your face.`),
+    ]);
+
+    await this.dialogue.play([
+      ...narrate('Without deciding to, you raise the lantern — the gesture that kept every soul in the reaches. Keep him. Hold him. Do not let him fade.'),
+      ...narrate('Nothing happens. The lantern will not take him. He is not a lingering thing to be drawn in; he is a whole life, and a whole life cannot be kept that way.'),
+      ...say('Halden', 'No. Put it down. You cannot syphon a person — only the echo one leaves. I taught you to keep souls. I never taught you this, because I could not do it myself.'),
+      ...say('Halden', 'Keeping was never the same as loving. Some things you honour by holding on. The ones that matter most, you honour by letting go. That is the question the lantern was always asking you.'),
+      ...narrate('His hand goes still. The serial plays on to no one.'),
+    ]);
+
+    const choice = await this.chooseFarewell();
+    if (choice === 'name') {
+      game.set('mourn:name');
+      await this.dialogue.play([
+        ...narrate('You write his name where it will be read, so the second death cannot have him. He will be remembered — held, a little, against his own advice.'),
+      ]);
+    } else if (choice === 'work') {
+      game.set('mourn:work');
+      game.addItem('haldensSerial');
+      await this.dialogue.play([
+        ...narrate('You take his chair, his radio, the serial with its last chapter unread. The duty is yours now. You carry the unfinished story with you.'),
+      ]);
+      toast(this.ctx.ui, "<span class=\"accent\">Got Halden's Serial</span> — a Memento", 2600);
+    } else {
+      game.set('mourn:letgo');
+      await this.dialogue.play([
+        ...narrate('You keep nothing. You let the story stay unfinished, the chair stay empty, the name go unwritten. It is the hardest thing he taught you, and the last.'),
+      ]);
+    }
+
+    await sleep(700);
+    await this.dialogue.play([
+      ...narrate('Word travels the reaches. Grief does not soften the others. It sharpens them.'),
+      ...say('Sena Vale', 'So you have felt it now. That is why I froze Lire — so I would never have to. Bring me a soul you love and I will do the same for you. You need never lose another.'),
+      ...say('Wren', 'I have added Halden to the Book. I add everyone. If every name is written down, then no one is truly gone — they are not gone — tell me they are not gone.'),
+      ...narrate('And you: you have been keeping souls since the first lantern. You wonder, now, whether it was ever tending them — or only refusing, again and again, to let a single one go.'),
+    ]);
+    game.set('actTwo');
+    toast(this.ctx.ui, '<span class="accent">Act II — every philosophy hardens</span>', 3000);
+  }
+
+  /** The funeral choice (framework §10.5): the player authors what a life leaves behind. */
+  private async chooseFarewell(): Promise<'name' | 'work' | 'letgo'> {
+    const host = el('div', 'panel');
+    host.style.cssText =
+      'position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);min-width:340px;text-align:left;';
+    host.appendChild(el('h2', undefined, 'What do you keep of him?'));
+    this.ctx.ui.appendChild(host);
+    const menu = new Menu(host, [
+      { value: 'name', label: 'His name', note: 'write him in the Book of Names' },
+      { value: 'work', label: 'His work', note: "take up the keeper's duty" },
+      { value: 'letgo', label: 'Let him go', note: 'keep nothing; honour the lesson' },
+    ]);
+    const v = await menu.open();
+    menu.destroy();
+    remove(host);
+    return (v ?? 'letgo') as 'name' | 'work' | 'letgo';
   }
 
   private async rivalAndBriefing() {

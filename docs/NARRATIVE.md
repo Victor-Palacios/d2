@@ -237,10 +237,32 @@ filled before commercial use.
   (100% criticals for a battle's first three rounds) unlocks when all twelve
   poem pieces are collected.
 
-## 11. Still ahead (tracked, not yet built)
+## 11. The midpoint — the unanswerable death (built)
 
-- A **midpoint unanswerable death** and Act-II hardening (§11.4) once the three
-  reaches carry the theme.
+After all three reaches are quiet, returning to the Everwake fires the midpoint
+(framework §11.4). **Halden** is dying — the ordinary way, a whole life the
+Keeping cannot hold. The player instinctively raises the lantern; it fails,
+because *you cannot syphon a person, only the echo one leaves*. His last lesson
+is the thesis: keeping was never the same as loving, and the things that matter
+most you honour by letting go.
+
+Then the player **authors the farewell** (framework §10.5) — keep his **name**
+(against the second death), take up his **work** (inherit the duty, and
+*Halden's Serial*, a Memento), or **let him go** (keep nothing). No option is
+correct; each is a real loss.
+
+And **every philosophy hardens** (framework §11.3), delivered as the survivors'
+response: **Sena** turns coercive ("bring me a soul you love and I will freeze
+it, so you never lose another"), **Wren** turns captive ("if every name is
+written down, no one is truly gone — tell me they are not gone"), and the
+player — the Unfinished — must face that all their Keeping may have been a
+refusal, over and over, to let a single soul go. Flags: `midpointDone`,
+`haldenGone`, `mourn:*`, `actTwo`.
+
+## 12. Still ahead (tracked, not yet built)
+
+- Act-III: characters borrow from their opponents (§11.5) and a finale
+  temptation (§11.6) that exposes what the player valued.
 - Companion arcs for Sena and Wren beyond their single scenes.
 
 > **Closing test (framework closing principle):** every change above was made
