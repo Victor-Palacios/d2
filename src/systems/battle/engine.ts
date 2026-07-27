@@ -1,5 +1,5 @@
 import type { CreatureInstance } from '../party/creature';
-import { isDown, isUp, effSpd } from '../party/creature';
+import { isDown, isUp, effSpd, hasEquipEffect } from '../party/creature';
 import type { ElementId } from '../../data/elements';
 import type { Technique } from '../../data/techniques';
 import { technique, techShape } from '../../data/techniques';
@@ -103,6 +103,8 @@ export const BREAK_DAMAGE_MULT = 1.5;
 export type FieldPulse = 'calm' | 'crit' | 'surge';
 export const PULSE_CYCLE: readonly FieldPulse[] = ['calm', 'crit', 'surge'];
 export const CRIT_PULSE_MULT = 1.2;
+/** Guaranteed-critical multiplier (Immortality Memento). */
+export const CRIT_MULT = 1.5;
 
 export type BattleAction =
   | { type: 'attack'; targetUid: string }
@@ -118,6 +120,8 @@ export interface Hit {
   damage: number;
   heal: number;
   fainted: boolean;
+  /** Guaranteed critical (Immortality Memento) — drives the crit FX/log. */
+  crit?: boolean;
   breakdown?: DamageBreakdown;
 }
 
@@ -392,17 +396,21 @@ export class Battle {
         defenderRow: t.cell.row,
         rng: this.rng,
       });
-      // Post-multipliers: a broken target takes extra, and the `crit` field
-      // pulse boosts every damaging action this round.
+      // Post-multipliers: a broken target takes extra, the `crit` field pulse
+      // boosts every damaging action this round, and an Immortality Memento
+      // makes the wearer's hits guaranteed criticals for the first three rounds.
       let dealt = breakdown.amount;
       if (t.staggered) dealt = Math.round(dealt * BREAK_DAMAGE_MULT);
       if (this.fieldPulse === 'crit') dealt = Math.round(dealt * CRIT_PULSE_MULT);
+      const critHit = hasEquipEffect(c, 'crit') && this.round <= 3;
+      if (critHit) dealt = Math.round(dealt * CRIT_MULT);
       dealt = Math.max(1, dealt);
 
       t.creature.hp = Math.max(0, t.creature.hp - dealt);
       const fainted = isDown(t.creature);
-      result.hits.push({ targetUid: t.creature.uid, damage: dealt, heal: 0, fainted, breakdown });
+      result.hits.push({ targetUid: t.creature.uid, damage: dealt, heal: 0, fainted, crit: critHit, breakdown });
 
+      if (critHit) result.log.push('A remembered life strikes true — critical!');
       if (breakdown.attackerTileBonus) result.log.push(`The ${actor.tile} plate amplifies it!`);
       if (breakdown.effectiveness === 'super') result.log.push('Class advantage — it hits hard!');
       else if (breakdown.effectiveness === 'weak') result.log.push('Class disadvantage — it is resisted.');

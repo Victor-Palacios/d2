@@ -48,6 +48,13 @@ export const EQUIPMENT: Record<string, Equipment> = {
     spd: 4,
     desc: 'A locket whose small heart still ticks. +4 SPD.',
   },
+  immortalityMemento: {
+    id: 'immortalityMemento',
+    name: 'Immortality',
+    slot: 'memento',
+    effect: 'crit',
+    desc: 'A whole life, remembered. The wearer lands only criticals for a battle\'s first three rounds.',
+  },
 };
 
 export function equipment(id: string): Equipment {

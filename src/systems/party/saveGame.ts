@@ -19,7 +19,7 @@ import type { AttributeId } from '../../data/elements';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 /**
  * Oldest save this build can still read. Because every change so far is additive
  * and `applySave` defaults missing fields, all versions from 1 up migrate
@@ -60,6 +60,7 @@ export interface SaveData {
     soularium: typeof game.soularium;
     partyCap: number;
     sanctuary: CreatureInstance[];
+    immortality: number;
   };
 }
 
@@ -100,6 +101,7 @@ export function snapshot(kind: SaveKind, scene: SaveData['scene'], label: string
       soularium: JSON.parse(JSON.stringify(game.soularium)),
       partyCap: game.partyCap,
       sanctuary: JSON.parse(JSON.stringify(game.sanctuary)) as CreatureInstance[],
+      immortality: game.immortality,
     },
   };
 }
@@ -190,6 +192,7 @@ export function applySave(data: SaveData) {
   game.soularium = s.soularium ?? {};
   game.partyCap = s.partyCap ?? START_PARTY_CAP;
   game.sanctuary = s.sanctuary ?? [];
+  game.immortality = s.immortality ?? 0;
   // Saves from before the leveling / equipment systems won't have these fields.
   for (const c of [...game.party, ...game.sanctuary]) {
     if (c.xp === undefined) c.xp = 0;

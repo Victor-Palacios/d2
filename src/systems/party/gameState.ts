@@ -2,6 +2,7 @@ import type { CreatureInstance } from './creature';
 import { makeCreature } from './creature';
 import { BOOT_DOMAIN } from '../../data/bootDomain';
 import type { AttributeId } from '../../data/elements';
+import { IMMORTALITY_POEM, IMMORTALITY_TOTAL } from '../../data/immortality';
 
 /**
  * Soul Syphon capture tuning. An *encounter* primes a wild species to
@@ -79,6 +80,8 @@ export class GameState {
   partyCap = START_PARTY_CAP;
   /** Reserve monsters (the Soul Sanctuary): captured but not in the party. */
   sanctuary: CreatureInstance[] = [];
+  /** Pieces of the Immortality set collected (lines of the elegy), 0..12. */
+  immortality = 0;
 
   // --- Soularium / capture ------------------------------------------------
 
@@ -166,6 +169,20 @@ export class GameState {
     if (i < 0 || j < 0 || j >= this.party.length) return false;
     [this.party[i], this.party[j]] = [this.party[j], this.party[i]];
     return true;
+  }
+
+  /**
+   * Awards the next Immortality piece (in poem order). Returns the line granted
+   * and its number, or null if the set is already complete. Completing the set
+   * (all twelve) drops the Immortality Memento into the bag.
+   */
+  grantImmortalityPiece(): { index: number; line: string } | null {
+    if (this.immortality >= IMMORTALITY_TOTAL) return null;
+    const index = this.immortality;
+    const line = IMMORTALITY_POEM[index];
+    this.immortality++;
+    if (this.immortality >= IMMORTALITY_TOTAL) this.addItem('immortalityMemento');
+    return { index, line };
   }
 
   /** Buy one more party slot, up to the cap. Returns false if already maxed. */

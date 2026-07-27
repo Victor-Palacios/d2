@@ -186,6 +186,19 @@ export class BattleHUD {
     this.log.innerHTML = esc(text);
   }
 
+  /**
+   * The Grief command set — the only actions against The Last Light. Not
+   * cancellable: you must choose how to meet it.
+   */
+  async chooseGrief(comforted: boolean): Promise<'remember' | 'comfort' | 'letgo'> {
+    const v = await this.runMenu([
+      { value: 'remember', label: 'Remember', note: 'recall who they are' },
+      { value: 'comfort', label: 'Comfort', note: 'speak gently' },
+      { value: 'letgo', label: 'Let Go', note: comforted ? 'release them' : 'they may not be ready' },
+    ]);
+    return (v ?? 'remember') as 'remember' | 'comfort' | 'letgo';
+  }
+
   /** Floating damage / heal number at a screen position. */
   float(x: number, y: number, text: string, color: string) {
     const node = el('div', 'dmg-float');

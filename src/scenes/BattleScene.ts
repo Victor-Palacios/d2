@@ -11,6 +11,7 @@ import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
 import type { EnemySpec } from '../data/bootDomain';
 import { technique } from '../data/techniques';
+import { COMFORT_PHRASES, IMMORTALITY_TOTAL } from '../data/immortality';
 import { Battle } from '../systems/battle/engine';
 import type { BattleAction, Battler, TurnResult } from '../systems/battle/engine';
 import { makeCreature, isUp, reviveFainted, grantXp, xpFromEnemy } from '../systems/party/creature';
@@ -348,6 +349,12 @@ export class BattleScene extends GameScene {
   private async run() {
     if (this.params.intro?.length) await this.dialogue.play(this.params.intro);
 
+    // The Last Light is not a fight — it is a soul asking to be understood.
+    if (this.battle.side('enemy').some((b) => b.creature.speciesId === 'lastlight')) {
+      await this.runLastLight();
+      return;
+    }
+
     this.hud.setBanner(this.params.isBoss ? 'Warden Battle' : 'Battle');
     this.hud.setLog(
       this.params.isBoss
@@ -585,7 +592,7 @@ export class BattleScene extends GameScene {
         const color = ELEMENTS[tech.element].color;
         this.particles.emit(worldTop, { count: 18, color, speed: 2.6, life: 0.55, gravity: -3 });
         const s = this.screenPos(worldTop);
-        const superEffective = hit.breakdown?.effectiveness === 'super';
+        const superEffective = hit.crit || hit.breakdown?.effectiveness === 'super';
         this.hud.float(s.x, s.y, String(hit.damage), superEffective ? '#ffd166' : '#ff9a8a');
         this.ctx.hd2d.addShake(superEffective ? 0.2 : 0.11);
         if (superEffective) audio.sfx('crit');
@@ -689,6 +696,114 @@ export class BattleScene extends GameScene {
       eventId: this.params.eventId,
     };
     await this.ctx.go(this.params.returnTo, params);
+  }
+
+  /**
+   * The Last Light (death theme): a soul almost ready to move on. It cannot be
+   * fought or kept — only understood and released, within three dimming turns,
+   * using the Grief commands. Success grants a huge EXP boon and a piece of the
+   * Immortality set; failure lets it slip away with nothing.
+   */
+  private async runLastLight() {
+    const light = this.battle.side('enemy')[0];
+    this.hud.setActive(light.creature.uid);
+    this.hud.setBanner('A Trembling Light');
+    this.hud.setLog('A cracked lantern drifts near, a small flame shivering inside. It cannot fight, and will not be made to. It is trying, gently, to leave.');
+    await sleep(1900);
+
+    let turns = 3;
+    let comforted = false;
+    let rememberStreak = 0;
+    let awarded = false;
+    let left = false;
+
+    while (turns > 0 && !awarded && !left && !this.finished) {
+      this.hud.setBanner(`The flame dims — ${turns} left`);
+      const choice = await this.hud.chooseGrief(comforted);
+
+      if (choice === 'remember') {
+        rememberStreak += 1;
+        const chance = rememberStreak <= 1 ? 0.33 : 0.66; // rises to 66% when pressed consecutively
+        this.hud.setLog('You say: "Remember who you are."');
+        await sleep(1200);
+        if (Math.random() < chance) awarded = true;
+        else { this.hud.setLog('The flame gutters, reaching for a name it almost has. Not yet.'); await sleep(1200); turns -= 1; }
+      } else if (choice === 'comfort') {
+        rememberStreak = 0;
+        comforted = true;
+        const phrase = COMFORT_PHRASES[Math.floor(Math.random() * COMFORT_PHRASES.length)];
+        this.hud.setLog(`You say: "${phrase}"`);
+        await sleep(1300);
+        if (Math.random() < 0.10) awarded = true;
+        else { this.hud.setLog('It leans toward the warmth of your voice, a little steadier now.'); await sleep(1200); turns -= 1; }
+      } else {
+        rememberStreak = 0;
+        this.hud.setLog('You say: "You are free."');
+        await sleep(1300);
+        if (comforted) awarded = true;
+        else { left = true; this.hud.setLog('But it was not ready. Startled, the flame slips away — taking nothing you offered.'); await sleep(1800); }
+      }
+    }
+
+    if (!awarded && !left) {
+      this.hud.setLog('The flame thins to a thread and, with a small sigh, goes out on its own. Peacefully.');
+      await sleep(1900);
+    }
+
+    if (awarded) await this.onLastLightReleased(light);
+    else await this.onLastLightGone();
+  }
+
+  private async onLastLightReleased(light: Battler) {
+    if (this.finished) return;
+    this.finished = true;
+    audio.sfx('victory');
+    this.hud.setActive(null);
+    this.hud.setBanner('At Rest');
+    this.hud.setLog('The Last Light understands. It rises, unhurried, and is gone — not lost. Home.');
+    await sleep(1700);
+
+    // A huge EXP boon: twenty times what a foe of its level would normally give.
+    const enemyLevel = light.creature.level;
+    const levelUps: string[] = [];
+    for (const b of this.battle.side('party')) {
+      const nl = grantXp(b.creature, xpFromEnemy(b.creature.level, enemyLevel) * 20);
+      if (nl !== null) levelUps.push(`${b.creature.name} → Lv${nl}`);
+    }
+    this.hud.setLog('Something it carried passes to you — a great, quiet understanding.');
+    await sleep(1500);
+    for (const msg of levelUps) {
+      audio.sfx('heal');
+      toast(this.ctx.ui, `<span class="accent">Level up!</span> ${msg}`, 2200);
+      await sleep(1200);
+    }
+
+    // A piece of the Immortality elegy, in order — the set completes at twelve.
+    const piece = game.grantImmortalityPiece();
+    if (piece) {
+      audio.sfx('chest');
+      this.hud.setLog(`It leaves a line behind: "${piece.line}"`);
+      toast(this.ctx.ui, `<span class="accent">◆ Immortality ${piece.index + 1}/${IMMORTALITY_TOTAL}</span> — "${piece.line}"`, 3200);
+      await sleep(2400);
+      if (game.immortality >= IMMORTALITY_TOTAL) {
+        this.hud.setLog('The elegy is whole. A life remembered entire — the Immortality Memento is yours.');
+        toast(this.ctx.ui, '<span class="accent">★ Immortality complete</span> — a Memento of 100% criticals', 3200);
+        await sleep(2400);
+      }
+    }
+
+    await this.ctx.go(this.params.returnTo, { resume: true, battleResult: 'flee', eventId: this.params.eventId });
+  }
+
+  private async onLastLightGone() {
+    if (this.finished) return;
+    this.finished = true;
+    audio.sfx('cancel');
+    this.hud.setActive(null);
+    this.hud.setBanner('Gone');
+    this.hud.setLog('The lantern is empty. You did not get to understand it in time. Some souls you only meet once.');
+    await sleep(2000);
+    await this.ctx.go(this.params.returnTo, { resume: true, battleResult: 'flee', eventId: this.params.eventId });
   }
 
   private async onFlee() {

@@ -40,6 +40,7 @@ Environment variables:
 | `flee.mjs` | The Run action escapes a non-boss fight back to the crawl without consuming the encounter. |
 | `menu.mjs` | The grid main menu (R1 / E / Start) renders Party / Gear / Soularium / Sanctuary, and party reordering ("move monster positions") swaps the fielded order. |
 | `equip.mjs` | The keeper's kit is granted at the start and the Gear screen fits an Arm/Shroud/Memento into a soul's slot (moving it out of the bag). |
+| `lastlight.mjs` | The Last Light grief encounter: Comfort → Let Go releases the soul, granting the next Immortality poem piece and a 20× EXP boon; twelve pieces unlock the Immortality Memento. |
 
 ## Two environment traps that cost real time
 

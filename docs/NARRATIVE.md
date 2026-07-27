@@ -227,13 +227,21 @@ filled before commercial use.
   Sena, and Wren.
 - Smoke tests updated for the renamed reaches.
 
-## 10. Still ahead (tracked, not yet built)
+## 10. Built since (now in the game)
 
-- **The Last Light** full Grief encounter (§6) — task in progress.
-- **Equipment** as intimacy items (Arms / Shrouds / Mementos), the Immortality
-  Memento set (§7).
+- **The Last Light** full Grief encounter (§6) — Remember / Comfort / Let Go,
+  the three-turn dim, the 20× EXP boon, and the Immortality poem pieces awarded
+  in order (`data/immortality.ts`, `BattleScene.runLastLight`).
+- **Equipment** as intimacy items — Arms / Shrouds / Mementos, one slot each
+  (`data/equipment.ts`, `ui/GearScreen.ts`); the **Immortality Memento**
+  (100% criticals for a battle's first three rounds) unlocks when all twelve
+  poem pieces are collected.
+
+## 11. Still ahead (tracked, not yet built)
+
 - A **midpoint unanswerable death** and Act-II hardening (§11.4) once the three
   reaches carry the theme.
+- Companion arcs for Sena and Wren beyond their single scenes.
 
 > **Closing test (framework closing principle):** every change above was made
 > against one question — *what does this reveal about living that could only be
