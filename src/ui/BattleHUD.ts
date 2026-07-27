@@ -2,7 +2,8 @@ import { el, esc, meter, remove } from './dom';
 import { Menu } from './Menu';
 import type { MenuItem } from './Menu';
 import type { Battle, BattleAction, Battler } from '../systems/battle/engine';
-import { technique } from '../data/techniques';
+import type { CreatureInstance } from '../systems/party/creature';
+import { technique, techShape } from '../data/techniques';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
 import { audio } from '../engine/Audio';
 import { game } from '../systems/party/gameState';
@@ -17,6 +18,11 @@ interface FighterCard {
 
 /** What the action menu can resolve to — a real action, or "go auto". */
 export type MenuChoice = BattleAction | { type: 'auto' };
+
+/** Human label for a formation cell, e.g. "Vanguard · Left". */
+function cellLabel(row: number, col: number): string {
+  return `${row === 0 ? 'Vanguard' : 'Rear'} · ${['Left', 'Centre', 'Right'][col]}`;
+}
 
 /** Battle DOM overlay: HP/MP panels, turn banner, log and the action menu. */
 export class BattleHUD {
@@ -189,18 +195,22 @@ export class BattleHUD {
     battle: Battle,
     actor: Battler,
     onTargetHover?: (uid: string | null) => void,
+    reserves: CreatureInstance[] = [],
   ): Promise<MenuChoice> {
     const c = actor.creature;
 
     for (;;) {
       // Technique is greyed out unless the creature can afford at least one.
       const canTechnique = c.techniques.some((id) => c.mp >= technique(id).mpCost);
+      const canMove = battle.emptyCells(actor.side).length > 0;
+      const canSwap = reserves.length > 0;
       const root = await this.runMenu([
         { value: 'attack', label: 'Attack' },
         { value: 'technique', label: 'Technique', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
+        { value: 'move', label: 'Move', disabled: !canMove, note: canMove ? undefined : 'no room' },
+        { value: 'swap', label: 'Swap', disabled: !canSwap, note: canSwap ? undefined : '—' },
         { value: 'guard', label: 'Guard' },
         { value: 'auto', label: 'Auto', note: 'L1' },
-        { value: 'item', label: 'Item', disabled: true, note: '—' },
       ]);
 
       if (root === 'auto') return { type: 'auto' };
@@ -214,30 +224,54 @@ export class BattleHUD {
         return { type: 'attack', targetUid: uid };
       }
 
+      if (root === 'move') {
+        const items: MenuItem[] = battle.emptyCells(actor.side).map((cell) => ({
+          value: `${cell.row}:${cell.col}`,
+          label: cellLabel(cell.row, cell.col),
+          note: battle.plateAt(actor.side, cell) ? `${battle.plateAt(actor.side, cell)} plate` : undefined,
+        }));
+        const pick = await this.runMenu(items, { cancellable: true });
+        if (!pick) continue;
+        const [row, col] = pick.split(':').map(Number);
+        return { type: 'shift', cell: { row, col } };
+      }
+
+      if (root === 'swap') {
+        const items: MenuItem[] = reserves.map((r) => ({
+          value: r.uid,
+          label: r.name,
+          note: `${r.hp}/${r.maxHp}`,
+        }));
+        const uid = await this.runMenu(items, { cancellable: true });
+        if (!uid) continue;
+        return { type: 'swap', reserveUid: uid };
+      }
+
       if (root === 'technique') {
         const items: MenuItem[] = c.techniques.map((id) => {
           const t = technique(id);
+          const shape = techShape(t);
           return {
             value: id,
             label: t.name,
             // Techniques are tinted by their element so the plate bonus and the
             // resistance you are about to hit are readable at a glance.
             color: ELEMENTS[t.element].color,
-            note: `${t.mpCost} MP`,
+            note: `${t.mpCost} MP${shape === 'single' ? '' : ` · ${shape}`}`,
             disabled: c.mp < t.mpCost,
           };
         });
         const techId = await this.runMenu(items, { cancellable: true });
         if (!techId) continue;
         const t = technique(techId);
-        if (t.aoe) return { type: 'technique', techniqueId: techId, targetUid: battle.living('enemy')[0].creature.uid };
+        // 'all' needs no aim; row/column/single all aim at an anchor foe.
+        if (techShape(t) === 'all') return { type: 'technique', techniqueId: techId, targetUid: battle.living('enemy')[0].creature.uid };
         // Techniques are ranged/Ether: they reach any living target, cover or not.
         const candidates = t.kind === 'heal' ? battle.living('party') : battle.living('enemy');
         const uid = await this.pickTarget(actor, candidates, onTargetHover);
         if (!uid) continue;
         return { type: 'technique', techniqueId: techId, targetUid: uid };
       }
-      // 'item' is disabled, and cancel at the root loops back around.
     }
   }
 

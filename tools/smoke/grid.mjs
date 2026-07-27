@@ -34,7 +34,8 @@ for (let i = 0; i < 40; i++) { if (await page.locator('.card', { hasText: 'Ember
 await page.locator('.card', { hasText: 'Emberling' }).click();
 await clearDlg(); await waitScene('hub'); await page.waitForTimeout(600); await clearDlg();
 await page.evaluate(() => { const g = window.hd2dGame;
-  ['sprigling', 'cogling'].forEach((id) => g.game.addMonster(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'x' + id, speciesId: id, name: id })))); });
+  // Three extra so the fight deploys 3 and keeps 1 in reserve (for the swap test).
+  ['sprigling', 'cogling', 'dropletta'].forEach((id) => g.game.addMonster(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'x' + id, speciesId: id, name: id })))); });
 
 // Into The Quiet Crossing floor 1 and across the gateway into the first fight.
 await press('ArrowDown', 5); await press('ArrowLeft', 3); await press('ArrowDown', 2);
@@ -90,6 +91,7 @@ const r = await page.evaluate(() => {
   return out;
 });
 
+console.log('== Phase A ==');
 console.log('party cells        :', JSON.stringify(r.party));
 console.log('enemy cells        :', JSON.stringify(r.enemy));
 console.log('default all-front  :', r.partyAllVanguard && r.enemyFrontCentre);
@@ -98,9 +100,59 @@ console.log('exposed is meleeable:', r.exposedBecomesMelee);
 console.log(`front melee > rear : ${r.meleeFrontDealt} > ${r.meleeRearDealt} = ${r.meleeFrontDealt > r.meleeRearDealt}`);
 console.log(`vanguard takes more: ${r.takenVanguard} > ${r.takenRear} = ${r.takenVanguard > r.takenRear}`);
 
-const ok = r.partyAllVanguard && r.enemyFrontCentre && r.coveredHiddenFromMelee && r.exposedBecomesMelee &&
+const okA = r.partyAllVanguard && r.enemyFrontCentre && r.coveredHiddenFromMelee && r.exposedBecomesMelee &&
   r.meleeFrontDealt > r.meleeRearDealt && r.takenVanguard > r.takenRear;
-console.log('\nPHASE A OK :', ok);
+
+// --- Phase B: AoE shapes, shift + plate-on-cell, swap --------------------
+const r2 = await page.evaluate(() => {
+  const b = window.hd2dGame.manager.activeScene.battle;
+  const idx = (cell) => cell.row * 3 + cell.col;
+  const party = b.side('party');
+  const enemy = b.side('enemy')[0];
+  const out = {};
+  enemy.creature.mp = 999; // let the enemy afford shaped Techniques for the test
+  const restore = () => party.forEach((p) => { p.creature.hp = p.creature.maxHp; });
+
+  // Row shape: all three party in row 0 -> a row technique aimed at any hits all 3.
+  party[0].cell = { row: 0, col: 0 }; party[1].cell = { row: 0, col: 1 }; party[2].cell = { row: 0, col: 2 };
+  restore();
+  out.rowHits = b.perform(enemy, { type: 'technique', techniqueId: 'emberWave', targetUid: party[1].creature.uid }).hits.length;
+
+  // Column shape: stack two party in one column -> a column technique hits exactly those 2.
+  party[0].cell = { row: 0, col: 0 }; party[1].cell = { row: 1, col: 0 }; party[2].cell = { row: 0, col: 2 };
+  restore();
+  out.colHits = b.perform(enemy, { type: 'technique', techniqueId: 'boltPierce', targetUid: party[0].creature.uid }).hits.length;
+
+  // Shift onto a plated cell: the moved unit derives that cell's element.
+  party[0].cell = { row: 0, col: 0 }; party[1].cell = { row: 0, col: 2 }; party[2].cell = { row: 1, col: 2 };
+  b.plates.party[idx({ row: 1, col: 1 })] = 'fire';
+  const shiftRes = b.perform(party[0], { type: 'shift', cell: { row: 1, col: 1 } });
+  out.shiftMoved = !!shiftRes.moved && party[0].cell.row === 1 && party[0].cell.col === 1;
+  out.shiftPlate = party[0].tile === 'fire';
+
+  // Swap: a living reserve tags in, taking the actor's slot; the actor benches.
+  const reserve = b.reserves.filter((x) => x.hp > 0)[0];
+  out.hadReserve = !!reserve;
+  if (reserve) {
+    const actor = b.side('party')[1];
+    const oldUid = actor.creature.uid;
+    const swapRes = b.perform(actor, { type: 'swap', reserveUid: reserve.uid });
+    out.swapMoved = !!swapRes.moved && actor.creature.uid === reserve.uid && b.reserves.some((x) => x.uid === oldUid);
+  }
+  return out;
+});
+
+console.log('\n== Phase B ==');
+console.log(`row shape hits 3   : ${r2.rowHits} (=3? ${r2.rowHits === 3})`);
+console.log(`column shape hits 2: ${r2.colHits} (=2? ${r2.colHits === 2})`);
+console.log('shift repositions  :', r2.shiftMoved);
+console.log('shift picks up plate:', r2.shiftPlate);
+console.log('swap tags in reserve:', r2.hadReserve && r2.swapMoved);
+
+const okB = r2.rowHits === 3 && r2.colHits === 2 && r2.shiftMoved && r2.shiftPlate && r2.hadReserve && r2.swapMoved;
+
+const ok = okA && okB;
+console.log('\nPHASE A OK :', okA, '| PHASE B OK :', okB);
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();
 process.exit(ok && !errs.length ? 0 : 1);

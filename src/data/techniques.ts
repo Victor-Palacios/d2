@@ -7,6 +7,15 @@ import type { ElementId } from './elements';
 
 export type TechniqueKind = 'damage' | 'heal';
 
+/**
+ * Area shape on the 2×3 formation grid (grid battle, Phase B):
+ * - `single` (default): one target.
+ * - `row`: the target plus every foe sharing its row (a rank sweep).
+ * - `column`: the target plus every foe sharing its column (a file pierce).
+ * - `all`: the whole opposing side.
+ */
+export type TechniqueShape = 'single' | 'row' | 'column' | 'all';
+
 export interface Technique {
   id: string;
   name: string;
@@ -14,9 +23,16 @@ export interface Technique {
   mpCost: number;
   power: number;
   element: ElementId;
-  /** Hits every living target on the opposing side. */
+  /** Legacy flag, equivalent to `shape: 'all'`. */
   aoe?: boolean;
+  /** Area shape; defaults to `single` (or `all` when `aoe` is set). */
+  shape?: TechniqueShape;
   desc: string;
+}
+
+/** Resolves a technique's effective shape, honouring the legacy `aoe` flag. */
+export function techShape(t: Technique): TechniqueShape {
+  return t.shape ?? (t.aoe ? 'all' : 'single');
 }
 
 export const TECHNIQUES: Record<string, Technique> = {
@@ -49,6 +65,26 @@ export const TECHNIQUES: Record<string, Technique> = {
     element: 'fire',
     aoe: true,
     desc: 'Scatters embers across every foe.',
+  },
+  emberWave: {
+    id: 'emberWave',
+    name: 'Ember Wave',
+    kind: 'damage',
+    mpCost: 10,
+    power: 40,
+    element: 'fire',
+    shape: 'row',
+    desc: 'A sheet of flame that sweeps a whole rank.',
+  },
+  boltPierce: {
+    id: 'boltPierce',
+    name: 'Bolt Pierce',
+    kind: 'damage',
+    mpCost: 10,
+    power: 40,
+    element: 'machine',
+    shape: 'column',
+    desc: 'A lance of current that punches down a file.',
   },
   tidalSlap: {
     id: 'tidalSlap',

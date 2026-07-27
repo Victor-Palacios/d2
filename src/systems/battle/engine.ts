@@ -2,7 +2,7 @@ import type { CreatureInstance } from '../party/creature';
 import { isDown, isUp } from '../party/creature';
 import type { ElementId } from '../../data/elements';
 import type { Technique } from '../../data/techniques';
-import { technique } from '../../data/techniques';
+import { technique, techShape } from '../../data/techniques';
 import { GUARD_MP_RESTORE, computeDamage, computeHeal } from './formula';
 import type { DamageBreakdown } from './formula';
 
@@ -49,6 +49,11 @@ export function defaultFormation(n: number): Cell[] {
   return FORMATION_ORDER.slice(0, Math.max(0, Math.min(n, FORMATION_ORDER.length))).map((c) => ({ ...c }));
 }
 
+/** Row-major index of a cell on the 2×3 grid. */
+export function cellIndex(cell: Cell): number {
+  return cell.row * 3 + cell.col;
+}
+
 export interface Battler {
   creature: CreatureInstance;
   side: Side;
@@ -72,7 +77,11 @@ export function isMeleeTechnique(tech: Technique): boolean {
 export type BattleAction =
   | { type: 'attack'; targetUid: string }
   | { type: 'technique'; techniqueId: string; targetUid: string }
-  | { type: 'guard' };
+  | { type: 'guard' }
+  /** Reposition to an empty cell on your own grid (consumes the turn). */
+  | { type: 'shift'; cell: Cell }
+  /** Bench the actor and field a reserve in its cell (consumes the turn). */
+  | { type: 'swap'; reserveUid: string };
 
 export interface Hit {
   targetUid: string;
@@ -89,6 +98,8 @@ export interface TurnResult {
   techniqueId?: string;
   hits: Hit[];
   log: string[];
+  /** Set when the actor changed cell (shift/swap) so the scene can re-place it. */
+  moved?: boolean;
 }
 
 export type BattleOutcome = 'ongoing' | 'victory' | 'defeat';
@@ -115,17 +126,41 @@ export class Battle {
   private queue: Battler[] = [];
   private rng: () => number;
 
+  /** Element plate under each of the 6 cells per side, row-major (row*3+col). */
+  private plates: Record<Side, (ElementId | undefined)[]>;
+  /** Benched party creatures available to swap in; the scene keeps this current. */
+  reserves: CreatureInstance[] = [];
+
   constructor(cfg: BattleConfig) {
     this.rng = cfg.rng ?? Math.random;
     this.isBoss = !!cfg.isBoss;
     const partyCells = cfg.partyCells ?? defaultFormation(cfg.party.length);
     const enemyCells = cfg.enemyCells ?? defaultFormation(cfg.enemies.length);
+
+    // Plates belong to cells, not units: laying them by each unit's starting cell
+    // means a repositioned creature leaves its plate behind (and can move onto
+    // another). The incoming per-slot tiles map to their starting cells.
+    this.plates = { party: new Array(6).fill(undefined), enemy: new Array(6).fill(undefined) };
+    partyCells.forEach((cell, i) => { if (cfg.partyTiles?.[i]) this.plates.party[cellIndex(cell)] = cfg.partyTiles[i]; });
+    enemyCells.forEach((cell, i) => { if (cfg.enemyTiles?.[i]) this.plates.enemy[cellIndex(cell)] = cfg.enemyTiles[i]; });
+
     cfg.party.forEach((c, i) =>
-      this.battlers.push({ creature: c, side: 'party', slot: i, cell: partyCells[i], tile: cfg.partyTiles?.[i] }),
+      this.battlers.push({ creature: c, side: 'party', slot: i, cell: partyCells[i], tile: this.plateAt('party', partyCells[i]) }),
     );
     cfg.enemies.forEach((c, i) =>
-      this.battlers.push({ creature: c, side: 'enemy', slot: i, cell: enemyCells[i], tile: cfg.enemyTiles?.[i] }),
+      this.battlers.push({ creature: c, side: 'enemy', slot: i, cell: enemyCells[i], tile: this.plateAt('enemy', enemyCells[i]) }),
     );
+  }
+
+  /** Element plate under a cell on `side`'s grid, if any. */
+  plateAt(side: Side, cell: Cell): ElementId | undefined {
+    return this.plates[side][cellIndex(cell)];
+  }
+
+  /** All cells with no living occupant (and not the actor's own), for repositioning. */
+  emptyCells(side: Side): Cell[] {
+    const taken = new Set(this.living(side).map((b) => cellIndex(b.cell)));
+    return FORMATION_ORDER.filter((c) => !taken.has(cellIndex(c))).map((c) => ({ ...c }));
   }
 
   side(side: Side): Battler[] {
@@ -192,16 +227,21 @@ export class Battle {
       return t ? [t] : [];
     }
     const opposing: Side = actor.side === 'party' ? 'enemy' : 'party';
-    if (tech.aoe) {
+    const shape = techShape(tech);
+    if (shape === 'all') {
       return this.living(opposing);
     }
     const melee = isMeleeTechnique(tech);
     const pool = melee ? this.meleeTargets(opposing) : this.living(opposing);
     const t = this.find(targetUid);
-    // Honour a valid chosen target; a melee attack can never reach a covered
-    // Rear unit, so fall back to the nearest legal target if one slipped through.
-    if (t && isUp(t.creature) && (!melee || !this.isCovered(t))) return [t];
-    return pool.slice(0, 1);
+    // The anchor: the chosen target if legal, else the nearest reachable foe.
+    const anchor = t && isUp(t.creature) && (!melee || !this.isCovered(t)) ? t : pool[0];
+    if (!anchor) return [];
+    // Shaped ranged techniques sweep the anchor's rank/file (cover doesn't apply
+    // to ranged); `single` hits the anchor alone.
+    if (shape === 'row') return this.living(opposing).filter((b) => b.cell.row === anchor.cell.row);
+    if (shape === 'column') return this.living(opposing).filter((b) => b.cell.col === anchor.cell.col);
+    return [anchor];
   }
 
   /** Applies one action and returns everything the scene needs to animate it. */
@@ -216,6 +256,38 @@ export class Battle {
       result.actionLabel = 'Guard';
       result.log.push(`${c.name} braces for impact.`);
       if (restored > 0) result.log.push(`${c.name} recovers ${restored} MP.`);
+      return result;
+    }
+
+    if (action.type === 'shift') {
+      const blocked = this.living(actor.side).some((b) => b !== actor && cellIndex(b.cell) === cellIndex(action.cell));
+      result.actionLabel = 'Move';
+      if (blocked) {
+        result.log.push(`${c.name} has nowhere to move.`);
+        return result;
+      }
+      actor.cell = { ...action.cell };
+      actor.tile = this.plateAt(actor.side, actor.cell);
+      result.moved = true;
+      result.log.push(`${c.name} repositions.`);
+      if (actor.tile) result.log.push(`${c.name} steps onto a ${actor.tile} plate.`);
+      return result;
+    }
+
+    if (action.type === 'swap') {
+      const idx = this.reserves.findIndex((r) => r.uid === action.reserveUid && isUp(r));
+      result.actionLabel = 'Swap';
+      if (idx < 0) {
+        result.log.push(`${c.name} has no one to tag in.`);
+        return result;
+      }
+      const incoming = this.reserves[idx];
+      this.reserves[idx] = c; // the benched creature becomes a reserve
+      actor.creature = incoming;
+      actor.creature.guarding = false;
+      actor.tile = this.plateAt(actor.side, actor.cell);
+      result.moved = true;
+      result.log.push(`${c.name} taps out — ${incoming.name} steps in!`);
       return result;
     }
 
@@ -314,8 +386,8 @@ export class Battle {
       .filter((t) => t.kind === 'damage' && c.mp >= t.mpCost);
 
     if (usable.length && this.rng() < 0.72) {
-      // Prefer an AoE when it would hit two or more.
-      const aoe = usable.find((t) => t.aoe);
+      // Prefer a multi-target shape when it would hit two or more.
+      const aoe = usable.find((t) => techShape(t) !== 'single');
       const pick = aoe && foes.length >= 2 && this.rng() < 0.6
         ? aoe
         : usable[Math.floor(this.rng() * usable.length)];

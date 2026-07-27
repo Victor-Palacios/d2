@@ -52,7 +52,7 @@ export const SPECIES: Record<string, Species> = {
     height: 1.35,
     base: { hp: 44, mp: 18, off: 15, def: 12, spd: 13 },
     growth: ROOKIE_GROWTH,
-    techniques: ['emberFang', 'cinderBurst'],
+    techniques: ['emberFang', 'cinderBurst', 'emberWave'],
     canDigivolveTo: ['regalion'],
     blurb: 'A hot-tempered lizard rookie. Runs its core far too warm.',
   },
@@ -103,7 +103,7 @@ export const SPECIES: Record<string, Species> = {
     height: 1.3,
     base: { hp: 46, mp: 16, off: 15, def: 16, spd: 10 },
     growth: { ...ROOKIE_GROWTH, def: 2.2 },
-    techniques: ['boltDrive'],
+    techniques: ['boltDrive', 'boltPierce'],
     blurb: 'Maintenance unit. Technically still under warranty.',
   },
   dropletta: {

@@ -97,6 +97,8 @@ export class BattleScene extends GameScene {
       enemyTiles: this.params.enemyTiles,
       isBoss: this.params.isBoss,
     });
+    // Living party members who did not deploy are the swap-in reserves.
+    this.battle.reserves = game.party.filter(isUp).filter((c) => !active.some((a) => a.uid === c.uid));
 
     // Encountering a wild species primes its Soul Syphon (before the HUD builds
     // so the meter already reads its primed value).
@@ -294,6 +296,40 @@ export class BattleScene extends GameScene {
     }
   }
 
+  /** Tears down and rebuilds all fighter billboards (after a swap changes who is fielded). */
+  private rebuildFighters() {
+    for (const bb of this.sprites.values()) {
+      this.scene.remove(bb.object);
+      bb.dispose();
+    }
+    this.sprites.clear();
+    this.homePos.clear();
+    this.buildFighters();
+  }
+
+  /**
+   * Reflects a reposition or swap in 3D: a shift glides the sprite to its new
+   * cell; a swap (the fielded creature changed) rebuilds the fighters and cards.
+   */
+  private async applyMove(actor: Battler, beforeUid: string) {
+    if (actor.creature.uid !== beforeUid) {
+      this.rebuildFighters();
+      this.hud.build(this.battle);
+      audio.sfx('confirm');
+      return;
+    }
+    const cp = cellPos(actor.side, actor.cell);
+    const home = new THREE.Vector3(cp.x, 0, cp.z);
+    const bb = this.sprites.get(actor.creature.uid);
+    if (bb) {
+      const from = bb.object.position.clone();
+      audio.sfx('blip');
+      await this.tween(0.25, (t) => bb.object.position.lerpVectors(from, home, t));
+      bb.object.position.copy(home);
+    }
+    this.homePos.set(actor.creature.uid, home);
+  }
+
   // --- battle loop ---------------------------------------------------------
 
   private async run() {
@@ -328,7 +364,12 @@ export class BattleScene extends GameScene {
             action = this.autoAction();
           } else {
             this.hud.setLog(`${actor.creature.name}'s turn.`);
-            const choice = await this.hud.chooseAction(this.battle, actor, (uid) => this.hoverTarget(uid));
+            const choice = await this.hud.chooseAction(
+              this.battle,
+              actor,
+              (uid) => this.hoverTarget(uid),
+              this.battle.reserves.filter(isUp),
+            );
             if (choice.type === 'auto') {
               this.setAuto(true);
               await sleep(200);
@@ -337,8 +378,10 @@ export class BattleScene extends GameScene {
               action = choice;
             }
           }
+          const beforeUid = actor.creature.uid;
           result = this.battle.perform(actor, action);
           this.syphonFromHits(result);
+          if (result.moved) await this.applyMove(actor, beforeUid);
         } else {
           this.hud.setLog(`${actor.creature.name} is deciding...`);
           await sleep(480);
