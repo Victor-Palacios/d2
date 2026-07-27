@@ -53,7 +53,8 @@ jobs:
         run: node tools/pixellab/pending.mjs "${{ github.event.inputs.max || '5' }}" >> "$GITHUB_ENV"
 
       - name: Report selection
-        run: echo "Pending: ${PENDING_COUNT:-0} — ${MONSTER:-(none)}" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Pending: ${PENDING_COUNT:-0} - ${MONSTER:-(none)}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Generate sprites
         if: env.PENDING_COUNT != '0'
