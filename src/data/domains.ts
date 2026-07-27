@@ -1,6 +1,7 @@
 import type { Domain } from './dungeon';
 import { BOOT_DOMAIN } from './bootDomain';
 import { CRYSTAL_CAVERN } from './crystalCavern';
+import { JUNGLE_DOMAIN } from './jungleDomain';
 import { HAUNTED_DUNGEON } from './hauntedDungeon';
 
 /**
@@ -11,11 +12,12 @@ import { HAUNTED_DUNGEON } from './hauntedDungeon';
 export const DOMAINS: Record<string, Domain> = {
   boot: BOOT_DOMAIN,
   crystal: CRYSTAL_CAVERN,
+  jungle: JUNGLE_DOMAIN,
   haunted: HAUNTED_DUNGEON,
 };
 
 /** Order the domains appear on the world map (after The Everwake). */
-export const DOMAIN_ORDER = ['boot', 'crystal', 'haunted'];
+export const DOMAIN_ORDER = ['boot', 'crystal', 'jungle', 'haunted'];
 
 export function domain(id: string): Domain {
   const d = DOMAINS[id];

@@ -141,7 +141,7 @@ function cached(id: string, build: () => HTMLCanvasElement, srgb = true): THREE.
  * only the grid mechanics are shared, never the surfaces. `stone` is the
  * original speckled-flagstone / brick baseline; the rest are new.
  */
-export type TerrainStyle = 'stone' | 'crystal' | 'crypt' | 'metal' | 'cave';
+export type TerrainStyle = 'stone' | 'crystal' | 'crypt' | 'metal' | 'cave' | 'jungle';
 
 /** Grout / seam border used by several floor skins. */
 function floorBorder(ctx: CanvasRenderingContext2D, base: string, res: number, amt = -0.45) {
@@ -255,6 +255,33 @@ export function floorTexture(
         ctx.fillStyle = shade(base, 0.2);
         ctx.fillRect(Math.floor(rnd() * res), Math.floor(rnd() * res), 2, 2);
       }
+    } else if (style === 'jungle') {
+      // Mossy earth: soil blotches, moss highlights and little grass tufts.
+      for (let y = 0; y < res; y += 3) {
+        for (let x = 0; x < res; x += 3) {
+          const r = rnd();
+          if (r < 0.3) {
+            ctx.fillStyle = shade(base, r < 0.14 ? -0.34 : -0.18);
+            ctx.fillRect(x, y, 3, 3);
+          } else if (r > 0.82) {
+            ctx.fillStyle = shade(base, 0.24); // moss patch
+            ctx.fillRect(x, y, 3, 3);
+          }
+        }
+      }
+      for (let i = 0; i < 10; i++) {
+        // grass tufts: short brighter-green vertical strokes
+        const x = Math.floor(rnd() * res);
+        const y = Math.floor(rnd() * (res - 4));
+        ctx.fillStyle = shade(base, 0.42);
+        ctx.fillRect(x, y, 1, 3);
+        if (rnd() < 0.5) ctx.fillRect(x + 1, y + 1, 1, 2);
+      }
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = shade(base, -0.4); // roots / pebbles
+        ctx.fillRect(Math.floor(rnd() * res), Math.floor(rnd() * res), 2, 1);
+      }
+      floorBorder(ctx, base, res, -0.3);
     } else {
       // stone (baseline): chunky 2x2 speckle so it still reads as pixel art.
       for (let y = 0; y < res; y += 2) {
@@ -362,6 +389,32 @@ export function wallTexture(
           ctx.fillStyle = shade(base, -0.55);
           ctx.fillRect(x, res - 2 - Math.floor(rnd() * 4), 2, 5);
         }
+      }
+      return c;
+    }
+
+    if (style === 'jungle') {
+      // Dense foliage over a dark trunk: leaf clusters and hanging vines.
+      ctx.fillStyle = shade(base, -0.5);
+      ctx.fillRect(0, 0, res, res);
+      for (let i = 0; i < 22; i++) {
+        const x = Math.floor(rnd() * res);
+        const y = Math.floor(rnd() * res);
+        const s = 3 + Math.floor(rnd() * 4);
+        ctx.fillStyle = shade(base, (rnd() - 0.35) * 0.6);
+        ctx.fillRect(x, y, s, s);
+      }
+      for (let i = 0; i < 10; i++) {
+        ctx.fillStyle = shade(base, 0.42); // bright leaf catches
+        ctx.fillRect(Math.floor(rnd() * res), Math.floor(rnd() * res), 2, 2);
+      }
+      for (let v = 0; v < 4; v++) {
+        // hanging vines: thin full-height strands with a leaf node
+        const x = Math.floor(rnd() * res);
+        ctx.fillStyle = shade(base, -0.32);
+        ctx.fillRect(x, 0, 1, res);
+        ctx.fillStyle = shade(base, 0.3);
+        ctx.fillRect(x, Math.floor(rnd() * res), 2, 2);
       }
       return c;
     }

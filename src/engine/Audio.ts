@@ -91,7 +91,7 @@ const SFX: Record<SfxName, Note[]> = {
   ],
 };
 
-export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | 'crystal' | 'haunted' | null;
+export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | 'crystal' | 'haunted' | 'jungle' | null;
 
 /** Simple looping bass/arp patterns, one per mood. Semitone offsets from root. */
 const TRACKS: Record<Exclude<MusicTrack, null>, { root: number; bpm: number; bass: number[]; arp: number[] }> = {
@@ -103,6 +103,8 @@ const TRACKS: Record<Exclude<MusicTrack, null>, { root: number; bpm: number; bas
   crystal: { root: 164.8, bpm: 80, bass: [0, 4, 7, 4], arp: [19, 24, 28, 24, 19, 24, 31, 28] },
   // Haunted Dungeon: low, minor, unsettled — a dragging tritone-leaning bass.
   haunted: { root: 98, bpm: 72, bass: [0, 0, -1, -6], arp: [12, 15, 18, 15, 12, 18, 15, 11] },
+  // The Overgrowth: warm, loping, major-pentatonic — a humid, rolling groove.
+  jungle: { root: 138.6, bpm: 104, bass: [0, 3, 5, 3], arp: [12, 14, 17, 21, 17, 14, 12, 17] },
 };
 
 class AudioEngine {

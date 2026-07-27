@@ -153,18 +153,21 @@ supply bay → Mission 2 briefing.
   **capturing** more (see below), earning a licence and your own vehicle after
   the warden falls.
 - **More domains**: the world map is free-select — beyond The Quiet Crossing it
-  offers the **Crystal Cavern** (Water/Machine, warden Glaciark) and the
-  **Haunted Dungeon** (Dark/Nature, warden Revenance), each with its own
-  monster roster, tile theme and ambience. Adding another is a data file
-  registered in `src/data/domains.ts` — no scene code changes.
+  offers the **Crystal Cavern** (Water/Machine, warden Glaciark), the
+  **Overgrowth** (Nature/Water, warden Verdanox) and the **Haunted Dungeon**
+  (Dark/Nature, warden Revenance), each with its own monster roster, tile theme
+  and ambience. Adding another is a data file registered in
+  `src/data/domains.ts` — no scene code changes.
 - **Distinct terrain per domain**: the crawl mechanics never change (grid,
   walls, floors, portals), but the *look* does. Each floor picks a
   `TerrainStyle` — `stone` (brick/flagstone), `crystal` (faceted shards),
-  `crypt` (cracked ashlar), `metal` (riveted plating) or `cave` (raw rock) —
-  plus its own wall height, fog tint and a scatter of non-colliding **decor**
-  (crystal columns, gravestones, roots, machine pylons…). The Reliquary reads as
-  tall, symmetric crystal-and-metal; The Unremembered as broken, organic
-  crypt-and-cave — the same movement, two unmistakable places.
+  `crypt` (cracked ashlar), `metal` (riveted plating), `cave` (raw rock) or
+  `jungle` (mossy earth under vine-hung foliage) — plus its own wall height, fog
+  tint and a scatter of non-colliding **decor** (crystal columns, gravestones,
+  roots, machine pylons, ferns, palms, bamboo, totems…). The Reliquary reads as
+  tall, symmetric crystal-and-metal; The Overgrowth as a humid green jungle; The
+  Unremembered as broken, organic crypt-and-cave — the same movement,
+  unmistakably different places.
 
 ## Capturing monsters — Soul Syphon
 

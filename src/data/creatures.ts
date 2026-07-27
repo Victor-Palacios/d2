@@ -258,6 +258,59 @@ export const SPECIES: Record<string, Species> = {
     blurb: 'An empty suit still running its last standing order.',
   },
 
+  // --- The Overgrowth -----------------------------------------------------
+  // A jungle roster. Art is reused from fitting existing sprites (the domain's
+  // identity rides on its bespoke terrain + decor); stats/element/attribute are
+  // its own. Swap `art` for dedicated sprites later — nothing else changes.
+  frondle: {
+    id: 'frondle',
+    name: 'Frondle',
+    attribute: 'hero',
+    element: 'nature',
+    art: 'plant',
+    height: 1.3,
+    base: { hp: 52, mp: 20, off: 15, def: 17, spd: 10 },
+    growth: { ...ROOKIE_GROWTH, def: 2.3 },
+    techniques: ['seedVolley', 'bloomPulse'],
+    blurb: 'A soul that put down roots where it fell, and let the green take the rest.',
+  },
+  thorncat: {
+    id: 'thorncat',
+    name: 'Thorncat',
+    attribute: 'assassin',
+    element: 'nature',
+    art: 'wolf',
+    height: 1.4,
+    base: { hp: 47, mp: 18, off: 19, def: 12, spd: 18 },
+    growth: { ...ROOKIE_GROWTH, off: 2.5, spd: 2 },
+    techniques: ['seedVolley', 'ironHowl'],
+    blurb: 'It stalked these paths in life and never learned that they end.',
+  },
+  boggle: {
+    id: 'boggle',
+    name: 'Boggle',
+    attribute: 'mage',
+    element: 'water',
+    art: 'slime',
+    height: 1.15,
+    base: { hp: 54, mp: 24, off: 13, def: 15, spd: 11 },
+    growth: { ...ROOKIE_GROWTH, mp: 2.4 },
+    techniques: ['tidalSlap', 'mistVeil'],
+    blurb: 'A soul that sank into the warm dark and decided the sinking was rest.',
+  },
+  chitter: {
+    id: 'chitter',
+    name: 'Chitter',
+    attribute: 'assassin',
+    element: 'nature',
+    art: 'bug',
+    height: 1.05,
+    base: { hp: 42, mp: 12, off: 15, def: 11, spd: 16 },
+    growth: { ...ROOKIE_GROWTH, off: 2, spd: 1.9 },
+    techniques: ['seedVolley'],
+    blurb: 'The small remainder of something that only ever wanted to keep moving.',
+  },
+
   // --- bosses -------------------------------------------------------------
   glaciark: {
     id: 'glaciark',
@@ -283,6 +336,18 @@ export const SPECIES: Record<string, Species> = {
     growth: { hp: 11, mp: 3.4, off: 2.4, def: 2, spd: 1.6 },
     techniques: ['dirge', 'hexBolt'],
     blurb: 'Warden of the Haunted Dungeon. It remembers being deleted.',
+  },
+  verdanox: {
+    id: 'verdanox',
+    name: 'Verdanox',
+    attribute: 'hero',
+    element: 'nature',
+    art: 'lion',
+    height: 2.3,
+    base: { hp: 96, mp: 44, off: 18, def: 24, spd: 12 },
+    growth: { hp: 10, mp: 3, off: 2.3, def: 2.2, spd: 1.4 },
+    techniques: ['bloomPulse', 'quakeCore'],
+    blurb: 'Warden of the Overgrowth. It lets nothing leave that the jungle has taken back.',
   },
 
   // --- boss ---------------------------------------------------------------

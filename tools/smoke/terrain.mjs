@@ -72,6 +72,7 @@ console.log('  terrain skins :', JSON.stringify(terrains));
 const expect = {
   boot: ['stone', 'stone', 'stone'],
   crystal: ['crystal', 'metal', 'crystal'],
+  jungle: ['jungle', 'jungle', 'jungle'],
   haunted: ['crypt', 'cave', 'crypt'],
 };
 for (const [id, exp] of Object.entries(expect)) {
