@@ -2,6 +2,7 @@ import { bar, el, esc, meter, remove } from './dom';
 import type { CreatureInstance } from '../systems/party/creature';
 import { game } from '../systems/party/gameState';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
+import { classIcon } from './icons';
 
 /** Crawl HUD: floor, fuel/EP meter, credits and the lent party's condition. */
 export class DungeonHUD {
@@ -53,13 +54,13 @@ export class DungeonHUD {
     for (const c of party) {
       const attr = ATTRIBUTES[c.attribute];
       const elem = ELEMENTS[c.element];
-      // Class rides on the border colour, element on the dot — no text line.
+      // Element rides on the border colour, class on the glyph — no text line.
       const wrap = el('div', 'member');
-      wrap.style.setProperty('--class-color', attr.color);
+      wrap.style.setProperty('--elem-color', elem.color);
       wrap.title = `${attr.name} · ${elem.name}`;
       const nm = el('div', 'nm');
       const label = el('span');
-      label.innerHTML = `<i class="elem-dot" style="background:${elem.color}"></i>${esc(c.name)}`;
+      label.innerHTML = `${classIcon(c.attribute)}${esc(c.name)}`;
       const lv = el('span', 'dim', `Lv${c.level}`);
       nm.append(label, lv);
       wrap.appendChild(nm);
@@ -79,9 +80,9 @@ export class DungeonHUD {
       if (!b) continue;
       b.hp(c.hp, c.maxHp);
       b.mp(c.mp, c.maxMp);
-      const dot = `<i class="elem-dot" style="background:${ELEMENTS[c.element].color}"></i>`;
+      const icon = classIcon(c.attribute);
       b.label.innerHTML =
-        c.hp > 0 ? `${dot}${esc(c.name)}` : `${dot}<span class="danger">${esc(c.name)}</span>`;
+        c.hp > 0 ? `${icon}${esc(c.name)}` : `${icon}<span class="danger">${esc(c.name)}</span>`;
     }
   }
 

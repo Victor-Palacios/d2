@@ -6,6 +6,7 @@ import { BOOST_MAX } from '../systems/battle/engine';
 import type { CreatureInstance } from '../systems/party/creature';
 import { technique, techShape } from '../data/techniques';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
+import { classIcon } from './icons';
 import { audio } from '../engine/Audio';
 import { game } from '../systems/party/gameState';
 
@@ -84,9 +85,9 @@ export class BattleHUD {
   }
 
   /**
-   * A fighter card. The class is carried by the card's border colour rather
-   * than a text line, and the element by a small dot next to the name — that
-   * keeps the card to two lines so the fighters behind it stay visible.
+   * A fighter card. The element is carried by the card's border colour and the
+   * class by a small glyph next to the name — that keeps the card to two lines
+   * so the fighters behind it stay visible.
    */
   private makeCard(b: Battler): FighterCard {
     const c = b.creature;
@@ -95,14 +96,14 @@ export class BattleHUD {
 
     const rowName = b.cell.row === 0 ? 'Vanguard' : 'Rear';
     const root = el('div', 'panel fighter');
-    root.style.setProperty('--class-color', attr.color);
+    root.style.setProperty('--elem-color', elem.color);
     root.classList.add(b.cell.row === 0 ? 'vanguard' : 'rear');
     root.title = `${attr.name} · ${elem.name} · ${rowName}${b.tile ? ` · on a ${ELEMENTS[b.tile].name} plate` : ''}`;
 
     const nm = el('div', 'nm');
     const name = el('span');
     name.innerHTML =
-      `<i class="elem-dot" style="background:${elem.color}"></i>${esc(c.name)}` +
+      `${classIcon(c.attribute)}${esc(c.name)}` +
       (b.tile
         ? `<i class="plate-mark" style="color:${ELEMENTS[b.tile].color}" title="standing on a ${ELEMENTS[b.tile].name} plate">▲</i>`
         : '');
