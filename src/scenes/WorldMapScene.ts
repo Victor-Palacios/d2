@@ -16,6 +16,13 @@ interface Node3D {
   x: number;
 }
 
+/** Rough party strength for the readiness cue: the average party level, min 1. */
+function partyLevel(): number {
+  const p = game.party;
+  if (!p.length) return 1;
+  return Math.max(1, Math.round(p.reduce((s, c) => s + c.level, 0) / p.length));
+}
+
 /**
  * World map (plan §2.3): a two-node select — the city you are standing in, and
  * the first domain. The 3D layer is a lit relief map so the screen still reads
@@ -124,12 +131,20 @@ export class WorldMapScene extends GameScene {
         const d = domain(id);
         const cleared = game.has(d.onClear.flag);
         const tag = id === 'boot' && !cleared ? 'Mission 1' : cleared ? 'Cleared' : 'Open';
+        // Readiness cue: green if your party meets the recommendation, amber if
+        // close, red if under-levelled — so the intended order reads at a glance.
+        const rec = d.recommendedLevel;
+        const partyLv = partyLevel();
+        const recColor = partyLv >= rec ? '#7bdc8a' : partyLv >= rec - 2 ? '#ffd166' : '#ff6b6b';
         return {
           value: id,
           title: d.name,
           tag,
           tagColor: d.color,
-          body: `${d.blurb}<br><br><span class="dim">${d.floors.length} floors · EP ${d.startingFuel}</span>`,
+          body:
+            `<span style="color:${recColor}">◆ Recommended Lv ${rec}</span>` +
+            `<span class="dim"> · your party ~Lv ${partyLv}</span><br><br>` +
+            `${d.blurb}<br><br><span class="dim">${d.floors.length} floors · EP ${d.startingFuel}</span>`,
         };
       }),
     ];

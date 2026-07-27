@@ -55,17 +55,17 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'shardling', level: 10 },
-          { species: 'prismoth', level: 10 },
+          { species: 'shardling', level: 5 },
+          { species: 'prismoth', level: 5 },
         ],
         intro: narrate('Light scatters off a shelf of living crystal — and it turns toward you.'),
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'shardling', level: 11 },
-          { species: 'geodon', level: 11 },
-          { species: 'prismoth', level: 10 },
+          { species: 'shardling', level: 6 },
+          { species: 'geodon', level: 6 },
+          { species: 'prismoth', level: 5 },
         ],
       },
     },
@@ -74,10 +74,10 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'shardling', level: 10 }] },
-      { weight: 2, enemies: [{ species: 'prismoth', level: 11 }] },
-      { weight: 2, enemies: [{ species: 'shardling', level: 10 }, { species: 'prismoth', level: 10 }] },
-      { weight: 1, enemies: [{ species: 'geodon', level: 12 }] },
+      { weight: 3, enemies: [{ species: 'shardling', level: 5 }] },
+      { weight: 2, enemies: [{ species: 'prismoth', level: 6 }] },
+      { weight: 2, enemies: [{ species: 'shardling', level: 5 }, { species: 'prismoth', level: 5 }] },
+      { weight: 1, enemies: [{ species: 'geodon', level: 7 }] },
     ],
   },
 
@@ -103,16 +103,16 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'geodon', level: 12 },
-          { species: 'shardling', level: 12 },
+          { species: 'geodon', level: 7 },
+          { species: 'shardling', level: 7 },
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'prismoth', level: 13 },
-          { species: 'prismoth', level: 12 },
-          { species: 'geodon', level: 12 },
+          { species: 'prismoth', level: 8 },
+          { species: 'prismoth', level: 7 },
+          { species: 'geodon', level: 7 },
         ],
         intro: narrate('The vault hums. Something big is keeping the cold in here.'),
       },
@@ -122,10 +122,10 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.07,
     encounters: [
-      { weight: 3, enemies: [{ species: 'shardling', level: 12 }] },
-      { weight: 3, enemies: [{ species: 'geodon', level: 12 }] },
-      { weight: 2, enemies: [{ species: 'prismoth', level: 13 }, { species: 'shardling', level: 12 }] },
-      { weight: 1, enemies: [{ species: 'geodon', level: 13 }, { species: 'prismoth', level: 13 }] },
+      { weight: 3, enemies: [{ species: 'shardling', level: 7 }] },
+      { weight: 3, enemies: [{ species: 'geodon', level: 7 }] },
+      { weight: 2, enemies: [{ species: 'prismoth', level: 8 }, { species: 'shardling', level: 7 }] },
+      { weight: 1, enemies: [{ species: 'geodon', level: 8 }, { species: 'prismoth', level: 8 }] },
     ],
   },
 
@@ -149,7 +149,7 @@ const FLOORS: DungeonFloor[] = [
     events: {
       '1': {
         kind: 'boss',
-        enemies: [{ species: 'glaciark', level: 15 }],
+        enemies: [{ species: 'glaciark', level: 9 }],
         intro: [
           ...narrate('The far wall unfolds. It was never a wall.'),
           ...say('Glaciark', 'You brought warmth into my vault. I will fix that.'),
@@ -163,8 +163,8 @@ const FLOORS: DungeonFloor[] = [
     chests: {},
     encounterRate: 0.03,
     encounters: [
-      { weight: 2, enemies: [{ species: 'shardling', level: 13 }] },
-      { weight: 1, enemies: [{ species: 'prismoth', level: 14 }, { species: 'geodon', level: 13 }] },
+      { weight: 2, enemies: [{ species: 'shardling', level: 8 }] },
+      { weight: 1, enemies: [{ species: 'prismoth', level: 8 }, { species: 'geodon', level: 8 }] },
     ],
   },
 ];
@@ -174,6 +174,7 @@ export const CRYSTAL_CAVERN: Domain = {
   name: 'Crystal Cavern',
   blurb: 'A supercooled data-vault, bright and sharp. Its warden has never felt warmth.',
   color: '#6fe0ff',
+  recommendedLevel: 5,
   floors: FLOORS,
   startingFuel: 130,
   music: 'crystal',

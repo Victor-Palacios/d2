@@ -108,6 +108,10 @@ await waitScene('dungeon'); await page.waitForTimeout(600); await clearDlg();
 await page.evaluate(async () => { const g = window.hd2dGame; g.game.floorIndex = 2; g.game.crawl.initialized = false; await g.manager.go('dungeon'); });
 await waitScene('dungeon'); await page.waitForTimeout(800);
 s = await st(); console.log('boss floor :', JSON.stringify({ floor: s.floor, floorName: s.floorName }));
+// Re-assert god-mode: floor-1 may have recruited weak creatures into the party
+// (Soul Syphon), and this smoke tests flow, not survivability.
+await page.evaluate(() => { window.hd2dGame.game.party.forEach((c) => { c.maxHp = 999; c.hp = 999; c.maxMp = 999; c.mp = 999; c.off = 140; c.def = 999; }); });
+console.log('boss party :', await page.evaluate(() => window.hd2dGame.game.party.map((c) => `${c.speciesId} L${c.level} hp${c.hp} def${c.def}`)));
 await press('ArrowUp', 3);           // S 7,7 -> boss 7,4
 console.log('boss won :', await winBattle(90000));
 await waitScene('dungeon'); await page.waitForTimeout(800); await clearDlg();

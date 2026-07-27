@@ -58,6 +58,8 @@ export interface Domain {
   blurb: string;
   /** Accent colour for the world-map node and its card. */
   color: string;
+  /** Party level the stage is tuned for — shown on the world-map card. */
+  recommendedLevel: number;
   floors: DungeonFloor[];
   startingFuel: number;
   /** Ambience track while crawling this domain (boss fights still use 'boss'). */

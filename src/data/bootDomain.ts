@@ -198,6 +198,7 @@ export const BOOT_DOMAIN: Domain = {
   name: 'The Quiet Crossing',
   blurb: 'Training sector. Low corruption, one registered warden. Every licence starts here.',
   color: '#ffa64d',
+  recommendedLevel: 1,
   floors: BOOT_DOMAIN_FLOORS,
   startingFuel: 120,
   music: 'dungeon',
