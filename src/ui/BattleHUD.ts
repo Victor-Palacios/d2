@@ -2,6 +2,7 @@ import { el, esc, meter, remove } from './dom';
 import { Menu } from './Menu';
 import type { MenuItem } from './Menu';
 import type { Battle, BattleAction, Battler } from '../systems/battle/engine';
+import { BOOST_MAX } from '../systems/battle/engine';
 import type { CreatureInstance } from '../systems/party/creature';
 import { technique, techShape } from '../data/techniques';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
@@ -16,8 +17,8 @@ interface FighterCard {
   syphon?: () => void;
 }
 
-/** What the action menu can resolve to — a real action, or "go auto". */
-export type MenuChoice = BattleAction | { type: 'auto' };
+/** What the action menu can resolve to — a real action, "go auto", or "boost". */
+export type MenuChoice = BattleAction | { type: 'auto' } | { type: 'boost' };
 
 /** Human label for a formation cell, e.g. "Vanguard · Left". */
 function cellLabel(row: number, col: number): string {
@@ -33,6 +34,7 @@ export class BattleHUD {
   private partyWrap: HTMLElement;
   private menuHost: HTMLElement;
   private autoChip: HTMLElement;
+  private boostChip!: HTMLElement;
   private cards = new Map<string, FighterCard>();
   private menu: Menu | null = null;
 
@@ -58,7 +60,11 @@ export class BattleHUD {
     this.autoChip.innerHTML = '<span class="accent">AUTO</span> — press ESC or L1 to take over';
     this.autoChip.style.display = 'none';
 
-    this.root.append(this.banner, this.log, this.enemyWrap, this.partyWrap, this.menuHost, this.autoChip);
+    // Party Boost gauge — fills on Attack/Guard, spent to act again.
+    this.boostChip = el('div', 'panel');
+    this.boostChip.id = 'boost-chip';
+
+    this.root.append(this.banner, this.log, this.enemyWrap, this.partyWrap, this.menuHost, this.autoChip, this.boostChip);
     this.parent.appendChild(this.root);
   }
 
@@ -145,6 +151,10 @@ export class BattleHUD {
       card.root.classList.toggle('down', c.hp <= 0);
       if (c.guarding) card.root.classList.add('guarding');
     }
+    const charges = battle.boost.party;
+    const pips = Array.from({ length: BOOST_MAX }, (_, i) => `<i class="${i < charges ? 'on' : ''}">▲</i>`).join('');
+    this.boostChip.innerHTML = `<span class="dim">BOOST</span> ${pips}`;
+    this.boostChip.classList.toggle('ready', charges > 0);
   }
 
   setActive(uid: string | null) {
@@ -204,9 +214,11 @@ export class BattleHUD {
       const canTechnique = c.techniques.some((id) => c.mp >= technique(id).mpCost);
       const canMove = battle.emptyCells(actor.side).length > 0;
       const canSwap = reserves.length > 0;
+      const charges = battle.boost.party;
       const root = await this.runMenu([
         { value: 'attack', label: 'Attack' },
         { value: 'technique', label: 'Technique', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
+        { value: 'boost', label: 'Boost', disabled: charges < 1, note: charges > 0 ? `act again · ▲${charges}` : 'empty' },
         { value: 'move', label: 'Move', disabled: !canMove, note: canMove ? undefined : 'no room' },
         { value: 'swap', label: 'Swap', disabled: !canSwap, note: canSwap ? undefined : '—' },
         { value: 'guard', label: 'Guard' },
@@ -214,6 +226,8 @@ export class BattleHUD {
       ]);
 
       if (root === 'auto') return { type: 'auto' };
+
+      if (root === 'boost') return { type: 'boost' };
 
       if (root === 'guard') return { type: 'guard' };
 

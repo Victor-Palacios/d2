@@ -151,8 +151,60 @@ console.log('swap tags in reserve:', r2.hadReserve && r2.swapMoved);
 
 const okB = r2.rowHits === 3 && r2.colHits === 2 && r2.shiftMoved && r2.shiftPlate && r2.hadReserve && r2.swapMoved;
 
-const ok = okA && okB;
-console.log('\nPHASE A OK :', okA, '| PHASE B OK :', okB);
+// --- Phase C: Boost gauge -----------------------------------------------
+const r3 = await page.evaluate(() => {
+  const b = window.hd2dGame.manager.activeScene.battle;
+  const party = b.side('party');
+  party.forEach((p) => { p.creature.hp = p.creature.maxHp; });
+  const out = {};
+
+  // Basic Attack builds a charge.
+  b.boost.party = 0;
+  const foe = b.meleeTargets('enemy')[0];
+  b.perform(party[0], { type: 'attack', targetUid: foe.creature.uid });
+  out.attackGain = b.boost.party === 1;
+
+  // Guard builds a charge too.
+  b.perform(party[1], { type: 'guard' });
+  out.guardGain = b.boost.party === 2;
+
+  // A Technique spends MP but does not feed Boost.
+  b.boost.party = 0;
+  party[0].creature.mp = 99;
+  b.perform(party[0], { type: 'technique', techniqueId: 'emberFang', targetUid: foe.creature.uid });
+  out.techNoGain = b.boost.party === 0;
+
+  // Gauge caps, and spend decrements / returns false when empty.
+  b.gainBoost('party', 10);
+  out.capped = b.boost.party; // expect BOOST_MAX (3)
+  const spent = b.spendBoost('party');
+  out.spendWorks = spent && b.boost.party === 2;
+  b.boost.party = 0;
+  out.spendEmptyFails = b.spendBoost('party') === false;
+
+  // requeueFront grants the same actor an immediate extra turn.
+  b.beginRound();
+  const a1 = b.nextTurn();
+  b.requeueFront(a1);
+  const a2 = b.nextTurn();
+  out.extraTurn = !!a1 && !!a2 && a1.creature.uid === a2.creature.uid;
+  return out;
+});
+
+console.log('\n== Phase C ==');
+console.log('attack builds boost:', r3.attackGain);
+console.log('guard builds boost :', r3.guardGain);
+console.log('technique no boost :', r3.techNoGain);
+console.log(`gauge caps at 3    : ${r3.capped} (=3? ${r3.capped === 3})`);
+console.log('spend decrements   :', r3.spendWorks);
+console.log('empty spend fails  :', r3.spendEmptyFails);
+console.log('boost -> extra turn:', r3.extraTurn);
+
+const okC = r3.attackGain && r3.guardGain && r3.techNoGain && r3.capped === 3 &&
+  r3.spendWorks && r3.spendEmptyFails && r3.extraTurn;
+
+const ok = okA && okB && okC;
+console.log('\nPHASE A OK :', okA, '| PHASE B OK :', okB, '| PHASE C OK :', okC);
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();
 process.exit(ok && !errs.length ? 0 : 1);

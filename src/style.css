@@ -615,6 +615,28 @@ body {
   }
 }
 
+/* Party Boost gauge, bottom-right above the fold. */
+#boost-chip {
+  position: absolute;
+  right: 14px;
+  bottom: 52px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  padding: 7px 12px;
+}
+#boost-chip i {
+  font-style: normal;
+  margin-left: 3px;
+  color: rgba(255, 255, 255, 0.2);
+}
+#boost-chip i.on {
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--accent);
+}
+#boost-chip.ready {
+  border-color: var(--accent);
+}
+
 .dmg-float {
   position: absolute;
   transform: translate(-50%, -50%);

@@ -74,6 +74,9 @@ export function isMeleeTechnique(tech: Technique): boolean {
   return tech.id === 'strike';
 }
 
+/** Maximum stored Boost charges per side (grid battle, Phase C). */
+export const BOOST_MAX = 3;
+
 export type BattleAction =
   | { type: 'attack'; targetUid: string }
   | { type: 'technique'; techniqueId: string; targetUid: string }
@@ -130,6 +133,11 @@ export class Battle {
   private plates: Record<Side, (ElementId | undefined)[]>;
   /** Benched party creatures available to swap in; the scene keeps this current. */
   reserves: CreatureInstance[] = [];
+  /**
+   * Boost charges per side (Xenosaga-style timing layer). Filled by basic
+   * Attacks and Guards; spent to grant an immediate extra turn.
+   */
+  boost: Record<Side, number> = { party: 0, enemy: 0 };
 
   constructor(cfg: BattleConfig) {
     this.rng = cfg.rng ?? Math.random;
@@ -221,6 +229,23 @@ export class Battle {
     return null;
   }
 
+  /** Adds `n` Boost charges to a side (capped at BOOST_MAX). */
+  gainBoost(side: Side, n = 1) {
+    this.boost[side] = Math.min(BOOST_MAX, this.boost[side] + n);
+  }
+
+  /** Spends one Boost charge; returns false if the side had none. */
+  spendBoost(side: Side): boolean {
+    if (this.boost[side] < 1) return false;
+    this.boost[side]--;
+    return true;
+  }
+
+  /** Inserts a battler at the front of the turn queue for an immediate extra turn. */
+  requeueFront(b: Battler) {
+    if (isUp(b.creature)) this.queue.unshift(b);
+  }
+
   private targetsFor(actor: Battler, tech: Technique, targetUid: string): Battler[] {
     if (tech.kind === 'heal') {
       const t = this.find(targetUid);
@@ -253,6 +278,7 @@ export class Battle {
       c.guarding = true;
       const restored = Math.min(c.maxMp - c.mp, Math.round(c.maxMp * GUARD_MP_RESTORE));
       c.mp += restored;
+      this.gainBoost(actor.side); // patience builds Boost
       result.actionLabel = 'Guard';
       result.log.push(`${c.name} braces for impact.`);
       if (restored > 0) result.log.push(`${c.name} recovers ${restored} MP.`);
@@ -301,6 +327,9 @@ export class Battle {
         return result;
       }
       c.mp -= tech.mpCost;
+    } else {
+      // Only the free basic Attack builds Boost — Techniques spend, they don't feed.
+      this.gainBoost(actor.side);
     }
 
     const targets = this.targetsFor(actor, tech, action.targetUid);

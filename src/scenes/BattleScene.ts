@@ -356,6 +356,7 @@ export class BattleScene extends GameScene {
         this.pulse(actor);
 
         let result: TurnResult;
+        let extraTurns = 0;
         if (actor.side === 'party') {
           let action: BattleAction;
           if (this.autoBattle) {
@@ -363,30 +364,51 @@ export class BattleScene extends GameScene {
             await sleep(320);
             action = this.autoAction();
           } else {
-            this.hud.setLog(`${actor.creature.name}'s turn.`);
-            const choice = await this.hud.chooseAction(
-              this.battle,
-              actor,
-              (uid) => this.hoverTarget(uid),
-              this.battle.reserves.filter(isUp),
-            );
-            if (choice.type === 'auto') {
-              this.setAuto(true);
-              await sleep(200);
-              action = this.autoAction();
-            } else {
-              action = choice;
+            // Loop so Boost can be spent (act again) before the real action.
+            for (;;) {
+              const choice = await this.hud.chooseAction(
+                this.battle,
+                actor,
+                (uid) => this.hoverTarget(uid),
+                this.battle.reserves.filter(isUp),
+              );
+              if (choice.type === 'boost') {
+                if (this.battle.spendBoost('party')) {
+                  extraTurns++;
+                  audio.sfx('confirm');
+                  this.hud.setLog(`${actor.creature.name} boosts — it will act again!`);
+                  this.hud.refresh(this.battle);
+                }
+                continue;
+              }
+              if (choice.type === 'auto') {
+                this.setAuto(true);
+                await sleep(200);
+                action = this.autoAction();
+              } else {
+                action = choice;
+              }
+              break;
             }
           }
           const beforeUid = actor.creature.uid;
-          result = this.battle.perform(actor, action);
+          result = this.battle.perform(actor, action!);
           this.syphonFromHits(result);
           if (result.moved) await this.applyMove(actor, beforeUid);
         } else {
           this.hud.setLog(`${actor.creature.name} is deciding...`);
           await sleep(480);
           result = this.battle.perform(actor, this.battle.chooseEnemyAction(actor));
+          // Bosses press a Boost advantage; regular foes only rarely.
+          const p = this.battle.isBoss ? 0.5 : 0.18;
+          if (this.battle.boost.enemy >= 1 && Math.random() < p && this.battle.spendBoost('enemy')) {
+            extraTurns++;
+            this.hud.setLog(`${actor.creature.name} boosts!`);
+          }
         }
+
+        // Boost spent this turn grants immediate extra turn(s) to the actor.
+        for (let i = 0; i < extraTurns; i++) this.battle.requeueFront(actor);
 
         await this.animateTurn(actor, result);
         this.hud.refresh(this.battle);
