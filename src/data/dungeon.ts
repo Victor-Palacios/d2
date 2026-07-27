@@ -26,6 +26,22 @@ export interface EncounterEntry {
   enemies: EnemySpec[];
 }
 
+/**
+ * A purely-decorative billboard placed on the floor at grid coords (x, z).
+ * Decor never collides — it dresses a domain's terrain (crystals, gravestones,
+ * roots, machine pylons…) without touching movement. `kind` indexes the `DECOR`
+ * art table in `src/assets/art.ts`.
+ */
+export interface DecorSpec {
+  x: number;
+  z: number;
+  kind: string;
+  /** World height of the sprite (default 1.1). */
+  height?: number;
+  /** Self-illumination for glowing decor (crystals, braziers). Default 0.1. */
+  emissive?: number;
+}
+
 export interface DungeonFloor {
   id: string;
   name: string;
@@ -38,6 +54,8 @@ export interface DungeonFloor {
   encounters: EncounterEntry[];
   /** Fog density multiplier, so deeper floors feel heavier. */
   fog?: number;
+  /** Non-colliding decorative billboards dressing this floor's terrain. */
+  decor?: DecorSpec[];
 }
 
 /** What happens when the player drives into a domain's exit portal. */

@@ -157,6 +157,14 @@ supply bay → Mission 2 briefing.
   **Haunted Dungeon** (Dark/Nature, warden Revenance), each with its own
   monster roster, tile theme and ambience. Adding another is a data file
   registered in `src/data/domains.ts` — no scene code changes.
+- **Distinct terrain per domain**: the crawl mechanics never change (grid,
+  walls, floors, portals), but the *look* does. Each floor picks a
+  `TerrainStyle` — `stone` (brick/flagstone), `crystal` (faceted shards),
+  `crypt` (cracked ashlar), `metal` (riveted plating) or `cave` (raw rock) —
+  plus its own wall height, fog tint and a scatter of non-colliding **decor**
+  (crystal columns, gravestones, roots, machine pylons…). The Reliquary reads as
+  tall, symmetric crystal-and-metal; The Unremembered as broken, organic
+  crypt-and-cave — the same movement, two unmistakable places.
 
 ## Capturing monsters — Soul Syphon
 
@@ -292,7 +300,9 @@ Everything is behind a data layer, so swapping art is a data edit:
 | Dungeon layouts, encounters, dialogue | `src/data/bootDomain.ts`, `crystalCavern.ts`, `hauntedDungeon.ts` |
 | Guard teams and starters | `src/data/teams.ts` |
 | Shop stock | `src/data/items.ts` |
-| Tile / wall textures | the generators in `src/engine/pixel.ts` |
+| Tile / wall textures | the generators in `src/engine/pixel.ts` (one per `TerrainStyle`) |
+| A domain's terrain look | `terrain` / `wallHeight` / `fogColor` on each floor's `TileTheme` |
+| Decorative props (crystals, gravestones, roots…) | `DECOR` in `src/assets/art.ts` + a floor's `decor: []` list |
 | Sound effects and music | `src/engine/Audio.ts` |
 
 To use image files instead of procedural pixel maps, replace `spriteTexture()`

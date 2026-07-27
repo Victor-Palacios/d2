@@ -1,36 +1,49 @@
 import { narrate, say } from '../systems/dialogue/script';
+import type { TileTheme } from '../engine/TileGrid';
 import type { Domain, DungeonFloor } from './dungeon';
 
 /**
  * The Unremembered — a free-select domain (not on the tutorial path).
  *
- * Dim, foggy, oppressive. Leans on Dark + Nature element plates and its own
- * roster (Wispling / Gravemaw / Cryptguard), warded by Revenance. Pure data —
- * see `dungeon.ts` for the model and `docs/ROADMAP.md`.
+ * Dim, foggy, oppressive. Its terrain is cracked crypt masonry opening into a
+ * rotting, organic cave, strewn with gravestones, dead trees and roots — the
+ * broken, asymmetric opposite of the Reliquary's clean crystal geometry. Leans
+ * on Dark + Nature element plates and its own roster (Wispling / Gravemaw /
+ * Cryptguard), warded by Revenance. Pure data — see `dungeon.ts` for the model
+ * and `docs/ROADMAP.md`.
  */
 
-const THEME_UPPER = {
+const THEME_UPPER: TileTheme = {
   floor: '#2a2536',
   floorAlt: '#211d2c',
   wall: '#3a3350',
   wallTop: '#181322',
   accentWall: '#5a3f6e',
+  terrain: 'crypt',
+  wallHeight: 2.8,
+  fogColor: '#140f1e',
 };
 
-const THEME_DEEP = {
-  floor: '#241f30',
-  floorAlt: '#1b1725',
-  wall: '#332c48',
-  wallTop: '#140f1e',
-  accentWall: '#4a3358',
+const THEME_DEEP: TileTheme = {
+  floor: '#231d1a',
+  floorAlt: '#1a1512',
+  wall: '#332a22',
+  wallTop: '#120d0a',
+  accentWall: '#4a3a28',
+  terrain: 'cave',
+  wallHeight: 3.1,
+  fogColor: '#0e0a10',
 };
 
-const THEME_BOSS = {
+const THEME_BOSS: TileTheme = {
   floor: '#2c2438',
   floorAlt: '#201a2c',
   wall: '#3d3152',
   wallTop: '#150f1f',
   accentWall: '#7a4a8c',
+  terrain: 'crypt',
+  wallHeight: 3.0,
+  fogColor: '#100a1a',
 };
 
 const FLOORS: DungeonFloor[] = [
@@ -39,16 +52,24 @@ const FLOORS: DungeonFloor[] = [
     name: 'The Unremembered — Cold Foyer',
     theme: THEME_UPPER,
     fog: 1.4,
+    decor: [
+      { x: 2, z: 1, kind: 'gravestone' },
+      { x: 13, z: 2, kind: 'gravestone' },
+      { x: 3, z: 5, kind: 'boneheap', height: 0.7 },
+      { x: 12, z: 6, kind: 'deadTree', height: 1.7 },
+      { x: 9, z: 9, kind: 'gravestone' },
+      { x: 5, z: 7, kind: 'boneheap', height: 0.7 },
+    ],
     rows: [
       '#################',
+      '#..........#....#',
+      '#..S......C#....#',
+      '#..........#....#',
+      '#....1.........2#',
       '#...............#',
-      '#..S.......C....#',
-      '#...............#',
-      '#....1.....2....#',
-      '#...............#',
-      '#......$........#',
-      '#...............#',
-      '#........>......#',
+      '#.$....###......#',
+      '#......#.#......#',
+      '#......#>#......#',
       '#...............#',
       '#################',
     ],
@@ -88,16 +109,23 @@ const FLOORS: DungeonFloor[] = [
     name: 'The Unremembered — Rotting Nave',
     theme: THEME_DEEP,
     fog: 1.7,
+    decor: [
+      { x: 2, z: 3, kind: 'rockPile', height: 0.9 },
+      { x: 13, z: 4, kind: 'roots', height: 0.8 },
+      { x: 13, z: 6, kind: 'roots', height: 0.8 },
+      { x: 3, z: 8, kind: 'mushroomCluster', height: 0.7, emissive: 0.3 },
+      { x: 8, z: 9, kind: 'mushroomGlow', height: 0.6, emissive: 0.7 },
+    ],
     rows: [
       '#################',
       '#...............#',
       '#..S..D.N......C#',
-      '#.....D.N.......#',
-      '#....1..........#',
-      '#...............#',
-      '#....N...D......#',
-      '#.......2.......#',
-      '#.........>.....#',
+      '#..............##',
+      '#....1....###...#',
+      '#.........#.#...#',
+      '#..N...D..#.#...#',
+      '#.........#2#...#',
+      '#....>.........##',
       '#...............#',
       '#################',
     ],
@@ -137,15 +165,22 @@ const FLOORS: DungeonFloor[] = [
     name: 'The Unremembered — The Deletion',
     theme: THEME_BOSS,
     fog: 1.9,
+    decor: [
+      { x: 4, z: 3, kind: 'gravestone' },
+      { x: 12, z: 3, kind: 'gravestone' },
+      { x: 4, z: 5, kind: 'deadTree', height: 1.7 },
+      { x: 12, z: 5, kind: 'deadTree', height: 1.7 },
+      { x: 8, z: 8, kind: 'boneheap', height: 0.7 },
+    ],
     rows: [
       '=================',
       '=...............=',
-      '=...............=',
-      '=...............=',
+      '=..===.....===..=',
+      '=..=.........=..=',
       '=......1........=',
-      '=...............=',
-      '=...............=',
-      '=......S........=',
+      '=..=.........=..=',
+      '=..===.....===..=',
+      '=.......S.......=',
       '=...............=',
       '=================',
     ],

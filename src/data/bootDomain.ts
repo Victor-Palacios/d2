@@ -45,6 +45,11 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
     id: 'boot-1',
     name: 'The Quiet Crossing — Surface Cache',
     theme: THEME_UPPER,
+    decor: [
+      { x: 2, z: 4, kind: 'crate' },
+      { x: 13, z: 3, kind: 'rubble', height: 0.6 },
+      { x: 14, z: 8, kind: 'crate' },
+    ],
     rows: [
       '#################',
       '#......#........#',
@@ -94,6 +99,10 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
     name: 'The Quiet Crossing — Element Strata',
     theme: THEME_DEEP,
     fog: 1.25,
+    decor: [
+      { x: 2, z: 4, kind: 'rubble', height: 0.6 },
+      { x: 13, z: 1, kind: 'crate' },
+    ],
     rows: [
       '#################',
       '#...............#',
@@ -145,6 +154,10 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
     name: 'The Quiet Crossing — Warden Hall',
     theme: THEME_BOSS,
     fog: 1.5,
+    decor: [
+      { x: 2, z: 2, kind: 'rubble', height: 0.6 },
+      { x: 14, z: 2, kind: 'rubble', height: 0.6 },
+    ],
     rows: [
       '=================',
       '=...............=',

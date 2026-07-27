@@ -1,36 +1,49 @@
 import { narrate, say } from '../systems/dialogue/script';
+import type { TileTheme } from '../engine/TileGrid';
 import type { Domain, DungeonFloor } from './dungeon';
 
 /**
  * The Reliquary — a free-select domain (not on the tutorial path).
  *
- * Cold, bright, refractive. Leans on Water + Machine element plates and its own
- * roster (Shardling / Prismoth / Geodon), warded by Glaciark. Pure data — see
- * `dungeon.ts` for the model and `docs/ROADMAP.md` for how domains slot in.
+ * Cold, bright, refractive. Its terrain is faceted crystal with a tall,
+ * symmetric geometry (a machine vault at its heart), tinted with icy fog and
+ * dressed in crystal columns and ice shards — a deliberate contrast with the
+ * broken, organic Unremembered. Leans on Water + Machine element plates and its
+ * own roster (Shardling / Prismoth / Geodon), warded by Glaciark. Pure data —
+ * see `dungeon.ts` for the model and `docs/ROADMAP.md` for how domains slot in.
  */
 
-const THEME_UPPER = {
+const THEME_UPPER: TileTheme = {
   floor: '#26424f',
   floorAlt: '#1e3540',
   wall: '#2f5566',
   wallTop: '#16323d',
   accentWall: '#3f7f96',
+  terrain: 'crystal',
+  wallHeight: 3.0,
+  fogColor: '#0c2530',
 };
 
-const THEME_DEEP = {
-  floor: '#22323f',
-  floorAlt: '#1a2833',
-  wall: '#2a4a5a',
-  wallTop: '#132631',
-  accentWall: '#3a6f88',
+const THEME_DEEP: TileTheme = {
+  floor: '#2a3340',
+  floorAlt: '#1f2731',
+  wall: '#3a4656',
+  wallTop: '#151c25',
+  accentWall: '#5a86a8',
+  terrain: 'metal',
+  wallHeight: 2.9,
+  fogColor: '#0a1a22',
 };
 
-const THEME_BOSS = {
+const THEME_BOSS: TileTheme = {
   floor: '#2b3a4a',
   floorAlt: '#20303f',
   wall: '#35526b',
   wallTop: '#182530',
   accentWall: '#5fb0d0',
+  terrain: 'crystal',
+  wallHeight: 3.3,
+  fogColor: '#0e2a38',
 };
 
 const FLOORS: DungeonFloor[] = [
@@ -38,15 +51,23 @@ const FLOORS: DungeonFloor[] = [
     id: 'crystal-1',
     name: 'The Reliquary — Glimmer Shelf',
     theme: THEME_UPPER,
+    decor: [
+      { x: 8, z: 3, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
+      { x: 8, z: 5, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
+      { x: 2, z: 6, kind: 'crystalCluster', emissive: 0.6 },
+      { x: 14, z: 6, kind: 'crystalCluster', emissive: 0.6 },
+      { x: 13, z: 7, kind: 'iceShard', height: 0.8, emissive: 0.4 },
+      { x: 3, z: 8, kind: 'iceShard', height: 0.8, emissive: 0.4 },
+    ],
     rows: [
       '#################',
       '#...............#',
-      '#..S.......C....#',
-      '#...............#',
-      '#....1.....2....#',
+      '#..S........2..C#',
+      '#.....##.##.....#',
+      '#....1..........#',
+      '#.....##.##.....#',
       '#...............#',
       '#......$........#',
-      '#...............#',
       '#........>......#',
       '#...............#',
       '#################',
@@ -70,7 +91,7 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '10,2': { credits: 220, item: 'repairChip', note: 'A prospector left a crate wedged in the ice.' },
+      '15,2': { credits: 220, item: 'repairChip', note: 'A prospector left a crate wedged in the ice.' },
     },
     encounterRate: 0.06,
     encounters: [
@@ -86,16 +107,23 @@ const FLOORS: DungeonFloor[] = [
     name: 'The Reliquary — Frozen Vault',
     theme: THEME_DEEP,
     fog: 1.2,
+    decor: [
+      { x: 5, z: 4, kind: 'machinePylon', height: 1.4, emissive: 0.4 },
+      { x: 10, z: 4, kind: 'conduit', height: 1.0, emissive: 0.5 },
+      { x: 14, z: 5, kind: 'conduit', height: 1.0, emissive: 0.5 },
+      { x: 12, z: 8, kind: 'machinePylon', height: 1.4, emissive: 0.4 },
+      { x: 2, z: 8, kind: 'iceShard', height: 0.8, emissive: 0.4 },
+    ],
     rows: [
       '#################',
       '#...............#',
-      '#..S..W.M......C#',
-      '#.....W.M.......#',
-      '#....1..........#',
-      '#...............#',
-      '#....M...W......#',
-      '#.......2.......#',
-      '#.........>.....#',
+      '#..S...W.M.....C#',
+      '#......###.###..#',
+      '#..1...#.....#..#',
+      '#......#.....#..#',
+      '#..W...#..2..#..#',
+      '#..M...#######..#',
+      '#..........>....#',
       '#...............#',
       '#################',
     ],
@@ -134,14 +162,22 @@ const FLOORS: DungeonFloor[] = [
     name: 'The Reliquary — Warden Vault',
     theme: THEME_BOSS,
     fog: 1.4,
+    decor: [
+      { x: 6, z: 3, kind: 'crystalPillar', height: 1.8, emissive: 0.6 },
+      { x: 10, z: 3, kind: 'crystalPillar', height: 1.8, emissive: 0.6 },
+      { x: 6, z: 5, kind: 'crystalCluster', emissive: 0.6 },
+      { x: 10, z: 5, kind: 'crystalCluster', emissive: 0.6 },
+      { x: 2, z: 2, kind: 'iceShard', height: 0.9, emissive: 0.4 },
+      { x: 14, z: 2, kind: 'iceShard', height: 0.9, emissive: 0.4 },
+    ],
     rows: [
       '=================',
       '=...............=',
-      '=...............=',
-      '=...............=',
-      '=......1........=',
-      '=...............=',
-      '=...............=',
+      '=....=======....=',
+      '=....=.....=....=',
+      '=....=.1...=....=',
+      '=....=.....=....=',
+      '=....=.....=....=',
       '=......S........=',
       '=...............=',
       '=================',

@@ -135,41 +135,238 @@ function cached(id: string, build: () => HTMLCanvasElement, srgb = true): THREE.
   return tex;
 }
 
-/** Low-res speckled stone floor. `res` stays small on purpose — pixels are the point. */
-export function floorTexture(id: string, base: string, seed = 7, res = 32): THREE.Texture {
-  return cached(`floor:${id}`, () => {
+/**
+ * Terrain "skins". Each domain picks one so a crystal reliquary, a rotting
+ * crypt and a machine vault no longer share the same brick-and-flagstone look —
+ * only the grid mechanics are shared, never the surfaces. `stone` is the
+ * original speckled-flagstone / brick baseline; the rest are new.
+ */
+export type TerrainStyle = 'stone' | 'crystal' | 'crypt' | 'metal' | 'cave';
+
+/** Grout / seam border used by several floor skins. */
+function floorBorder(ctx: CanvasRenderingContext2D, base: string, res: number, amt = -0.45) {
+  ctx.fillStyle = shade(base, amt);
+  ctx.fillRect(0, 0, res, 1);
+  ctx.fillRect(0, 0, 1, res);
+  ctx.fillRect(0, res - 1, res, 1);
+  ctx.fillRect(res - 1, 0, 1, res);
+}
+
+/**
+ * Low-res floor tile, drawn in one of several terrain styles.
+ *
+ * The cache key folds in `base`, `style` and `seed` as well as `id`: the same
+ * `id` ('a'/'b') is reused by every floor, so keying on `id` alone made the
+ * first-built domain's colours leak into every other domain. Keying on the
+ * inputs keeps each theme's surface its own.
+ */
+export function floorTexture(
+  id: string,
+  base: string,
+  seed = 7,
+  res = 32,
+  style: TerrainStyle = 'stone',
+): THREE.Texture {
+  return cached(`floor:${style}:${base}:${seed}:${id}`, () => {
     const [c, ctx] = canvas(res, res);
     const rnd = mulberry32(seed);
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, res, res);
-    // Chunky 2x2 speckle so it still reads as "pixel art" up close.
-    for (let y = 0; y < res; y += 2) {
-      for (let x = 0; x < res; x += 2) {
-        const r = rnd();
-        if (r < 0.34) {
-          ctx.fillStyle = shade(base, r < 0.12 ? -0.28 : -0.12);
-          ctx.fillRect(x, y, 2, 2);
-        } else if (r > 0.9) {
-          ctx.fillStyle = shade(base, 0.16);
-          ctx.fillRect(x, y, 2, 2);
+
+    if (style === 'crystal') {
+      // Angular facets: diagonal light/dark shards catching a hard light.
+      for (let i = 0; i < 5; i++) {
+        const x = Math.floor(rnd() * res);
+        const y = Math.floor(rnd() * res);
+        const s = 5 + Math.floor(rnd() * 9);
+        ctx.fillStyle = shade(base, rnd() < 0.5 ? 0.28 : -0.24);
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + s, y + Math.floor(s * 0.4));
+        ctx.lineTo(x + Math.floor(s * 0.4), y + s);
+        ctx.closePath();
+        ctx.fill();
+      }
+      // A few specular sparkles.
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = shade(base, 0.55);
+        ctx.fillRect(Math.floor(rnd() * res), Math.floor(rnd() * res), 1, 1);
+      }
+      floorBorder(ctx, base, res, -0.3);
+    } else if (style === 'crypt') {
+      // Four cracked flagstones with mortar between them and hairline cracks.
+      ctx.fillStyle = shade(base, -0.42);
+      ctx.fillRect(res / 2 - 1, 0, 2, res);
+      ctx.fillRect(0, res / 2 - 1, res, 2);
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = shade(base, -0.3);
+        let x = Math.floor(rnd() * res);
+        let y = Math.floor(rnd() * res);
+        const steps = 3 + Math.floor(rnd() * 4);
+        for (let s = 0; s < steps; s++) {
+          ctx.fillRect(x, y, 1, 1);
+          x += rnd() < 0.5 ? 1 : 0;
+          y += rnd() < 0.5 ? 1 : -1;
         }
       }
+      // Pale bone-dust speckle.
+      for (let i = 0; i < 10; i++) {
+        ctx.fillStyle = shade(base, 0.14);
+        ctx.fillRect(Math.floor(rnd() * res), Math.floor(rnd() * res), 1, 1);
+      }
+      floorBorder(ctx, base, res);
+    } else if (style === 'metal') {
+      // Riveted floor plating: a panel cross-seam and corner rivets.
+      ctx.fillStyle = shade(base, -0.4);
+      ctx.fillRect(res / 2 - 1, 0, 2, res);
+      ctx.fillRect(0, res / 2 - 1, res, 2);
+      // Brushed horizontal sheen.
+      for (let y = 2; y < res; y += 3) {
+        if (rnd() < 0.6) {
+          ctx.fillStyle = shade(base, 0.1);
+          ctx.fillRect(1, y, res - 2, 1);
+        }
+      }
+      const rivets = [4, res / 2 - 4, res / 2 + 3, res - 5];
+      for (const rx of rivets) {
+        for (const ry of rivets) {
+          ctx.fillStyle = shade(base, 0.4);
+          ctx.fillRect(rx, ry, 2, 2);
+          ctx.fillStyle = shade(base, -0.5);
+          ctx.fillRect(rx + 1, ry + 1, 1, 1);
+        }
+      }
+      floorBorder(ctx, base, res, -0.35);
+    } else if (style === 'cave') {
+      // Organic rock: irregular blotches, rounded pebbles, no hard border.
+      for (let y = 0; y < res; y += 4) {
+        for (let x = 0; x < res; x += 4) {
+          const r = rnd();
+          if (r < 0.4) {
+            ctx.fillStyle = shade(base, r < 0.16 ? -0.3 : -0.16);
+            ctx.fillRect(x, y, 4, 4);
+          } else if (r > 0.86) {
+            ctx.fillStyle = shade(base, 0.14);
+            ctx.fillRect(x, y, 4, 4);
+          }
+        }
+      }
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = shade(base, 0.2);
+        ctx.fillRect(Math.floor(rnd() * res), Math.floor(rnd() * res), 2, 2);
+      }
+    } else {
+      // stone (baseline): chunky 2x2 speckle so it still reads as pixel art.
+      for (let y = 0; y < res; y += 2) {
+        for (let x = 0; x < res; x += 2) {
+          const r = rnd();
+          if (r < 0.34) {
+            ctx.fillStyle = shade(base, r < 0.12 ? -0.28 : -0.12);
+            ctx.fillRect(x, y, 2, 2);
+          } else if (r > 0.9) {
+            ctx.fillStyle = shade(base, 0.16);
+            ctx.fillRect(x, y, 2, 2);
+          }
+        }
+      }
+      floorBorder(ctx, base, res);
     }
-    // Grout border so tile seams read as individual flagstones.
-    ctx.fillStyle = shade(base, -0.45);
-    ctx.fillRect(0, 0, res, 1);
-    ctx.fillRect(0, 0, 1, res);
-    ctx.fillRect(0, res - 1, res, 1);
-    ctx.fillRect(res - 1, 0, 1, res);
     return c;
   });
 }
 
-/** Brick wall with alternating courses. */
-export function wallTexture(id: string, base: string, seed = 13, res = 32): THREE.Texture {
-  return cached(`wall:${id}`, () => {
+/** Wall tile, drawn in one of several terrain styles (see `TerrainStyle`). */
+export function wallTexture(
+  id: string,
+  base: string,
+  seed = 13,
+  res = 32,
+  style: TerrainStyle = 'stone',
+): THREE.Texture {
+  return cached(`wall:${style}:${base}:${seed}:${id}`, () => {
     const [c, ctx] = canvas(res, res);
     const rnd = mulberry32(seed);
+
+    if (style === 'crystal') {
+      // Vertical crystalline columns of varying shade with bright edges.
+      ctx.fillStyle = shade(base, -0.4);
+      ctx.fillRect(0, 0, res, res);
+      for (let x = 0; x < res; ) {
+        const w = 3 + Math.floor(rnd() * 4);
+        ctx.fillStyle = shade(base, (rnd() - 0.4) * 0.5);
+        ctx.fillRect(x, 0, w, res);
+        ctx.fillStyle = shade(base, 0.45);
+        ctx.fillRect(x, 0, 1, res); // lit left edge of the facet
+        x += w;
+      }
+      return c;
+    }
+    if (style === 'crypt') {
+      // Big mortared ashlar blocks, two courses, with cracks and grime.
+      ctx.fillStyle = shade(base, -0.5);
+      ctx.fillRect(0, 0, res, res);
+      const bh = 15;
+      const bw = 15;
+      for (let row = 0, y = 0; y < res; y += bh, row++) {
+        const offset = row % 2 ? -bw / 2 : 0;
+        for (let x = offset; x < res; x += bw) {
+          ctx.fillStyle = shade(base, (rnd() - 0.5) * 0.22);
+          ctx.fillRect(x + 1, y + 1, bw - 2, bh - 2);
+          if (rnd() < 0.5) {
+            // hairline crack across the block
+            ctx.fillStyle = shade(base, -0.45);
+            ctx.fillRect(x + 3 + Math.floor(rnd() * 6), y + 2, 1, bh - 4);
+          }
+        }
+      }
+      return c;
+    }
+    if (style === 'metal') {
+      // Riveted metal panels: horizontal seams, a vertical divider, rivets.
+      ctx.fillStyle = shade(base, -0.2);
+      ctx.fillRect(0, 0, res, res);
+      for (let y = 0; y < res; y += 10) {
+        ctx.fillStyle = shade(base, -0.5);
+        ctx.fillRect(0, y, res, 1);
+        for (let x = 3; x < res; x += 7) {
+          ctx.fillStyle = shade(base, 0.4);
+          ctx.fillRect(x, y + 1, 1, 1);
+        }
+      }
+      ctx.fillStyle = shade(base, -0.5);
+      ctx.fillRect(res / 2 - 1, 0, 1, res);
+      // faint vertical brushed sheen
+      for (let x = 0; x < res; x += 3) {
+        if (rnd() < 0.4) {
+          ctx.fillStyle = shade(base, 0.12);
+          ctx.fillRect(x, 0, 1, res);
+        }
+      }
+      return c;
+    }
+    if (style === 'cave') {
+      // Rough rock: no courses, just mottled patches and a heavy grimy base.
+      ctx.fillStyle = shade(base, -0.32);
+      ctx.fillRect(0, 0, res, res);
+      for (let y = 0; y < res; y += 3) {
+        for (let x = 0; x < res; x += 3) {
+          const r = rnd();
+          if (r < 0.4) {
+            ctx.fillStyle = shade(base, r < 0.18 ? -0.5 : 0.12);
+            ctx.fillRect(x, y, 3, 3);
+          }
+        }
+      }
+      for (let x = 0; x < res; x += 2) {
+        if (rnd() < 0.6) {
+          ctx.fillStyle = shade(base, -0.55);
+          ctx.fillRect(x, res - 2 - Math.floor(rnd() * 4), 2, 5);
+        }
+      }
+      return c;
+    }
+
+    // stone (baseline): brick with alternating courses.
     ctx.fillStyle = shade(base, -0.35);
     ctx.fillRect(0, 0, res, res);
     const bh = 8;
@@ -181,7 +378,6 @@ export function wallTexture(id: string, base: string, seed = 13, res = 32): THRE
         ctx.fillRect(x + 1, y + 1, bw - 2, bh - 2);
       }
     }
-    // A little grime along the bottom to ground the wall.
     for (let x = 0; x < res; x += 2) {
       if (rnd() < 0.5) {
         ctx.fillStyle = shade(base, -0.5);

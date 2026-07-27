@@ -7,7 +7,7 @@ import { Billboard } from '../engine/Billboard';
 import { ParticleField, Portal, Torch } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
-import { PROPS, VEHICLE } from '../assets/art';
+import { DECOR, PROPS, VEHICLE } from '../assets/art';
 import { domain } from '../data/domains';
 import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
 import { ELEMENTS } from '../data/elements';
@@ -66,6 +66,7 @@ export class DungeonScene extends GameScene {
   private torches: Torch[] = [];
   private portals: { portal: Portal; x: number; z: number }[] = [];
   private props = new Map<string, Billboard>();
+  private decor: Billboard[] = [];
   private elementLights: THREE.PointLight[] = [];
   private elementMeshes = new Map<string, THREE.Mesh>();
 
@@ -106,7 +107,7 @@ export class DungeonScene extends GameScene {
     this.saveCrawl();
 
     this.ctx.hd2d.setScene(this.scene);
-    this.ctx.hd2d.applyFog(this.scene, this.floor.fog ?? 1);
+    this.ctx.hd2d.applyFog(this.scene, this.floor.fog ?? 1, this.floor.theme.fogColor);
     this.ctx.hd2d.snapCamera();
     this.syncCamera();
     audio.music(dom.music);
@@ -192,6 +193,7 @@ export class DungeonScene extends GameScene {
     });
 
     this.placeTorches();
+    this.placeDecor();
 
     // Three roaming lights get assigned to whichever element plates are
     // nearest the party — keeps the light count (and cost) fixed.
@@ -200,6 +202,26 @@ export class DungeonScene extends GameScene {
       l.visible = false;
       this.scene.add(l);
       this.elementLights.push(l);
+    }
+  }
+
+  /**
+   * Scatters the floor's decorative billboards. Decor is non-colliding by
+   * design — it lives outside the grid, so the player drives straight through
+   * it; it only exists to give each domain's terrain its own silhouette.
+   */
+  private placeDecor() {
+    for (const d of this.floor.decor ?? []) {
+      const art = DECOR[d.kind];
+      if (!art) continue;
+      const b = new Billboard(art, `decor:${d.kind}`, {
+        height: d.height ?? 1.1,
+        emissive: d.emissive ?? 0.1,
+      });
+      b.bob = 0;
+      b.object.position.copy(this.grid.worldPos(d.x, d.z));
+      this.scene.add(b.object);
+      this.decor.push(b);
     }
   }
 
@@ -618,6 +640,7 @@ export class DungeonScene extends GameScene {
     for (const t of this.torches) t.update(dt, this.ctx.hd2d.camera, time);
     for (const p of this.portals) p.portal.update(dt, time);
     for (const b of this.props.values()) b.update(dt, this.ctx.hd2d.camera, time);
+    for (const b of this.decor) b.update(dt, this.ctx.hd2d.camera, time);
     this.particles.update(dt);
     this.updateElementLights();
     this.syncCamera();
@@ -631,6 +654,7 @@ export class DungeonScene extends GameScene {
     this.legend.remove();
     this.player.dispose();
     for (const b of this.props.values()) b.dispose();
+    for (const b of this.decor) b.dispose();
     this.particles.dispose();
     this.scene.clear();
   }

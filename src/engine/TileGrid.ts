@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { elementGlowTexture, elementTileTexture, floorTexture, wallTexture } from './pixel';
+import type { TerrainStyle } from './pixel';
 import type { ElementId } from '../data/elements';
 import { ELEMENTS } from '../data/elements';
 
@@ -36,6 +37,16 @@ export interface TileTheme {
   wallTop: string;
   /** Marks the boss approach: a second wall colour used for '=' tiles. */
   accentWall: string;
+  /**
+   * Surface skin for this floor's tiles — see `TerrainStyle`. Purely visual: it
+   * changes how floors and walls are drawn, never how the grid is walked.
+   * Defaults to 'stone' (the original brick-and-flagstone look).
+   */
+  terrain?: TerrainStyle;
+  /** Wall box height in world units (default 2.6). Taller walls read as caverns/vaults. */
+  wallHeight?: number;
+  /** Overrides the shared fog colour for this floor, tinting the whole air. */
+  fogColor?: string;
 }
 
 export const DEFAULT_THEME: TileTheme = {
@@ -158,18 +169,23 @@ export class TileGrid {
       }
     });
 
+    const style = this.theme.terrain ?? 'stone';
+    // Metal reads better with a touch of shine; the rest stay matte stone.
+    const metalness = style === 'metal' ? 0.35 : style === 'crystal' ? 0.12 : 0.02;
+    const roughness = style === 'metal' ? 0.55 : style === 'crystal' ? 0.6 : 0.92;
+
     // --- floors ------------------------------------------------------------
     const floorGeo = new THREE.PlaneGeometry(TILE, TILE);
     floorGeo.rotateX(-Math.PI / 2);
     const floorMatA = new THREE.MeshStandardMaterial({
-      map: floorTexture('a', this.theme.floor, 7),
-      roughness: 0.92,
-      metalness: 0.02,
+      map: floorTexture('a', this.theme.floor, 7, 32, style),
+      roughness,
+      metalness,
     });
     const floorMatB = new THREE.MeshStandardMaterial({
-      map: floorTexture('b', this.theme.floorAlt, 19),
-      roughness: 0.92,
-      metalness: 0.02,
+      map: floorTexture('b', this.theme.floorAlt, 19, 32, style),
+      roughness,
+      metalness,
     });
 
     const makeFloorInstances = (list: Tile[], mat: THREE.Material) => {
@@ -191,17 +207,17 @@ export class TileGrid {
     makeFloorInstances(floors.filter((t) => (t.x + t.z) % 2 !== 0), floorMatB);
 
     // --- walls -------------------------------------------------------------
-    const WALL_H = 2.6;
+    const WALL_H = this.theme.wallHeight ?? 2.6;
     const wallGeo = new THREE.BoxGeometry(TILE, WALL_H, TILE);
     const makeWalls = (list: Tile[], color: string, key: string) => {
       if (!list.length) return;
       const sideMat = new THREE.MeshStandardMaterial({
-        map: wallTexture(key, color, 13),
-        roughness: 0.95,
-        metalness: 0.03,
+        map: wallTexture(key, color, 13, 32, style),
+        roughness: style === 'metal' ? 0.6 : 0.95,
+        metalness: style === 'metal' ? 0.35 : 0.03,
       });
       const topMat = new THREE.MeshStandardMaterial({
-        map: floorTexture(`top-${key}`, this.theme.wallTop, 31),
+        map: floorTexture(`top-${key}`, this.theme.wallTop, 31, 32, style),
         roughness: 1,
       });
       // [+x, -x, +y, -y, +z, -z]

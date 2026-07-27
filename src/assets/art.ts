@@ -1727,3 +1727,208 @@ export const PROPS: Record<string, PixelArt> = {
     ],
   },
 };
+
+// ---------------------------------------------------------------------------
+// Decor: purely-decorative billboards a floor can scatter to dress its terrain
+// (see DecorSpec / DungeonFloor.decor). Non-colliding — they never touch the
+// grid. Grouped loosely by the terrain skin they suit, but any floor may use any.
+// ---------------------------------------------------------------------------
+
+export const DECOR: Record<string, PixelArt> = {
+  // --- crystal skin ---
+  crystalCluster: {
+    palette: { k: '#123', a: '#6fe0ff', b: '#3fb0d8', c: '#bff4ff' },
+    rows: [
+      '......c.......',
+      '.....cac......',
+      '.....aab..c...',
+      '..c..aab.cac..',
+      '.cac.aab.aab..',
+      '.aab.aabkaab..',
+      'kaabkaabkaabk.',
+      '.kkkkkkkkkkk..',
+    ],
+  },
+  crystalPillar: {
+    palette: { k: '#112233', a: '#7fe6ff', b: '#3a9ec4', c: '#d6f8ff' },
+    rows: [
+      '....c....',
+      '...cac...',
+      '...aab...',
+      '..caacb..',
+      '..aaabb..',
+      '..aaabb..',
+      '.caaabbc.',
+      '.aaaabbb.',
+      '.aaaabbb.',
+      '.baaabbb.',
+      'kbbaabbbk',
+      'kkbbbbbkk',
+      '.kkkkkkk.',
+    ],
+  },
+  iceShard: {
+    palette: { k: '#123', a: '#bfeaff', b: '#7fc4e8', c: '#ffffff' },
+    rows: [
+      '...c..',
+      '..ca..',
+      '..aab.',
+      '.caab.',
+      '.aabb.',
+      '.aabb.',
+      'kaabbk',
+      '.kkkk.',
+    ],
+  },
+  // --- metal skin ---
+  machinePylon: {
+    palette: { k: '#0d1016', a: '#7d8798', b: '#c8d2e0', d: '#39e0ff', r: '#ff6b6b' },
+    rows: [
+      '..bddb..',
+      '..bddb..',
+      '.baaaab.',
+      '.barrab.',
+      '.baaaab.',
+      '.baddab.',
+      '.baaaab.',
+      'kbaaaabk',
+      'kbaaaabk',
+      'kkaaaakk',
+      '.kk..kk.',
+    ],
+  },
+  conduit: {
+    palette: { k: '#0d1016', a: '#6b7688', b: '#aab4c4', d: '#39e0ff' },
+    rows: [
+      '.dddd.',
+      'baaaab',
+      'baddab',
+      'baaaab',
+      'baddab',
+      'baaaab',
+      'kbaabk',
+      'kkkkkk',
+    ],
+  },
+  // --- crypt / haunted skin ---
+  gravestone: {
+    palette: { k: '#0e0b14', a: '#4a4560', b: '#6a6480', c: '#8a84a0' },
+    rows: [
+      '..cccc..',
+      '.cbbbbc.',
+      'cbbaabbc',
+      'cbaaaabc',
+      'cbabbabc',
+      'cbaaaabc',
+      'cbabbabc',
+      'cbaaaabc',
+      'kbbaabbk',
+      'kkbbbbkk',
+      '.kkkkkk.',
+    ],
+  },
+  boneheap: {
+    palette: { k: '#0e0b14', a: '#c9c4b0', b: '#8a856f', c: '#ece6d2' },
+    rows: [
+      '..c...c...',
+      '.cac.cac..',
+      'kbabkbabk.',
+      '.cac.c.ac.',
+      'cabakbabak',
+      'kbabbababk',
+      '.kkkkkkkk.',
+    ],
+  },
+  deadTree: {
+    palette: { k: '#0d0a12', a: '#2f2636', b: '#4a3a52', c: '#5a4a4a' },
+    rows: [
+      '..b...b..',
+      '.b.b.b.b.',
+      'b..bbb..b',
+      '.b.aba.b.',
+      '...aba...',
+      '..baab...',
+      '...aba...',
+      '...aba...',
+      '..kabak..',
+      '.kkabakk.',
+      '..kkakk..',
+    ],
+  },
+  roots: {
+    palette: { k: '#0d0a12', a: '#2c3a1f', b: '#405a2a', c: '#6a8a3a' },
+    rows: [
+      'b..c...b.',
+      '.bb.cbb..',
+      '..bbcb.bb',
+      'bb.bcbbb.',
+      '.bbabab..',
+      '..kaak...',
+      '..kaak...',
+      '...kk....',
+    ],
+  },
+  // --- cave skin ---
+  mushroomCluster: {
+    palette: { k: '#0e1410', a: '#c85a6a', b: '#e88a98', c: '#f0e0c0', d: '#9adf7a' },
+    rows: [
+      '...bb.....',
+      '..bBab....',
+      '.bBaaab.bb',
+      '.baaaab.Ba',
+      '..ccc...ac',
+      '..ccc..ccc',
+      'd.ccc.d.cc',
+      'dkcckdkkck',
+      '.kkkk.kkk.',
+    ],
+  },
+  rockPile: {
+    palette: { k: '#0e0e12', a: '#4a4650', b: '#6a6472', c: '#87828f' },
+    rows: [
+      '...cc.....',
+      '..caabc...',
+      '.caaaabc..',
+      'caabbaabc.',
+      'kaaaaaaabk',
+      'kbaabbaaak',
+      '.kkkkkkkk.',
+    ],
+  },
+  mushroomGlow: {
+    palette: { k: '#0e1410', a: '#3a7fa8', b: '#7fd6ff', c: '#d6f4ff' },
+    rows: [
+      '..c...',
+      '.cbc..',
+      'cbbbc.',
+      '.aaa..',
+      '.kak..',
+      '.kak..',
+      '.kkk..',
+    ],
+  },
+  // --- generic / stone (boot) ---
+  crate: {
+    palette: { k: '#1a1108', w: '#7a4f24', W: '#a86c31' },
+    rows: [
+      '.kkkkkkkk.',
+      'kwWWWWWWwk',
+      'kWwWWWWwWk',
+      'kWWkWWkWWk',
+      'kWWWWWWWWk',
+      'kWWkWWkWWk',
+      'kWwWWWWwWk',
+      'kwWWWWWWwk',
+      '.kkkkkkkk.',
+    ],
+  },
+  rubble: {
+    palette: { k: '#0f0f14', a: '#3f3a48', b: '#5a5464', c: '#736d80' },
+    rows: [
+      '..c..bc...',
+      '.cabcaabc.',
+      'kaabbaaabk',
+      '.kkkkkkkk.',
+    ],
+  },
+};
