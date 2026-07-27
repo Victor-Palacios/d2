@@ -15,6 +15,8 @@ interface FighterCard {
   mp: (cur: number, max: number) => void;
   /** Enemy cards only: refresh the Soul Syphon meter / captured star. */
   syphon?: () => void;
+  /** Stagger meter / BROKEN tag (Phase D). */
+  staggerEl: HTMLElement;
 }
 
 /** What the action menu can resolve to — a real action, "go auto", or "boost". */
@@ -110,7 +112,10 @@ export class BattleHUD {
     const hp = meter(root, 'hp', 'HP');
     const mp = meter(root, 'mp', 'MP');
 
-    const card: FighterCard = { root, hp, mp };
+    const staggerEl = el('div', 'stagger-meter');
+    root.appendChild(staggerEl);
+
+    const card: FighterCard = { root, hp, mp, staggerEl };
 
     // Enemy cards carry a Soul Syphon meter (or a captured ★) so the player can
     // read how close a wild monster is to being logged in the Soularium.
@@ -149,7 +154,18 @@ export class BattleHUD {
       card.mp(c.mp, c.maxMp);
       card.syphon?.();
       card.root.classList.toggle('down', c.hp <= 0);
+      card.root.classList.toggle('broken', b.staggered);
       if (c.guarding) card.root.classList.add('guarding');
+      if (b.staggered) {
+        card.staggerEl.className = 'stagger-meter broken';
+        card.staggerEl.innerHTML = '<b>BROKEN</b>';
+      } else if (b.stagger > 0) {
+        card.staggerEl.className = 'stagger-meter';
+        card.staggerEl.innerHTML = `<span class="dim">Stagger</span><i class="stagger-bar"><i style="width:${Math.round(b.stagger)}%"></i></i>`;
+      } else {
+        card.staggerEl.className = 'stagger-meter';
+        card.staggerEl.innerHTML = '';
+      }
     }
     const charges = battle.boost.party;
     const pips = Array.from({ length: BOOST_MAX }, (_, i) => `<i class="${i < charges ? 'on' : ''}">▲</i>`).join('');

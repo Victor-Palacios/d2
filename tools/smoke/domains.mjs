@@ -90,7 +90,9 @@ console.log('entered :', JSON.stringify({ domain: s.domain, floor: s.floor, floo
 // API so fights resolve deterministically here. (Real balance rides on the
 // recruitment system — a next-iteration feature; see the plan/roadmap.)
 await page.evaluate(() => {
-  window.hd2dGame.game.party.forEach((c) => { c.maxHp = 999; c.hp = 999; c.maxMp = 999; c.mp = 999; c.off = 140; });
+  // Huge def as well as hp/off so incoming damage stays ~1 even through a Break
+  // stun-lock or a crit field — this smoke tests flow, not survivability.
+  window.hd2dGame.game.party.forEach((c) => { c.maxHp = 999; c.hp = 999; c.maxMp = 999; c.mp = 999; c.off = 140; c.def = 999; });
 });
 
 // Floor 1: S at 3,2 ; event '1' at 5,4. Right 2, down 2 -> fight.

@@ -203,8 +203,74 @@ console.log('boost -> extra turn:', r3.extraTurn);
 const okC = r3.attackGain && r3.guardGain && r3.techNoGain && r3.capped === 3 &&
   r3.spendWorks && r3.spendEmptyFails && r3.extraTurn;
 
-const ok = okA && okB && okC;
-console.log('\nPHASE A OK :', okA, '| PHASE B OK :', okB, '| PHASE C OK :', okC);
+// --- Phase D: Break / stagger, field pulse, smarter AI -------------------
+const r4 = await page.evaluate(() => {
+  const b = window.hd2dGame.manager.activeScene.battle;
+  const party = b.side('party');
+  const enemy = b.side('enemy')[0];
+  enemy.creature.mp = 999;
+  b.fieldPulse = 'calm';
+  const out = {};
+  const reset = (u) => { u.stagger = 0; u.staggered = false; u.creature.hp = u.creature.maxHp; };
+
+  // Repeated hits fill the stagger meter and eventually Break the target.
+  const T = party[0]; reset(T); T.cell = { row: 0, col: 2 };
+  let hits = 0;
+  while (!T.staggered && hits < 12) { b.perform(enemy, { type: 'attack', targetUid: T.creature.uid }); T.creature.hp = T.creature.maxHp; hits++; }
+  out.staggerBroke = T.staggered && T.stagger >= 100;
+
+  // A broken target takes more than a non-broken one.
+  const U = party[1]; reset(U); U.cell = { row: 0, col: 0 };
+  T.creature.hp = T.creature.maxHp; // T remains broken
+  const dmgBroken = b.perform(enemy, { type: 'attack', targetUid: T.creature.uid }).hits[0].damage;
+  const dmgNormal = b.perform(enemy, { type: 'attack', targetUid: U.creature.uid }).hits[0].damage;
+  out.brokenTakesMore = dmgBroken > dmgNormal;
+
+  // clearStagger resets the meter.
+  b.clearStagger(T); out.clearWorks = !T.staggered && T.stagger === 0;
+
+  // Field pulse rotates with a period of 3 across rounds.
+  const pulses = []; for (let i = 0; i < 6; i++) { b.beginRound(); pulses.push(b.fieldPulse); }
+  out.pulsePeriodic = new Set(pulses).size === 3 && pulses[0] === pulses[3] && pulses[1] === pulses[4] && pulses[2] === pulses[5];
+
+  // Crit pulse deals more than calm; summed over rolls so the +20% edge beats
+  // per-hit variance/rounding.
+  const V = party[2]; V.cell = { row: 0, col: 1 };
+  let dc = 0, dcr = 0;
+  b.fieldPulse = 'calm'; for (let i = 0; i < 12; i++) { reset(V); dc += b.perform(enemy, { type: 'attack', targetUid: V.creature.uid }).hits[0].damage; }
+  b.fieldPulse = 'crit'; for (let i = 0; i < 12; i++) { reset(V); dcr += b.perform(enemy, { type: 'attack', targetUid: V.creature.uid }).hits[0].damage; }
+  out.critPulseMore = dcr > dc;
+  reset(V); b.fieldPulse = 'surge'; b.boost.enemy = 0;
+  b.perform(enemy, { type: 'attack', targetUid: V.creature.uid });
+  out.surgeBoost = b.boost.enemy >= 2; // +1 Attack, +1 Surge
+
+  // Smarter AI: softmax gives variety, and it focuses a broken, low-HP threat.
+  b.fieldPulse = 'calm';
+  party.forEach(reset);
+  party[0].cell = { row: 0, col: 0 }; party[1].cell = { row: 0, col: 1 }; party[2].cell = { row: 0, col: 2 };
+  const picks = []; for (let i = 0; i < 60; i++) { const a = b.chooseEnemyAction(enemy); if (a.targetUid) picks.push(a.targetUid); }
+  out.aiDistinct = new Set(picks).size;
+  party[0].creature.hp = 1; party[0].staggered = true;
+  let focus = 0, n = 0; for (let i = 0; i < 60; i++) { const a = b.chooseEnemyAction(enemy); if (a.targetUid) { n++; if (a.targetUid === party[0].creature.uid) focus++; } }
+  out.aiFocus = n > 0 && focus / n > 0.5;
+  return out;
+});
+
+console.log('\n== Phase D ==');
+console.log('hits build to Break :', r4.staggerBroke);
+console.log('broken takes more   :', r4.brokenTakesMore);
+console.log('clearStagger resets :', r4.clearWorks);
+console.log('field pulse cycles  :', r4.pulsePeriodic);
+console.log('crit pulse > calm   :', r4.critPulseMore);
+console.log('surge banks boost   :', r4.surgeBoost);
+console.log(`AI target variety   : ${r4.aiDistinct} distinct (>=2? ${r4.aiDistinct >= 2})`);
+console.log('AI focuses threat   :', r4.aiFocus);
+
+const okD = r4.staggerBroke && r4.brokenTakesMore && r4.clearWorks && r4.pulsePeriodic &&
+  r4.critPulseMore && r4.surgeBoost && r4.aiDistinct >= 2 && r4.aiFocus;
+
+const ok = okA && okB && okC && okD;
+console.log('\nPHASE A OK :', okA, '| B :', okB, '| C :', okC, '| D :', okD);
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();
 process.exit(ok && !errs.length ? 0 : 1);

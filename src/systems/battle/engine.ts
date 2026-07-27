@@ -63,6 +63,10 @@ export interface Battler {
   cell: Cell;
   /** Element of the arena plate under this cell (buffs matching creatures). */
   tile?: ElementId;
+  /** Stagger meter 0..STAGGER_MAX (Phase D). */
+  stagger: number;
+  /** Broken: skips the next turn and takes bonus damage until then. */
+  staggered: boolean;
 }
 
 /**
@@ -76,6 +80,29 @@ export function isMeleeTechnique(tech: Technique): boolean {
 
 /** Maximum stored Boost charges per side (grid battle, Phase C). */
 export const BOOST_MAX = 3;
+
+/**
+ * Break / Stagger (grid battle, Phase D). Damaging hits fill a target's stagger
+ * meter — faster with class advantage or a plate-amplified hit. At full it
+ * Breaks: the target loses its next turn and takes bonus damage until then.
+ * Deliberately an *accelerator*, never a damage gate (the Xenosaga II mistake).
+ */
+export const STAGGER_MAX = 100;
+export const STAGGER_HIT = 26;
+export const STAGGER_SUPER = 24;
+export const STAGGER_PLATE = 16;
+export const BREAK_DAMAGE_MULT = 1.5;
+
+/**
+ * Field pulse (grid battle, Phase D): a telegraphed per-round condition that
+ * favours whoever acts into it, echoing Xenosaga's turn events.
+ * - `crit`: damaging actions deal +20% this round.
+ * - `surge`: every action grants an extra Boost charge.
+ * - `calm`: nothing.
+ */
+export type FieldPulse = 'calm' | 'crit' | 'surge';
+export const PULSE_CYCLE: readonly FieldPulse[] = ['calm', 'crit', 'surge'];
+export const CRIT_PULSE_MULT = 1.2;
 
 export type BattleAction =
   | { type: 'attack'; targetUid: string }
@@ -138,6 +165,8 @@ export class Battle {
    * Attacks and Guards; spent to grant an immediate extra turn.
    */
   boost: Record<Side, number> = { party: 0, enemy: 0 };
+  /** The current round's field pulse (Phase D). */
+  fieldPulse: FieldPulse = 'calm';
 
   constructor(cfg: BattleConfig) {
     this.rng = cfg.rng ?? Math.random;
@@ -153,10 +182,10 @@ export class Battle {
     enemyCells.forEach((cell, i) => { if (cfg.enemyTiles?.[i]) this.plates.enemy[cellIndex(cell)] = cfg.enemyTiles[i]; });
 
     cfg.party.forEach((c, i) =>
-      this.battlers.push({ creature: c, side: 'party', slot: i, cell: partyCells[i], tile: this.plateAt('party', partyCells[i]) }),
+      this.battlers.push({ creature: c, side: 'party', slot: i, cell: partyCells[i], tile: this.plateAt('party', partyCells[i]), stagger: 0, staggered: false }),
     );
     cfg.enemies.forEach((c, i) =>
-      this.battlers.push({ creature: c, side: 'enemy', slot: i, cell: enemyCells[i], tile: this.plateAt('enemy', enemyCells[i]) }),
+      this.battlers.push({ creature: c, side: 'enemy', slot: i, cell: enemyCells[i], tile: this.plateAt('enemy', enemyCells[i]), stagger: 0, staggered: false }),
     );
   }
 
@@ -211,6 +240,7 @@ export class Battle {
    */
   beginRound(): Battler[] {
     this.round++;
+    this.fieldPulse = PULSE_CYCLE[(this.round - 1) % PULSE_CYCLE.length];
     for (const b of this.battlers) b.creature.guarding = false;
     this.queue = this.battlers
       .filter((b) => isUp(b.creature))
@@ -244,6 +274,12 @@ export class Battle {
   /** Inserts a battler at the front of the turn queue for an immediate extra turn. */
   requeueFront(b: Battler) {
     if (isUp(b.creature)) this.queue.unshift(b);
+  }
+
+  /** Ends a Break: clears the staggered flag and empties the meter. */
+  clearStagger(b: Battler) {
+    b.staggered = false;
+    b.stagger = 0;
   }
 
   private targetsFor(actor: Battler, tech: Technique, targetUid: string): Battler[] {
@@ -356,46 +392,86 @@ export class Battle {
         defenderRow: t.cell.row,
         rng: this.rng,
       });
-      t.creature.hp = Math.max(0, t.creature.hp - breakdown.amount);
+      // Post-multipliers: a broken target takes extra, and the `crit` field
+      // pulse boosts every damaging action this round.
+      let dealt = breakdown.amount;
+      if (t.staggered) dealt = Math.round(dealt * BREAK_DAMAGE_MULT);
+      if (this.fieldPulse === 'crit') dealt = Math.round(dealt * CRIT_PULSE_MULT);
+      dealt = Math.max(1, dealt);
+
+      t.creature.hp = Math.max(0, t.creature.hp - dealt);
       const fainted = isDown(t.creature);
-      result.hits.push({ targetUid: t.creature.uid, damage: breakdown.amount, heal: 0, fainted, breakdown });
+      result.hits.push({ targetUid: t.creature.uid, damage: dealt, heal: 0, fainted, breakdown });
 
       if (breakdown.attackerTileBonus) result.log.push(`The ${actor.tile} plate amplifies it!`);
       if (breakdown.effectiveness === 'super') result.log.push('Class advantage — it hits hard!');
       else if (breakdown.effectiveness === 'weak') result.log.push('Class disadvantage — it is resisted.');
+      if (t.staggered) result.log.push(`${t.creature.name} is broken — it takes extra damage!`);
       if (breakdown.guarded) result.log.push(`${t.creature.name} guards against it.`);
       if (fainted) result.log.push(`${t.creature.name} is knocked out!`);
+
+      // Stagger accrual (living targets only): faster on class advantage or a
+      // plate-amplified hit. Full meter -> Break on the next check.
+      if (!fainted && !t.staggered) {
+        let gain = STAGGER_HIT;
+        if (breakdown.effectiveness === 'super') gain += STAGGER_SUPER;
+        if (breakdown.attackerTileBonus) gain += STAGGER_PLATE;
+        t.stagger = Math.min(STAGGER_MAX, t.stagger + gain);
+        if (t.stagger >= STAGGER_MAX) {
+          t.staggered = true;
+          result.log.push(`${t.creature.name} is BROKEN!`);
+        }
+      }
     }
+
+    // The `surge` field pulse feeds Boost on top of the normal Attack gain.
+    if (this.fieldPulse === 'surge') this.gainBoost(actor.side);
 
     return result;
   }
 
   /**
-   * Enemy AI (plan §5.3): pick a living target and use a technique when the MP
-   * allows, otherwise fall back to a basic attack. Slightly biased toward
-   * targets it has an attribute advantage over, and toward finishing off
-   * anything already hurt — enough to feel deliberate without being cruel.
+   * Picks one item weighted by exp(score) — a softmax draw. Unlike a plain
+   * argmax it usually takes the strongest option but not always, so the AI
+   * stops being perfectly predictable (the recurring Digimon Dusk criticism).
+   */
+  private softmaxPick<T>(items: { item: T; score: number }[]): T {
+    if (items.length === 1) return items[0].item;
+    const weights = items.map((x) => Math.exp(x.score * 1.6));
+    const total = weights.reduce((s, w) => s + w, 0);
+    let r = this.rng() * total;
+    for (let i = 0; i < items.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return items[i].item;
+    }
+    return items[items.length - 1].item;
+  }
+
+  /**
+   * Enemy AI (plan §5.3, Phase D). Scores foes on damage, finishing blows, an
+   * exposed back-line caster, plate-buffed threats and existing Break state,
+   * then draws with a softmax so it is deliberate without being scripted. It
+   * heals when hurt, favours a multi-target shape against a stacked column, and
+   * occasionally feints with a Guard.
    */
   chooseEnemyAction(actor: Battler): BattleAction {
-    const foes = this.living(actor.side === 'party' ? 'enemy' : 'party');
+    const oppSide: Side = actor.side === 'party' ? 'enemy' : 'party';
+    const foes = this.living(oppSide);
     if (!foes.length) return { type: 'guard' };
 
     const c = actor.creature;
     const scored = foes.map((f) => {
-      let score = this.rng() * 0.4;
-      if (f.creature.hp / f.creature.maxHp < 0.35) score += 0.6;
-      const mult = computeDamage({
-        attacker: c,
-        defender: f.creature,
-        technique: technique('strike'),
-        rng: () => 0.5,
-      });
+      let score = this.rng() * 0.3;
+      if (f.creature.hp / f.creature.maxHp < 0.35) score += 0.6; // finish the wounded
+      if (f.staggered) score += 0.7; // press a Break
+      if (f.cell.row === 1 && !this.isCovered(f)) score += 0.4; // exposed back-liner
+      if (f.tile === f.creature.element) score += 0.3; // a plate-buffed threat
+      const mult = computeDamage({ attacker: c, defender: f.creature, technique: technique('strike'), rng: () => 0.5 });
       if (mult.effectiveness === 'super') score += 0.5;
       if (mult.effectiveness === 'weak') score -= 0.3;
-      return { f, score };
+      return { item: f, score };
     });
-    scored.sort((a, b) => b.score - a.score);
-    const target = scored[0].f;
+    const target = this.softmaxPick(scored);
 
     // Heal itself / an ally when badly hurt and the technique is available.
     const healTech = c.techniques
@@ -415,20 +491,24 @@ export class Battle {
       .filter((t) => t.kind === 'damage' && c.mp >= t.mpCost);
 
     if (usable.length && this.rng() < 0.72) {
-      // Prefer a multi-target shape when it would hit two or more.
-      const aoe = usable.find((t) => techShape(t) !== 'single');
-      const pick = aoe && foes.length >= 2 && this.rng() < 0.6
-        ? aoe
-        : usable[Math.floor(this.rng() * usable.length)];
+      // Prefer a multi-target shape when it would actually catch two or more.
+      const shaped = usable.find((t) => {
+        const sh = techShape(t);
+        if (sh === 'all') return foes.length >= 2;
+        if (sh === 'row') return foes.filter((f) => f.cell.row === target.cell.row).length >= 2;
+        if (sh === 'column') return foes.filter((f) => f.cell.col === target.cell.col).length >= 2;
+        return false;
+      });
+      const pick = shaped && this.rng() < 0.65 ? shaped : usable[Math.floor(this.rng() * usable.length)];
       return { type: 'technique', techniqueId: pick.id, targetUid: target.creature.uid };
     }
 
-    // Low on HP with nothing good to do: guard.
+    // Feint: low on HP with nothing better, brace instead (also banks Boost).
     if (c.hp / c.maxHp < 0.25 && this.rng() < 0.3) return { type: 'guard' };
 
     // A basic Attack is melee: it can only reach the Vanguard (and exposed Rear),
     // so retarget to a legal foe if the scored pick is behind cover.
-    const meleeFoes = this.meleeTargets(actor.side === 'party' ? 'enemy' : 'party');
+    const meleeFoes = this.meleeTargets(oppSide);
     const meleeTarget = meleeFoes.includes(target) ? target : meleeFoes[0] ?? target;
     return { type: 'attack', targetUid: meleeTarget.creature.uid };
   }

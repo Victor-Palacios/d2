@@ -57,6 +57,14 @@ function cellPos(side: 'party' | 'enemy', cell: { row: number; col: number }): {
   return { x: SLOT_X[cell.col], z: front + (cell.row === 1 ? dir * ROW_GAP : 0) };
 }
 
+/** Field-pulse banner suffix and announcement line (Phase D). */
+const PULSE_LABEL: Record<string, string> = { calm: '', crit: ' · ⚡ Crit Field', surge: ' · ▲ Surge Field' };
+const PULSE_TEXT: Record<string, string> = {
+  calm: '',
+  crit: 'A Crit Field settles in — attacks bite deeper this round.',
+  surge: 'A Surge Field crackles — every action banks extra Boost this round.',
+};
+
 /**
  * Turn-based 3v3 battle (plan §5.3, M2).
  *
@@ -345,12 +353,28 @@ export class BattleScene extends GameScene {
 
     while (this.battle.outcome === 'ongoing' && !this.finished) {
       this.battle.beginRound();
-      this.hud.setBanner(`Round ${this.battle.round}`);
+      this.hud.setBanner(`Round ${this.battle.round}${PULSE_LABEL[this.battle.fieldPulse]}`);
+      if (this.battle.fieldPulse !== 'calm') {
+        this.hud.setLog(PULSE_TEXT[this.battle.fieldPulse]);
+        await sleep(700);
+      }
 
       for (;;) {
         const actor = this.battle.nextTurn();
         if (!actor) break;
         if (this.battle.outcome !== 'ongoing') break;
+
+        // A broken actor loses this turn; the Break then clears.
+        if (actor.staggered) {
+          this.hud.setActive(actor.creature.uid);
+          this.hud.setLog(`${actor.creature.name} is broken and cannot move!`);
+          this.battle.clearStagger(actor);
+          this.hud.refresh(this.battle);
+          audio.sfx('cancel');
+          await sleep(1000);
+          this.hud.setActive(null);
+          continue;
+        }
 
         this.hud.setActive(actor.creature.uid);
         this.pulse(actor);
