@@ -10,11 +10,12 @@ name: Daily monster sprites
 # batch as an artifact.
 #
 # Scheduled workflows only run from the default branch, so this lives on main.
-# Cron is UTC: 08:00 UTC = 01:00 America/Los_Angeles during PDT (UTC-7). After
-# DST ends switch to '0 9 * * *' to keep it at 1am.
+# Cron is UTC, set to 01:00 UTC per request.
+# NOTE: 01:00 UTC = 18:00 (6pm) America/Los_Angeles during PDT. If the intent is
+# 1am Pacific, use '0 8 * * *' (PDT) / '0 9 * * *' (PST) instead.
 on:
   schedule:
-    - cron: "0 8 * * *"
+    - cron: "0 1 * * *"
   workflow_dispatch:
     inputs:
       max:
