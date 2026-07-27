@@ -32,7 +32,7 @@ const FUEL_PER_STEP = 1;
 export interface DungeonSceneParams {
   /** Set when returning from a battle so the crawl resumes in place. */
   resume?: boolean;
-  battleResult?: 'victory' | 'defeat';
+  battleResult?: 'victory' | 'defeat' | 'flee';
   /** Event id that started the battle, so it can be marked done. */
   eventId?: string;
 }

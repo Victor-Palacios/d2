@@ -25,6 +25,9 @@ import type { DungeonSceneParams } from './DungeonScene';
 /** Monsters fielded on screen at once (the rest of the party are reserves). */
 const ACTIVE_PARTY = 3;
 
+/** Chance a Run attempt succeeds (bosses cannot be fled). */
+const FLEE_CHANCE = 0.5;
+
 export interface BattleSceneParams {
   enemies: EnemySpec[];
   isBoss?: boolean;
@@ -83,6 +86,8 @@ export class BattleScene extends GameScene {
   private homePos = new Map<string, THREE.Vector3>();
   private highlight: THREE.PointLight | null = null;
   private finished = false;
+  /** Set when the party successfully flees — skips victory/defeat resolution. */
+  private fled = false;
   /** Auto-battle: party members take the basic Attack until the player cancels. */
   private autoBattle = false;
   private unsubInput: (() => void) | null = null;
@@ -351,7 +356,7 @@ export class BattleScene extends GameScene {
     );
     await sleep(900);
 
-    while (this.battle.outcome === 'ongoing' && !this.finished) {
+    while (this.battle.outcome === 'ongoing' && !this.finished && !this.fled) {
       this.battle.beginRound();
       this.hud.setBanner(`Round ${this.battle.round}${PULSE_LABEL[this.battle.fieldPulse]}`);
       if (this.battle.fieldPulse !== 'calm') {
@@ -382,7 +387,7 @@ export class BattleScene extends GameScene {
         let result: TurnResult;
         let extraTurns = 0;
         if (actor.side === 'party') {
-          let action: BattleAction;
+          let action: BattleAction | null = null;
           if (this.autoBattle) {
             this.hud.setLog(`${actor.creature.name} attacks on its own.`);
             await sleep(320);
@@ -405,6 +410,18 @@ export class BattleScene extends GameScene {
                 }
                 continue;
               }
+              if (choice.type === 'flee') {
+                // A coin-flip escape; a failed attempt still costs the turn.
+                if (Math.random() < FLEE_CHANCE) {
+                  this.fled = true;
+                } else {
+                  audio.sfx('cancel');
+                  this.hud.setLog(`${actor.creature.name} tried to run — no way out!`);
+                  await sleep(1000);
+                }
+                action = null;
+                break;
+              }
               if (choice.type === 'auto') {
                 this.setAuto(true);
                 await sleep(200);
@@ -415,10 +432,16 @@ export class BattleScene extends GameScene {
               break;
             }
           }
-          const beforeUid = actor.creature.uid;
-          result = this.battle.perform(actor, action!);
-          this.syphonFromHits(result);
-          if (result.moved) await this.applyMove(actor, beforeUid);
+          if (this.fled) break;
+          if (action) {
+            const beforeUid = actor.creature.uid;
+            result = this.battle.perform(actor, action);
+            this.syphonFromHits(result);
+            if (result.moved) await this.applyMove(actor, beforeUid);
+          } else {
+            // Failed flee: the turn is spent with no action.
+            result = { actorUid: actor.creature.uid, actionLabel: '', hits: [], log: [] };
+          }
         } else {
           this.hud.setLog(`${actor.creature.name} is deciding...`);
           await sleep(480);
@@ -441,7 +464,8 @@ export class BattleScene extends GameScene {
       }
     }
 
-    if (this.battle.outcome === 'victory') await this.onVictory();
+    if (this.fled) await this.onFlee();
+    else if (this.battle.outcome === 'victory') await this.onVictory();
     else await this.onDefeat();
   }
 
@@ -664,6 +688,19 @@ export class BattleScene extends GameScene {
       battleResult: 'victory',
       eventId: this.params.eventId,
     };
+    await this.ctx.go(this.params.returnTo, params);
+  }
+
+  private async onFlee() {
+    if (this.finished) return;
+    this.finished = true;
+    audio.sfx('portal');
+    this.hud.setActive(null);
+    this.hud.setBanner('Escaped');
+    this.hud.setLog('You slip away from the fight — no spoils, but you live.');
+    await sleep(1300);
+    // Resume the crawl in place; no rewards, no captures claimed.
+    const params: DungeonSceneParams = { resume: true, battleResult: 'flee', eventId: this.params.eventId };
     await this.ctx.go(this.params.returnTo, params);
   }
 

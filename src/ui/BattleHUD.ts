@@ -20,8 +20,8 @@ interface FighterCard {
   staggerEl: HTMLElement;
 }
 
-/** What the action menu can resolve to — a real action, "go auto", or "boost". */
-export type MenuChoice = BattleAction | { type: 'auto' } | { type: 'boost' };
+/** What the action menu can resolve to — a real action, "go auto", "boost", or "flee". */
+export type MenuChoice = BattleAction | { type: 'auto' } | { type: 'boost' } | { type: 'flee' };
 
 /** Human label for a formation cell, e.g. "Vanguard · Left". */
 function cellLabel(row: number, col: number): string {
@@ -239,12 +239,15 @@ export class BattleHUD {
         { value: 'move', label: 'Move', disabled: !canMove, note: canMove ? undefined : 'no room' },
         { value: 'swap', label: 'Swap', disabled: !canSwap, note: canSwap ? undefined : '—' },
         { value: 'guard', label: 'Guard' },
+        { value: 'run', label: 'Run', disabled: battle.isBoss, note: battle.isBoss ? "can't flee" : '50%' },
         { value: 'auto', label: 'Auto', note: 'L1' },
       ]);
 
       if (root === 'auto') return { type: 'auto' };
 
       if (root === 'boost') return { type: 'boost' };
+
+      if (root === 'run') return { type: 'flee' };
 
       if (root === 'guard') return { type: 'guard' };
 
