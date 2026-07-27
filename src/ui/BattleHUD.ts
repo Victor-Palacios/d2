@@ -79,9 +79,11 @@ export class BattleHUD {
     const attr = ATTRIBUTES[c.attribute];
     const elem = ELEMENTS[c.element];
 
+    const rowName = b.cell.row === 0 ? 'Vanguard' : 'Rear';
     const root = el('div', 'panel fighter');
     root.style.setProperty('--class-color', attr.color);
-    root.title = `${attr.name} · ${elem.name}${b.tile ? ` · on a ${ELEMENTS[b.tile].name} plate` : ''}`;
+    root.classList.add(b.cell.row === 0 ? 'vanguard' : 'rear');
+    root.title = `${attr.name} · ${elem.name} · ${rowName}${b.tile ? ` · on a ${ELEMENTS[b.tile].name} plate` : ''}`;
 
     const nm = el('div', 'nm');
     const name = el('span');
@@ -206,7 +208,8 @@ export class BattleHUD {
       if (root === 'guard') return { type: 'guard' };
 
       if (root === 'attack') {
-        const uid = await this.pickTarget(battle, actor, 'enemy', onTargetHover);
+        // A basic Attack is melee: it cannot reach a covered Rear foe.
+        const uid = await this.pickTarget(actor, battle.meleeTargets('enemy'), onTargetHover);
         if (!uid) continue;
         return { type: 'attack', targetUid: uid };
       }
@@ -228,7 +231,9 @@ export class BattleHUD {
         if (!techId) continue;
         const t = technique(techId);
         if (t.aoe) return { type: 'technique', techniqueId: techId, targetUid: battle.living('enemy')[0].creature.uid };
-        const uid = await this.pickTarget(battle, actor, t.kind === 'heal' ? 'party' : 'enemy', onTargetHover);
+        // Techniques are ranged/Ether: they reach any living target, cover or not.
+        const candidates = t.kind === 'heal' ? battle.living('party') : battle.living('enemy');
+        const uid = await this.pickTarget(actor, candidates, onTargetHover);
         if (!uid) continue;
         return { type: 'technique', techniqueId: techId, targetUid: uid };
       }
@@ -237,23 +242,18 @@ export class BattleHUD {
   }
 
   private async pickTarget(
-    battle: Battle,
     actor: Battler,
-    side: 'party' | 'enemy',
+    candidates: Battler[],
     onTargetHover?: (uid: string | null) => void,
   ): Promise<string | null> {
-    const candidates = battle.living(side);
     if (!candidates.length) return null;
     const items: MenuItem[] = candidates.map((b) => ({
       value: b.creature.uid,
       label: b.creature.name,
       note: `${b.creature.hp}/${b.creature.maxHp}`,
     }));
-    // Default to the actor when healing, otherwise the first foe.
-    const startIndex = Math.max(
-      0,
-      side === 'party' ? candidates.findIndex((b) => b.creature.uid === actor.creature.uid) : 0,
-    );
+    // Default to the actor when it is a valid target (self-heal), otherwise the first.
+    const startIndex = Math.max(0, candidates.findIndex((b) => b.creature.uid === actor.creature.uid));
     this.menuHost.style.display = '';
     this.menu?.destroy();
     this.menu = new Menu(this.menuHost, items, {

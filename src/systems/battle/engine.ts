@@ -15,12 +15,58 @@ import type { DamageBreakdown } from './formula';
 
 export type Side = 'party' | 'enemy';
 
+/**
+ * A cell on a side's 2×3 formation grid (plan: grid battle, Phase A).
+ *
+ * - `row` 0 is the **Vanguard** (front): melee hits harder and lands harder on
+ *   it, and it can be struck by melee.
+ * - `row` 1 is the **Rear** (back): shielded from single-target melee while a
+ *   living ally holds the Vanguard cell in the same column, deals less melee,
+ *   but takes and throws ranged/Ether at full strength.
+ * - `col` 0/1/2 map left→right and share the arena's element plates.
+ */
+export interface Cell {
+  row: number;
+  col: number;
+}
+
+/**
+ * Where units drop in when no explicit formation is given: the Vanguard fills
+ * left→centre→right first, then the Rear. Three units therefore stand across
+ * the front, exactly as before the grid existed — the back row is something the
+ * player deploys into deliberately (Phase B), not a default.
+ */
+export const FORMATION_ORDER: readonly Cell[] = [
+  { row: 0, col: 1 },
+  { row: 0, col: 0 },
+  { row: 0, col: 2 },
+  { row: 1, col: 1 },
+  { row: 1, col: 0 },
+  { row: 1, col: 2 },
+];
+
+export function defaultFormation(n: number): Cell[] {
+  return FORMATION_ORDER.slice(0, Math.max(0, Math.min(n, FORMATION_ORDER.length))).map((c) => ({ ...c }));
+}
+
 export interface Battler {
   creature: CreatureInstance;
   side: Side;
+  /** Deploy index (0-based), also indexes into per-slot tile arrays. */
   slot: number;
-  /** Element of the arena plate under this slot (buffs matching creatures). */
+  /** Formation cell on this side's 2×3 grid. */
+  cell: Cell;
+  /** Element of the arena plate under this cell (buffs matching creatures). */
   tile?: ElementId;
+}
+
+/**
+ * A "melee" action reaches only the enemy Vanguard (and any exposed Rear). The
+ * free basic Attack is melee; every MP Technique is treated as ranged/Ether and
+ * ignores cover. Kept as one rule so the front/back trade-off stays legible.
+ */
+export function isMeleeTechnique(tech: Technique): boolean {
+  return tech.id === 'strike';
 }
 
 export type BattleAction =
@@ -53,6 +99,9 @@ export interface BattleConfig {
   /** Element plate under each party / enemy slot. */
   partyTiles?: (ElementId | undefined)[];
   enemyTiles?: (ElementId | undefined)[];
+  /** Explicit starting formation; defaults to `defaultFormation`. */
+  partyCells?: Cell[];
+  enemyCells?: Cell[];
   /** Boss fights disable fleeing and are flagged in the UI. */
   isBoss?: boolean;
   rng?: () => number;
@@ -69,11 +118,13 @@ export class Battle {
   constructor(cfg: BattleConfig) {
     this.rng = cfg.rng ?? Math.random;
     this.isBoss = !!cfg.isBoss;
+    const partyCells = cfg.partyCells ?? defaultFormation(cfg.party.length);
+    const enemyCells = cfg.enemyCells ?? defaultFormation(cfg.enemies.length);
     cfg.party.forEach((c, i) =>
-      this.battlers.push({ creature: c, side: 'party', slot: i, tile: cfg.partyTiles?.[i] }),
+      this.battlers.push({ creature: c, side: 'party', slot: i, cell: partyCells[i], tile: cfg.partyTiles?.[i] }),
     );
     cfg.enemies.forEach((c, i) =>
-      this.battlers.push({ creature: c, side: 'enemy', slot: i, tile: cfg.enemyTiles?.[i] }),
+      this.battlers.push({ creature: c, side: 'enemy', slot: i, cell: enemyCells[i], tile: cfg.enemyTiles?.[i] }),
     );
   }
 
@@ -83,6 +134,22 @@ export class Battle {
 
   living(side: Side): Battler[] {
     return this.side(side).filter((b) => isUp(b.creature));
+  }
+
+  /**
+   * True when a Rear unit is shielded from single-target melee: it sits in
+   * row 1 and a living ally holds the Vanguard (row 0) cell in the same column.
+   */
+  isCovered(b: Battler): boolean {
+    if (b.cell.row !== 1) return false;
+    return this.side(b.side).some(
+      (a) => a !== b && isUp(a.creature) && a.cell.row === 0 && a.cell.col === b.cell.col,
+    );
+  }
+
+  /** Living units on `side` that a melee attack is allowed to reach. */
+  meleeTargets(side: Side): Battler[] {
+    return this.living(side).filter((b) => !this.isCovered(b));
   }
 
   find(uid: string): Battler | undefined {
@@ -124,11 +191,17 @@ export class Battle {
       const t = this.find(targetUid);
       return t ? [t] : [];
     }
+    const opposing: Side = actor.side === 'party' ? 'enemy' : 'party';
     if (tech.aoe) {
-      return this.living(actor.side === 'party' ? 'enemy' : 'party');
+      return this.living(opposing);
     }
+    const melee = isMeleeTechnique(tech);
+    const pool = melee ? this.meleeTargets(opposing) : this.living(opposing);
     const t = this.find(targetUid);
-    return t && isUp(t.creature) ? [t] : this.living(actor.side === 'party' ? 'enemy' : 'party').slice(0, 1);
+    // Honour a valid chosen target; a melee attack can never reach a covered
+    // Rear unit, so fall back to the nearest legal target if one slipped through.
+    if (t && isUp(t.creature) && (!melee || !this.isCovered(t))) return [t];
+    return pool.slice(0, 1);
   }
 
   /** Applies one action and returns everything the scene needs to animate it. */
@@ -177,6 +250,9 @@ export class Battle {
         technique: tech,
         attackerTile: actor.tile,
         defenderTile: t.tile,
+        melee: isMeleeTechnique(tech),
+        attackerRow: actor.cell.row,
+        defenderRow: t.cell.row,
         rng: this.rng,
       });
       t.creature.hp = Math.max(0, t.creature.hp - breakdown.amount);
@@ -249,6 +325,10 @@ export class Battle {
     // Low on HP with nothing good to do: guard.
     if (c.hp / c.maxHp < 0.25 && this.rng() < 0.3) return { type: 'guard' };
 
-    return { type: 'attack', targetUid: target.creature.uid };
+    // A basic Attack is melee: it can only reach the Vanguard (and exposed Rear),
+    // so retarget to a legal foe if the scored pick is behind cover.
+    const meleeFoes = this.meleeTargets(actor.side === 'party' ? 'enemy' : 'party');
+    const meleeTarget = meleeFoes.includes(target) ? target : meleeFoes[0] ?? target;
+    return { type: 'attack', targetUid: meleeTarget.creature.uid };
   }
 }

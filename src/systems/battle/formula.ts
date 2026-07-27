@@ -16,6 +16,18 @@ export const GUARD_REDUCTION = 0.5;
 export const GUARD_MP_RESTORE = 0.12;
 export const VARIANCE = 0.06;
 
+/**
+ * Formation row modifiers (grid battle, Phase A).
+ *
+ * Melee from the Vanguard hits harder; melee from the Rear pulls its punches.
+ * Anyone standing in the Vanguard takes more from every hit — the price of the
+ * front line. Ranged/Ether is unaffected by the attacker's row, which is the
+ * incentive to keep casters in the back.
+ */
+export const VANGUARD_MELEE_DEALT = 1.15;
+export const REAR_MELEE_DEALT = 0.8;
+export const VANGUARD_DAMAGE_TAKEN = 1.15;
+
 export interface DamageBreakdown {
   amount: number;
   attributeMult: number;
@@ -33,6 +45,11 @@ export interface DamageInput {
   /** Element of the floor tile the attacker is standing on, if any. */
   attackerTile?: ElementId;
   defenderTile?: ElementId;
+  /** Melee (basic Attack) vs ranged/Ether — only melee gets the row modifiers. */
+  melee?: boolean;
+  /** Formation rows (0 = Vanguard, 1 = Rear) for the front/back modifiers. */
+  attackerRow?: number;
+  defenderRow?: number;
   /** Deterministic roll injection for tests; defaults to Math.random. */
   rng?: () => number;
 }
@@ -50,6 +67,15 @@ export function computeDamage(input: DamageInput): DamageBreakdown {
   let amount = base * attributeMult;
   if (attackerTileBonus) amount *= ELEMENT_TILE_BONUS;
   if (defenderTileBonus) amount /= ELEMENT_TILE_BONUS;
+
+  // Formation rows: melee is stronger from the front, weaker from the back;
+  // the Vanguard takes more from everything.
+  if (input.melee) {
+    if (input.attackerRow === 0) amount *= VANGUARD_MELEE_DEALT;
+    else if (input.attackerRow === 1) amount *= REAR_MELEE_DEALT;
+  }
+  if (input.defenderRow === 0) amount *= VANGUARD_DAMAGE_TAKEN;
+
   if (defender.guarding) amount *= GUARD_REDUCTION;
 
   amount *= 1 + (rng() * 2 - 1) * VARIANCE;

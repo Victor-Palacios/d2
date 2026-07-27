@@ -39,6 +39,8 @@ export interface BattleSceneParams {
 const SLOT_X = [-2.4, 0, 2.4];
 const PARTY_Z = 2.2;
 const ENEMY_Z = -3;
+/** Depth gap between the Vanguard (front) row and the Rear (back) row. */
+const ROW_GAP = 1.6;
 /**
  * The camera looks slightly past the party so the near row sits above the
  * bottom-left HUD panels instead of behind them.
@@ -46,12 +48,13 @@ const ENEMY_Z = -3;
 const CAMERA_BIAS_Z = 0.9;
 
 /**
- * Depth of a slot. The outer slots are staggered so overlapping billboards
- * still separate visually.
+ * World position of a formation cell. Columns spread along X; the Rear row sits
+ * further from the opposing side (behind the party, deeper for enemies).
  */
-function slotZ(side: 'party' | 'enemy', slot: number): number {
-  const base = side === 'party' ? PARTY_Z : ENEMY_Z;
-  return base + (slot - 1) * (side === 'party' ? 0.55 : -0.55);
+function cellPos(side: 'party' | 'enemy', cell: { row: number; col: number }): { x: number; z: number } {
+  const front = side === 'party' ? PARTY_Z : ENEMY_Z;
+  const dir = side === 'party' ? 1 : -1;
+  return { x: SLOT_X[cell.col], z: front + (cell.row === 1 ? dir * ROW_GAP : 0) };
 }
 
 /**
@@ -229,7 +232,32 @@ export class BattleScene extends GameScene {
       this.scene.add(light);
     };
     for (const b of this.battle.battlers) {
-      if (b.tile) plate(SLOT_X[b.slot], slotZ(b.side, b.slot), b.tile);
+      if (b.tile) {
+        const p = cellPos(b.side, b.cell);
+        plate(p.x, p.z, b.tile);
+      }
+    }
+
+    // Formation grid: a faint outline under every one of the 12 cells so the
+    // 2×3 layout reads at a glance; occupied cells glow a little brighter.
+    const occupied = new Set(this.battle.battlers.map((b) => `${b.side}:${b.cell.row}:${b.cell.col}`));
+    const cellGeo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(1.7, 1.7));
+    for (const side of ['party', 'enemy'] as const) {
+      for (let row = 0; row < 2; row++) {
+        for (let col = 0; col < 3; col++) {
+          const p = cellPos(side, { row, col });
+          const on = occupied.has(`${side}:${row}:${col}`);
+          const mat = new THREE.LineBasicMaterial({
+            color: side === 'party' ? 0x8fd0ff : 0xff9a8a,
+            transparent: true,
+            opacity: on ? 0.5 : 0.16,
+          });
+          const outline = new THREE.LineSegments(cellGeo, mat);
+          outline.rotation.x = -Math.PI / 2;
+          outline.position.set(p.x, 0.02, p.z);
+          this.scene.add(outline);
+        }
+      }
     }
 
     // Two torches frame the arena and feed the bloom.
@@ -253,7 +281,8 @@ export class BattleScene extends GameScene {
         hover: sp.hover ?? 0,
         emissive: 0.08,
       });
-      const pos = new THREE.Vector3(SLOT_X[b.slot], 0, slotZ(b.side, b.slot));
+      const cp = cellPos(b.side, b.cell);
+      const pos = new THREE.Vector3(cp.x, 0, cp.z);
       bb.object.position.copy(pos);
       this.homePos.set(b.creature.uid, pos.clone());
       this.scene.add(bb.object);
