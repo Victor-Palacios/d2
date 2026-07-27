@@ -75,6 +75,7 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.07,
     encounters: [
+      { weight: 1, enemies: [{ species: 'lastlight', level: 14 }] }, // rare: a soul about to move on
       { weight: 3, enemies: [{ species: 'wispling', level: 13 }] },
       { weight: 2, enemies: [{ species: 'gravemaw', level: 14 }] },
       { weight: 2, enemies: [{ species: 'wispling', level: 13 }, { species: 'gravemaw', level: 13 }] },
@@ -123,6 +124,7 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.08,
     encounters: [
+      { weight: 1, enemies: [{ species: 'lastlight', level: 14 }] }, // rare: a soul about to move on
       { weight: 3, enemies: [{ species: 'gravemaw', level: 15 }] },
       { weight: 3, enemies: [{ species: 'wispling', level: 14 }] },
       { weight: 2, enemies: [{ species: 'cryptguard', level: 15 }, { species: 'wispling', level: 14 }] },

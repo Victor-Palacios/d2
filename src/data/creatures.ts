@@ -298,6 +298,21 @@ export const SPECIES: Record<string, Species> = {
     techniques: ['sunClaw', 'regalRoar'],
     blurb: 'Warden of the Quiet Crossing. It does not consider you a threat.',
   },
+
+  // --- rare spirit --------------------------------------------------------
+  lastlight: {
+    id: 'lastlight',
+    name: 'The Last Light',
+    attribute: 'mage',
+    element: 'dark',
+    art: 'lastlight',
+    height: 0.95,
+    hover: 0.12,
+    base: { hp: 24, mp: 30, off: 8, def: 9, spd: 22 },
+    growth: { hp: 4, mp: 3, off: 1.2, def: 1.2, spd: 2.2 },
+    techniques: ['dirge', 'gloomLance', 'strike'],
+    blurb: 'A soul almost ready to move on — a trembling flame in a cracked lantern. It would sooner drift away than fight.',
+  },
 };
 
 export function species(id: string): Species {
