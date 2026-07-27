@@ -433,7 +433,7 @@ export class Battle {
   /**
    * Picks one item weighted by exp(score) — a softmax draw. Unlike a plain
    * argmax it usually takes the strongest option but not always, so the AI
-   * stops being perfectly predictable (the recurring Digimon Dusk criticism).
+   * stops being perfectly predictable (a common monster-RPG AI criticism).
    */
   private softmaxPick<T>(items: { item: T; score: number }[]): T {
     if (items.length === 1) return items[0].item;

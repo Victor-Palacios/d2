@@ -13,7 +13,7 @@ import { toast } from './Toast';
 export async function openShop(parent: HTMLElement): Promise<void> {
   const root = el('div', 'screen');
   root.appendChild(el('h1', 'title-main', 'SUPPLY BAY'));
-  root.appendChild(el('p', 'title-sub', 'Digital City — licensed drivers only'));
+  root.appendChild(el('p', 'title-sub', 'The Everwake — licensed drivers only'));
 
   const wrap = el('div', 'shop-wrap');
   const listPanel = el('div', 'panel');

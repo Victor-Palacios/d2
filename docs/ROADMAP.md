@@ -2,8 +2,9 @@
 
 Where this goes next. The current build is a complete **first-hour vertical
 slice** (see `docs/PLAN_AUDIT.md`); this charts the path toward reproducing the
-*shape* of **Digimon World 2**'s first ~5 hours — multiple domains, a real
-progression loop, DNA digivolution, and recruiting — without breaking the two
+*shape* of a **classic monster-collecting dungeon-crawler**'s first ~5 hours —
+multiple domains, a real progression loop, DNA-merge evolution, and recruiting —
+without breaking the two
 things that make the slice good: it is **fully procedural** (no binary assets)
 and its **battle model is headless** (pure rules, no renderer).
 
@@ -83,13 +84,13 @@ The single biggest gap: **there is no XP / level-up today** (`docs/SYSTEMS.md`
 - **Test:** extend `tools/smoke/` with a headless "grind N fights, assert level
   and stat deltas" run against `engine.ts`.
 
-*Why first:* every later system (recruiting, digivolution, harder domains)
+*Why first:* every later system (recruiting, evolution, harder domains)
 assumes creatures get stronger. Build the spine before the limbs.
 
 ## M8 — Recruiting / capturing (Soul Syphon)
 
-DW2 fills your roster from the dungeon. This game uses a custom **Soul Syphon**
-mechanic instead of a capture item.
+The genre fills your roster from the dungeon. This game uses a custom **Soul
+Syphon** mechanic instead of a capture item.
 
 - ✅ **Phase 1 done:** Soul Syphon capture — encountering a wild species primes
   its meter, a hit fills it to 100% and captures it (a free copy to the party, or
@@ -112,15 +113,15 @@ mechanic instead of a capture item.
   (project the billboard's world position to screen) rather than only on the HUD
   card; and battle should draw at most 3 active party monsters (3-on-screen).
 
-## M9 — DNA Digivolution (cash the §5.6 stub)
+## M9 — DNA-merge Evolution (cash the §5.6 stub)
 
-The data model is **already there**: `canDigivolveTo` on every `Species`
+The data model is **already there**: `evolvesTo` on every `Species`
 (`data/creatures.ts`), deliberately carried for exactly this.
 
-- Digivolution screen: pick a creature meeting a requirement (level, and later a
+- Evolution screen: pick a creature meeting a requirement (level, and later a
   second creature for DNA-merge), preview the result, confirm.
-- Merge rules in a new `systems/party/digivolve.ts` (headless, testable) — level
-  reset with carried-over stat bonuses is the DW2 hook that makes the level cap
+- Merge rules in a new `systems/party/evolve.ts` (headless, testable) — a level
+  reset with carried-over stat bonuses is the genre hook that makes the level cap
   interesting.
 - Author the evolved-form roster in `creatures.ts` + `art.ts` (Regalion already
   exists as Emberling's target — use it as the reference chain).
@@ -168,7 +169,7 @@ One tutorial dungeon becomes several servers/domains.
 ## Sequencing rationale
 
 ```
-Element trim ──▶ M7 XP ──▶ M8 Recruit ──▶ M9 Digivolve
+Element trim ──▶ M7 XP ──▶ M8 Recruit ──▶ M9 Evolve
                     │                          │
                     └────────▶ M10 Domains ◀───┘ ──▶ M11 Story ──▶ M12 Depth
 ```

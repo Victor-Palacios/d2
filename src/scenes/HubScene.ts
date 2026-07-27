@@ -55,7 +55,7 @@ export interface HubSceneParams {
 }
 
 /**
- * Digital City, simplified (plan §2.2, M4/M5).
+ * The Everwake, simplified (plan §2.2, M4/M5).
  *
  * One room, walk-around movement, bump-to-talk NPCs and a portal to the world
  * map. This is also where the post-boss progression beats fire: licence, own
@@ -218,7 +218,7 @@ export class HubScene extends GameScene {
     // Autosave point: the city is the one place the run is unambiguously safe,
     // and saving here keeps the out-of-EP tow a real cost rather than something
     // you reload away.
-    if (game.has('prologueDone') && saveAuto('hub', 'Digital City')) {
+    if (game.has('prologueDone') && saveAuto('hub', 'The Everwake')) {
       toast(this.ctx.ui, '<span class="dim">Game saved</span>', 1400);
     }
   }

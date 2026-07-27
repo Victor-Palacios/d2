@@ -185,8 +185,8 @@ export class IntroScene extends GameScene {
     await sleep(200);
     await this.dialogue.play([
       ...narrate(
-        'Digital City. Ground level, licence office, 07:40.',
-        'The domains outside the city are open code — and something in them has started biting back.',
+        'The Everwake. Ground level, licence office, 07:40.',
+        'The domains beyond it are open code — and something in them has started biting back.',
       ),
       ...say(
         'Dr. Halden',

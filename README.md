@@ -45,7 +45,8 @@ in [`docs/`](docs/):
 - **[docs/PLAN_AUDIT.md](docs/PLAN_AUDIT.md)** — the original design plan audited
   section by section: implemented / partial / missing.
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** — the path from this first-hour slice
-  toward *Digimon World 2*'s first five hours, including the element-count trim.
+  toward a full monster-collecting dungeon-crawler's first five hours, including
+  the element-count trim.
 
 ## Run it locally
 
@@ -129,7 +130,7 @@ only thing still keyboard-only is the `` ` `` debug panel.
 
 ## What's in the slice
 
-Title → name entry → **pick your partner** → Digital City hub → world map → **The Quiet Crossing**
+Title → name entry → **pick your partner** → The Everwake hub → world map → **The Quiet Crossing**
 (3 floors: crawl, chests, element plates, draining EP, scripted fights,
 random encounters, and the warden boss) → licence + own vehicle → rival intro →
 supply bay → Mission 2 briefing.
@@ -176,7 +177,7 @@ Press **E** / **R1** to open the **Soul menu** anytime in town or the crawl — 
 opens the **Soularium** (dex) or the **Soul Sanctuary**, where you move monsters
 between your active party and the reserve.
 
-The **Soul Store** (a vendor in Digital City — talk to Soul Broker Vex, the tile
+The **Soul Store** (a vendor in The Everwake — talk to Soul Broker Vex, the tile
 just above where you start) sells copies of any species you've logged (priced by
 power) and **party-capacity upgrades**: party size starts at **4** and grows one
 slot at a time to **10**. Monsters that don't fit go to the Soul Sanctuary.
@@ -185,7 +186,7 @@ slot at a time to **10**. Monsters that don't fit go to the Soul Sanctuary.
 
 Two kinds, deliberately different in weight:
 
-- **Autosave** — written whenever you reach Digital City or the domain map.
+- **Autosave** — written whenever you reach The Everwake or the domain map.
   This is your progress; it survives everything.
 - **Suspend save** — press **Esc** mid-crawl and pick *Suspend & quit*. It puts
   the run down exactly where you stand, and is **deleted the moment you load
@@ -327,7 +328,7 @@ automated smoke tests drive.
 
 ## Not in scope
 
-Digivolution / DNA-merge is a **data stub only** (`canDigivolveTo` on each
+Evolution / DNA-merge is a **data stub only** (`evolvesTo` on each
 species) — the data model leaves room for it, but there is no UI. Item use in
 battle is likewise present as a disabled menu entry. Both are deliberate: the
 slice is the crawl-and-fight loop plus its framing, not a complete game.

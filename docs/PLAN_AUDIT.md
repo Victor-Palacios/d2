@@ -1,7 +1,7 @@
 # Plan audit — implemented / partial / missing
 
 A section-by-section audit of the build against the original design plan
-(`DW2firsthourHD2Dplan.md`).
+(the owner's uploaded plan doc; see `HANDOFF.md` §1).
 
 > **Caveat on the source.** The plan document itself is **not in the repo** — it
 > was uploaded by the owner (see `HANDOFF.md` §1). This audit is therefore
@@ -13,7 +13,7 @@ A section-by-section audit of the build against the original design plan
 > read-through, not a re-derivation.
 
 **Verdict at a glance:** every plan section and milestone the code references is
-**implemented**, with two deliberate stubs (§5.6 digivolution, in-battle items)
+**implemented**, with two deliberate stubs (§5.6 evolution, in-battle items)
 and one known bug (hub autosave — `HANDOFF.md` §2). Nothing tracked is silently
 missing.
 
@@ -36,7 +36,7 @@ missing.
 | Ref | Requirement | Status | Evidence |
 |---|---|---|---|
 | §2.1 | Title + name entry | ✅ | `IntroScene.ts` (M4), `ui/NameEntry.ts` — five slots, on-screen keyboard. |
-| §2.2 | Digital City hub | ✅ | `HubScene.ts` (M4/M5). *(hub autosave bug — see below.)* |
+| §2.2 | The Everwake hub | ✅ | `HubScene.ts` (M4/M5). *(hub autosave bug — see below.)* |
 | §2.3 | World map / domain select | ✅ | `WorldMapScene.ts`, two-node picker via `ui/CardSelect.ts`. |
 | §2.4 | Boot Domain crawl | ✅ | `DungeonScene.ts` (M1/M3). |
 | §2.5 | *(not referenced by any code marker)* | ❔ Unconfirmed | No `plan §2.5` marker exists. Likely the rival-intro / Mission-2 hook, which **is** built (end of `HubScene`), but the mapping can't be confirmed without the plan text. |
@@ -64,7 +64,7 @@ missing.
 | §5.3 | Headless 3v3 battle model + enemy AI | ✅ | `systems/battle/engine.ts` (rules-only, no Three.js/DOM), driven by `BattleScene.ts` (M2). |
 | §5.4 | Three Guard Teams, each setting class + starter | ✅ | `data/teams.ts`. |
 | §5.5 | Boot Domain tutorial dungeon + vehicle EP | ✅ | `data/bootDomain.ts` (3 floors, borrowed party, boss), EP drain in `DungeonScene.ts`. |
-| §5.6 | Digivolution / DNA-merge | ⚠️ **Data stub, by design** | `canDigivolveTo` on `Species` (`data/creatures.ts`); **no UI reads it.** The plan specifies a stub here, so this is *complete-as-specified*, not missing. |
+| §5.6 | Evolution / DNA-merge | ⚠️ **Data stub, by design** | `evolvesTo` on `Species` (`data/creatures.ts`); **no UI reads it.** The plan specifies a stub here, so this is *complete-as-specified*, not missing. |
 
 ## §6 — Polish pass
 
@@ -101,7 +101,7 @@ demonstrable:
 
 ## Deliberate stubs (complete-as-specified, not gaps)
 
-1. **Digivolution (§5.6)** — data model only (`canDigivolveTo`), no UI. Matches
+1. **Evolution (§5.6)** — data model only (`evolvesTo`), no UI. Matches
    the plan.
 2. **In-battle item use** — the **Item** action exists but is disabled; buying
    works, using does not (`data/items.ts` notes "Battle use not wired up yet").
@@ -110,7 +110,7 @@ demonstrable:
 
 ## Known defect (tracked, not a plan gap)
 
-- **Hub autosave does not fire.** After a normal playthrough into Digital City,
+- **Hub autosave does not fire.** After a normal playthrough into The Everwake,
   `localStorage` `hd2d.save.auto` is never written. The save *API* is verified
   working when called directly; the miss is in `HubScene.arrival()` returning
   early. Full repro and the one-probe next step are in `HANDOFF.md` §2. Suspend

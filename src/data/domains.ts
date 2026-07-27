@@ -14,7 +14,7 @@ export const DOMAINS: Record<string, Domain> = {
   haunted: HAUNTED_DUNGEON,
 };
 
-/** Order the domains appear on the world map (after Digital City). */
+/** Order the domains appear on the world map (after The Everwake). */
 export const DOMAIN_ORDER = ['boot', 'crystal', 'haunted'];
 
 export function domain(id: string): Domain {

@@ -223,7 +223,7 @@ While crawling, EP is the resource that makes the dungeon a place you can lose:
 | Drain per step | **1** | `FUEL_PER_STEP`, `DungeonScene` |
 | Fuel canister pickup | **+40** | `DungeonScene` (crawl `$` tiles) |
 | Shop Fuel Canister item | **+40 EP** | `data/items.ts` |
-| Hit 0 EP | **towed back to Digital City** | `DungeonScene` |
+| Hit 0 EP | **towed back to The Everwake** | `DungeonScene` |
 
 EP is why suspend-saves are consumed on load (see `HANDOFF.md` / README): if you
 could reload a suspend save, running out of EP would cost nothing. Autosave, by

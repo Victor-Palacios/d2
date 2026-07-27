@@ -34,7 +34,7 @@ export const ITEMS: Record<string, ItemDef> = {
     id: 'towBeacon',
     name: 'Tow Beacon',
     price: 200,
-    desc: 'Emergency return to Digital City without losing your haul.',
+    desc: 'Emergency return to The Everwake without losing your haul.',
   },
   domainMap: {
     id: 'domainMap',

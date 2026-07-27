@@ -85,7 +85,7 @@ export class WorldMapScene extends GameScene {
       this.nodes.push({ mesh, light, x });
     };
 
-    // One node for Digital City, then one per registered domain.
+    // One node for The Everwake, then one per registered domain.
     const count = DOMAIN_ORDER.length + 1;
     const span = 9;
     const xAt = (i: number) => (count > 1 ? -span / 2 + (span * i) / (count - 1) : 0);
@@ -115,7 +115,7 @@ export class WorldMapScene extends GameScene {
     const cards: Card[] = [
       {
         value: 'city',
-        title: 'Digital City',
+        title: 'The Everwake',
         tag: 'Safe zone',
         tagColor: '#6fd3ff',
         body: 'Licence office, supply bay, and everyone who wants something from you. Go back inside.',

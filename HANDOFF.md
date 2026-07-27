@@ -13,7 +13,7 @@ https://victor-palacios.github.io/d2/
 ## 1. What this is
 
 A browser dungeon-crawler RPG vertical slice built to a supplied plan
-(`DW2firsthourHD2Dplan.md`, uploaded by the owner — **not in the repo**, ask them
+(the owner's uploaded plan doc — **not in the repo**, ask them
 for it). It reproduces the shape of a PS1-era dungeon-crawler's opening hour in
 the Square-Enix "HD-2D" style: pixel-art billboards inside a real 3D world, one
 shadow-casting point light, bloom + DOF + tilt-shift post stack.
@@ -78,7 +78,7 @@ recorded in §6.
   (Re-selecting Settings → Pages → Source: "GitHub Actions" also resets this.)
   Verified on run #8 for commit `95ad947`: build ✅, deploy ✗ (0 steps). CI itself
   needs no change.
-- Still worth having on hand: the original plan doc `DW2firsthourHD2Dplan.md` is
+- Still worth having on hand: the original plan doc (the owner's upload) is
   **not in the repo** — ask the owner for it if you need to confirm the audit in
   `docs/PLAN_AUDIT.md` against the source text.
 
@@ -92,8 +92,9 @@ The four items the owner asked for are written and live in [`docs/`](docs/):
    walked section by section (reconstructed from the `plan §…` markers in the
    code, since the plan doc itself isn't in the repo), implemented / partial /
    missing.
-2. **Roadmap** — [`docs/ROADMAP.md`](docs/ROADMAP.md): a path toward *Digimon
-   World 2*'s first ~5 hours (XP loop, recruiting, digivolution, more domains).
+2. **Roadmap** — [`docs/ROADMAP.md`](docs/ROADMAP.md): a path toward a full
+   monster-collecting crawler's first ~5 hours (XP loop, recruiting, evolution,
+   more domains).
 3. **Scope trim (five elements → three)** — folded into the roadmap as the first,
    cheapest task, with rationale and an exact edit list.
 4. **Systems explainer** — [`docs/SYSTEMS.md`](docs/SYSTEMS.md): types, class

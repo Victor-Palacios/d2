@@ -36,7 +36,7 @@ export interface Species {
    * Merge/evolution stub (plan §5.6) — the data model carries it so the feature
    * can be built later; no UI reads it yet.
    */
-  canDigivolveTo?: string[];
+  evolvesTo?: string[];
   blurb: string;
 }
 
@@ -53,7 +53,7 @@ export const SPECIES: Record<string, Species> = {
     base: { hp: 44, mp: 18, off: 15, def: 12, spd: 13 },
     growth: ROOKIE_GROWTH,
     techniques: ['emberFang', 'cinderBurst', 'emberWave'],
-    canDigivolveTo: ['regalion'],
+    evolvesTo: ['regalion'],
     blurb: 'A hot-tempered lizard rookie. Runs its core far too warm.',
   },
   glidefang: {

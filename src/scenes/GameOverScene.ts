@@ -34,7 +34,7 @@ export class GameOverScene extends GameScene {
       el(
         'p',
         'title-sub',
-        'The tow line pulled what was left of you back to Digital City.',
+        'The tow line pulled what was left of you back to The Everwake.',
       ),
     );
     const host = el('div', 'panel');
@@ -43,7 +43,7 @@ export class GameOverScene extends GameScene {
 
     this.menu = new Menu(host, [
       { value: 'retry', label: 'Repair and try again' },
-      { value: 'hub', label: 'Return to Digital City' },
+      { value: 'hub', label: 'Return to The Everwake' },
     ]);
   }
 

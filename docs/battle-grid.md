@@ -1,16 +1,16 @@
 # Grid battle system
 
-A formation-grid combat model inspired by **Digimon World Dusk/Dawn** (a
+A formation-grid combat model inspired by **classic monster-collecting RPGs** (a
 multi-unit front line where target priority matters) and the **Xenosaga**
 trilogy (a timing/economy layer on top of turns). The design deliberately keeps
 what those systems were praised for and sidesteps what they were criticised for.
 
 ## What the research pointed at
 
-- **Digimon World Dusk/Dawn** — praised: fielding three creatures at once made
-  combat feel more tactical than one-on-one; the depth lived in raising and
-  recruiting. Criticised: the CPU was **predictable** and the system felt
-  unchanged, shining mainly in PvP.
+- **Monster-collecting party RPGs** — praised: fielding three creatures at once
+  made combat feel more tactical than one-on-one; the depth lived in raising and
+  recruiting. Criticised: the CPU was often **predictable** and the systems felt
+  unchanged between entries, shining mainly in PvP.
 - **Xenosaga I / III** — praised: the **Boost** gauge (build with basic attacks,
   spend to act again / cut the turn order) and telegraphed per-turn events.
 - **Xenosaga II** — criticised: a mandatory **Break** combo system that *gated*
