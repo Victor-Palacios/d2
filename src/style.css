@@ -655,11 +655,11 @@ body {
   }
 }
 
-/* Party Boost gauge, bottom-right above the fold. */
+/* Party Boost gauge — left side, just above the first party card's name. */
 #boost-chip {
   position: absolute;
-  right: 14px;
-  bottom: 52px;
+  left: 14px;
+  bottom: 122px;
   font-size: 12px;
   letter-spacing: 0.12em;
   padding: 7px 12px;
