@@ -111,9 +111,9 @@ export class HubScene extends GameScene {
 
     void this.arrival(p.arrival);
 
-    // R1 / E opens the Soul menu (Soularium + Sanctuary) from town too.
+    // R1 / E / Start (Options) opens the main menu from town too.
     this.unsubInput = input.onAction((a) => {
-      if (a === 'menu') void this.openSoulMenu();
+      if (a === 'menu' || a === 'start') void this.openSoulMenu();
     });
   }
 

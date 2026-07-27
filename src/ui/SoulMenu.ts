@@ -1,33 +1,31 @@
-import { el, remove } from './dom';
-import { Menu } from './Menu';
+import { GridMenu } from './GridMenu';
+import type { GridItem } from './GridMenu';
+import { menuIcon } from './icons';
 import { openSoularium } from './SoulariumScreen';
 import { openSanctuary } from './SanctuaryScreen';
+import { openPartyArrange } from './PartyScreen';
 
 /**
- * The R1 / E menu: a small chooser that opens the Soularium (capture dex) or the
- * Soul Sanctuary (party/reserve management). Available in town and while
- * crawling.
+ * The main system menu (R1 / E / Start), in the style of a modern handheld RPG:
+ * a grid of icon + name cards. Open in town and while crawling. Routes to the
+ * party arranger, the Soularium (book of names / dex) and the Soul Sanctuary
+ * (reserve management).
  */
 export async function openSoulMenu(parent: HTMLElement): Promise<void> {
-  const host = el('div', 'panel');
-  host.id = 'soul-menu';
-  host.style.cssText =
-    'position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);min-width:240px;';
-  host.appendChild(el('h2', undefined, 'Soul Menu'));
-  parent.appendChild(host);
+  for (;;) {
+    const items: GridItem[] = [
+      { value: 'party', label: 'Party', sublabel: 'arrange the fielded three', icon: menuIcon('party', '#8fd0ff'), color: '#8fd0ff' },
+      { value: 'soularium', label: 'Soularium', sublabel: 'the book of names', icon: menuIcon('soularium', '#ffd166'), color: '#ffd166' },
+      { value: 'sanctuary', label: 'Sanctuary', sublabel: 'bench or call up souls', icon: menuIcon('sanctuary', '#c77dff'), color: '#c77dff' },
+    ];
+    const menu = new GridMenu(parent, items, { heading: 'MENU', subheading: 'The Everwake' });
+    const choice = await menu.open();
+    menu.destroy();
+    if (!choice) return;
 
-  const menu = new Menu(
-    host,
-    [
-      { value: 'soularium', label: 'Soularium', note: 'dex' },
-      { value: 'sanctuary', label: 'Soul Sanctuary', note: 'party' },
-    ],
-    { cancellable: true },
-  );
-  const choice = await menu.open();
-  menu.destroy();
-  remove(host);
-
-  if (choice === 'soularium') await openSoularium(parent);
-  else if (choice === 'sanctuary') await openSanctuary(parent);
+    if (choice === 'party') await openPartyArrange(parent);
+    else if (choice === 'soularium') await openSoularium(parent);
+    else if (choice === 'sanctuary') await openSanctuary(parent);
+    // Loop back to the menu after a sub-screen closes, so it feels like a hub.
+  }
 }

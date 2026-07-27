@@ -275,7 +275,7 @@ export class DungeonScene extends GameScene {
 
     this.unsubInput = input.onAction((a) => {
       if (a === 'cancel') void this.openPauseMenu();
-      else if (a === 'menu') void this.openSoulMenu();
+      else if (a === 'menu' || a === 'start') void this.openSoulMenu();
     });
   }
 

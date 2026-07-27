@@ -155,6 +155,19 @@ export class GameState {
     return true;
   }
 
+  /**
+   * Move a party member up (delta -1) or down (delta +1) in the party order.
+   * Order matters: the first three living members are the ones fielded, in
+   * formation order, so this is how the player arranges who fights and where.
+   */
+  reorderParty(uid: string, delta: number): boolean {
+    const i = this.party.findIndex((c) => c.uid === uid);
+    const j = i + delta;
+    if (i < 0 || j < 0 || j >= this.party.length) return false;
+    [this.party[i], this.party[j]] = [this.party[j], this.party[i]];
+    return true;
+  }
+
   /** Buy one more party slot, up to the cap. Returns false if already maxed. */
   gainPartySlot(): boolean {
     if (this.partyCap >= MAX_PARTY_CAP) return false;
