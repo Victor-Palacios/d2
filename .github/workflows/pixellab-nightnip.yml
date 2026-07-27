@@ -31,7 +31,7 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     env:
-      MONSTER: ${{ github.event.inputs.monster || 'lastlight' }}
+      MONSTER: ${{ github.event.inputs.monster || 'lizard,wing,plant,bot,slime,wisp,knight,wolf,bug,scrap,crystalSlime,prismMoth,geodeGolem,wraithWisp,graveCrawler,cursedArmor,lion,crystalWarden,revenant' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -55,11 +55,13 @@ jobs:
         run: node tools/pixellab/generate.mjs
 
       - name: Convert to pixel-art { palette, rows }
-        run: node tools/pixellab/png-to-pixelart.mjs "${{ github.event.inputs.target || '24' }}"
+        if: always()
+        run: node tools/pixellab/png-to-pixelart.mjs "${{ github.event.inputs.target || '64' }}"
 
       - name: Upload sprite for review
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pixellab-sprites
           path: out/
-          if-no-files-found: error
+          if-no-files-found: warn

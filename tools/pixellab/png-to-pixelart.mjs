@@ -14,7 +14,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { inflateSync, deflateSync } from "node:zlib";
 import { MONSTERS } from "./monsters.mjs";
 
-const IDS = (process.env.MONSTER || "lastlight").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+const IDS = (process.env.MONSTER || "lastlight").split(",").map((s) => s.trim()).filter(Boolean);
 const TARGET = Number(process.argv[2]) || 64;          // 64px standard (monsters.mjs SIZE)
 const COLORS = Math.min(Number(process.env.COLORS) || 48, 62); // cap; 62 clean keys available
 const RANGE_MIN = Number(process.env.RANGE_MIN) || 8;   // stop splitting tight colour boxes (adaptivity)
@@ -115,6 +115,6 @@ function convert(id) {
   return true;
 }
 
-let ok = true;
-for (const id of IDS) ok = convert(id) && ok;
-if (!ok) process.exit(1);
+let done = 0;
+for (const id of IDS) { try { if (convert(id)) done++; } catch (e) { console.error(`✗ ${id}: ${e.message}`); } }
+if (done === 0) process.exit(1);

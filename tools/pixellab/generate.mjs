@@ -12,7 +12,7 @@ import { MONSTERS } from "./monsters.mjs";
 
 const KEY = process.env.PIXEL_LAB_API_KEY;
 if (!KEY) { console.error("✗ PIXEL_LAB_API_KEY is not set."); process.exit(1); }
-const IDS = (process.env.MONSTER || "lastlight-candle").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+const IDS = (process.env.MONSTER || "lastlight-candle").split(",").map((s) => s.trim()).filter(Boolean);
 const FORCE_PALETTE = process.env.FORCE_PALETTE !== "0";
 
 // --- Minimal dependency-free truecolor PNG encoder (for the palette swatch) ---
@@ -68,6 +68,6 @@ async function genOne(id) {
   return true;
 }
 
-let ok = true;
-for (const id of IDS) { ok = (await genOne(id)) && ok; }
-if (!ok) process.exit(1);
+let done = 0;
+for (const id of IDS) { try { if (await genOne(id)) done++; } catch (e) { console.error(`✗ ${id}: ${e.message}`); } }
+if (done === 0) process.exit(1);
