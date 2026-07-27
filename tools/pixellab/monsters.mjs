@@ -18,6 +18,10 @@ export const STYLE = "clean single-color black outline, flat shading, front view
 // migrate the roster to PixelLab sprites. Change here to move the whole roster.
 export const SIZE = 64;
 
+// Hard cap on the roster. The daily ideation routine must STOP adding monsters
+// (and disable itself) once MONSTERS reaches this many entries.
+export const MAX_MONSTERS = 200;
+
 // ---------------------------------------------------------------------------
 // Standardized evolution ladder.  Wisp -> Shade -> Revenant -> Beyond.
 // STAGE vibes are creature-agnostic; `line()` slots a creature's theme in.
