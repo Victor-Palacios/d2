@@ -1,0 +1,67 @@
+name: PixelLab — monster sprites
+
+# Generates a monster sprite from the tools/pixellab registry against the
+# PixelLab API (PIXEL_LAB_API_KEY secret), converts it into the repo's
+# { palette, rows } form, and uploads both for review. It does NOT commit
+# anything — the repo stays asset-free. See docs/adding-monsters.md.
+#
+# Fires on pushes to the working branch (so it runs as soon as the tooling
+# lands) and on manual dispatch, where you pick which monster to generate.
+on:
+  push:
+    branches: [claude/monster-creation-management-x9x72z]
+    paths:
+      - "tools/pixellab/**"
+      - ".github/workflows/pixellab-nightnip.yml"
+  workflow_dispatch:
+    inputs:
+      monster:
+        description: "Monster id from MONSTERS in tools/pixellab/monsters.mjs (e.g. lastlight, nightnip-wisp)."
+        required: false
+        default: "lastlight"
+      target:
+        description: "Pixel-art downscale size (square)."
+        required: false
+        default: "64"
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    env:
+      MONSTER: ${{ github.event.inputs.monster || 'wisp,knight,wolf,crystalSlime,prismMoth,geodeGolem,wraithWisp,graveCrawler,cursedArmor' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check secret is configured
+        env:
+          PIXEL_LAB_API_KEY: ${{ secrets.PIXEL_LAB_API_KEY }}
+        run: |
+          if [ -z "$PIXEL_LAB_API_KEY" ]; then
+            echo "::error::PIXEL_LAB_API_KEY secret is not set for this repository."
+            exit 1
+          fi
+          echo "PIXEL_LAB_API_KEY is configured."
+
+      - name: Generate sprite
+        env:
+          PIXEL_LAB_API_KEY: ${{ secrets.PIXEL_LAB_API_KEY }}
+        run: node tools/pixellab/generate.mjs
+
+      - name: Convert to pixel-art { palette, rows }
+        if: always()
+        run: node tools/pixellab/png-to-pixelart.mjs "${{ github.event.inputs.target || '64' }}"
+
+      - name: Upload sprite for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixellab-sprites
+          path: out/
+          if-no-files-found: warn

@@ -1,0 +1,68 @@
+name: Daily monster sprites
+
+# Every day, generate art for any monsters in the registry
+# (tools/pixellab/monsters.mjs) that don't yet have a sprite in art.ts, and
+# upload them as an artifact for review. Pair this with the "Daily monster
+# ideation" Claude routine, which adds fresh registry entries each night.
+#
+# Scheduled workflows only run from the default branch, so this lives on main.
+# Cron is UTC: 08:00 UTC = 01:00 America/Los_Angeles during PDT (UTC-7). After
+# DST ends (PST, UTC-8) this fires at 00:00 PT — bump to '0 9 * * *' if you want
+# to keep it at 1am year-round.
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "Max sprites to generate this run (keeps within the daily quota)."
+        required: false
+        default: "8"
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check secret is configured
+        env:
+          PIXEL_LAB_API_KEY: ${{ secrets.PIXEL_LAB_API_KEY }}
+        run: |
+          if [ -z "$PIXEL_LAB_API_KEY" ]; then
+            echo "::error::PIXEL_LAB_API_KEY secret is not set for this repository."
+            exit 1
+          fi
+          echo "PIXEL_LAB_API_KEY is configured."
+
+      - name: Pick monsters still needing art
+        run: node tools/pixellab/pending.mjs "${{ github.event.inputs.max || '8' }}" >> "$GITHUB_ENV"
+
+      - name: Report selection
+        run: |
+          echo "Pending: ${PENDING_COUNT:-0} — ${MONSTER:-(none)}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Generate sprites
+        if: env.PENDING_COUNT != '0'
+        env:
+          PIXEL_LAB_API_KEY: ${{ secrets.PIXEL_LAB_API_KEY }}
+        run: node tools/pixellab/generate.mjs
+
+      - name: Convert to pixel-art { palette, rows }
+        if: env.PENDING_COUNT != '0'
+        run: node tools/pixellab/png-to-pixelart.mjs 64
+
+      - name: Upload sprites for review
+        if: env.PENDING_COUNT != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-monster-sprites
+          path: out/
+          if-no-files-found: warn
