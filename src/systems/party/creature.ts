@@ -1,6 +1,7 @@
 import { species } from '../../data/creatures';
 import type { Species, Stats } from '../../data/creatures';
 import type { AttributeId, ElementId } from '../../data/elements';
+import { equipment } from '../../data/equipment';
 
 /** A concrete creature in someone's party (or an enemy formation). */
 export interface CreatureInstance {
@@ -20,6 +21,8 @@ export interface CreatureInstance {
   /** EXP banked toward the next level (see `xpToNext`). */
   xp: number;
   techniques: string[];
+  /** Equipped item ids, one per slot (Arms / Shrouds / Mementos). */
+  equip: { arms?: string; shroud?: string; memento?: string };
   /** Set while the creature is guarding this round. */
   guarding: boolean;
 }
@@ -56,12 +59,36 @@ export function makeCreature(speciesId: string, level: number, nickname?: string
     spd: st.spd,
     xp: 0,
     techniques: s.techniques.slice(),
+    equip: {},
     guarding: false,
   };
 }
 
 export const isDown = (c: CreatureInstance): boolean => c.hp <= 0;
 export const isUp = (c: CreatureInstance): boolean => c.hp > 0;
+
+/** Sum of a stat's bonuses from the creature's three equipment slots. */
+export function equipBonus(c: CreatureInstance, key: 'off' | 'def' | 'spd'): number {
+  const e = c.equip;
+  if (!e) return 0;
+  let b = 0;
+  for (const id of [e.arms, e.shroud, e.memento]) {
+    if (id) b += equipment(id)[key] ?? 0;
+  }
+  return b;
+}
+
+/** Effective stats (base + equipment) — used by the battle model. */
+export const effOff = (c: CreatureInstance): number => c.off + equipBonus(c, 'off');
+export const effDef = (c: CreatureInstance): number => c.def + equipBonus(c, 'def');
+export const effSpd = (c: CreatureInstance): number => c.spd + equipBonus(c, 'spd');
+
+/** True if any equipped item carries the given battle-special effect. */
+export function hasEquipEffect(c: CreatureInstance, effect: string): boolean {
+  const e = c.equip;
+  if (!e) return false;
+  return [e.arms, e.shroud, e.memento].some((id) => id && equipment(id).effect === effect);
+}
 
 /** EXP needed to advance from `level` to the next. A gentle super-linear curve. */
 export function xpToNext(level: number): number {

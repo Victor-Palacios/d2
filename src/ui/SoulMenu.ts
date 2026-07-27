@@ -4,6 +4,7 @@ import { menuIcon } from './icons';
 import { openSoularium } from './SoulariumScreen';
 import { openSanctuary } from './SanctuaryScreen';
 import { openPartyArrange } from './PartyScreen';
+import { openGear } from './GearScreen';
 
 /**
  * The main system menu (R1 / E / Start), in the style of a modern handheld RPG:
@@ -15,6 +16,7 @@ export async function openSoulMenu(parent: HTMLElement): Promise<void> {
   for (;;) {
     const items: GridItem[] = [
       { value: 'party', label: 'Party', sublabel: 'arrange the fielded three', icon: menuIcon('party', '#8fd0ff'), color: '#8fd0ff' },
+      { value: 'gear', label: 'Gear', sublabel: 'arms · shrouds · mementos', icon: menuIcon('arrange', '#7bdc8a'), color: '#7bdc8a' },
       { value: 'soularium', label: 'Soularium', sublabel: 'the book of names', icon: menuIcon('soularium', '#ffd166'), color: '#ffd166' },
       { value: 'sanctuary', label: 'Sanctuary', sublabel: 'bench or call up souls', icon: menuIcon('sanctuary', '#c77dff'), color: '#c77dff' },
     ];
@@ -24,6 +26,7 @@ export async function openSoulMenu(parent: HTMLElement): Promise<void> {
     if (!choice) return;
 
     if (choice === 'party') await openPartyArrange(parent);
+    else if (choice === 'gear') await openGear(parent);
     else if (choice === 'soularium') await openSoularium(parent);
     else if (choice === 'sanctuary') await openSanctuary(parent);
     // Loop back to the menu after a sub-screen closes, so it feels like a hub.

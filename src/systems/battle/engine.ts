@@ -1,5 +1,5 @@
 import type { CreatureInstance } from '../party/creature';
-import { isDown, isUp } from '../party/creature';
+import { isDown, isUp, effSpd } from '../party/creature';
 import type { ElementId } from '../../data/elements';
 import type { Technique } from '../../data/techniques';
 import { technique, techShape } from '../../data/techniques';
@@ -244,7 +244,7 @@ export class Battle {
     for (const b of this.battlers) b.creature.guarding = false;
     this.queue = this.battlers
       .filter((b) => isUp(b.creature))
-      .map((b) => ({ b, roll: b.creature.spd * (0.88 + this.rng() * 0.24) }))
+      .map((b) => ({ b, roll: effSpd(b.creature) * (0.88 + this.rng() * 0.24) }))
       .sort((a, z) => z.roll - a.roll)
       .map((x) => x.b);
     return this.queue.slice();

@@ -38,7 +38,8 @@ Environment variables:
 | `grid.mjs` | Grid battle system, all four phases against the live engine: formation cells + melee cover + row damage (A); AoE shapes, reposition, swap, plate-on-cell (B); the Boost gauge (C); Break/stagger, field pulse, and the smarter AI (D). See [docs/battle-grid.md](../../docs/battle-grid.md). |
 | `stages.mjs` | World-map per-stage level recommendation and the rebalanced progression curve (The Quiet Crossing Lv1 → The Reliquary Lv5 → The Unremembered Lv10). Reads the rendered cards + domain data; no fights, so it is fast and deterministic. |
 | `flee.mjs` | The Run action escapes a non-boss fight back to the crawl without consuming the encounter. |
-| `menu.mjs` | The grid main menu (R1 / E / Start) renders Party / Soularium / Sanctuary, and party reordering ("move monster positions") swaps the fielded order. |
+| `menu.mjs` | The grid main menu (R1 / E / Start) renders Party / Gear / Soularium / Sanctuary, and party reordering ("move monster positions") swaps the fielded order. |
+| `equip.mjs` | The keeper's kit is granted at the start and the Gear screen fits an Arm/Shroud/Memento into a soul's slot (moving it out of the bag). |
 
 ## Two environment traps that cost real time
 

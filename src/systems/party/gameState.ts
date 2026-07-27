@@ -179,6 +179,16 @@ export class GameState {
     this.bag[id] = (this.bag[id] ?? 0) + n;
   }
 
+  /** Removes up to `n` of an item; returns true if at least one was taken. */
+  takeItem(id: string, n = 1): boolean {
+    const have = this.bag[id] ?? 0;
+    if (have < 1) return false;
+    const left = have - n;
+    if (left > 0) this.bag[id] = left;
+    else delete this.bag[id];
+    return true;
+  }
+
   itemCount(id: string): number {
     return this.bag[id] ?? 0;
   }

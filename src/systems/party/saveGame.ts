@@ -190,8 +190,11 @@ export function applySave(data: SaveData) {
   game.soularium = s.soularium ?? {};
   game.partyCap = s.partyCap ?? START_PARTY_CAP;
   game.sanctuary = s.sanctuary ?? [];
-  // Saves from before the leveling system won't have xp on their creatures.
-  for (const c of [...game.party, ...game.sanctuary]) if (c.xp === undefined) c.xp = 0;
+  // Saves from before the leveling / equipment systems won't have these fields.
+  for (const c of [...game.party, ...game.sanctuary]) {
+    if (c.xp === undefined) c.xp = 0;
+    if (!c.equip) c.equip = {};
+  }
 
   // A suspend save is a bookmark, not a checkpoint: consume it on load so it
   // cannot be reloaded to undo whatever happens next.

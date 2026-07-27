@@ -235,9 +235,15 @@ export class IntroScene extends GameScene {
     game.party = [makeCreature(choice, PARTNER_LEVEL)];
     game.teamAttribute = s.attribute;
 
+    // A keeper's kit: the dead leave things behind, and a keeper carries them.
+    game.addItem('cinderEdge');
+    game.addItem('paleShroud');
+    game.addItem('quickLocket');
+
     await this.dialogue.play([
       ...say('Halden', `${s.name}. It chose you as much as you chose it. Keep it well — a bonded soul does not fade while it rides with you.`),
       ...narrate(`${s.name} settles into your lantern.`),
+      ...say('Halden', 'Take these, too. A blade, a shroud, a locket — what the dead leave behind. Fit them to your souls from the menu. Small comforts, but the dark is long.'),
     ]);
   }
 

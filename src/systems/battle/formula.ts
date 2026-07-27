@@ -1,4 +1,5 @@
 import type { CreatureInstance } from '../party/creature';
+import { effOff, effDef } from '../party/creature';
 import type { Technique } from '../../data/techniques';
 import type { ElementId } from '../../data/elements';
 import { ELEMENT_TILE_BONUS, attributeMultiplier } from '../../data/elements';
@@ -57,7 +58,8 @@ export interface DamageInput {
 export function computeDamage(input: DamageInput): DamageBreakdown {
   const { attacker, defender, technique, rng = Math.random } = input;
 
-  const base = (technique.power * attacker.off) / (defender.def + 40);
+  // Effective Offense/Defense include equipped Arms / Shrouds / Mementos.
+  const base = (technique.power * effOff(attacker)) / (effDef(defender) + 40);
 
   const attributeMult = attributeMultiplier(attacker.attribute, defender.attribute);
 
