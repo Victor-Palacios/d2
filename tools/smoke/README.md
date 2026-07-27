@@ -35,6 +35,7 @@ Environment variables:
 | `domains.mjs` | Free-select world map → Crystal Cavern (floor + boss + clear) and Haunted Dungeon (floor); proves the domain registry, per-domain data/art/music. Boosts the party via the debug API so fights resolve deterministically (this checks flow, not balance). |
 | `capture.mjs` | Soul Syphon capture loop: R1 → Soul menu → Soularium; an encounter primes syphon to 50%, a hit captures at 100% and grants a free copy; the species logs in the dex. Boosts the party for a deterministic win. |
 | `store.mjs` | Soul Store (summon a logged species, buy a party-slot upgrade) and Soul Sanctuary (bench a party member via R1 → Soul menu). Seeds a logged species + credits via the debug API. |
+| `grid.mjs` | Grid battle system, all four phases against the live engine: formation cells + melee cover + row damage (A); AoE shapes, reposition, swap, plate-on-cell (B); the Boost gauge (C); Break/stagger, field pulse, and the smarter AI (D). See [docs/battle-grid.md](../../docs/battle-grid.md). |
 
 ## Two environment traps that cost real time
 
