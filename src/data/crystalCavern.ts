@@ -2,7 +2,7 @@ import { narrate, say } from '../systems/dialogue/script';
 import type { Domain, DungeonFloor } from './dungeon';
 
 /**
- * Crystal Cavern — a free-select domain (not on the tutorial path).
+ * The Reliquary — a free-select domain (not on the tutorial path).
  *
  * Cold, bright, refractive. Leans on Water + Machine element plates and its own
  * roster (Shardling / Prismoth / Geodon), warded by Glaciark. Pure data — see
@@ -36,7 +36,7 @@ const THEME_BOSS = {
 const FLOORS: DungeonFloor[] = [
   {
     id: 'crystal-1',
-    name: 'Crystal Cavern — Glimmer Shelf',
+    name: 'The Reliquary — Glimmer Shelf',
     theme: THEME_UPPER,
     rows: [
       '#################',
@@ -83,7 +83,7 @@ const FLOORS: DungeonFloor[] = [
 
   {
     id: 'crystal-2',
-    name: 'Crystal Cavern — Frozen Vault',
+    name: 'The Reliquary — Frozen Vault',
     theme: THEME_DEEP,
     fog: 1.2,
     rows: [
@@ -131,7 +131,7 @@ const FLOORS: DungeonFloor[] = [
 
   {
     id: 'crystal-3',
-    name: 'Crystal Cavern — Warden Vault',
+    name: 'The Reliquary — Warden Vault',
     theme: THEME_BOSS,
     fog: 1.4,
     rows: [
@@ -151,12 +151,12 @@ const FLOORS: DungeonFloor[] = [
         kind: 'boss',
         enemies: [{ species: 'glaciark', level: 9 }],
         intro: [
-          ...narrate('The far wall unfolds. It was never a wall.'),
-          ...say('Glaciark', 'You brought warmth into my vault. I will fix that.'),
+          ...narrate('At the vault\'s heart, a woman kneels over a pane of ice. Inside it, a girl is laughing — frozen mid-laugh, forever.'),
+          ...say('Sena Vale', 'Don\'t. If you bring warmth in here, she fades. I froze her so she would never have to end. I will not let you thaw my sister.'),
         ],
         outro: [
-          ...say('Glaciark', 'Melting... how novel.'),
-          ...narrate('The cavern quiets. A portal home glimmers open behind you.'),
+          ...say('Sena Vale', 'She was already gone, wasn\'t she. I only kept the shape.'),
+          ...narrate('The ice loosens its grip. Somewhere, at last, a soul is allowed to move on — and a portal home glimmers open behind you.'),
         ],
       },
     },
@@ -171,8 +171,8 @@ const FLOORS: DungeonFloor[] = [
 
 export const CRYSTAL_CAVERN: Domain = {
   id: 'crystal',
-  name: 'Crystal Cavern',
-  blurb: 'A supercooled data-vault, bright and sharp. Its warden has never felt warmth.',
+  name: 'The Reliquary',
+  blurb: 'A hall of kept light, where souls are frozen in glass so they can never fade — and never rest. Someone here refuses to let go.',
   color: '#6fe0ff',
   recommendedLevel: 5,
   floors: FLOORS,

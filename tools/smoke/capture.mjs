@@ -61,10 +61,10 @@ console.log('R1 -> Soularium in hub :', (await st()).soulOpen);
 await page.keyboard.press('x'); await page.waitForTimeout(500);
 console.log('X closes it            :', !(await st()).soulOpen);
 
-// Head to Crystal Cavern.
+// Head to The Reliquary.
 await press('ArrowDown', 5); await press('ArrowLeft', 3); await press('ArrowDown', 2);
 await waitScene('worldmap'); await page.waitForTimeout(700);
-await page.locator('.card', { hasText: 'Crystal Cavern' }).click();
+await page.locator('.card', { hasText: 'The Reliquary' }).click();
 await waitScene('dungeon'); await page.waitForTimeout(900);
 
 // Boost the party so the fight is a deterministic win (this verifies the

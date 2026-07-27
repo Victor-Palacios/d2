@@ -185,14 +185,18 @@ export class IntroScene extends GameScene {
     await sleep(200);
     await this.dialogue.play([
       ...narrate(
-        'The Everwake. Ground level, licence office, 07:40.',
-        'The domains beyond it are open code — and something in them has started biting back.',
+        'The Everwake: a house of lanterns that never goes dark, kept for the souls who cannot yet cross.',
+        'You came here certain you understood loss. You have carried it a long way. You are about to learn how little you have actually held.',
       ),
       ...say(
-        'Dr. Halden',
-        `You must be ${name}. Good. Sit down, sign nothing yet.`,
-        'The Guard needs drivers, and every driver bonds one partner soul to start.',
-        'Pick the one that answers you. It fights; you decide how.',
+        'Halden',
+        `You must be ${name}. Come in out of the dark. Warm your hands.`,
+        'We are keepers, you and I. The reaches beyond the Everwake are thick with souls that lingered — grief made them stay, or being forgotten. Someone has to tend them.',
+        'Every keeper carries a lantern, and bonds one soul to ride in it. It answers for you in the dark; you decide how.',
+      ),
+      ...say(
+        'Halden',
+        'And I know why you really took the lantern. You are looking for someone. Keepers always are, at first.',
       ),
     ]);
 
@@ -220,8 +224,8 @@ export class IntroScene extends GameScene {
       };
     });
     const select = new CardSelect(this.ctx.ui, cards, {
-      heading: 'CHOOSE YOUR PARTNER',
-      subheading: 'The soul you bond first',
+      heading: 'BOND A SOUL',
+      subheading: 'The first to ride your lantern',
     });
     const choice = (await select.open()) ?? PARTNER_CHOICES[0];
     select.destroy();
@@ -232,8 +236,8 @@ export class IntroScene extends GameScene {
     game.teamAttribute = s.attribute;
 
     await this.dialogue.play([
-      ...say('Dr. Halden', `${s.name}. A fine bond. It is yours now — raise it well.`),
-      ...narrate(`${s.name} joined your party.`),
+      ...say('Halden', `${s.name}. It chose you as much as you chose it. Keep it well — a bonded soul does not fade while it rides with you.`),
+      ...narrate(`${s.name} settles into your lantern.`),
     ]);
   }
 

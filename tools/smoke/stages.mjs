@@ -52,7 +52,7 @@ const cards = await page.evaluate(() =>
 for (const c of cards) console.log(`${c.title.padEnd(18)} | ${c.body}`);
 
 const rec = (title) => { const c = cards.find((x) => x.title === title); const m = c && c.body.match(/Recommended Lv (\d+)/); return m ? Number(m[1]) : null; };
-const boot = rec('The Quiet Crossing'), crystal = rec('Crystal Cavern'), haunted = rec('Haunted Dungeon');
+const boot = rec('The Quiet Crossing'), crystal = rec('The Reliquary'), haunted = rec('The Unremembered');
 console.log('\nrecommended levels :', JSON.stringify({ boot, crystal, haunted }));
 const cityHasNoRec = !cards.find((x) => x.title === 'The Everwake')?.body.includes('Recommended');
 console.log('city has no rec    :', cityHasNoRec);

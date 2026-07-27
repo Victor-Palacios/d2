@@ -2,7 +2,7 @@ import { narrate, say } from '../systems/dialogue/script';
 import type { Domain, DungeonFloor } from './dungeon';
 
 /**
- * Haunted Dungeon — a free-select domain (not on the tutorial path).
+ * The Unremembered — a free-select domain (not on the tutorial path).
  *
  * Dim, foggy, oppressive. Leans on Dark + Nature element plates and its own
  * roster (Wispling / Gravemaw / Cryptguard), warded by Revenance. Pure data —
@@ -36,7 +36,7 @@ const THEME_BOSS = {
 const FLOORS: DungeonFloor[] = [
   {
     id: 'haunted-1',
-    name: 'Haunted Dungeon — Cold Foyer',
+    name: 'The Unremembered — Cold Foyer',
     theme: THEME_UPPER,
     fog: 1.4,
     rows: [
@@ -85,7 +85,7 @@ const FLOORS: DungeonFloor[] = [
 
   {
     id: 'haunted-2',
-    name: 'Haunted Dungeon — Rotting Nave',
+    name: 'The Unremembered — Rotting Nave',
     theme: THEME_DEEP,
     fog: 1.7,
     rows: [
@@ -134,7 +134,7 @@ const FLOORS: DungeonFloor[] = [
 
   {
     id: 'haunted-3',
-    name: 'Haunted Dungeon — The Deletion',
+    name: 'The Unremembered — The Deletion',
     theme: THEME_BOSS,
     fog: 1.9,
     rows: [
@@ -154,12 +154,13 @@ const FLOORS: DungeonFloor[] = [
         kind: 'boss',
         enemies: [{ species: 'revenance', level: 14 }],
         intro: [
-          ...narrate('The fog gathers into a shape that remembers being someone.'),
-          ...say('Revenance', 'They deleted me. Stay. Keep me company.'),
+          ...narrate('The fog gathers into a shape that used to be a person. It has forgotten which one — no one has said its name in so long that even it cannot remember.'),
+          ...say('the Unnamed', 'I had a name. Say it. Give me back one word and I will let you pass. Stay. Keep me company. Do not let me finish forgetting.'),
         ],
         outro: [
-          ...say('Revenance', 'At last... quiet.'),
-          ...narrate('The haunting lifts. A way home opens in the settling dark.'),
+          ...narrate('You cannot give back what the world let go. But you can give it something: a name of your own choosing, or the mercy of none.'),
+          ...say('the Unnamed', 'Oh. That will do. That will do.'),
+          ...narrate('The last of it unravels, quiet now. A way home opens in the settling dark.'),
         ],
       },
     },
@@ -174,8 +175,8 @@ const FLOORS: DungeonFloor[] = [
 
 export const HAUNTED_DUNGEON: Domain = {
   id: 'haunted',
-  name: 'Haunted Dungeon',
-  blurb: 'A corrupted sector nobody logs out of. The lost still run their last routines here.',
+  name: 'The Unremembered',
+  blurb: 'A dimming reach where the nearly-forgotten run their last errands, thinner each time. Say a soul\'s name and you save it from the second, final death.',
   color: '#b48cff',
   recommendedLevel: 10,
   floors: FLOORS,

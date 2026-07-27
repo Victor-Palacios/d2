@@ -191,17 +191,17 @@ export class HubScene extends GameScene {
         ...say(
           'Chief Marrow',
           `${game.playerName}. Halden vouched for you, so here is the short version.`,
-          'Take a training beetle into the Quiet Crossing, clear it, come back breathing. Then you get a licence.',
+          'Carry a lantern into the Quiet Crossing, tend what lingers there, and come back with your light still lit. Then you keep in full.',
         ),
-        ...say('Dr. Halden', `${game.party[0]?.name ?? 'Your partner'} rides with you — and syphon whatever else you meet in there.`),
-        ...narrate('The south portal leads to the domain map.'),
+        ...say('Halden', `${game.party[0]?.name ?? 'Your bonded soul'} rides with you — and keep whatever else you meet in your Soularium, so it is not forgotten twice.`),
+        ...narrate('The south portal leads out to the reaches.'),
       ]);
     } else if (kind === 'towed') {
       await this.dialogue.play(
         say(
-          'Dr. Halden',
-          'The tow line is not a failure. It is a receipt.',
-          'Refuel, take the map again, and mind the EP this time.',
+          'Halden',
+          'A guttered lantern is not a failure. It is a debt to the dark, and the dark is patient.',
+          'Refill your light, take the map again, and spend it carefully this time.',
         ),
       );
       game.resetCrawl();
@@ -226,13 +226,13 @@ export class HubScene extends GameScene {
   private async licenseCeremony() {
     fullRestore(game.party);
     await this.dialogue.play([
-      ...narrate('The Quiet Crossing closes behind you. The beetle is scorched but intact.'),
+      ...narrate('The Quiet Crossing settles behind you. Your lantern is low, but it is lit.'),
       ...say(
         'Chief Marrow',
-        'Warden down on a training run. That is either talent or luck, and I take both.',
-        `Licence approved, driver ${game.playerName}.`,
+        'The Vigil let you pass on your first crossing. That is either talent or mercy, and I will take either.',
+        `You keep in full now, ${game.playerName}.`,
       ),
-      ...say('Dr. Halden', 'The beetle is yours now, and your partner has earned its keep. Do not make me regret the paperwork.'),
+      ...say('Halden', 'The lantern is yours to carry, and your bonded soul has earned its place in it. Tend the reaches gently. Most of what you meet only wants to be remembered — or let go.'),
     ]);
     game.hasLicense = true;
     game.hasOwnVehicle = true;
@@ -322,14 +322,14 @@ export class HubScene extends GameScene {
       case 'mentor':
         if (!game.hasLicense) {
           return say(
-            'Dr. Halden',
+            'Halden',
             'Ground rules. Attack is free, Techniques cost MP, Guard halves the hit and gives MP back.',
             'Assassin beats Mage. Mage beats Hero. Hero beats Assassin. Element plates buff whoever matches them.',
             'Every step in the domain costs 1 EP. Fuel canisters are worth the detour.',
           );
         }
         return say(
-          'Dr. Halden',
+          'Halden',
           'My three are back in their bay and only slightly on fire, so I will call that a success.',
           'Your starter is yours to raise now. Merging creatures comes later — not today.',
         );

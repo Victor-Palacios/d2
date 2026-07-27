@@ -14,7 +14,7 @@ import type { Domain, DungeonFloor } from './dungeon';
 // Re-exported for the many modules that still import these from here.
 export type { EnemySpec, FloorEvent, EncounterEntry, DungeonFloor } from './dungeon';
 
-const MENTOR = 'Dr. Halden';
+const MENTOR = 'Halden';
 
 const THEME_UPPER: TileTheme = {
   floor: '#3a3f57',
@@ -67,19 +67,19 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
         script: [
           ...say(
             MENTOR,
-            'Radio check. You are driving a training beetle through the Quiet Crossing.',
-            'Arrow keys or WASD move you one tile at a time. Every step burns 1 EP — watch the meter.',
-            'Run dry and the tow line drags you home with nothing to show for it.',
+            'Radio check. You are carrying a keeper\'s lantern across the Quiet Crossing — the threshold every soul passes on its way to rest.',
+            'Arrow keys or WASD move you one tile at a time. Every step spends a little of your light — watch the meter.',
+            'Let it gutter out and the tow line brings you home with the dark unattended.',
           ),
-          ...say(MENTOR, 'Your partner rides in the back. It fights; you decide how.'),
-          ...say(MENTOR, 'Syphon anything you meet — hit a wild soul and it logs to your Soularium.'),
+          ...say(MENTOR, 'The soul you bonded with rides in your lantern. It answers for you; you decide how.'),
+          ...say(MENTOR, 'What you meet here are echoes — souls still running their last errand. Meet one, and it logs to your Soularium: your book of names, so it is not forgotten twice.'),
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [{ species: 'mitebug', level: 1 }],
-        intro: say(MENTOR, 'One mitebug. Open with Attack and watch what the numbers do.'),
-        outro: say(MENTOR, 'Clean. Attack costs nothing; Techniques cost MP but hit far harder.'),
+        intro: say(MENTOR, 'An echo, and a small one. Open with Attack. You are not hurting it — you are getting its attention.'),
+        outro: say(MENTOR, 'Quieted, not slain. Attack costs nothing; Techniques cost MP but reach far deeper.'),
       },
     },
     chests: {
@@ -126,7 +126,7 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
         kind: 'battle',
         enemies: [{ species: 'sprigling', level: 1 }],
         intro: say(MENTOR, 'Company at the gate. Guard when a creature is about to drop — it soaks the hit and recovers MP.'),
-        outro: say(MENTOR, 'Good. The plates and the descent portal are just ahead. The warden is on the next floor down.'),
+        outro: say(MENTOR, 'Good. The plates and the descent portal are just ahead. The Vigil keeps the floor below — the boundary you will have to satisfy.'),
       },
     },
     chests: {
@@ -165,21 +165,21 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
         kind: 'dialogue',
         once: true,
         script: [
-          ...say(MENTOR, 'Stop. Those walls are warden-marked, and the hall ahead is lit for a reason.'),
+          ...say(MENTOR, 'Stop. The Vigil stands the far end of this hall. It keeps the boundary — it decides who is fit to carry a light past the Crossing.'),
           ...narrate('Something heavy shifts at the far end of the hallway.'),
-          ...say(MENTOR, 'It is a Hero — armoured, and it knows it. A Mage cuts straight through that; lead with one if your team has it.'),
+          ...say(MENTOR, 'It stands like a Hero — armoured, certain. A Mage reaches past armour; lead with one if you have bonded one.'),
         ],
       },
       '1': {
         kind: 'boss',
         enemies: [{ species: 'regalion', level: 2 }],
         intro: [
-          ...narrate('The warden rises out of the dark and fills the hallway.'),
-          ...say('Regalion', 'A training beetle. In MY domain.'),
+          ...narrate('The Vigil rises out of the dark and fills the hallway — a keeper older than the Crossing itself.'),
+          ...say('the Vigil', 'A new lantern, still warm. Show me you can hold it steady before I let you carry it where the dark is deeper.'),
         ],
         outro: [
-          ...say('Regalion', 'Licensed, then. Go on. The deeper domains will not be this polite.'),
-          ...say(MENTOR, 'Warden down. Take the portal it left behind — you have earned your license.'),
+          ...say('the Vigil', 'Steady enough. Go on, keeper. What waits past me will not ask so gently.'),
+          ...say(MENTOR, 'The Vigil stands aside. Take the way it opened — you have your keeper\'s leave now.'),
         ],
       },
     },
@@ -196,7 +196,7 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
 export const BOOT_DOMAIN: Domain = {
   id: 'boot',
   name: 'The Quiet Crossing',
-  blurb: 'Training sector. Low corruption, one registered warden. Every licence starts here.',
+  blurb: 'The threshold every soul passes on its way to rest. Quiet, mostly — which is why new keepers learn to carry a lantern here.',
   color: '#ffa64d',
   recommendedLevel: 1,
   floors: BOOT_DOMAIN_FLOORS,

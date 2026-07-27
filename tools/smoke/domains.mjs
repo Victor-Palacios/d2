@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 
 // Drives the two free-select domains end to end: world-map selection, floor
 // loading, a scripted fight, descent, and the boss + exit-portal on Crystal
-// Cavern; world-map selection + a fight on Haunted Dungeon. Proves the domain
+// Cavern; world-map selection + a fight on The Unremembered. Proves the domain
 // registry, per-domain data/art/music, and the generic clear path all hold up
 // in a real browser. See tools/smoke/README.md.
 
@@ -75,12 +75,12 @@ await waitScene('worldmap'); await page.waitForTimeout(800);
 
 const cardTitles = await page.evaluate(() => [...document.querySelectorAll('.card h3')].map((n) => n.textContent));
 console.log('world-map cards :', JSON.stringify(cardTitles));
-const hasBoth = cardTitles.includes('Crystal Cavern') && cardTitles.includes('Haunted Dungeon');
+const hasBoth = cardTitles.includes('The Reliquary') && cardTitles.includes('The Unremembered');
 console.log('both new domains selectable :', hasBoth);
 
 // === CRYSTAL CAVERN: full run ===
-console.log('\n=== Crystal Cavern ===');
-await page.locator('.card', { hasText: 'Crystal Cavern' }).click();
+console.log('\n=== The Reliquary ===');
+await page.locator('.card', { hasText: 'The Reliquary' }).click();
 await waitScene('dungeon'); await page.waitForTimeout(1000);
 let s = await st();
 console.log('entered :', JSON.stringify({ domain: s.domain, floor: s.floor, floorName: s.floorName }));
@@ -123,11 +123,11 @@ const crystalFlag = await page.evaluate(() => window.hd2dGame.game.has('crystalC
 console.log('crystalCleared flag set :', crystalFlag);
 
 // === HAUNTED DUNGEON: enter + one fight ===
-console.log('\n=== Haunted Dungeon ===');
+console.log('\n=== The Unremembered ===');
 await clearDlg(); await page.waitForTimeout(600);
 await press('ArrowDown', 5); await press('ArrowLeft', 3); await press('ArrowDown', 2);
 await waitScene('worldmap'); await page.waitForTimeout(700);
-await page.locator('.card', { hasText: 'Haunted Dungeon' }).click();
+await page.locator('.card', { hasText: 'The Unremembered' }).click();
 await waitScene('dungeon'); await page.waitForTimeout(1000);
 s = await st();
 console.log('entered :', JSON.stringify({ domain: s.domain, floor: s.floor, floorName: s.floorName }));

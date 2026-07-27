@@ -54,7 +54,7 @@ export const SPECIES: Record<string, Species> = {
     growth: ROOKIE_GROWTH,
     techniques: ['emberFang', 'cinderBurst', 'emberWave'],
     evolvesTo: ['regalion'],
-    blurb: 'A hot-tempered lizard rookie. Runs its core far too warm.',
+    blurb: 'A soul that burned bright and went out angry. It lingers on all the heat it never got to spend.',
   },
   glidefang: {
     id: 'glidefang',
@@ -67,7 +67,7 @@ export const SPECIES: Record<string, Species> = {
     base: { hp: 42, mp: 22, off: 14, def: 11, spd: 16 },
     growth: { ...ROOKIE_GROWTH, spd: 2 },
     techniques: ['gustWing', 'mistVeil'],
-    blurb: 'A winged rookie that rides thermals in the data streams.',
+    blurb: 'A soul at peace, riding the last warm drafts. It waits to cross without any fear at all.',
   },
   nightnip: {
     id: 'nightnip',
@@ -80,7 +80,7 @@ export const SPECIES: Record<string, Species> = {
     base: { hp: 40, mp: 24, off: 17, def: 10, spd: 15 },
     growth: { ...ROOKIE_GROWTH, off: 2.5 },
     techniques: ['gloomLance', 'nightSpiral'],
-    blurb: 'An impish rookie. Bites first, parses the packet later.',
+    blurb: 'A soul that hid from its own ending — quick, funny, and gone before the dark could say its name.',
   },
   sprigling: {
     id: 'sprigling',

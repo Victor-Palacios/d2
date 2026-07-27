@@ -546,7 +546,7 @@ export class DungeonScene extends GameScene {
     this.busy = true;
     await this.dialogue.play(
       say(
-        'Dr. Halden',
+        'Halden',
         'Your EP hit zero. Sit tight — I am pulling the beetle back on the tow line.',
         'Nothing lost but time. Refuel and go again.',
       ),
