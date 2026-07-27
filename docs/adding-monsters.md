@@ -18,6 +18,11 @@ Tooling lives in [`tools/pixellab/`](../tools/pixellab/); the API key is the
   prompt + palette lives in `tools/pixellab/monsters.mjs`. Never generate from
   an ad-hoc prompt that isn't recorded there — if you try a prompt, add it as a
   registry entry so anyone can later see how a monster was generated.
+- **Wisp-stage / rookie sprites must be cute or charming.** The lowest form of
+  any creature (the `wisp` stage, and one-off rookies) must read as an
+  endearing little mascot — never generic, realistic, or scary. Its prompt must
+  use the cute-creature recipe below and end in the `cute charming … creature`
+  tone. (Middle/advanced stages and bosses may be cooler or more menacing.)
 
 ## The pipeline
 
@@ -59,6 +64,29 @@ Every prompt is composed in this fixed order so sprites read as one roster:
   `direction: "south"`, `no_background: true`, and the forced palette as a
   `color_image` swatch. Keep colour words out of the prompt — the palette
   enforces colour.
+
+#### The cute-creature recipe (house style)
+
+This is what makes a sprite read as a charming little creature instead of a
+generic or too-real object. Required for rookies/Wisp stages; use it as the
+default everywhere except deliberately menacing bosses.
+
+1. **Frame it as a *creature*, not the literal object.** Say "a cute round
+   beetle-creature", not "a bug/pest"; "a creature with a metal shell", not "a
+   robot". Object nouns (robot, lantern, golem, suit of armour) and animal/pest
+   nouns (bug, beetle, wolf) make the model render something realistic.
+2. **Give it big expressive eyes and a tiny face.** This is the single biggest
+   mascot signal. Never substitute "an optic/lens" or leave the face out.
+3. **Make the material a surface, not the identity.** "a smooth metal shell",
+   "a crystalline body", "a mossy stone body" — a round body wearing the
+   material, not a body *made of hard parts* ("boxy", "plating", "boulder").
+4. **Round, soft silhouette** + a short **personality** ("shy and gentle",
+   "plucky and earnest").
+5. **End with `cute charming dark-fantasy RPG creature sprite`.**
+
+Avoid: "boxy", "optic/lens", "pest", "mechanical/robot", "realistic",
+anatomical part lists (legs + antennae + mandibles). Those pull toward
+realism.
 
 ### 3. Generate (in CI)
 

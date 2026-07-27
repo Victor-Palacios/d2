@@ -21,6 +21,11 @@ export const SIZE = 64;
 // ---------------------------------------------------------------------------
 // Standardized evolution ladder.  Wisp -> Shade -> Revenant -> Beyond.
 // STAGE vibes are creature-agnostic; `line()` slots a creature's theme in.
+//
+// RULE: the wisp (rookie) stage MUST be cute/charming — an endearing mascot,
+// never generic or scary. Follow the cute-creature recipe (creature-framed,
+// big eyes + face, material as a surface, cute-charming tone). See
+// docs/adding-monsters.md. Later stages/bosses may be cooler or menacing.
 // ---------------------------------------------------------------------------
 export const STAGES = {
   wisp:     { vibe: "a small round chibi creature, oversized head, tiny stubby body, short limbs, big cute glowing eyes, harmless endearing and a little mischievous", tone: "cute charming dark-fantasy RPG creature sprite" },
