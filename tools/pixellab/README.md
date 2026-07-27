@@ -14,8 +14,9 @@ The end-to-end rule lives in [`docs/adding-monsters.md`](../../docs/adding-monst
 - **`generate.mjs`** — `MONSTER=<id> node generate.mjs` → calls the PixelLab
   pixflux API (forced palette + shared style options) → `out/<id>.png`.
 - **`png-to-pixelart.mjs`** — `MONSTER=<id> node png-to-pixelart.mjs [size]` →
-  decodes/downscales/snaps to the registry palette → `out/<id>.art.txt`
-  (paste-ready literal) + `out/<id>-pixelart.png` (preview).
+  decodes/downscales and derives an adaptive palette via median-cut (up to
+  `COLORS`, default 48) → `out/<id>.art.txt` (paste-ready literal) +
+  `out/<id>-pixelart.png` (preview).
 
 ## Run it
 

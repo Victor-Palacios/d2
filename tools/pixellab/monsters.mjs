@@ -4,8 +4,10 @@
 // generate.mjs reads this. Full workflow + rules: docs/adding-monsters.md.
 //
 // Every spec is { palette: string[], size: number, prompt: string }.
-//   - palette: the small on-brand colour set (<=6 hex). Forced on the API and
-//     reused to snap the PNG back to a clean on-roster sprite.
+//   - palette: a small on-brand colour HINT (<=6 hex) forced on the API to keep
+//     the render on-brand. The converter (png-to-pixelart.mjs) then derives its
+//     own adaptive palette (up to ~48 colours) from the render — so this is a
+//     hint, not the final sprite palette.
 //   - size:    square generation size. STANDARD = 64px for all art (see SIZE).
 //   - prompt:  text prompt, always ending with STYLE + a tone clause.
 
@@ -48,9 +50,10 @@ export const MONSTERS = {
   // (nightnip-wisp is the shipped rookie; it records that sprite's prompt.)
   ...line("nightnip", NIGHTNIP_THEME, NIGHTNIP_PALETTE),
 
-  // --- The Last Light: three very different takes on the same concept ------
-  // A: cute wax candle-ghost with a soft flame, cradled in a cracked lantern.
-  "lastlight-candle": {
+  // --- The Last Light: a soul almost ready to move on. Chosen design: the cute
+  // wax candle-ghost with a soft flame, cradled in a cracked lantern.
+  // (Explored alternates: a living lantern and an escaping flame-wisp — dropped.)
+  lastlight: {
     palette: LASTLIGHT_PALETTE,
     size: SIZE,
     prompt:
@@ -58,25 +61,5 @@ export const MONSTERS = {
       "a sweet simple face with one big round glowing eye and a tiny smile, topped by a gentle " +
       "teardrop blue-violet flame, cradled in a small cracked black lantern, soft and ghostly, " +
       `${STYLE}, cute charming dark-fantasy RPG spirit sprite`,
-  },
-  // B: the lantern itself is alive — a shy sooty lantern-creature with a soul inside.
-  "lastlight-lantern": {
-    palette: LASTLIGHT_PALETTE,
-    size: SIZE,
-    prompt:
-      "a small cracked black iron lantern that is alive, tiny glowing amber eyes and a shy little " +
-      "face in its sooty glass, a warm soul-flame flickering inside, stubby ember legs and tiny " +
-      "arms, hunched and timid, " +
-      `${STYLE}, melancholic dark-fantasy RPG spirit sprite`,
-  },
-  // C: an ethereal flame-wisp escaping the broken lantern.
-  "lastlight-wisp": {
-    palette: LASTLIGHT_PALETTE,
-    size: SIZE,
-    prompt:
-      "a wispy ghostly blue-violet flame spirit with a faint sorrowful face and a trailing smoky " +
-      "tail, rising out of a broken cracked black lantern at its base, ethereal weightless and " +
-      "fading away, " +
-      `${STYLE}, ethereal melancholic dark-fantasy RPG spirit sprite`,
   },
 };

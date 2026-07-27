@@ -31,10 +31,11 @@ define spec  →  generate (CI)  →  convert  →  review  →  integrate  → 
 Add an entry to `MONSTERS` in `tools/pixellab/monsters.mjs`:
 `{ palette: string[], size: number, prompt: string }`.
 
-- **palette** — a small (≤6) on-brand hex set. It is *forced* on the API and
-  reused to snap the sprite back to clean colours, so the whole line stays
-  on-palette. Reuse an existing creature's palette to slot into that family.
-- **size** — square generation size; 48–64 is the sweet spot.
+- **palette** — a small (≤6) on-brand hex set, used as a colour *hint* forced
+  on the API so the render stays on-brand. The final sprite palette is derived
+  adaptively by the converter (up to ~48 colours), so this is a hint, not the
+  output palette. Reuse a related creature's hint to keep a family cohesive.
+- **size** — square generation size; **64px** is the standard (see `SIZE`).
 - **prompt** — see the prompt rule below.
 
 An evolution line uses the `line(id, theme, palette)` helper, which composes
@@ -80,9 +81,11 @@ MONSTER=<id> node tools/pixellab/png-to-pixelart.mjs 24   # target size
 ### 4. Convert & review
 
 `png-to-pixelart.mjs` decodes the PNG, downscales (default **64×64**, the
-standard), and snaps each pixel to the registry palette. **Look at the
-preview** — if a feature dropped out, hand-touch a few characters in the
-literal. (Lower sizes exist for one-offs but 64px is the roster standard.)
+standard), and derives an **adaptive palette via median-cut** — up to `COLORS`
+(default **48**) colours, but fewer when the image has few real hues. Keys stay
+within the 62 clean alphanumeric characters, so the literal is always valid.
+**Look at the preview** — if a feature dropped out, raise `COLORS` or
+hand-touch a few characters in the literal.
 
 ### 5. Integrate into the game
 
@@ -106,5 +109,6 @@ to `main`; the push deploys the live game.
   literal (text) goes into `src/`. `out/` is git-ignored.
 - **No copyrighted characters.** Prompts describe an original creature; don't
   name or reproduce another game's characters or art (see `art.ts` header).
-- **Palette discipline.** Snap to a small on-brand palette so new sprites match
-  the existing roster instead of importing an off-key colour set.
+- **Palette discipline.** Use the palette hint to keep the render on-brand; the
+  converter's adaptive median-cut then keeps colour counts sane (≤48, clean
+  alphanumeric keys) so sprites stay tidy instead of importing hundreds of colours.
