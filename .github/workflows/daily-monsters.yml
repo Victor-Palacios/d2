@@ -1,26 +1,33 @@
 name: Daily monster sprites
 
-# Every day, generate art for any monsters in the registry
-# (tools/pixellab/monsters.mjs) that don't yet have a sprite in art.ts, and
-# upload them as an artifact for review. Pair this with the "Daily monster
-# ideation" Claude routine, which adds fresh registry entries each night.
+# Every day, spend the day's PixelLab credits (5/day) on sprites:
+#   1. the REGEN queue (tools/pixellab/regen.txt) — sprites to redo — first,
+#   2. then new registry monsters that lack art,
+# capped at `max` (default 5). Generated sprites are converted to the repo's
+# { palette, rows } form, integrated into art.ts, and committed to main; redone
+# ids are pruned from the queue so it self-clears. New sprites land as art
+# (their Species/encounter wiring is a separate review step). Also uploads the
+# batch as an artifact.
 #
 # Scheduled workflows only run from the default branch, so this lives on main.
 # Cron is UTC: 08:00 UTC = 01:00 America/Los_Angeles during PDT (UTC-7). After
-# DST ends (PST, UTC-8) this fires at 00:00 PT — bump to '0 9 * * *' if you want
-# to keep it at 1am year-round.
+# DST ends switch to '0 9 * * *' to keep it at 1am.
 on:
   schedule:
     - cron: "0 8 * * *"
   workflow_dispatch:
     inputs:
       max:
-        description: "Max sprites to generate this run (keeps within the daily quota)."
+        description: "Max sprites this run (daily credit budget)."
         required: false
-        default: "8"
+        default: "5"
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: daily-monsters
+  cancel-in-progress: false
 
 jobs:
   generate:
@@ -31,6 +38,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Check secret is configured
         env:
@@ -40,14 +48,12 @@ jobs:
             echo "::error::PIXEL_LAB_API_KEY secret is not set for this repository."
             exit 1
           fi
-          echo "PIXEL_LAB_API_KEY is configured."
 
-      - name: Pick monsters still needing art
-        run: node tools/pixellab/pending.mjs "${{ github.event.inputs.max || '8' }}" >> "$GITHUB_ENV"
+      - name: Pick monsters (regen queue first, then new)
+        run: node tools/pixellab/pending.mjs "${{ github.event.inputs.max || '5' }}" >> "$GITHUB_ENV"
 
       - name: Report selection
-        run: |
-          echo "Pending: ${PENDING_COUNT:-0} — ${MONSTER:-(none)}" >> "$GITHUB_STEP_SUMMARY"
+        run: echo "Pending: ${PENDING_COUNT:-0} — ${MONSTER:-(none)}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Generate sprites
         if: env.PENDING_COUNT != '0'
@@ -60,9 +66,34 @@ jobs:
         run: node tools/pixellab/png-to-pixelart.mjs 64
 
       - name: Upload sprites for review
-        if: env.PENDING_COUNT != '0'
+        if: always() && env.PENDING_COUNT != '0'
         uses: actions/upload-artifact@v4
         with:
           name: daily-monster-sprites
           path: out/
           if-no-files-found: warn
+
+      - name: Integrate into art.ts + prune queue
+        if: env.PENDING_COUNT != '0'
+        run: node tools/pixellab/apply.mjs
+
+      - name: Build gate
+        if: env.PENDING_COUNT != '0'
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit + push to main
+        if: env.PENDING_COUNT != '0'
+        run: |
+          if [ -z "$(git status --porcelain src/assets/art.ts tools/pixellab/regen.txt)" ]; then
+            echo "No changes to commit."; exit 0
+          fi
+          git config user.name "monster-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/assets/art.ts tools/pixellab/regen.txt
+          git commit -m "Daily sprites: ${MONSTER}"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && break
+            echo "push retry $i"; sleep 3
+          done

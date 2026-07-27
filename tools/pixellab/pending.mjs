@@ -1,23 +1,28 @@
 #!/usr/bin/env node
-// Print the registry monsters that still need art — i.e. ids that don't yet
-// have a CREATURES entry in src/assets/art.ts. Skips stage-variant ids
-// (containing "-", e.g. nightnip-shade) which are explored via the manual
-// workflow, not the daily batch. Emits GitHub-Actions env lines:
+// Decide which monsters the daily action generates, within a credit budget.
+// Priority: (1) the REGEN queue (tools/pixellab/regen.txt) — ids whose prompt
+// changed and must be redone even though they already have art; then (2) new
+// registry monsters that don't yet have a CREATURES entry in art.ts. Stage
+// variants (ids containing "-") are left to the manual workflow.
 //
+// Emits GitHub-Actions env lines:
 //   MONSTER=id1,id2,...
 //   PENDING_COUNT=N
 //
-//   node tools/pixellab/pending.mjs [max]   # default max 8
+//   node tools/pixellab/pending.mjs [max]   # default max 5 (credits/day)
 
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { MONSTERS } from "./monsters.mjs";
 
-const MAX = Number(process.argv[2]) || 8;
+const MAX = Number(process.argv[2]) || 5;
 const art = readFileSync("src/assets/art.ts", "utf8");
 const hasArt = (id) => art.includes(`\n  ${id}: {`);
 
-const pending = Object.keys(MONSTERS)
-  .filter((id) => !id.includes("-") && !hasArt(id))
-  .slice(0, MAX);
+const regen = existsSync("tools/pixellab/regen.txt")
+  ? readFileSync("tools/pixellab/regen.txt", "utf8").split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#") && MONSTERS[l])
+  : [];
 
-process.stdout.write(`MONSTER=${pending.join(",")}\nPENDING_COUNT=${pending.length}\n`);
+const fresh = Object.keys(MONSTERS).filter((id) => !id.includes("-") && !hasArt(id) && !regen.includes(id));
+
+const list = [...regen, ...fresh].slice(0, MAX);
+process.stdout.write(`MONSTER=${list.join(",")}\nPENDING_COUNT=${list.length}\n`);

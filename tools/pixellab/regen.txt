@@ -1,0 +1,8 @@
+# Ids whose prompt changed and need REGENERATING even though they already have
+# art (one per line). The daily action generates these first, re-integrates
+# their art.ts entry, then removes them from this list. Blank lines and #
+# comments are ignored.
+geodeGolem
+wraithWisp
+graveCrawler
+cursedArmor
