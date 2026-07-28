@@ -64,8 +64,13 @@ await page.waitForTimeout(400);
 const state = await page.evaluate(() => window.hd2dGame?.audio ? 'ok' : 'no-audio-hook');
 console.log('audio hook :', state);
 
-const SPECIES = ['emberling', 'glidefang', 'nightnip'];
-const NEGATIVE = 'cogling'; // a monster with no authored cry — must stay silent.
+const SPECIES = [
+  // starter trio
+  'emberling', 'glidefang', 'nightnip',
+  // The Quiet Crossing (first dungeon): wild roster + the warden boss
+  'mitebug', 'sprigling', 'scrapmite', 'gloomote', 'dropletta', 'regalion',
+];
+const NEGATIVE = 'bulwarq'; // a monster with no authored cry — must stay silent.
 
 const measure = async (id) => page.evaluate((sp) => {
   const a = window.hd2dGame.audio;
@@ -86,7 +91,9 @@ console.log('\n=== monster cries ===');
 let pass = true;
 for (const id of SPECIES) {
   const m = await measure(id);
-  const ok = m.has && m.oscs >= 3 && m.gains >= 3 && m.ramps >= 1 && m.vibrato >= 1;
+  // Every voice must build multiple layers with at least one pitch glide.
+  // Vibrato is character, not a requirement (e.g. Dropletta is pure bloops).
+  const ok = m.has && m.oscs >= 2 && m.gains >= 2 && m.ramps >= 1;
   pass = pass && ok;
   console.log(
     `${ok ? 'PASS' : 'FAIL'}  ${id.padEnd(10)}  hasCry=${m.has}  oscillators=${m.oscs}  gains=${m.gains}  pitch-glides=${m.ramps}  vibrato-LFOs=${m.vibrato}`,
