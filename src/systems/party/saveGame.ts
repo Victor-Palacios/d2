@@ -22,10 +22,10 @@ import type { AttributeId } from '../../data/elements';
 export const SAVE_VERSION = 5;
 /**
  * Oldest save this build can still read. Normally we keep this at 1 because
- * changes are additive, but v5 renamed the tutorial domain id `boot` →
- * `crossing` and its flag `bootDomainCleared` → `crossingCleared`. A pre-v5 save
- * carries `activeDomainId: 'boot'`, which no longer resolves and would throw, so
- * v5 is a genuinely breaking change: drop anything older and start fresh.
+ * changes are additive, but v5 renamed the tutorial domain's id and clear flag
+ * to the `crossing` family. A pre-v5 save carries the old `activeDomainId`,
+ * which no longer resolves and would throw, so v5 is a genuinely breaking
+ * change: drop anything older and start fresh.
  */
 export const MIN_SAVE_VERSION = 5;
 
