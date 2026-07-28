@@ -3,7 +3,9 @@ import { narrate, say } from '../systems/dialogue/script';
 import type { Domain, DungeonFloor } from './dungeon';
 
 /**
- * The Boot Domain — the tutorial dungeon (plan §5.5).
+ * The Quiet Crossing — the tutorial dungeon (plan §5.5). Its internal id and
+ * clear flag stay `boot` / `bootDomainCleared` (like `crystal` / `haunted`, the
+ * ids never matched the display names) so saves and the gate logic keep working.
  *
  * Three small floors: a teaching floor, an element-tile floor, and a boss
  * floor whose accent walls and glowing hallway telegraph what is waiting.

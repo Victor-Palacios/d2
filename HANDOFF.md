@@ -33,7 +33,7 @@ content). Keep it that way.
 
 | Feature | Notes |
 |---|---|
-| Full slice | title → name → hub → world map → 3-floor Boot Domain → boss → licence → Guard Team → rival → shop → Mission 2 hook |
+| Full slice | title → name → hub → world map → 3-floor Quiet Crossing → boss → licence → Guard Team → rival → shop → Mission 2 hook |
 | HD-2D rig | shared by crawl and battle; every parameter live-tunable via `` ` `` |
 | 3v3 battle | speed order, Attack/Technique/Guard/Auto, class + element multipliers, enemy AI |
 | Auto-battle | basic Attack only, weakest target, Esc to stop; verified it spends **no MP** over 14 s hands-off |

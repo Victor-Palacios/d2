@@ -38,7 +38,8 @@ export interface DungeonSceneParams {
 }
 
 /**
- * The Boot Domain crawl (plan §2.4, M1/M3).
+ * The dungeon crawl (plan §2.4, M1/M3). Used by every reach, starting with the
+ * Quiet Crossing.
  *
  * Tile-by-tile movement in the dig-vehicle with wall collision, chests,
  * element floor plates, a draining EP meter, descent portals and both scripted
@@ -553,7 +554,7 @@ export class DungeonScene extends GameScene {
     const dom = domain(game.activeDomainId);
     game.set(dom.onClear.flag);
     if (dom.onClear.licenseCeremony) {
-      // Boot Domain only: the licence + Guard-Team ceremony.
+      // The Quiet Crossing only: the licence + Guard-Team ceremony.
       await this.ctx.go('hub', { arrival: 'domainCleared' });
     } else {
       // Any other domain: you're back in the safe city, patched up.

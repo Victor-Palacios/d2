@@ -63,7 +63,7 @@ export interface DomainClear {
   /** Flag set on the run when the domain is cleared. */
   flag: string;
   /**
-   * Boot Domain only: return through the licence + Guard-Team ceremony
+   * The Quiet Crossing only: return through the licence + Guard-Team ceremony
    * (`HubScene` arrival 'domainCleared'). Other domains just restore the party
    * and drop you back in the city.
    */

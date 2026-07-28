@@ -1,4 +1,4 @@
-# Boot Domain — a "first hour" HD-2D dungeon-crawler RPG (browser)
+# The Everwake — a "first hour" HD-2D dungeon-crawler RPG (browser)
 
 A playable vertical slice of a PS1-era dungeon-crawler RPG, rendered in the
 Square-Enix-style **HD-2D** look: pixel-art billboard sprites standing inside a

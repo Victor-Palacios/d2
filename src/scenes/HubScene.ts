@@ -261,7 +261,7 @@ export class HubScene extends GameScene {
     await sleep(1200);
 
     // The rival is already standing in the room (build() shows them once the
-    // Boot Domain is cleared), so go straight into the next story beat.
+    // the Quiet Crossing is cleared), so go straight into the next story beat.
     await this.rivalAndBriefing();
   }
 
@@ -403,7 +403,7 @@ export class HubScene extends GameScene {
         ...narrate('Someone is already leaning on the supply bay counter, watching you come in.'),
         ...say(
           'Kade',
-          `So you are the one who dropped the Boot warden on a training run. Kade. Second year.`,
+          `So you are the one who dropped the Vigil on your first crossing. Kade. Second year.`,
           'Enjoy the licence. The next domain does not hand them out.',
         ),
         ...say('Kade', 'Try to keep up, rookie.'),

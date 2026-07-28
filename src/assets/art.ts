@@ -1907,7 +1907,7 @@ export const DECOR: Record<string, PixelArt> = {
       '.kkk..',
     ],
   },
-  // --- generic / stone (boot) ---
+  // --- generic / stone (the Quiet Crossing) ---
   crate: {
     palette: { k: '#1a1108', w: '#7a4f24', W: '#a86c31' },
     rows: [

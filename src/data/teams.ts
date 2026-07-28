@@ -1,7 +1,7 @@
 import type { AttributeId } from './elements';
 
 /**
- * The three Guard Teams offered after the Boot Domain boss (plan §5.4).
+ * The three Guard Teams offered after the Quiet Crossing boss (plan §5.4).
  * Picking one sets the player's team attribute and their first own creature.
  */
 
