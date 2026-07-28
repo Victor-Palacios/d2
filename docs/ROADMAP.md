@@ -61,31 +61,23 @@ into a **compile error**, and `npm run build` runs `tsc --noEmit` first — so t
 build won't publish until the last one is fixed. **Do this refactor with the
 compiler as your checklist.**
 
-> **Consider going further and making element a real mechanic** while you're in
-> here: a small element-vs-element multiplier in `computeDamage()` (mirroring the
-> class triangle) would make the surviving three elements *matter* instead of
-> being flavour. Optional, but it's the natural payoff of trimming — three
-> interacting elements teach better than five inert ones. If you do, update
-> `docs/SYSTEMS.md` §1 to retire the "mostly cosmetic" note.
+> **✅ Element is now a real mechanic** via **elemental reactions**
+> (`engine.ts`, `docs/SYSTEMS.md` §9): a hit leaves an elemental mark and a
+> different-element follow-up detonates it. This is the dynamic version of the
+> "make element matter" idea — and because the reaction maths is uniform across
+> pairs, trimming five elements to three is still a data edit, not a rebalance.
 
 ---
 
 ## M7 — Progression loop (XP, levels, growth)
 
-The single biggest gap: **there is no XP / level-up today** (`docs/SYSTEMS.md`
-§6). Creatures are minted at a fixed level and never grow mid-run.
-
-- Add `xp` + `xpToNext` to `CreatureInstance`; award XP on victory alongside the
-  existing credit reward in `BattleScene.finishVictory`.
-- On level-up, recompute stats via the **already-existing** `statsAt()` growth
-  curve — the data (`growth` per species) is there, unused past creation.
-- Level-up toast + a "learns technique X" hook (extend `Species.techniques` to a
-  level-keyed list).
-- **Test:** extend `tools/smoke/` with a headless "grind N fights, assert level
-  and stat deltas" run against `engine.ts`.
-
-*Why first:* every later system (recruiting, evolution, harder domains)
-assumes creatures get stronger. Build the spine before the limbs.
+- ✅ **Done:** `xp` + `xpToNext` live on `CreatureInstance`; victory awards XP to
+  each surviving monster scaled by the level gap (`xpFromEnemy`), and `grantXp`
+  applies level-ups off the existing `statsAt()` growth curve with a level-up
+  toast (`BattleScene.onVictory`, `docs/SYSTEMS.md` §6).
+- **Still to do:** a "learns technique X" hook (extend `Species.techniques` to a
+  level-keyed list), and a headless "grind N fights, assert level/stat deltas"
+  smoke run against `engine.ts`.
 
 ## M8 — Recruiting / capturing (Soul Syphon)
 

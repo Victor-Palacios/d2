@@ -37,6 +37,13 @@ export interface Species {
    * can be built later; no UI reads it yet.
    */
   evolvesTo?: string[];
+  /**
+   * A gentle, half-here soul that can be reached with words instead of blows:
+   * the **Commune** battle action can pacify it (see `systems/battle/engine.ts`).
+   * Copied onto the `CreatureInstance` at creation so the headless engine never
+   * has to import this table.
+   */
+  communable?: boolean;
   blurb: string;
 }
 
@@ -231,7 +238,8 @@ export const SPECIES: Record<string, Species> = {
     base: { hp: 44, mp: 28, off: 17, def: 11, spd: 15 },
     growth: { ...ROOKIE_GROWTH, mp: 2.6 },
     techniques: ['hexBolt', 'nightSpiral'],
-    blurb: 'A frightened process that never finished terminating.',
+    communable: true,
+    blurb: 'A frightened process that never finished terminating. It is not angry — only lost, and would rather be spoken to than struck.',
   },
   gravemaw: {
     id: 'gravemaw',

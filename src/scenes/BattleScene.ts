@@ -21,6 +21,7 @@ import { BattleHUD } from '../ui/BattleHUD';
 import { DialogueBox } from '../ui/DialogueBox';
 import { toast } from '../ui/Toast';
 import type { DialogueScript } from '../systems/dialogue/script';
+import { say, narrate } from '../systems/dialogue/script';
 import type { DungeonSceneParams } from './DungeonScene';
 
 /** Monsters fielded on screen at once (the rest of the party are reserves). */
@@ -38,6 +39,8 @@ export interface BattleSceneParams {
   intro?: DialogueScript;
   /** Scene to return to on victory. */
   returnTo: string;
+  /** Optional seeded RNG — makes the whole played fight reproducible (tests). */
+  rng?: () => number;
 }
 
 const SLOT_X = [-2.4, 0, 2.4];
@@ -110,6 +113,7 @@ export class BattleScene extends GameScene {
       partyTiles: this.params.partyTiles,
       enemyTiles: this.params.enemyTiles,
       isBoss: this.params.isBoss,
+      rng: this.params.rng,
     });
     // Living party members who did not deploy are the swap-in reserves.
     this.battle.reserves = game.party.filter(isUp).filter((c) => !active.some((a) => a.uid === c.uid));
@@ -355,6 +359,10 @@ export class BattleScene extends GameScene {
       return;
     }
 
+    // A single, flag-gated mechanic lesson per fight (see `maybeTutorial`), so
+    // the new systems arrive slowly across the three areas rather than at once.
+    await this.maybeTutorial();
+
     this.hud.setBanner(this.params.isBoss ? 'Warden Battle' : 'Battle');
     this.hud.setLog(
       this.params.isBoss
@@ -419,7 +427,7 @@ export class BattleScene extends GameScene {
               }
               if (choice.type === 'flee') {
                 // A coin-flip escape; a failed attempt still costs the turn.
-                if (Math.random() < FLEE_CHANCE) {
+                if (this.battle.rng() < FLEE_CHANCE) {
                   this.fled = true;
                 } else {
                   audio.sfx('cancel');
@@ -444,6 +452,7 @@ export class BattleScene extends GameScene {
             const beforeUid = actor.creature.uid;
             result = this.battle.perform(actor, action);
             this.syphonFromHits(result);
+            if (result.pacified) this.resolvePacify(result.pacified);
             if (result.moved) await this.applyMove(actor, beforeUid);
           } else {
             // Failed flee: the turn is spent with no action.
@@ -453,9 +462,8 @@ export class BattleScene extends GameScene {
           this.hud.setLog(`${actor.creature.name} is deciding...`);
           await sleep(480);
           result = this.battle.perform(actor, this.battle.chooseEnemyAction(actor));
-          // Bosses press a Boost advantage; regular foes only rarely.
-          const p = this.battle.isBoss ? 0.5 : 0.18;
-          if (this.battle.boost.enemy >= 1 && Math.random() < p && this.battle.spendBoost('enemy')) {
+          // Boost-spend timing is a tactical, seeded decision in the model now.
+          if (this.battle.shouldSpendBoost(actor) && this.battle.spendBoost('enemy')) {
             extraTurns++;
             this.hud.setLog(`${actor.creature.name} boosts!`);
           }
@@ -487,6 +495,68 @@ export class BattleScene extends GameScene {
     if (!foes.length) return { type: 'guard' };
     const target = foes.reduce((weakest, f) => (f.creature.hp < weakest.creature.hp ? f : weakest), foes[0]);
     return { type: 'attack', targetUid: target.creature.uid };
+  }
+
+  /**
+   * One-time mechanic coaching, gated on `game.flags` so each lesson shows
+   * exactly once — and at most one per fight, in curriculum order, so the new
+   * systems are introduced slowly across the three story areas:
+   *
+   * - **The Quiet Crossing (boot):** melee vs ranged reach and cover.
+   * - **The Reliquary (crystal):** elemental reactions.
+   * - **The Unremembered (haunted):** break-chains, then Commune once a gentle
+   *   soul is actually on the field.
+   */
+  private async maybeTutorial() {
+    const dom = game.activeDomainId;
+    const teach = (flag: string, script: DialogueScript) => {
+      game.set(flag);
+      return this.dialogue.play(script);
+    };
+
+    if (dom === 'boot' && !game.has('tut.melee')) {
+      return teach('tut.melee', say('Halden',
+        'One more thing before the scraps get real. Your basic Attack — and some heavy Techniques — are melee: they only reach the front row.',
+        'A soul in the Rear is covered while an ally holds the front of its column, so melee cannot touch it. Ranged Techniques ignore cover and reach anyone.',
+        'So keep a fragile caster in the Rear, a sturdy body in the Vanguard ahead of it. Use Move to set your line.'));
+    }
+
+    if (dom === 'crystal' && !game.has('tut.reaction')) {
+      return teach('tut.reaction', say('Halden',
+        'The Reliquary runs hot and cold at once — a good place to learn reactions. Hit a soul with one element and it leaves a mark; you will see a ◈ on its card.',
+        'Strike that mark with a DIFFERENT element before it fades and the two detonate — Steam, Wildfire, Short-Circuit: bonus damage, and it Breaks faster.',
+        'Two casters of different elements can pop a reaction every round. Mix your elements; do not just hammer one.'));
+    }
+
+    if (dom === 'haunted') {
+      if (!game.has('tut.breakChain')) {
+        return teach('tut.breakChain', say('Halden',
+          'These are already half-gone. Break one and it cannot even shield itself — so when a soul is BROKEN, pile on before it recovers.',
+          'Each hit landed on it extends a chain: every link bites harder, and a long enough chain banks you a Boost charge.',
+          'Order your turns onto the broken one, and spend Boost to squeeze in an extra hit and keep the chain alive.'));
+      }
+      if (!game.has('tut.commune') && this.battle.communeTargets('enemy').length > 0) {
+        return teach('tut.commune', [
+          ...say('Halden',
+            'Wait — that one isn\'t attacking. It\'s just frightened. You don\'t have to put it down.',
+            'Use Commune. Speak to it a few turns, until it understands; it settles and leaves in peace — and you still log its soul if you win the fight.'),
+          ...narrate('Some of what waits down here does not need to be beaten. Only heard.'),
+        ]);
+      }
+    }
+  }
+
+  /**
+   * A soul talked into peace by Commune is *understood* — recorded like a full
+   * Soul Syphon so it is claimed on victory (`finalizeCaptures`), same as a
+   * drained one, but without a single blow landed.
+   */
+  private resolvePacify(uid: string) {
+    const t = this.battle.find(uid);
+    if (!t || t.side !== 'enemy') return;
+    game.understandSoul(t.creature.speciesId);
+    audio.sfx('blip');
+    this.hud.setLog(`${t.creature.name} is at peace — win the fight to log its soul.`);
   }
 
   /**
@@ -590,12 +660,18 @@ export class BattleScene extends GameScene {
         tbb.hit(1);
         const tech = technique(result.techniqueId ?? 'strike');
         const color = ELEMENTS[tech.element].color;
-        this.particles.emit(worldTop, { count: 18, color, speed: 2.6, life: 0.55, gravity: -3 });
+        const react = !!hit.reaction;
+        this.particles.emit(worldTop, { count: react ? 30 : 18, color, speed: react ? 3.4 : 2.6, life: 0.55, gravity: -3 });
         const s = this.screenPos(worldTop);
         const superEffective = hit.crit || hit.breakdown?.effectiveness === 'super';
-        this.hud.float(s.x, s.y, String(hit.damage), superEffective ? '#ffd166' : '#ff9a8a');
-        this.ctx.hd2d.addShake(superEffective ? 0.2 : 0.11);
-        if (superEffective) audio.sfx('crit');
+        const big = superEffective || react;
+        this.hud.float(s.x, s.y, String(hit.damage), big ? '#ffd166' : '#ff9a8a');
+        this.ctx.hd2d.addShake(react ? 0.26 : superEffective ? 0.2 : 0.11);
+        if (react) {
+          audio.sfx('crit');
+          this.hud.float(s.x, s.y - 30, hit.reaction!, color);
+        } else if (superEffective) audio.sfx('crit');
+        if (hit.chain && hit.chain >= 2) this.hud.float(s.x, s.y - 52, `${hit.chain}-chain`, '#ffd166');
       }
 
       if (hit.fainted) {
@@ -613,6 +689,20 @@ export class BattleScene extends GameScene {
         bb.object.position.z = home.z + dir * 1.1 * (1 - t);
       });
       bb.object.position.copy(home);
+    }
+
+    // A pacified soul dissolves gently — a soft, upward drift rather than a KO fall.
+    if (result.pacified) {
+      const tbb = this.sprites.get(result.pacified);
+      if (tbb) {
+        const worldTop = tbb.object.position.clone();
+        worldTop.y += 1.0;
+        this.particles.emit(worldTop, { count: 22, color: 0xbfe0ff, speed: 1.2, life: 1.0, gravity: 0.5, upBias: 1 });
+        const s = this.screenPos(worldTop);
+        this.hud.float(s.x, s.y, 'understood', '#bfe0ff');
+        audio.sfx('heal');
+        await this.tween(0.5, (t) => tbb.setOpacity(1 - t * 0.85));
+      }
     }
 
     // Remaining log lines, paced so they can be read.
@@ -726,15 +816,15 @@ export class BattleScene extends GameScene {
         const chance = rememberStreak <= 1 ? 0.33 : 0.66; // rises to 66% when pressed consecutively
         this.hud.setLog('You say: "Remember who you are."');
         await sleep(1200);
-        if (Math.random() < chance) awarded = true;
+        if (this.battle.rng() < chance) awarded = true;
         else { this.hud.setLog('The flame gutters, reaching for a name it almost has. Not yet.'); await sleep(1200); turns -= 1; }
       } else if (choice === 'comfort') {
         rememberStreak = 0;
         comforted = true;
-        const phrase = COMFORT_PHRASES[Math.floor(Math.random() * COMFORT_PHRASES.length)];
+        const phrase = COMFORT_PHRASES[Math.floor(this.battle.rng() * COMFORT_PHRASES.length)];
         this.hud.setLog(`You say: "${phrase}"`);
         await sleep(1300);
-        if (Math.random() < 0.10) awarded = true;
+        if (this.battle.rng() < 0.10) awarded = true;
         else { this.hud.setLog('It leans toward the warmth of your voice, a little steadier now.'); await sleep(1200); turns -= 1; }
       } else {
         rememberStreak = 0;

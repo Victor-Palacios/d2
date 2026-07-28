@@ -627,6 +627,30 @@ body {
   }
 }
 
+/* Commune: an "Understanding" meter, cool blue, and an at-peace resolved state. */
+.fighter .stagger-meter.commune .stagger-bar > i {
+  background: linear-gradient(90deg, #7bdcff, #bfa8ff);
+}
+.fighter .stagger-meter.pacified {
+  justify-content: center;
+  color: #bfe0ff;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 8px rgba(123, 220, 255, 0.6);
+}
+.fighter.pacified {
+  opacity: 0.72;
+  filter: saturate(0.6);
+}
+
+/* Elemental-reaction mark: a small element-coloured pip after the name. */
+.react-mark {
+  margin-left: 5px;
+  font-style: normal;
+  font-size: 11px;
+  text-shadow: 0 0 6px currentColor;
+}
+
 #action-menu {
   position: absolute;
   right: 14px;
