@@ -1,4 +1,6 @@
 import type { CreatureInstance } from './creature';
+import { statsAt } from './creature';
+import { SPECIES } from '../../data/creatures';
 import { game, START_PARTY_CAP } from './gameState';
 import type { AttributeId } from '../../data/elements';
 
@@ -19,7 +21,7 @@ import type { AttributeId } from '../../data/elements';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 /**
  * Oldest save this build can still read. Because every change so far is additive
  * and `applySave` defaults missing fields, all versions from 1 up migrate
@@ -197,6 +199,19 @@ export function applySave(data: SaveData) {
   for (const c of [...game.party, ...game.sanctuary]) {
     if (c.xp === undefined) c.xp = 0;
     if (!c.equip) c.equip = {};
+    // Saves from before the magick pass have no mag/res — recompute from the
+    // species growth curve at the creature's level (v5).
+    if (c.mag === undefined || c.res === undefined) {
+      const s = SPECIES[c.speciesId];
+      if (s) {
+        const st = statsAt(s, c.level);
+        if (c.mag === undefined) c.mag = st.mag;
+        if (c.res === undefined) c.res = st.res;
+      } else {
+        c.mag = c.mag ?? 0;
+        c.res = c.res ?? 0;
+      }
+    }
   }
 
   // A suspend save is a bookmark, not a checkpoint: consume it on load so it

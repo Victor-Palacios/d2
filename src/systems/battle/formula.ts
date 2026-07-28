@@ -1,6 +1,7 @@
 import type { CreatureInstance } from '../party/creature';
-import { effOff, effDef } from '../party/creature';
+import { effOff, effDef, effMag, effRes } from '../party/creature';
 import type { Technique } from '../../data/techniques';
+import { techCategory } from '../../data/techniques';
 import type { ElementId } from '../../data/elements';
 import { ELEMENT_TILE_BONUS, attributeMultiplier } from '../../data/elements';
 
@@ -58,8 +59,13 @@ export interface DamageInput {
 export function computeDamage(input: DamageInput): DamageBreakdown {
   const { attacker, defender, technique, rng = Math.random } = input;
 
-  // Effective Offense/Defense include equipped Arms / Shrouds / Mementos.
-  const base = (technique.power * effOff(attacker)) / (effDef(defender) + 40);
+  // Pick the stat pair by channel: physical rides Offense vs Defense, magical
+  // rides Magick vs Resolve. Effective stats fold in equipped Arms / Shrouds /
+  // Mementos.
+  const magical = techCategory(technique) === 'magical';
+  const atkStat = magical ? effMag(attacker) : effOff(attacker);
+  const defStat = magical ? effRes(defender) : effDef(defender);
+  const base = (technique.power * atkStat) / (defStat + 40);
 
   const attributeMult = attributeMultiplier(attacker.attribute, defender.attribute);
 
@@ -93,5 +99,6 @@ export function computeDamage(input: DamageInput): DamageBreakdown {
 }
 
 export function computeHeal(healer: CreatureInstance, technique: Technique): number {
-  return Math.round(technique.power + healer.off * 0.4);
+  // Mending is a spell — it rides Magick, so casters heal for more than bruisers.
+  return Math.round(technique.power + effMag(healer) * 0.4);
 }

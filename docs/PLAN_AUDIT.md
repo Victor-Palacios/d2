@@ -64,7 +64,7 @@ missing.
 | §5.3 | Headless 3v3 battle model + enemy AI | ✅ | `systems/battle/engine.ts` (rules-only, no Three.js/DOM), driven by `BattleScene.ts` (M2). |
 | §5.4 | Three Guard Teams, each setting class + starter | ✅ | `data/teams.ts`. |
 | §5.5 | Boot Domain tutorial dungeon + vehicle EP | ✅ | `data/bootDomain.ts` (3 floors, borrowed party, boss), EP drain in `DungeonScene.ts`. |
-| §5.6 | Evolution / DNA-merge | ⚠️ **Data stub, by design** | `evolvesTo` on `Species` (`data/creatures.ts`); **no UI reads it.** The plan specifies a stub here, so this is *complete-as-specified*, not missing. |
+| §5.6 | Evolution / transcendence | ✅ **Implemented (Pokémon × Digimon hybrid)** | `evolutions` tree on `Species` (`data/creatures.ts`); headless `systems/party/evolve.ts` (`evolve`/`devolve`); **Transcend** screen (`ui/TranscendScreen.ts`). Level-gated, branching, reversible. Ships alongside the magick pass (Mag/Res) and level 1–20 learnsets. Covered by `tools/smoke/transcend.mjs`; see `docs/SYSTEMS.md §7`. DNA-merge remains a future branch condition. |
 
 ## §6 — Polish pass
 

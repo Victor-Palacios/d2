@@ -41,6 +41,8 @@ const MENU_ICONS: Record<string, string> = {
   sanctuary: '<path d="M8 3 H16 V5 A6 6 0 0 1 17 8 V16 A4 4 0 0 1 13 20 H11 A4 4 0 0 1 7 16 V8 A6 6 0 0 1 8 5 Z"/>',
   // Arrange — reorder up / down.
   arrange: '<path d="M12 2 L7 8 H17 Z"/><path d="M12 22 L7 16 H17 Z"/>',
+  // Transcend — a soul ascending (stacked rising chevrons).
+  transcend: '<path d="M6 13 L12 7 L18 13"/><path d="M6 18 L12 12 L18 18"/>',
 };
 
 /** Inline SVG glyph for a grid-menu entry, tinted with `color`. */

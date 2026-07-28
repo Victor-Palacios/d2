@@ -5,6 +5,7 @@ import { openSoularium } from './SoulariumScreen';
 import { openSanctuary } from './SanctuaryScreen';
 import { openPartyArrange } from './PartyScreen';
 import { openGear } from './GearScreen';
+import { openTranscend } from './TranscendScreen';
 
 /**
  * The main system menu (R1 / E / Start), in the style of a modern handheld RPG:
@@ -19,6 +20,7 @@ export async function openSoulMenu(parent: HTMLElement): Promise<void> {
       { value: 'gear', label: 'Gear', sublabel: 'arms · shrouds · mementos', icon: menuIcon('arrange', '#7bdc8a'), color: '#7bdc8a' },
       { value: 'soularium', label: 'Soularium', sublabel: 'the book of names', icon: menuIcon('soularium', '#ffd166'), color: '#ffd166' },
       { value: 'sanctuary', label: 'Sanctuary', sublabel: 'bench or call up souls', icon: menuIcon('sanctuary', '#c77dff'), color: '#c77dff' },
+      { value: 'transcend', label: 'Transcend', sublabel: 'evolve · de-evolve', icon: menuIcon('transcend', '#ff9de2'), color: '#ff9de2' },
     ];
     const menu = new GridMenu(parent, items, { heading: 'MENU', subheading: 'The Everwake' });
     const choice = await menu.open();
@@ -29,6 +31,7 @@ export async function openSoulMenu(parent: HTMLElement): Promise<void> {
     else if (choice === 'gear') await openGear(parent);
     else if (choice === 'soularium') await openSoularium(parent);
     else if (choice === 'sanctuary') await openSanctuary(parent);
+    else if (choice === 'transcend') await openTranscend(parent);
     // Loop back to the menu after a sub-screen closes, so it feels like a hub.
   }
 }

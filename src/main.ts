@@ -13,6 +13,11 @@ import { GameOverScene } from './scenes/GameOverScene';
 import { toast } from './ui/Toast';
 import { game } from './systems/party/gameState';
 import * as saves from './systems/party/saveGame';
+import * as evolve from './systems/party/evolve';
+import * as creature from './systems/party/creature';
+import * as formula from './systems/battle/formula';
+import { technique } from './data/techniques';
+import * as roster from './data/creatures';
 import { DOMAINS } from './data/domains';
 import { validateDomains } from './data/validateDomains';
 
@@ -64,6 +69,11 @@ const stats = { frames: 0, fps: 0 };
   debug,
   stats,
   saves,
+  evolve,
+  creature,
+  formula,
+  tech: technique,
+  roster,
   domains: DOMAINS,
   validateDomains,
 };

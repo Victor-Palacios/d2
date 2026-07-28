@@ -18,6 +18,10 @@ export interface Equipment {
   off?: number;
   def?: number;
   spd?: number;
+  /** Magick bonus. */
+  mag?: number;
+  /** Resolve (magical defence) bonus. */
+  res?: number;
   /** Battle-special hook id, resolved by the battle model. */
   effect?: string;
   desc: string;
@@ -32,6 +36,13 @@ export const EQUIPMENT: Record<string, Equipment> = {
     off: 6,
     desc: 'A blade that kept a little of its owner\'s warmth. +6 OFF.',
   },
+  focusReliquary: {
+    id: 'focusReliquary',
+    name: 'Focus Reliquary',
+    slot: 'arms',
+    mag: 6,
+    desc: 'A relic that still hums with the thoughts poured into it. +6 MAG.',
+  },
   // --- Shrouds ------------------------------------------------------------
   paleShroud: {
     id: 'paleShroud',
@@ -39,6 +50,13 @@ export const EQUIPMENT: Record<string, Equipment> = {
     slot: 'shroud',
     def: 6,
     desc: 'Linen that outlasted the one it covered. +6 DEF.',
+  },
+  wardingVeil: {
+    id: 'wardingVeil',
+    name: 'Warding Veil',
+    slot: 'shroud',
+    res: 6,
+    desc: 'A veil stitched with quieting sigils. +6 RES.',
   },
   // --- Mementos -----------------------------------------------------------
   quickLocket: {

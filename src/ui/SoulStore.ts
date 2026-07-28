@@ -17,7 +17,7 @@ const SLOT_COSTS = [500, 800, 1200, 1700, 2300, 3000];
 /** Summon price, scaled to a species' raw power. */
 export function soulPrice(id: string): number {
   const b = SPECIES[id].base;
-  return Math.round(b.hp * 2 + b.mp + (b.off + b.def + b.spd) * 6);
+  return Math.round(b.hp * 2 + b.mp + (b.off + b.def + b.spd + b.mag + b.res) * 6);
 }
 
 function nextSlotCost(): number | null {
