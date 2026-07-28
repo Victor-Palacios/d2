@@ -1,4 +1,4 @@
-// The first-dungeon (Boot Domain) roster, redesigned procedurally.
+// The first-dungeon (The Quiet Crossing) roster, redesigned procedurally.
 // Keyed by the art key each Species uses in src/assets/art.ts, so integrating
 // is a direct replace of CREATURES[<key>]. Recipe: docs/procedural-sprites.md.
 import { grid, ellipse, rect, dot, set } from './compose.mjs';
@@ -253,7 +253,7 @@ export function lion() {
   return finish(g, P);
 }
 
-export const BOOT = {
+export const CROSSING = {
   lizard: { species: 'Emberling', element: 'fire', build: lizard },
   wing: { species: 'Glidefang', element: 'water', build: wing },
   bat: { species: 'Nightnip', element: 'dark', build: bat },

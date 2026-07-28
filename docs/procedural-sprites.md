@@ -17,7 +17,7 @@ tools/sprites/
   compose.mjs      char-grid drawing kit (ellipse, rect, smooth, outlineSil, toArt)
   render.mjs       dependency-free PNG encoder + comparison-strip compositor
   creatures.mjs    shared recipe helpers + demo builders + a CREATURES registry
-  boot-domain.mjs  the first-dungeon roster, keyed by art key (BOOT registry)
+  quiet-crossing.mjs the first-dungeon roster, keyed by art key (CROSSING registry)
   build.mjs        CLI: render previews to out/ and emit pasteable { palette, rows }
   integrate.mjs    CLI: replace CREATURES[<artKey>] blocks in src/assets/art.ts
 ```
@@ -87,7 +87,7 @@ outlines interior gaps. The replacement:
 To **replace an existing art key** (redesign a creature already in the game):
 
 ```bash
-node tools/sprites/integrate.mjs           # whole BOOT set
+node tools/sprites/integrate.mjs           # whole CROSSING set
 node tools/sprites/integrate.mjs lion bat   # specific keys
 npm run build                               # tsc --noEmit + vite
 ```
@@ -107,7 +107,7 @@ To **add a brand-new creature**:
 
 > Note: `smooth()` deletes 1px spurs, so thin appendages (antennae, insect legs,
 > antennas) must be drawn ≥2px thick or they vanish. See `bug`/`scrap` in
-> `boot-domain.mjs` for the 2×2-stamp helper.
+> `quiet-crossing.mjs` for the 2×2-stamp helper.
 
 ## Changelog (for reproducibility)
 
@@ -124,8 +124,8 @@ To **add a brand-new creature**:
   4. **Asymmetry** — off-centre gaze via eye `tilt`, uneven limbs, one-sided
      tail/leaves, to shed the stiff mirror-perfect look.
 - **2026-07-28 — first-dungeon roster redesigned + wired in.** Added
-  `boot-domain.mjs` (the `BOOT` registry) and `integrate.mjs`. Redesigned all
-  nine Boot Domain creatures and replaced their art keys in `art.ts`:
+  `quiet-crossing.mjs` (the `CROSSING` registry) and `integrate.mjs`. Redesigned all
+  nine Quiet Crossing creatures and replaced their art keys in `art.ts`:
   starters `lizard` (Emberling), `wing` (Glidefang), `bat` (Nightnip); enemies
   `bug` (Mitebug), `plant` (Sprigling), `scrap` (Scrapmite), `wisp` (Gloomote),
   `slime` (Dropletta); boss `lion` (Regalion). Verified in-engine in the HD-2D
