@@ -91,10 +91,15 @@ const r = await page.evaluate(() => {
   // Physical (off30 vs def10) should out-hit magical (mag10 vs res30) despite
   // pyreLance's higher base power — proving the split reads the right stats.
   out.channelSplit = phys > magi;
-  // A heal scales with the caster's MAG (magical channel).
-  const lowMag = makeCreature('emberling', 10); lowMag.mag = 5;
-  const hiMag = makeCreature('emberling', 10); hiMag.mag = 40;
-  out.healUsesMag = computeHeal(hiMag, tech('mistVeil')) > computeHeal(lowMag, tech('mistVeil'));
+  // A heal blends RES (0.7) and MAG (0.3): both stats raise it, and RES moves it
+  // more than the same bump to MAG.
+  const baseH = makeCreature('emberling', 10); baseH.res = 10; baseH.mag = 10;
+  const moreMag = makeCreature('emberling', 10); moreMag.res = 10; moreMag.mag = 40;
+  const moreRes = makeCreature('emberling', 10); moreRes.res = 40; moreRes.mag = 10;
+  const h0 = computeHeal(baseH, tech('mistVeil'));
+  const hM = computeHeal(moreMag, tech('mistVeil'));
+  const hR = computeHeal(moreRes, tech('mistVeil'));
+  out.healUsesBoth = hM > h0 && hR > h0 && hR > hM;
 
   // --- Roster sweep: every species builds at L1 and L20, every learnset move
   //     and every evolution target resolves, and no evolve/devolve throws -----
@@ -140,13 +145,13 @@ line('de-evolution restores exactly', r.devolved);
 line('multi-stage line resolves', r.multiStage);
 line('terminal form has no path', r.terminal);
 line('damage channel splits phys/magic', r.channelSplit);
-line('heal scales with MAG', r.healUsesMag);
+line('heal blends RES(0.7)+MAG(0.3)', r.healUsesBoth);
 console.log(`roster sweep: ${r.rosterCount} species` + (r.rosterProblems.length ? '\n  ' + r.rosterProblems.join('\n  ') : ''));
 line('every species + evolution resolves', r.rosterClean);
 
 const ok = r.learnsetGrows && r.mageMagBeatsOff && r.bruiserOffBeatsMag && r.statsPresent &&
   r.tooYoung && r.branchesAt10 && r.refusesAmbiguous && r.evolved && r.devolved &&
-  r.multiStage && r.terminal && r.channelSplit && r.healUsesMag && r.rosterClean;
+  r.multiStage && r.terminal && r.channelSplit && r.healUsesBoth && r.rosterClean;
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 console.log(ok && !errs.length ? '\nPASS' : '\nFAIL');

@@ -161,11 +161,14 @@ between examples A-style advantage and B-style disadvantage (1.25 vs 0.8 =
 From `computeHeal()`:
 
 ```
-heal = round(technique.power + healer.mag × 0.4)
+stat = healer.res × 0.7 + healer.mag × 0.3      // HEAL_RES_WEIGHT / HEAL_MAG_WEIGHT
+heal = round(technique.power + stat × 0.4)        // HEAL_STAT_SCALE
 ```
 
-Heals ride **Magick** (they are magical by category), so a Mage mends for more
-than a bruiser — the same stat that powers their spells.
+A heal blends **Resolve** (mostly) and **Magick** — mending reads as a protective
+act with a magical component, so a durable support and a caster both make decent
+healers, and neither a glass cannon nor a pure bruiser is great at it. The weights
+(and scale) are balance knobs in `formula.ts`.
 
 Example: **Mist Veil** (power 42) cast by Gloomote (off 35 at level 11) →
 42 + 35 × 0.4 = 42 + 14 = **56 HP**, capped at the target's missing HP. Heals

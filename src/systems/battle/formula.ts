@@ -19,6 +19,17 @@ export const GUARD_MP_RESTORE = 0.12;
 export const VARIANCE = 0.06;
 
 /**
+ * Heal scaling. A heal blends the caster's **Resolve** and **Magick** — mending
+ * is mostly a protective act (Res) with a magical component (Mag). Weights sum to
+ * 1; the blended stat is then scaled by `HEAL_STAT_SCALE` and added to the
+ * technique's flat power. Tunable — raise the Mag weight to make casters the best
+ * healers, or the Res weight to reward durable supports.
+ */
+export const HEAL_RES_WEIGHT = 0.7;
+export const HEAL_MAG_WEIGHT = 0.3;
+export const HEAL_STAT_SCALE = 0.4;
+
+/**
  * Formation row modifiers (grid battle, Phase A).
  *
  * Melee from the Vanguard hits harder; melee from the Rear pulls its punches.
@@ -99,6 +110,7 @@ export function computeDamage(input: DamageInput): DamageBreakdown {
 }
 
 export function computeHeal(healer: CreatureInstance, technique: Technique): number {
-  // Mending is a spell — it rides Magick, so casters heal for more than bruisers.
-  return Math.round(technique.power + effMag(healer) * 0.4);
+  // Blend of Resolve (mostly) and Magick, then scaled onto the flat heal power.
+  const stat = effRes(healer) * HEAL_RES_WEIGHT + effMag(healer) * HEAL_MAG_WEIGHT;
+  return Math.round(technique.power + stat * HEAL_STAT_SCALE);
 }
