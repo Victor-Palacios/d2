@@ -1,5 +1,13 @@
 # Adding a monster (sprite workflow)
 
+> **⚠️ Retired — kept for reference.** We no longer generate sprites through the
+> PixelLab API. The current, no-API way to author creatures is
+> [procedural-sprites.md](procedural-sprites.md). The PixelLab-derived sprites
+> already in `src/assets/art.ts` stay in the game, and the prompt registry in
+> [`tools/pixellab/`](../tools/pixellab/) is preserved as reference — but the
+> scheduled Action and the daily ideation routine that drove this pipeline have
+> been removed. The rest of this file documents how that pipeline worked.
+
 The rule for creating a new creature sprite, end to end. It turns a text idea
 into an on-roster sprite in the game, using the PixelLab API for generation but
 keeping the repo **asset-free** — the sprite ships as a hand-format
