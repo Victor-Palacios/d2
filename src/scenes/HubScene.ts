@@ -213,6 +213,14 @@ export class HubScene extends GameScene {
       await this.rivalAndBriefing();
     }
 
+    // The Overgrowth's own aftermath: clearing it unroots the souls Liora Fen
+    // kept, and she follows the light home to cross. A self-contained side-beat
+    // (fires once), independent of the main-line midpoint below.
+    if (game.has('jungleCleared') && !game.has('jungleWakeDone')) {
+      await this.jungleAftermath();
+      if (this.disposed) return;
+    }
+
     // Midpoint: once all three reaches are quiet, the one death the Keeping
     // cannot answer. Fires once, whenever the player next stands in the Everwake.
     if (
@@ -329,6 +337,63 @@ export class HubScene extends GameScene {
     menu.destroy();
     remove(host);
     return (v ?? 'letgo') as 'name' | 'work' | 'letgo';
+  }
+
+  /**
+   * The Overgrowth's aftermath (docs/NARRATIVE.md §11a): a self-contained
+   * side-beat that pays off clearing the jungle. Liora Fen — who rooted other
+   * souls so she would never sit alone — is unrooted now, and follows the light
+   * to the Everwake to cross. It replays the dramatic question at a smaller,
+   * quieter scale than the midpoint: keeping for company is still keeping. The
+   * player names the truth of it (either answer is true) and she leaves a
+   * Memento of the walk she stopped taking. Fires once.
+   */
+  private async jungleAftermath() {
+    game.set('jungleWakeDone');
+
+    await this.dialogue.play([
+      ...narrate('The Overgrowth lets go behind you — root by root, soul by soul, the way you unwound it. By the time you reach the Everwake, one of the freed has followed the light home.'),
+      ...narrate('Liora Fen stands unsteady by the wake-fire, learning legs that were roots for longer than she can count. The souls she kept have already crossed. She waited, to watch each one go.'),
+      ...say('Liora Fen', 'They are gone. All of them. I thought that would feel like losing.', 'It feels like a window opening in a room I had forgotten was shut.'),
+      ...say('Liora Fen', `I told the ones I caught that I was giving them rest. ${game.playerName}, I was keeping myself company. I could not sit in that green alone, so I made sure I never had to.`),
+    ]);
+
+    const kind = await this.chooseLiora();
+    if (kind === 'lonely') {
+      game.set('mourn:liora:kind');
+      await this.dialogue.play(
+        say('Liora Fen', 'Lonely. Yes. You could have called it something worse and been just as right. Thank you for the gentler true thing.'),
+      );
+    } else {
+      game.set('mourn:liora:true');
+      await this.dialogue.play(
+        say('Liora Fen', 'Cruel. Yes — I stole years and called it kindness so I could keep stealing them. You did not look away from that. Good. Neither will I.'),
+      );
+    }
+
+    game.addItem('lioraStep');
+    await this.dialogue.play([
+      ...say('Liora Fen', 'Here. The first step of a walk I stopped taking. I have no more use for standing still.'),
+      ...narrate('She presses a worn charm into your hand — and then she is walking, at last, toward the dark that is only dark until you reach it.'),
+    ]);
+    toast(this.ctx.ui, "<span class=\"accent\">Got Liora's Step</span> — a Memento", 2600);
+  }
+
+  /** Liora's small farewell choice: name the truth of what her keeping was. */
+  private async chooseLiora(): Promise<'lonely' | 'true'> {
+    const host = el('div', 'panel');
+    host.style.cssText =
+      'position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);min-width:340px;text-align:left;';
+    host.appendChild(el('h2', undefined, 'What do you tell her?'));
+    this.ctx.ui.appendChild(host);
+    const menu = new Menu(host, [
+      { value: 'lonely', label: 'You were lonely', note: 'the gentler truth' },
+      { value: 'true', label: 'You were cruel', note: 'the harder truth' },
+    ]);
+    const v = await menu.open();
+    menu.destroy();
+    remove(host);
+    return (v ?? 'lonely') as 'lonely' | 'true';
   }
 
   private async rivalAndBriefing() {

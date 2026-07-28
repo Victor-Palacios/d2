@@ -48,6 +48,13 @@ export const EQUIPMENT: Record<string, Equipment> = {
     spd: 4,
     desc: 'A locket whose small heart still ticks. +4 SPD.',
   },
+  lioraStep: {
+    id: 'lioraStep',
+    name: "Liora's Step",
+    slot: 'memento',
+    spd: 5,
+    desc: 'A worn charm from a woman who forgot how to walk away. Carried so its bearer never does. +5 SPD.',
+  },
   immortalityMemento: {
     id: 'immortalityMemento',
     name: 'Immortality',

@@ -158,6 +158,24 @@ reflects one idea from the framework and hosts one relationship with death.
 - **Relationship hosted:** the Bereaved Witness (Wren) and the Exhausted (the
   Last Light).
 
+### An optional reach — The Overgrowth *(a side path)*
+- **Idea:** *Keeping mistaken for company* — the dramatic question at a smaller,
+  quieter scale than the main line. Not on the mission spine; a green detour off
+  the map (recommended ~Lv7), open whenever the player wanders to it.
+- **What it is:** a warm, humid reach that never gives anything back — souls who
+  stopped to rest were quietly rooted where they sat. The echoes (Frondle,
+  Thorncat, Boggle, Chitter) are all variations on *stopping* — souls that put
+  down roots where they fell and let the green take the rest.
+- **Warden (boss):** **Liora Fen**, a woman half-grown into a mossed trunk, roots
+  where her legs were. She stopped walking here, let the green hold her — and
+  then let it hold everyone who came after, so she would never sit alone. The
+  echo she fights as is **Verdanox** (species id unchanged; she is the person
+  inside it, as Sena is inside Glaciark). Her release is *"undo my knots — let
+  them all go, me last."*
+- **Relationship hosted:** a fifth face of grief — the one who keeps others for
+  her own company, and calls it kindness. Her aftermath is a built side-beat
+  (§11a).
+
 ## 6. The Last Light — the thesis in one encounter
 
 A tiny, rare soul: a trembling candle-flame in a cracked black lantern, ash for
@@ -258,6 +276,23 @@ written down, no one is truly gone — tell me they are not gone"), and the
 player — the Unfinished — must face that all their Keeping may have been a
 refusal, over and over, to let a single soul go. Flags: `midpointDone`,
 `haldenGone`, `mourn:*`, `actTwo`.
+
+## 11a. The Overgrowth's aftermath — a side-beat (built)
+
+Clearing The Overgrowth (§5a) pays off back home, independent of the main-line
+midpoint. Liora Fen — unrooted now, learning legs that were roots for years —
+follows the light to the Everwake to cross, having stayed to watch every soul she
+kept go first. She names what her keeping really was: *"I told them I was giving
+them rest. I was keeping myself company."*
+
+The player answers the smaller version of the game's question — **You were
+lonely** (the gentler truth) or **You were cruel** (the harder truth). Both are
+true (framework §17.3: every philosophy a victory and a casualty); the choice
+only colours her farewell and sets `mourn:liora:kind` / `mourn:liora:true`. Either
+way she leaves **Liora's Step** — a Memento (+5 SPD) of the walk she stopped
+taking, "carried so its bearer never does." Fires once, gated on `jungleCleared`
+→ `jungleWakeDone`; it does not touch or trigger the midpoint. Implemented in
+`HubScene.jungleAftermath()`; covered by `tools/smoke/jungle.mjs`.
 
 ## 12. Still ahead (tracked, not yet built)
 
