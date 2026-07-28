@@ -70,7 +70,7 @@ console.log('stage 1 (fresh) — only Quiet Crossing open :', s1);
 
 // --- Stage 2: Quiet Crossing cleared — the Reliquary opens -----------------
 await backToHub();
-await setFlag('bootDomainCleared');
+await setFlag('crossingCleared');
 await goWorldmap();
 cards = await readCards();
 const s2 =
@@ -79,7 +79,7 @@ const s2 =
   lockOf(cards, 'The Unremembered').locked &&
   /Reliquary/.test(lockOf(cards, 'The Overgrowth').note) &&
   /Reliquary/.test(lockOf(cards, 'The Unremembered').note);
-console.log('stage 2 (boot cleared) — Reliquary opens   :', s2);
+console.log('stage 2 (Crossing cleared) — Reliquary opens   :', s2);
 
 // --- Stage 3: Reliquary cleared — Overgrowth + Unremembered open -----------
 await backToHub();

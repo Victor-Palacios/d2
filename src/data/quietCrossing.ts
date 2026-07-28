@@ -3,9 +3,9 @@ import { narrate, say } from '../systems/dialogue/script';
 import type { Domain, DungeonFloor } from './dungeon';
 
 /**
- * The Quiet Crossing — the tutorial dungeon (plan §5.5). Its internal id and
- * clear flag stay `boot` / `bootDomainCleared` (like `crystal` / `haunted`, the
- * ids never matched the display names) so saves and the gate logic keep working.
+ * The Quiet Crossing — the tutorial dungeon (plan §5.5). Its id is `crossing`
+ * and its clear flag `crossingCleared`, matching the `crystal` / `haunted` /
+ * `jungle` naming.
  *
  * Three small floors: a teaching floor, an element-tile floor, and a boss
  * floor whose accent walls and glowing hallway telegraph what is waiting.
@@ -42,9 +42,9 @@ const THEME_BOSS: TileTheme = {
   accentWall: '#8a4a3c',
 };
 
-export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
+export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
   {
-    id: 'boot-1',
+    id: 'crossing-1',
     name: 'The Quiet Crossing — Surface Cache',
     theme: THEME_UPPER,
     decor: [
@@ -97,7 +97,7 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
   },
 
   {
-    id: 'boot-2',
+    id: 'crossing-2',
     name: 'The Quiet Crossing — Element Strata',
     theme: THEME_DEEP,
     fog: 1.25,
@@ -152,7 +152,7 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
   },
 
   {
-    id: 'boot-3',
+    id: 'crossing-3',
     name: 'The Quiet Crossing — Warden Hall',
     theme: THEME_BOSS,
     fog: 1.5,
@@ -208,14 +208,14 @@ export const BOOT_DOMAIN_FLOORS: DungeonFloor[] = [
   },
 ];
 
-export const BOOT_DOMAIN: Domain = {
-  id: 'boot',
+export const QUIET_CROSSING: Domain = {
+  id: 'crossing',
   name: 'The Quiet Crossing',
   blurb: 'The threshold every soul passes on its way to rest. Quiet, mostly — which is why new keepers learn to carry a lantern here.',
   color: '#ffa64d',
   recommendedLevel: 1,
-  floors: BOOT_DOMAIN_FLOORS,
+  floors: QUIET_CROSSING_FLOORS,
   startingFuel: 120,
   music: 'dungeon',
-  onClear: { flag: 'bootDomainCleared', licenseCeremony: true },
+  onClear: { flag: 'crossingCleared', licenseCeremony: true },
 };

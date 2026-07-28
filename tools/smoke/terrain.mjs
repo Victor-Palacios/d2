@@ -70,7 +70,7 @@ const terrains = await page.evaluate(() => {
 });
 console.log('  terrain skins :', JSON.stringify(terrains));
 const expect = {
-  boot: ['stone', 'stone', 'stone'],
+  crossing: ['stone', 'stone', 'stone'],
   crystal: ['crystal', 'metal', 'crystal'],
   jungle: ['jungle', 'jungle', 'jungle'],
   haunted: ['crypt', 'cave', 'crypt'],

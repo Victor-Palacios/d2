@@ -215,5 +215,5 @@ export const CRYSTAL_CAVERN: Domain = {
   startingFuel: 130,
   music: 'crystal',
   onClear: { flag: 'crystalCleared' },
-  requires: 'bootDomainCleared',
+  requires: 'crossingCleared',
 };

@@ -114,7 +114,7 @@ outstanding.
   wolf an Assassin). The borrowed tutorial trio is deliberately one of each
   class, and the boss is a Hero countered by the party's Mage — the mentor's
   hint text depends on that, so re-balancing classes means re-checking
-  `src/data/bootDomain.ts` dialogue.
+  `src/data/quietCrossing.ts` dialogue.
 - **Auto-battle uses only the free Attack.** Not an oversight: leaving it on must
   never spend MP you were saving.
 - **Suspend saves are consumed on load.** Also deliberate — it is a bookmark, not

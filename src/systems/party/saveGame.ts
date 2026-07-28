@@ -19,13 +19,15 @@ import type { AttributeId } from '../../data/elements';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 /**
- * Oldest save this build can still read. Because every change so far is additive
- * and `applySave` defaults missing fields, all versions from 1 up migrate
- * forward — so raise this only on a genuinely breaking change.
+ * Oldest save this build can still read. Normally we keep this at 1 because
+ * changes are additive, but v5 renamed the tutorial domain id `boot` →
+ * `crossing` and its flag `bootDomainCleared` → `crossingCleared`. A pre-v5 save
+ * carries `activeDomainId: 'boot'`, which no longer resolves and would throw, so
+ * v5 is a genuinely breaking change: drop anything older and start fresh.
  */
-export const MIN_SAVE_VERSION = 1;
+export const MIN_SAVE_VERSION = 5;
 
 const AUTO_KEY = 'hd2d.save.auto';
 const SUSPEND_KEY = 'hd2d.save.suspend';
@@ -183,7 +185,7 @@ export function applySave(data: SaveData) {
   game.hasOwnVehicle = s.hasOwnVehicle;
   game.teamId = s.teamId;
   game.teamAttribute = s.teamAttribute;
-  game.activeDomainId = s.activeDomainId ?? 'boot';
+  game.activeDomainId = s.activeDomainId ?? 'crossing';
   game.floorIndex = s.floorIndex;
   game.crawl = { ...s.crawl };
   game.usedEvents = new Set(s.usedEvents);

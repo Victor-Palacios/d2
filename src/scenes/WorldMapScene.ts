@@ -134,7 +134,7 @@ export class WorldMapScene extends GameScene {
         const locked = !!d.requires && !game.has(d.requires);
         const tag = locked
           ? 'Locked'
-          : id === 'boot' && !cleared
+          : id === 'crossing' && !cleared
             ? 'Mission 1'
             : cleared
               ? 'Cleared'

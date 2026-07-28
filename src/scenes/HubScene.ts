@@ -153,7 +153,7 @@ export class HubScene extends GameScene {
       const entry = roster.find((r) => r.char === t.eventId);
       if (!entry) return;
       // The rival only shows up once you are licensed.
-      if (entry.id === 'rival' && !game.has('bootDomainCleared')) return;
+      if (entry.id === 'rival' && !game.has('crossingCleared')) return;
       const b = new Billboard(HUMANS[entry.art], `human:${entry.art}`, { height: 1.6 });
       b.bob = 0.025;
       b.object.position.copy(this.grid.worldPos(t.x, t.z));
@@ -224,7 +224,7 @@ export class HubScene extends GameScene {
     // Midpoint: once all three reaches are quiet, the one death the Keeping
     // cannot answer. Fires once, whenever the player next stands in the Everwake.
     if (
-      game.has('bootDomainCleared') &&
+      game.has('crossingCleared') &&
       game.has('crystalCleared') &&
       game.has('hauntedCleared') &&
       !game.has('midpointDone')

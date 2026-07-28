@@ -1,6 +1,6 @@
 import type { CreatureInstance } from './creature';
 import { makeCreature } from './creature';
-import { BOOT_DOMAIN } from '../../data/bootDomain';
+import { QUIET_CROSSING } from '../../data/quietCrossing';
 import type { AttributeId } from '../../data/elements';
 import { IMMORTALITY_POEM, IMMORTALITY_TOTAL } from '../../data/immortality';
 
@@ -47,8 +47,8 @@ export class GameState {
   flags = new Set<string>();
 
   /** Vehicle fuel while crawling (plan §5.5). */
-  fuel = BOOT_DOMAIN.startingFuel;
-  maxFuel = BOOT_DOMAIN.startingFuel;
+  fuel = QUIET_CROSSING.startingFuel;
+  maxFuel = QUIET_CROSSING.startingFuel;
 
   hasLicense = false;
   hasOwnVehicle = false;
@@ -56,7 +56,7 @@ export class GameState {
   teamAttribute: AttributeId | null = null;
 
   /** Which domain the crawl scene is currently in (key into DOMAINS). */
-  activeDomainId = 'boot';
+  activeDomainId = 'crossing';
   /** Floor index inside the active domain. */
   floorIndex = 0;
   /** Where the crawl resumes after a battle. */

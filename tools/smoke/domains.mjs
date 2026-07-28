@@ -98,7 +98,7 @@ await clearDlg(); await waitScene('hub'); await page.waitForTimeout(700); await 
 // The Reliquary is gated behind the Quiet Crossing. Unlock it (this smoke tests
 // the domain flow, not the tutorial); clearing the Reliquary then unlocks the
 // Unremembered on its own, exercising the gate chain end to end.
-await page.evaluate(() => window.hd2dGame.game.set('bootDomainCleared'));
+await page.evaluate(() => window.hd2dGame.game.set('crossingCleared'));
 await gotoWorldmap(); await page.waitForTimeout(800);
 
 const cardTitles = await page.evaluate(() => [...document.querySelectorAll('.card h3')].map((n) => n.textContent));
@@ -113,7 +113,7 @@ await waitScene('dungeon'); await page.waitForTimeout(1000);
 let s = await st();
 console.log('entered :', JSON.stringify({ domain: s.domain, floor: s.floor, floorName: s.floorName }));
 
-// This smoke verifies WIRING/FLOW, not balance — a post-boot party can be a
+// This smoke verifies WIRING/FLOW, not balance — a post-tutorial party can be a
 // single starter, which cannot solo a warden. Boost the party via the debug
 // API so fights resolve deterministically here. (Real balance rides on the
 // recruitment system — a next-iteration feature; see the plan/roadmap.)

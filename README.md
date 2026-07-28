@@ -230,7 +230,7 @@ src/
     battle/           headless battle model + damage formula
     dialogue/         dialogue script data
     party/            creature instances + the run's GameState
-  data/               creatures, techniques, elements, teams, items, bootDomain
+  data/               creatures, techniques, elements, teams, items, quietCrossing
   ui/                 DOM overlay: dialogue, menus, HUDs, name entry, shop
   assets/art.ts       every sprite, as pixel maps
 ```
@@ -302,7 +302,7 @@ Everything is behind a data layer, so swapping art is a data edit:
 | Techniques / damage numbers | `src/data/techniques.ts`, `src/systems/battle/formula.ts` |
 | NPCs and the vehicle | `HUMANS` / `VEHICLE` in `src/assets/art.ts` |
 | A whole new dungeon | a new `src/data/<name>.ts` exporting a `Domain`, registered in `src/data/domains.ts` |
-| Dungeon layouts, encounters, dialogue | `src/data/bootDomain.ts`, `crystalCavern.ts`, `hauntedDungeon.ts` |
+| Dungeon layouts, encounters, dialogue | `src/data/quietCrossing.ts`, `crystalCavern.ts`, `hauntedDungeon.ts` |
 | Guard teams and starters | `src/data/teams.ts` |
 | Shop stock | `src/data/items.ts` |
 | Tile / wall textures | the generators in `src/engine/pixel.ts` (one per `TerrainStyle`) |
@@ -331,8 +331,8 @@ Floor layouts use this legend (see `src/engine/TileGrid.ts`):
 | Element plate bonus (×1.2) | `data/elements.ts` |
 | Guard damage reduction & MP refund | `systems/battle/formula.ts` |
 | Damage curve and variance | `systems/battle/formula.ts` |
-| EP per step, pickup value | `scenes/DungeonScene.ts`, `data/bootDomain.ts` |
-| Encounter rates and tables | `data/bootDomain.ts` |
+| EP per step, pickup value | `scenes/DungeonScene.ts`, `data/quietCrossing.ts` |
+| Encounter rates and tables | `data/quietCrossing.ts` |
 
 ## Debug hooks
 

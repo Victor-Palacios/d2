@@ -51,7 +51,7 @@ machine→fire, dark→water, by feel.)
 | `src/data/elements.ts` | Narrow `ElementId` to `'fire' \| 'water' \| 'nature'`; trim `ELEMENTS`. |
 | `src/data/techniques.ts` | Re-element the ~4 `machine`/`dark` techniques onto the three survivors. |
 | `src/data/creatures.ts` | Re-element machine/dark species; keep their sprites. |
-| `src/data/bootDomain.ts` | Remove `M`/`D` plate glyphs from floor rows; keep `F`/`W`/`N`. |
+| `src/data/quietCrossing.ts` | Remove `M`/`D` plate glyphs from floor rows; keep `F`/`W`/`N`. |
 | `src/engine/TileGrid.ts` | Drop the retired plate kinds from the legend. |
 | `src/assets/art.ts` / `pixel.ts` | Retire the two unused plate colour generators. |
 | README "Balance knobs" / legend | Update the tile legend. |
@@ -130,7 +130,7 @@ The data model is **already there**: `evolvesTo` on every `Species`
 
 One tutorial dungeon becomes several servers/domains.
 
-- ✅ **Done (partial):** the singleton `BOOT_DOMAIN` is now a **registry**
+- ✅ **Done (partial):** the singleton `QUIET_CROSSING` is now a **registry**
   (`src/data/domains.ts` + `domain(id)`); `game.activeDomainId` drives the crawl,
   and the world map free-selects any registered domain. Two hand-authored
   domains shipped — **Crystal Cavern** (`crystalCavern.ts`) and **Haunted
@@ -138,7 +138,7 @@ One tutorial dungeon becomes several servers/domains.
   track. Adding another is a data file + one registry line; no scene changes.
   Covered by `tools/smoke/domains.mjs`.
 - **⚠️ Depends on M8 (recruiting).** These domains are wired and winnable, but a
-  post-boot party is a **single starter**, which cannot realistically clear a
+  post-tutorial party is a **single starter**, which cannot realistically clear a
   3-enemy floor or a warden. Until recruiting/party-building lands, they are
   balanced only for a full party (e.g. the borrowed trio). Recruiting is the
   gating feature that makes the extra domains actually playable — do M8 next.

@@ -38,7 +38,7 @@ console.log('flags before       :', JSON.stringify(await flags()));
 // Clear all three reaches and step back into the Everwake to trigger the beat.
 await page.evaluate(async () => {
   const g = window.hd2dGame;
-  ['bootDomainCleared', 'crystalCleared', 'hauntedCleared'].forEach((f) => g.game.set(f));
+  ['crossingCleared', 'crystalCleared', 'hauntedCleared'].forEach((f) => g.game.set(f));
   await g.manager.go('hub', {});
 });
 
