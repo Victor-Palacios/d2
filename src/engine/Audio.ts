@@ -91,6 +91,53 @@ const SFX: Record<SfxName, Note[]> = {
   ],
 };
 
+/**
+ * Monster "cries" — each creature's own voice, like a Pokémon/Digimon call.
+ *
+ * A cry is a short stack of oscillator layers. Unlike a flat `Note`, a layer can
+ * *glide* its pitch (`f0`→`f1`) and carry `vibrato` (an LFO on frequency), which
+ * is what lets a handful of oscillators read as a growl, a coo or a screech
+ * instead of a beep. Keyed by species id; a species with no entry stays silent.
+ */
+interface CryLayer {
+  /** Start frequency. */
+  f0: number;
+  /** Glide-to frequency by the end of the layer (defaults to `f0`, i.e. steady). */
+  f1?: number;
+  time: number;
+  dur: number;
+  type?: OscillatorType;
+  gain?: number;
+  /** `[rate Hz, depth Hz]` — a frequency wobble that gives the voice character. */
+  vibrato?: [rate: number, depth: number];
+  /** Pitch-ramp shape. `exp` (default) sounds natural; `lin` is more mechanical. */
+  glide?: 'lin' | 'exp';
+}
+
+const CRIES: Record<string, CryLayer[]> = {
+  // Emberling (fire lizard): a low, rough rising snarl that spits upward at the
+  // end — fast wide vibrato on a sawtooth reads as a guttural growl.
+  emberling: [
+    { f0: 240, f1: 380, time: 0, dur: 0.16, type: 'sawtooth', gain: 0.17, vibrato: [34, 22] },
+    { f0: 180, f1: 300, time: 0.02, dur: 0.14, type: 'square', gain: 0.06, vibrato: [55, 18] },
+    { f0: 520, f1: 760, time: 0.15, dur: 0.1, type: 'sawtooth', gain: 0.13 },
+  ],
+  // Glidefang (water/wind flier): an airy coo that lifts, then rides a long
+  // descending glide — soft triangle/sine with a slow vibrato.
+  glidefang: [
+    { f0: 720, f1: 1020, time: 0, dur: 0.12, type: 'triangle', gain: 0.14, vibrato: [12, 14] },
+    { f0: 1020, f1: 640, time: 0.11, dur: 0.22, type: 'sine', gain: 0.13, vibrato: [16, 20] },
+    { f0: 1400, f1: 1180, time: 0.12, dur: 0.16, type: 'sine', gain: 0.05 },
+  ],
+  // Nightnip (dark bat): a quick, high, chittery screech — two fluttering chirps
+  // and a sharp rising tail, rapid vibrato throughout.
+  nightnip: [
+    { f0: 900, f1: 1180, time: 0, dur: 0.06, type: 'square', gain: 0.12, vibrato: [70, 40] },
+    { f0: 1180, f1: 820, time: 0.06, dur: 0.06, type: 'square', gain: 0.12, vibrato: [70, 40] },
+    { f0: 1000, f1: 1500, time: 0.12, dur: 0.11, type: 'sawtooth', gain: 0.1, vibrato: [90, 30] },
+  ],
+};
+
 export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | 'crystal' | 'haunted' | 'jungle' | null;
 
 /** Simple looping bass/arp patterns, one per mood. Semitone offsets from root. */
@@ -166,6 +213,59 @@ class AudioEngine {
     if (!this.ctx || !this.sfxGain) return;
     const t0 = this.ctx.currentTime;
     for (const n of SFX[name]) this.tone(n, this.sfxGain, t0 + n.time);
+  }
+
+  /** One gliding, optionally-vibrato'd oscillator layer of a monster cry. */
+  private voiceLayer(l: CryLayer, dest: GainNode, when: number) {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = l.type ?? 'sawtooth';
+    const f1 = l.f1 ?? l.f0;
+    osc.frequency.setValueAtTime(l.f0, when);
+    if (f1 !== l.f0) {
+      if ((l.glide ?? 'exp') === 'exp') osc.frequency.exponentialRampToValueAtTime(Math.max(1, f1), when + l.dur);
+      else osc.frequency.linearRampToValueAtTime(f1, when + l.dur);
+    }
+    // Vibrato: a sine LFO summed into the oscillator's frequency.
+    if (l.vibrato) {
+      const [rate, depth] = l.vibrato;
+      const lfo = this.ctx.createOscillator();
+      const lfoGain = this.ctx.createGain();
+      lfo.type = 'sine';
+      lfo.frequency.setValueAtTime(rate, when);
+      lfoGain.gain.setValueAtTime(depth, when);
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+      lfo.start(when);
+      lfo.stop(when + l.dur + 0.02);
+    }
+    const peak = l.gain ?? 0.12;
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(peak, when + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + l.dur);
+    osc.connect(g);
+    g.connect(dest);
+    osc.start(when);
+    osc.stop(when + l.dur + 0.02);
+  }
+
+  /**
+   * Play a monster's battle cry — its own voice, the way a Pokémon or Digimon
+   * calls out when it appears or strikes. No-op for a species without a cry, so
+   * callers can fire it unconditionally.
+   */
+  cry(speciesId: string) {
+    if (!this.ctx || !this.sfxGain) return;
+    const voice = CRIES[speciesId];
+    if (!voice) return;
+    const t0 = this.ctx.currentTime;
+    for (const l of voice) this.voiceLayer(l, this.sfxGain, t0 + l.time);
+  }
+
+  /** Species ids that currently have an authored cry. */
+  hasCry(speciesId: string): boolean {
+    return speciesId in CRIES;
   }
 
   music(track: MusicTrack) {

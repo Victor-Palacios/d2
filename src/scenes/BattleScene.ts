@@ -361,6 +361,8 @@ export class BattleScene extends GameScene {
         ? 'The warden blocks the hallway. There is no way past it.'
         : 'Hostile data detected. Defend the beetle!',
     );
+    // The foes announce themselves — each species with a voice cries in turn.
+    this.cryEnemies();
     await sleep(900);
 
     while (this.battle.outcome === 'ongoing' && !this.finished && !this.fled) {
@@ -555,6 +557,22 @@ export class BattleScene extends GameScene {
     };
   }
 
+  /**
+   * The opening roll-call: each distinct enemy species with a voice cries once,
+   * staggered so a mixed pack reads as several creatures rather than one blur.
+   */
+  private cryEnemies() {
+    const seen = new Set<string>();
+    let i = 0;
+    for (const b of this.battle.side('enemy')) {
+      const id = b.creature.speciesId;
+      if (seen.has(id) || !audio.hasCry(id)) continue;
+      seen.add(id);
+      window.setTimeout(() => audio.cry(id), i * 220);
+      i++;
+    }
+  }
+
   private async animateTurn(actor: Battler, result: TurnResult) {
     const bb = this.sprites.get(actor.creature.uid);
     const home = this.homePos.get(actor.creature.uid);
@@ -570,6 +588,11 @@ export class BattleScene extends GameScene {
     }
 
     const heal = result.hits.some((h) => h.heal > 0);
+    // The attacker calls out as it strikes — its own species cry, layered under
+    // the impact sfx. Only on an offensive move (not Guard, not a pure heal).
+    if (result.hits.length && !heal && result.actionLabel !== 'Guard') {
+      audio.cry(actor.creature.speciesId);
+    }
     if (result.actionLabel === 'Guard') audio.sfx('guard');
     else if (heal) audio.sfx('heal');
     else if (result.hits.length) audio.sfx('hit');
