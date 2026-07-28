@@ -15,7 +15,7 @@
 //   7. A baked contact shadow ('S'), then smooth() + outlineSil() for a clean edge.
 import { grid, ellipse, rect, dot, set, smooth, outlineSil, toArt } from './compose.mjs';
 
-function glossyEyes(g, cx, dx, y, rx, ry, tilt = 0) {
+export function glossyEyes(g, cx, dx, y, rx, ry, tilt = 0) {
   let i = 0;
   for (const sx of [cx - dx, cx + dx]) {
     const yy = y + (i === 0 ? -tilt : tilt); // a slight tilt breaks the dead-symmetry stare
@@ -28,7 +28,7 @@ function glossyEyes(g, cx, dx, y, rx, ry, tilt = 0) {
 }
 // Fill an ellipse only where the grid already holds one of `over` — a poor-man's
 // clip so a shadow/highlight hugs the body instead of spilling past its edge.
-function shadeInto(g, cx, cy, rx, ry, k, over) {
+export function shadeInto(g, cx, cy, rx, ry, k, over) {
   const s = new Set(over);
   for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++)
     for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
@@ -36,8 +36,8 @@ function shadeInto(g, cx, cy, rx, ry, k, over) {
       if (dx * dx + dy * dy <= 1 && g[y] && s.has(g[y][x])) set(g, x, y, k);
     }
 }
-const contactShadow = (g, cx, y, rx) => ellipse(g, cx, y, rx, Math.max(2, rx * 0.16), 'S');
-const finish = (g, P) => { smooth(g); outlineSil(g, 'k'); return toArt(g, P); };
+export const contactShadow = (g, cx, y, rx) => ellipse(g, cx, y, rx, Math.max(2, rx * 0.16), 'S');
+export const finish = (g, P) => { smooth(g); outlineSil(g, 'k'); return toArt(g, P); };
 
 // --- Cindercat — fire kitten soul (rookie / fire) --------------------------
 export function cindercat() {

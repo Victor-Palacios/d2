@@ -14,10 +14,12 @@ This is how we make creature sprites **now**. The repo is asset-free (plan
 
 ```
 tools/sprites/
-  compose.mjs    char-grid drawing kit (ellipse, rect, smooth, outlineSil, toArt)
-  render.mjs     dependency-free PNG encoder + comparison-strip compositor
-  creatures.mjs  the creature builders + a CREATURES registry
-  build.mjs      CLI: render previews to out/ and emit pasteable { palette, rows }
+  compose.mjs      char-grid drawing kit (ellipse, rect, smooth, outlineSil, toArt)
+  render.mjs       dependency-free PNG encoder + comparison-strip compositor
+  creatures.mjs    shared recipe helpers + demo builders + a CREATURES registry
+  boot-domain.mjs  the first-dungeon roster, keyed by art key (BOOT registry)
+  build.mjs        CLI: render previews to out/ and emit pasteable { palette, rows }
+  integrate.mjs    CLI: replace CREATURES[<artKey>] blocks in src/assets/art.ts
 ```
 
 Everything is plain Node (`.mjs`), zero dependencies (Node's built-in `zlib`
@@ -82,6 +84,19 @@ outlines interior gaps. The replacement:
 
 ## Integrate a finished sprite
 
+To **replace an existing art key** (redesign a creature already in the game):
+
+```bash
+node tools/sprites/integrate.mjs           # whole BOOT set
+node tools/sprites/integrate.mjs lion bat   # specific keys
+npm run build                               # tsc --noEmit + vite
+```
+
+`integrate.mjs` rewrites the matching `CREATURES[<artKey>]` block in
+`src/assets/art.ts` in place, preserving the comment above each entry.
+
+To **add a brand-new creature**:
+
 1. Paste the `out/<id>.art.txt` block into the `CREATURES` object in
    `src/assets/art.ts`.
 2. Add a `Species` in `src/data/creatures.ts` with `art: '<id>'`, its
@@ -89,6 +104,10 @@ outlines interior gaps. The replacement:
 3. Add it to a domain encounter table (e.g. `src/data/hauntedDungeon.ts`) if it
    should appear in the world.
 4. `npm run build` before pushing — the deploy runs `tsc --noEmit` first.
+
+> Note: `smooth()` deletes 1px spurs, so thin appendages (antennae, insect legs,
+> antennas) must be drawn ≥2px thick or they vanish. See `bug`/`scrap` in
+> `boot-domain.mjs` for the 2×2-stamp helper.
 
 ## Changelog (for reproducibility)
 
@@ -104,3 +123,10 @@ outlines interior gaps. The replacement:
      inner bubbles + uneven droop (Tideling), veined uneven leaves (Mossling).
   4. **Asymmetry** — off-centre gaze via eye `tilt`, uneven limbs, one-sided
      tail/leaves, to shed the stiff mirror-perfect look.
+- **2026-07-28 — first-dungeon roster redesigned + wired in.** Added
+  `boot-domain.mjs` (the `BOOT` registry) and `integrate.mjs`. Redesigned all
+  nine Boot Domain creatures and replaced their art keys in `art.ts`:
+  starters `lizard` (Emberling), `wing` (Glidefang), `bat` (Nightnip); enemies
+  `bug` (Mitebug), `plant` (Sprigling), `scrap` (Scrapmite), `wisp` (Gloomote),
+  `slime` (Dropletta); boss `lion` (Regalion). Verified in-engine in the HD-2D
+  battle scene.
