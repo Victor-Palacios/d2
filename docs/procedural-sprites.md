@@ -130,3 +130,11 @@ To **add a brand-new creature**:
   `bug` (Mitebug), `plant` (Sprigling), `scrap` (Scrapmite), `wisp` (Gloomote),
   `slime` (Dropletta); boss `lion` (Regalion). Verified in-engine in the HD-2D
   battle scene.
+- **2026-07-28 — four redesigns from feedback + the original sprites.** Pulled
+  the first-commit programmer-art sprites for reference and reworked four that
+  read as look-alikes: `lizard` (Emberling) → a chunky ember-GOLEM (visor +
+  molten chest core), away from a Charmander-ish fire lizard; `bug` (Mitebug) →
+  a rounded friendly "bug-mon" instead of a realistic beetle with legs; and to
+  split two teardrops, `slime` (Dropletta) → a round BALL and `wisp` (Gloomote)
+  → a wide-headed SHADE with trailing tendrils. Each honors the original
+  silhouette. Re-integrated and re-verified in-engine.
