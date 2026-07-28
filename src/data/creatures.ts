@@ -243,7 +243,7 @@ export const SPECIES: Record<string, Species> = {
     base: { hp: 50, mp: 16, off: 18, def: 14, spd: 14 },
     growth: { ...ROOKIE_GROWTH, off: 2.4 },
     techniques: ['graveRot', 'gustWing'],
-    blurb: 'Eats whatever the domain leaves rotting in the dark.',
+    blurb: 'Eats whatever the reach leaves rotting in the dark.',
   },
   cryptguard: {
     id: 'cryptguard',
@@ -259,7 +259,7 @@ export const SPECIES: Record<string, Species> = {
   },
 
   // --- The Overgrowth -----------------------------------------------------
-  // A jungle roster. Art is reused from fitting existing sprites (the domain's
+  // A jungle roster. Art is reused from fitting existing sprites (the reach's
   // identity rides on its bespoke terrain + decor); stats/element/attribute are
   // its own. Swap `art` for dedicated sprites later — nothing else changes.
   frondle: {

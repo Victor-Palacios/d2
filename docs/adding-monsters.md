@@ -130,7 +130,7 @@ hand-touch a few characters in the literal.
   entry — e.g. Nightnip's key is `bat`.)
 - For a **new** creature, also register a `Species` in `src/data/creatures.ts`
   (`art` must match the key) and, if it should appear, add it to an encounter
-  table in a domain file (`src/data/*Domain.ts` etc.). See
+  table in a reach file (`src/data/*Reach.ts` etc.). See
   [README.md](../README.md) and `src/data/creatures.ts`.
 
 ### 6. Build & ship

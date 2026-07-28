@@ -55,9 +55,9 @@ export class GameState {
   teamId: string | null = null;
   teamAttribute: AttributeId | null = null;
 
-  /** Which domain the crawl scene is currently in (key into DOMAINS). */
-  activeDomainId = 'crossing';
-  /** Floor index inside the active domain. */
+  /** Which reach the crawl scene is currently in (key into REACHES). */
+  activeReachId = 'crossing';
+  /** Floor index inside the active reach. */
   floorIndex = 0;
   /** Where the crawl resumes after a battle. */
   crawl = {

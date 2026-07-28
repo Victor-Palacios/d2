@@ -52,7 +52,7 @@ interface Npc {
 }
 
 export interface HubSceneParams {
-  arrival?: 'first' | 'domainCleared' | 'towed' | 'teamChosen';
+  arrival?: 'first' | 'reachCleared' | 'towed' | 'teamChosen';
 }
 
 /**
@@ -207,7 +207,7 @@ export class HubScene extends GameScene {
       );
       game.resetCrawl();
       fullRestore(game.party);
-    } else if (kind === 'domainCleared') {
+    } else if (kind === 'reachCleared') {
       await this.licenseCeremony();
     } else if (kind === 'teamChosen') {
       await this.rivalAndBriefing();
@@ -404,7 +404,7 @@ export class HubScene extends GameScene {
         ...say(
           'Kade',
           `So you are the one who dropped the Vigil on your first crossing. Kade. Second year.`,
-          'Enjoy the licence. The next domain does not hand them out.',
+          'Enjoy the licence. The next reach does not hand them out.',
         ),
         ...say('Kade', 'Try to keep up, rookie.'),
       ]);
@@ -415,7 +415,7 @@ export class HubScene extends GameScene {
       await this.dialogue.play([
         ...say(
           leader.leaderName,
-          `Briefing, ${game.playerName}. Sector two — the Cache Domain — has been dropping packets for a week.`,
+          `Briefing, ${game.playerName}. Sector two — the the Cache reach — has been dropping packets for a week.`,
           'Refit at the supply bay, then take the map when you are ready. That is your mission.',
         ),
       ]);
@@ -429,7 +429,7 @@ export class HubScene extends GameScene {
       'position:absolute;left:50%;top:18%;transform:translateX(-50%);text-align:center;max-width:600px;';
     this.banner.innerHTML =
       '<h2>End of the first hour</h2>' +
-      '<p class="dim">Mission 2 — <span class="accent">Cache Domain</span> — is the hook the slice ends on.<br>' +
+      '<p class="dim">Mission 2 — <span class="accent">the Cache reach</span> — is the hook the slice ends on.<br>' +
       'The city, the shop and the Quiet Crossing stay open: walk into the vendor to buy, or take the south portal to crawl again.</p>';
     this.ctx.ui.appendChild(this.banner);
   }
@@ -476,7 +476,7 @@ export class HubScene extends GameScene {
             'Halden',
             'Ground rules. Attack is free, Techniques cost MP, Guard halves the hit and gives MP back.',
             'Assassin beats Mage. Mage beats Hero. Hero beats Assassin. Element plates buff whoever matches them.',
-            'Every step in the domain costs 1 EP. Fuel canisters are worth the detour.',
+            'Every step in the reach costs 1 EP. Fuel canisters are worth the detour.',
           );
         }
         return say(
@@ -498,7 +498,7 @@ export class HubScene extends GameScene {
       case 'rival':
         return say(
           'Kade',
-          'Cache Domain. That is where they are sending you next, right?',
+          'the Cache reach. That is where they are sending you next, right?',
           'I ran it last season. Bring more than one creature.',
         );
       default:

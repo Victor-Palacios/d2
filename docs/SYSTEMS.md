@@ -227,7 +227,7 @@ While crawling, EP is the resource that makes the dungeon a place you can lose:
 
 EP is why suspend-saves are consumed on load (see `HANDOFF.md` / README): if you
 could reload a suspend save, running out of EP would cost nothing. Autosave, by
-contrast, only ever happens in town / on the domain map — safe ground — so it
+contrast, only ever happens in town / on the reach map — safe ground — so it
 never rescues you from a bad crawl.
 
 ---

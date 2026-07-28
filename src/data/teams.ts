@@ -38,7 +38,7 @@ export const TEAMS: GuardTeam[] = [
     leaderName: 'Analyst Cira',
     starter: 'glidefang',
     color: '#6fb7ff',
-    pitch: 'Read the domain before you drive into it. Adapt, then act.',
+    pitch: 'Read the reach before you drive into it. Adapt, then act.',
     perk: 'Mage team — faster turn order.',
   },
   {

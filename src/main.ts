@@ -13,8 +13,8 @@ import { GameOverScene } from './scenes/GameOverScene';
 import { toast } from './ui/Toast';
 import { game } from './systems/party/gameState';
 import * as saves from './systems/party/saveGame';
-import { DOMAINS } from './data/domains';
-import { validateDomains } from './data/validateDomains';
+import { REACHES } from './data/reaches';
+import { validateReaches } from './data/validateReaches';
 
 const canvas = document.getElementById('gl') as HTMLCanvasElement;
 const ui = document.getElementById('ui') as HTMLElement;
@@ -55,8 +55,8 @@ input.onAction((a) => {
 const stats = { frames: 0, fps: 0 };
 
 // Handy for poking at a running build from the console (and for automated
-// smoke tests): current scene, run state and every HD-2D parameter. `domains`
-// and `validateDomains` let the terrain smoke test check every floor's data.
+// smoke tests): current scene, run state and every HD-2D parameter. `reaches`
+// and `validateReaches` let the terrain smoke test check every floor's data.
 (window as unknown as Record<string, unknown>).hd2dGame = {
   manager,
   hd2d,
@@ -64,15 +64,15 @@ const stats = { frames: 0, fps: 0 };
   debug,
   stats,
   saves,
-  domains: DOMAINS,
-  validateDomains,
+  reaches: REACHES,
+  validateReaches,
 };
 
 // Fail loud in dev if a floor's data drifts out of consistency (dead chest key,
 // walled-off portal, orphaned event, floating decor). Silent in a clean build.
 if (import.meta.env?.DEV) {
-  const problems = validateDomains();
-  if (problems.length) console.error('[validateDomains]\n' + problems.join('\n'));
+  const problems = validateReaches();
+  if (problems.length) console.error('[validateReaches]\n' + problems.join('\n'));
 }
 
 void manager.go('intro');

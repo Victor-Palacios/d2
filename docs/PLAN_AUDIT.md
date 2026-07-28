@@ -37,7 +37,7 @@ missing.
 |---|---|---|---|
 | §2.1 | Title + name entry | ✅ | `IntroScene.ts` (M4), `ui/NameEntry.ts` — five slots, on-screen keyboard. |
 | §2.2 | The Everwake hub | ✅ | `HubScene.ts` (M4/M5). *(hub autosave bug — see below.)* |
-| §2.3 | World map / domain select | ✅ | `WorldMapScene.ts`, two-node picker via `ui/CardSelect.ts`. |
+| §2.3 | World map / reach select | ✅ | `WorldMapScene.ts`, two-node picker via `ui/CardSelect.ts`. |
 | §2.4 | The Quiet Crossing crawl | ✅ | `DungeonScene.ts` (M1/M3). |
 | §2.5 | *(not referenced by any code marker)* | ❔ Unconfirmed | No `plan §2.5` marker exists. Likely the rival-intro / Mission-2 hook, which **is** built (end of `HubScene`), but the mapping can't be confirmed without the plan text. |
 | §2.6 | Guard Team choice | ✅ | `CardSelect.ts` cites §2.6; `data/teams.ts` — three teams set class + starter. |

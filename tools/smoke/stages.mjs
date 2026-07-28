@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 
 // Verifies the per-stage level recommendation on the world-map cards and the
 // rebalanced progression curve (crossing < crystal < haunted), reading the rendered
-// cards and the loaded domain data — no fights, so it is fast and deterministic.
+// cards and the loaded reach data — no fights, so it is fast and deterministic.
 // See tools/smoke/README.md.
 
 const browser = await chromium.launch({

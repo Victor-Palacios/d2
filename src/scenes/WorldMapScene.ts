@@ -6,7 +6,7 @@ import { floorTexture } from '../engine/pixel';
 import { audio } from '../engine/Audio';
 import { game } from '../systems/party/gameState';
 import { saveAuto } from '../systems/party/saveGame';
-import { DOMAIN_ORDER, domain } from '../data/domains';
+import { REACH_ORDER, reach } from '../data/reaches';
 import { CardSelect } from '../ui/CardSelect';
 import type { Card } from '../ui/CardSelect';
 
@@ -25,7 +25,7 @@ function partyLevel(): number {
 
 /**
  * World map (plan §2.3): a two-node select — the city you are standing in, and
- * the first domain. The 3D layer is a lit relief map so the screen still reads
+ * the first reach. The 3D layer is a lit relief map so the screen still reads
  * as part of the same game rather than a menu bolted on top.
  */
 export class WorldMapScene extends GameScene {
@@ -49,7 +49,7 @@ export class WorldMapScene extends GameScene {
     this.ctx.hd2d.snapCamera();
     audio.music('hub');
     // Safe zone, so it is an autosave point like the city.
-    if (game.has('prologueDone')) saveAuto('worldmap', 'Domain map');
+    if (game.has('prologueDone')) saveAuto('worldmap', 'Reach map');
 
     void this.choose();
   }
@@ -92,13 +92,13 @@ export class WorldMapScene extends GameScene {
       this.nodes.push({ mesh, light, x });
     };
 
-    // One node for The Everwake, then one per registered domain.
-    const count = DOMAIN_ORDER.length + 1;
+    // One node for The Everwake, then one per registered reach.
+    const count = REACH_ORDER.length + 1;
     const span = 9;
     const xAt = (i: number) => (count > 1 ? -span / 2 + (span * i) / (count - 1) : 0);
     makeNode(xAt(0), 0x6fd3ff, 1.5);
-    DOMAIN_ORDER.forEach((id, i) => {
-      const color = parseInt(domain(id).color.slice(1), 16);
+    REACH_ORDER.forEach((id, i) => {
+      const color = parseInt(reach(id).color.slice(1), 16);
       makeNode(xAt(i + 1), color, 1.7 + (i % 2) * 0.4);
     });
 
@@ -127,8 +127,8 @@ export class WorldMapScene extends GameScene {
         tagColor: '#6fd3ff',
         body: 'Licence office, supply bay, and everyone who wants something from you. Go back inside.',
       },
-      ...DOMAIN_ORDER.map((id): Card => {
-        const d = domain(id);
+      ...REACH_ORDER.map((id): Card => {
+        const d = reach(id);
         const cleared = game.has(d.onClear.flag);
         // Story gate: a reach stays locked until its prerequisite flag is set.
         const locked = !!d.requires && !game.has(d.requires);
@@ -147,7 +147,7 @@ export class WorldMapScene extends GameScene {
         const partyLv = partyLevel();
         const recColor = partyLv >= rec ? '#7bdc8a' : partyLv >= rec - 2 ? '#ffd166' : '#ff6b6b';
         // Name the reach whose clearing unlocks this one, for the locked hint.
-        const gate = DOMAIN_ORDER.map(domain).find((x) => x.onClear.flag === d.requires);
+        const gate = REACH_ORDER.map(reach).find((x) => x.onClear.flag === d.requires);
         return {
           value: id,
           title: d.name,
@@ -168,7 +168,7 @@ export class WorldMapScene extends GameScene {
     ];
 
     this.select = new CardSelect(this.ctx.ui, cards, {
-      heading: 'DOMAIN MAP',
+      heading: 'REACH MAP',
       subheading: 'Select a destination',
     });
     const choice = await this.select.open();
@@ -176,8 +176,8 @@ export class WorldMapScene extends GameScene {
     this.select = null;
 
     if (choice && choice !== 'city') {
-      game.activeDomainId = choice;
-      const d = domain(choice);
+      game.activeReachId = choice;
+      const d = reach(choice);
       game.maxFuel = d.startingFuel;
       game.resetCrawl();
       await this.ctx.go('dungeon');

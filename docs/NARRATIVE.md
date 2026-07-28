@@ -1,6 +1,6 @@
 # The Everwake — a game about what we refuse to let go
 
-*A narrative reconstruction of the first three domains and the opening, pivoting
+*A narrative reconstruction of the first three reaches and the opening, pivoting
 the project from a monster-collecting dungeon-crawler to a meditation on death.
 This is the full report of the choices made, grounded in
 `docs/designing-a-video-game-about-death` (the design framework the owner
@@ -51,10 +51,10 @@ dark where lingering souls gather before they cross, and where the living who
 cannot let go come to keep them. It never sleeps because grief doesn't. (The
 name predates this pivot and fits so exactly it is kept.)
 
-The "domains" are not dungeons of data but **reaches of the lingering** — places
-where the dead have not moved on, each for a different reason. What the old build
-called *monsters* are **echoes**: souls still running their last routine (§, the
-old Haunted blurb already said this). You do not kill data. You meet the
+The crawlable areas are not dungeons of data but **reaches of the lingering** —
+places where the dead have not moved on, each for a different reason. What the old
+build called *monsters* are **echoes**: souls still running their last routine (§,
+the old Haunted blurb already said this). You do not kill data. You meet the
 lingering. A downed echo is *quieted*, not slain. To syphon one is to take it
 into your keeping — to save it, and to hold it.
 
@@ -84,7 +84,7 @@ each with a gameplay verb (§9) and a non-death desire (§6.1).
   to sit with a soul, hear its name, and let it cross. He is calm, understated,
   and privately terrified that if he felt every loss he has tended, he would
   collapse. He reads pulp mysteries on the radio between souls.
-- **Sena Vale** is the warden of the second domain (below). She froze her
+- **Sena Vale** is the warden of the second reach (below). She froze her
   sister's soul so it could never fade — and can never leave. She is not a
   villain; she *saved* someone (§5.2 necessary contradiction). Her verb,
   Preserve, keeps things exactly as they were, which is also why nothing can heal.
@@ -159,7 +159,7 @@ reflects one idea from the framework and hosts one relationship with death.
   Last Light).
 
 > **Reaches unlock in story order.** The world map gates each reach behind the
-> one before it (data-driven, `Domain.requires`): The Quiet Crossing is always
+> one before it (data-driven, `Reach.requires`): The Quiet Crossing is always
 > open; clearing it opens The Reliquary; clearing the Reliquary opens The
 > Unremembered *and* the optional Overgrowth. A locked reach shows greyed on the
 > map with a "clear ___ first" hint, so the intended path — and the fact that
@@ -201,8 +201,8 @@ Against it, the normal actions are replaced by **Grief**:
 
 Helping it move on grants a huge reward: **20× the usual EXP for its level**, and
 a piece of **Immortality** — a rare resource whose pieces are the lines of a
-public-domain elegy ("Do not stand at my grave and weep," Mary Elizabeth Frye;
-used as verified public-domain text per §12). The pieces are given **in order and
+public-reach elegy ("Do not stand at my grave and weep," Mary Elizabeth Frye;
+used as verified public-reach text per §12). The pieces are given **in order and
 once each**; collecting all of them unlocks a Memento (see §7): **a full life
 remembered** grants 100% criticals for three turns. The mechanic *is* the
 argument: you are rewarded not for holding the soul, but for understanding it
@@ -221,13 +221,13 @@ well enough to release it.
 - **Run (already shipped) → turning away.** You may leave an echo unmet. Some
   souls are not yours to keep or free.
 
-## 8. Public-domain sources drawn on (§12–13)
+## 8. Public-reach sources drawn on (§12–13)
 
 Ideas only, no protected expression; a proper rights ledger (§22) should be
 filled before commercial use.
 
 - **Mary Elizabeth Frye, "Do not stand at my grave and weep"** — the Immortality
-  poem pieces (widely treated as public domain; verify edition).
+  poem pieces (widely treated as public reach; verify edition).
 - **The Second Death / Book of Names** — *Spoon River Anthology* (§13.14): a place
   narrated by its dead; contradictory memory.
 - **The Reliquary** — *The Picture of Dorian Gray* (§13.10) + vanitas (§15.4):

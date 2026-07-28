@@ -1,9 +1,9 @@
-import type { Domain, DungeonFloor } from './dungeon';
-import { DOMAINS } from './domains';
+import type { Reach, DungeonFloor } from './dungeon';
+import { REACHES } from './reaches';
 import { DECOR } from '../assets/art';
 
 /**
- * Pure structural validator for every domain's floor data.
+ * Pure structural validator for every reach's floor data.
  *
  * There is no scene editor here — floors are hand-authored ASCII grids, and the
  * bugs that hurt are silent: a chest key that no longer lands on its `C`, an
@@ -128,12 +128,12 @@ export function validateFloor(floor: DungeonFloor): string[] {
 }
 
 /**
- * Validates every floor of every domain. Returns a flat list of
- * `"<domain>/<floor>: <error>"` strings — empty means everything is consistent.
+ * Validates every floor of every reach. Returns a flat list of
+ * `"<reach>/<floor>: <error>"` strings — empty means everything is consistent.
  */
-export function validateDomains(domains: Record<string, Domain> = DOMAINS): string[] {
+export function validateReaches(reaches: Record<string, Reach> = REACHES): string[] {
   const out: string[] = [];
-  for (const [domId, dom] of Object.entries(domains)) {
+  for (const [domId, dom] of Object.entries(reaches)) {
     dom.floors.forEach((floor) => {
       for (const err of validateFloor(floor)) out.push(`${domId}/${floor.id}: ${err}`);
     });

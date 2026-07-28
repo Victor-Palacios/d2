@@ -8,7 +8,7 @@ import { ParticleField, Portal, Torch } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { DECOR, PROPS, VEHICLE } from '../assets/art';
-import { domain } from '../data/domains';
+import { reach } from '../data/reaches';
 import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
 import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
@@ -86,7 +86,7 @@ export class DungeonScene extends GameScene {
   async enter(params?: unknown) {
     const p = (params ?? {}) as DungeonSceneParams;
 
-    const dom = domain(game.activeDomainId);
+    const dom = reach(game.activeReachId);
     this.floor = dom.floors[game.floorIndex];
     this.grid = new TileGrid(this.floor.rows, this.floor.theme);
 
@@ -209,7 +209,7 @@ export class DungeonScene extends GameScene {
   /**
    * Scatters the floor's decorative billboards. Decor is non-colliding by
    * design — it lives outside the grid, so the player drives straight through
-   * it; it only exists to give each domain's terrain its own silhouette.
+   * it; it only exists to give each reach's terrain its own silhouette.
    */
   private placeDecor() {
     for (const d of this.floor.decor ?? []) {
@@ -518,7 +518,7 @@ export class DungeonScene extends GameScene {
     if (this.leaving) return;
     this.leaving = true;
     audio.sfx('portal');
-    game.floorIndex = Math.min(domain(game.activeDomainId).floors.length - 1, game.floorIndex + 1);
+    game.floorIndex = Math.min(reach(game.activeReachId).floors.length - 1, game.floorIndex + 1);
     game.crawl.initialized = false;
     await this.ctx.go('dungeon');
   }
@@ -551,13 +551,13 @@ export class DungeonScene extends GameScene {
     if (this.leaving) return;
     this.leaving = true;
     audio.sfx('portal');
-    const dom = domain(game.activeDomainId);
+    const dom = reach(game.activeReachId);
     game.set(dom.onClear.flag);
     if (dom.onClear.licenseCeremony) {
       // The Quiet Crossing only: the licence + Guard-Team ceremony.
-      await this.ctx.go('hub', { arrival: 'domainCleared' });
+      await this.ctx.go('hub', { arrival: 'reachCleared' });
     } else {
-      // Any other domain: you're back in the safe city, patched up.
+      // Any other reach: you're back in the safe city, patched up.
       fullRestore(game.party);
       await this.ctx.go('hub');
     }

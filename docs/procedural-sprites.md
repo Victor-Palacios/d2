@@ -101,7 +101,7 @@ To **add a brand-new creature**:
    `src/assets/art.ts`.
 2. Add a `Species` in `src/data/creatures.ts` with `art: '<id>'`, its
    `attribute`/`element`, stats, techniques, and blurb.
-3. Add it to a domain encounter table (e.g. `src/data/hauntedDungeon.ts`) if it
+3. Add it to a reach encounter table (e.g. `src/data/hauntedDungeon.ts`) if it
    should appear in the world.
 4. `npm run build` before pushing — the deploy runs `tsc --noEmit` first.
 

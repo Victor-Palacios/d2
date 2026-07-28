@@ -158,9 +158,9 @@ supply bay → Mission 2 briefing.
   (Nature/Water, warden Liora Fen) as an optional side path that opens once the
   Reliquary is clear. Each has its own roster, tile theme and ambience, and a
   reach stays locked (greyed on the map) until the one before it is quieted.
-  Adding another is a data file registered in `src/data/domains.ts` — no scene
+  Adding another is a data file registered in `src/data/reaches.ts` — no scene
   code changes.
-- **Distinct terrain per domain**: the crawl mechanics never change (grid,
+- **Distinct terrain per reach**: the crawl mechanics never change (grid,
   walls, floors, portals), but the *look* does. Each floor picks a
   `TerrainStyle` — `stone` (brick/flagstone), `crystal` (faceted shards),
   `crypt` (cracked ashlar), `metal` (riveted plating), `cave` (raw rock) or
@@ -199,7 +199,7 @@ slot at a time to **10**. Monsters that don't fit go to the Soul Sanctuary.
 
 Two kinds, deliberately different in weight:
 
-- **Autosave** — written whenever you reach The Everwake or the domain map.
+- **Autosave** — written whenever you reach The Everwake or the reach map.
   This is your progress; it survives everything.
 - **Suspend save** — press **Esc** mid-crawl and pick *Suspend & quit*. It puts
   the run down exactly where you stand, and is **deleted the moment you load
@@ -301,12 +301,12 @@ Everything is behind a data layer, so swapping art is a data edit:
 | A creature's stats, class, element, techniques | `src/data/creatures.ts` |
 | Techniques / damage numbers | `src/data/techniques.ts`, `src/systems/battle/formula.ts` |
 | NPCs and the vehicle | `HUMANS` / `VEHICLE` in `src/assets/art.ts` |
-| A whole new dungeon | a new `src/data/<name>.ts` exporting a `Domain`, registered in `src/data/domains.ts` |
+| A whole new dungeon | a new `src/data/<name>.ts` exporting a `Reach`, registered in `src/data/reaches.ts` |
 | Dungeon layouts, encounters, dialogue | `src/data/quietCrossing.ts`, `crystalCavern.ts`, `hauntedDungeon.ts` |
 | Guard teams and starters | `src/data/teams.ts` |
 | Shop stock | `src/data/items.ts` |
 | Tile / wall textures | the generators in `src/engine/pixel.ts` (one per `TerrainStyle`) |
-| A domain's terrain look | `terrain` / `wallHeight` / `fogColor` on each floor's `TileTheme` |
+| A reach's terrain look | `terrain` / `wallHeight` / `fogColor` on each floor's `TileTheme` |
 | Decorative props (crystals, gravestones, roots…) | `DECOR` in `src/assets/art.ts` + a floor's `decor: []` list |
 | Sound effects and music | `src/engine/Audio.ts` |
 

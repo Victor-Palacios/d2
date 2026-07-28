@@ -8,7 +8,7 @@ import { el, remove } from '../ui/dom';
 
 /**
  * Defeat screen (plan M3). Losing costs the run, not the session: the party is
- * repaired and the crawl restarts from the domain entrance.
+ * repaired and the crawl restarts from the reach entrance.
  */
 export class GameOverScene extends GameScene {
   private screen: HTMLElement | null = null;

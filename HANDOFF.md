@@ -94,7 +94,7 @@ The four items the owner asked for are written and live in [`docs/`](docs/):
    missing.
 2. **Roadmap** — [`docs/ROADMAP.md`](docs/ROADMAP.md): a path toward a full
    monster-collecting crawler's first ~5 hours (XP loop, recruiting, evolution,
-   more domains).
+   more reaches).
 3. **Scope trim (five elements → three)** — folded into the roadmap as the first,
    cheapest task, with rationale and an exact edit list.
 4. **Systems explainer** — [`docs/SYSTEMS.md`](docs/SYSTEMS.md): types, class

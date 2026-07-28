@@ -1,9 +1,9 @@
 import { chromium } from 'playwright';
 
-// Drives the two free-select domains end to end: world-map selection, floor
+// Drives the two free-select reaches end to end: world-map selection, floor
 // loading, a scripted fight, descent, and the boss + exit-portal on Crystal
-// Cavern; world-map selection + a fight on The Unremembered. Proves the domain
-// registry, per-domain data/art/music, and the generic clear path all hold up
+// Cavern; world-map selection + a fight on The Unremembered. Proves the reach
+// registry, per-reach data/art/music, and the generic clear path all hold up
 // in a real browser. See tools/smoke/README.md.
 
 const browser = await chromium.launch({
@@ -19,7 +19,7 @@ const st = () => page.evaluate(() => {
   const g = window.hd2dGame; const s = g.manager.activeScene ?? {};
   return {
     scene: g.manager.current,
-    domain: g.game.activeDomainId,
+    reach: g.game.activeReachId,
     floor: g.game.floorIndex,
     tile: s.tileX !== undefined ? `${s.tileX},${s.tileZ}` : null,
     busy: s.busy ?? null,
@@ -59,7 +59,7 @@ const winBattle = async (ms = 120000) => {
   return (await st()).scene === 'dungeon';
 };
 
-// Click a domain card by EXACT title. Locked cards now carry a "clear <reach>
+// Click a reach card by EXACT title. Locked cards now carry a "clear <reach>
 // first" hint, so a substring match on a reach name hits multiple cards.
 const clickCard = (title) =>
   page.locator('.card').filter({ has: page.locator('h3', { hasText: new RegExp(`^${title}$`) }) }).click();
@@ -96,7 +96,7 @@ await page.locator('.keyboard button', { hasText: /^OK$/ }).click(); await page.
  await pickPartner();
 await clearDlg(); await waitScene('hub'); await page.waitForTimeout(700); await clearDlg();
 // The Reliquary is gated behind the Quiet Crossing. Unlock it (this smoke tests
-// the domain flow, not the tutorial); clearing the Reliquary then unlocks the
+// the reach flow, not the tutorial); clearing the Reliquary then unlocks the
 // Unremembered on its own, exercising the gate chain end to end.
 await page.evaluate(() => window.hd2dGame.game.set('crossingCleared'));
 await gotoWorldmap(); await page.waitForTimeout(800);
@@ -104,14 +104,14 @@ await gotoWorldmap(); await page.waitForTimeout(800);
 const cardTitles = await page.evaluate(() => [...document.querySelectorAll('.card h3')].map((n) => n.textContent));
 console.log('world-map cards :', JSON.stringify(cardTitles));
 const hasBoth = cardTitles.includes('The Reliquary') && cardTitles.includes('The Unremembered');
-console.log('both new domains selectable :', hasBoth);
+console.log('both new reaches selectable :', hasBoth);
 
 // === CRYSTAL CAVERN: full run ===
 console.log('\n=== The Reliquary ===');
 await clickCard('The Reliquary');
 await waitScene('dungeon'); await page.waitForTimeout(1000);
 let s = await st();
-console.log('entered :', JSON.stringify({ domain: s.domain, floor: s.floor, floorName: s.floorName }));
+console.log('entered :', JSON.stringify({ reach: s.reach, floor: s.floor, floorName: s.floorName }));
 
 // This smoke verifies WIRING/FLOW, not balance — a post-tutorial party can be a
 // single starter, which cannot solo a warden. Boost the party via the debug
@@ -157,7 +157,7 @@ await gotoWorldmap(); await page.waitForTimeout(700);
 await clickCard('The Unremembered');
 await waitScene('dungeon'); await page.waitForTimeout(1000);
 s = await st();
-console.log('entered :', JSON.stringify({ domain: s.domain, floor: s.floor, floorName: s.floorName }));
+console.log('entered :', JSON.stringify({ reach: s.reach, floor: s.floor, floorName: s.floorName }));
 // Re-assert god-mode across the WHOLE party: auto-battle recruited a couple of
 // souls in the Reliquary (Soul Syphon), and those recruits carry no god-mode
 // into this Lv10 reach. This smoke tests flow, not survivability.
@@ -166,6 +166,6 @@ await press('ArrowRight', 2); await press('ArrowDown', 2);
 console.log('floor-1 battle won :', await winBattle());
 await waitScene('dungeon'); await page.waitForTimeout(500);
 
-await page.screenshot({ path: new URL('./shots/domains.png', import.meta.url).pathname });
+await page.screenshot({ path: new URL('./shots/reaches.png', import.meta.url).pathname });
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();

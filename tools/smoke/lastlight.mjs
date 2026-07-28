@@ -44,7 +44,7 @@ console.log('party[0] level     :', beforeLv, '| immortality before:', await pag
 // Force a Last Light encounter (a rare random in The Unremembered), returning to the hub.
 await page.evaluate(async () => {
   const g = window.hd2dGame;
-  g.game.activeDomainId = 'crossing';
+  g.game.activeReachId = 'crossing';
   await g.manager.go('battle', { enemies: [{ species: 'lastlight', level: 8 }], returnTo: 'hub' });
 });
 console.log('reached battle     :', await wait('battle', 15000));

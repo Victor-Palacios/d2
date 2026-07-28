@@ -1,16 +1,16 @@
 import { narrate, say } from '../systems/dialogue/script';
 import type { TileTheme } from '../engine/TileGrid';
-import type { Domain, DungeonFloor } from './dungeon';
+import type { Reach, DungeonFloor } from './dungeon';
 
 /**
- * The Reliquary — a free-select domain (not on the tutorial path).
+ * The Reliquary — a free-select reach (not on the tutorial path).
  *
  * Cold, bright, refractive. Its terrain is faceted crystal with a tall,
  * symmetric geometry (a machine vault at its heart), tinted with icy fog and
  * dressed in crystal columns and ice shards — a deliberate contrast with the
  * broken, organic Unremembered. Leans on Water + Machine element plates and its
  * own roster (Shardling / Prismoth / Geodon), warded by Glaciark. Pure data —
- * see `dungeon.ts` for the model and `docs/ROADMAP.md` for how domains slot in.
+ * see `dungeon.ts` for the model and `docs/ROADMAP.md` for how reaches slot in.
  */
 
 const THEME_UPPER: TileTheme = {
@@ -205,7 +205,7 @@ const FLOORS: DungeonFloor[] = [
   },
 ];
 
-export const CRYSTAL_CAVERN: Domain = {
+export const CRYSTAL_CAVERN: Reach = {
   id: 'crystal',
   name: 'The Reliquary',
   blurb: 'A hall of kept light, where souls are frozen in glass so they can never fade — and never rest. Someone here refuses to let go.',

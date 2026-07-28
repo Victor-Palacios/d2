@@ -1,6 +1,6 @@
 import type { TileTheme } from '../engine/TileGrid';
 import { narrate, say } from '../systems/dialogue/script';
-import type { Domain, DungeonFloor } from './dungeon';
+import type { Reach, DungeonFloor } from './dungeon';
 
 /**
  * The Quiet Crossing — the tutorial dungeon (plan §5.5). Its id is `crossing`
@@ -10,7 +10,7 @@ import type { Domain, DungeonFloor } from './dungeon';
  * Three small floors: a teaching floor, an element-tile floor, and a boss
  * floor whose accent walls and glowing hallway telegraph what is waiting.
  * See `TileGrid` for the layout legend. The reusable data model lives in
- * `dungeon.ts`; this is just one `Domain`.
+ * `dungeon.ts`; this is just one `Reach`.
  */
 
 // Re-exported for the many modules that still import these from here.
@@ -208,7 +208,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
   },
 ];
 
-export const QUIET_CROSSING: Domain = {
+export const QUIET_CROSSING: Reach = {
   id: 'crossing',
   name: 'The Quiet Crossing',
   blurb: 'The threshold every soul passes on its way to rest. Quiet, mostly — which is why new keepers learn to carry a lantern here.',
