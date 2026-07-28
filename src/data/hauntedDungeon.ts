@@ -218,4 +218,5 @@ export const HAUNTED_DUNGEON: Domain = {
   startingFuel: 150,
   music: 'haunted',
   onClear: { flag: 'hauntedCleared' },
+  requires: 'crystalCleared',
 };

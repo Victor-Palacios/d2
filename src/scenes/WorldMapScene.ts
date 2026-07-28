@@ -130,17 +130,35 @@ export class WorldMapScene extends GameScene {
       ...DOMAIN_ORDER.map((id): Card => {
         const d = domain(id);
         const cleared = game.has(d.onClear.flag);
-        const tag = id === 'boot' && !cleared ? 'Mission 1' : cleared ? 'Cleared' : 'Open';
+        // Story gate: a reach stays locked until its prerequisite flag is set.
+        const locked = !!d.requires && !game.has(d.requires);
+        const tag = locked
+          ? 'Locked'
+          : id === 'boot' && !cleared
+            ? 'Mission 1'
+            : cleared
+              ? 'Cleared'
+              : d.side
+                ? 'Side path'
+                : 'Open';
         // Readiness cue: green if your party meets the recommendation, amber if
         // close, red if under-levelled — so the intended order reads at a glance.
         const rec = d.recommendedLevel;
         const partyLv = partyLevel();
         const recColor = partyLv >= rec ? '#7bdc8a' : partyLv >= rec - 2 ? '#ffd166' : '#ff6b6b';
+        // Name the reach whose clearing unlocks this one, for the locked hint.
+        const gate = DOMAIN_ORDER.map(domain).find((x) => x.onClear.flag === d.requires);
         return {
           value: id,
           title: d.name,
           tag,
-          tagColor: d.color,
+          tagColor: locked ? '#8a90a6' : d.color,
+          disabled: locked,
+          disabledNote: locked
+            ? gate
+              ? `Locked · clear ${gate.name} first`
+              : 'Locked'
+            : undefined,
           body:
             `<span style="color:${recColor}">◆ Recommended Lv ${rec}</span>` +
             `<span class="dim"> · your party ~Lv ${partyLv}</span><br><br>` +

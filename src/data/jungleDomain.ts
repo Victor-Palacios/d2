@@ -219,4 +219,6 @@ export const JUNGLE_DOMAIN: Domain = {
   startingFuel: 135,
   music: 'jungle',
   onClear: { flag: 'jungleCleared' },
+  requires: 'crystalCleared',
+  side: true,
 };

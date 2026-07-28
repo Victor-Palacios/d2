@@ -158,6 +158,13 @@ reflects one idea from the framework and hosts one relationship with death.
 - **Relationship hosted:** the Bereaved Witness (Wren) and the Exhausted (the
   Last Light).
 
+> **Reaches unlock in story order.** The world map gates each reach behind the
+> one before it (data-driven, `Domain.requires`): The Quiet Crossing is always
+> open; clearing it opens The Reliquary; clearing the Reliquary opens The
+> Unremembered *and* the optional Overgrowth. A locked reach shows greyed on the
+> map with a "clear ___ first" hint, so the intended path — and the fact that
+> there is more — reads at a glance.
+
 ### An optional reach — The Overgrowth *(a side path)*
 - **Idea:** *Keeping mistaken for company* — the dramatic question at a smaller,
   quieter scale than the main line. Not on the mission spine; a green detour off

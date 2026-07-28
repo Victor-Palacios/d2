@@ -152,12 +152,14 @@ supply bay → Mission 2 briefing.
   (Emberling / Glidefang / Nightnip — one per class), then build a team by
   **capturing** more (see below), earning a licence and your own vehicle after
   the warden falls.
-- **More domains**: the world map is free-select — beyond The Quiet Crossing it
-  offers the **Crystal Cavern** (Water/Machine, warden Glaciark), the
-  **Overgrowth** (Nature/Water, warden Verdanox) and the **Haunted Dungeon**
-  (Dark/Nature, warden Revenance), each with its own monster roster, tile theme
-  and ambience. Adding another is a data file registered in
-  `src/data/domains.ts` — no scene code changes.
+- **More reaches**: the world map unlocks in story order — beyond **The Quiet
+  Crossing** come **The Reliquary** (Water, warden Sena Vale), then **The
+  Unremembered** (Dark/Nature, warden the Unnamed), with **The Overgrowth**
+  (Nature/Water, warden Liora Fen) as an optional side path that opens once the
+  Reliquary is clear. Each has its own roster, tile theme and ambience, and a
+  reach stays locked (greyed on the map) until the one before it is quieted.
+  Adding another is a data file registered in `src/data/domains.ts` — no scene
+  code changes.
 - **Distinct terrain per domain**: the crawl mechanics never change (grid,
   walls, floors, portals), but the *look* does. Each floor picks a
   `TerrainStyle` — `stone` (brick/flagstone), `crystal` (faceted shards),

@@ -322,7 +322,7 @@ export const SPECIES: Record<string, Species> = {
     base: { hp: 90, mp: 44, off: 18, def: 24, spd: 13 },
     growth: { hp: 10, mp: 3, off: 2.3, def: 2.1, spd: 1.4 },
     techniques: ['prismStorm', 'frostLance'],
-    blurb: 'Warden of the Crystal Cavern. It has never felt warmth.',
+    blurb: 'Warden of the Reliquary. It has never felt warmth.',
   },
   revenance: {
     id: 'revenance',
@@ -335,7 +335,7 @@ export const SPECIES: Record<string, Species> = {
     base: { hp: 100, mp: 50, off: 20, def: 22, spd: 16 },
     growth: { hp: 11, mp: 3.4, off: 2.4, def: 2, spd: 1.6 },
     techniques: ['dirge', 'hexBolt'],
-    blurb: 'Warden of the Haunted Dungeon. It remembers being deleted.',
+    blurb: 'Warden of the Unremembered. It remembers being unmade.',
   },
   verdanox: {
     id: 'verdanox',

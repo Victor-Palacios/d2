@@ -83,6 +83,16 @@ export interface Domain {
   /** Ambience track while crawling this domain (boss fights still use 'boss'). */
   music: MusicTrack;
   onClear: DomainClear;
+  /**
+   * Story gate: a run flag that must be set before this reach can be entered.
+   * Until then the world-map card is shown locked (greyed, non-selectable) with
+   * a hint naming the reach that unlocks it. Usually another domain's
+   * `onClear.flag`, so reaches open in story order. Omit for an always-open
+   * reach (the tutorial).
+   */
+  requires?: string;
+  /** A side path off the main line (e.g. The Overgrowth) — tagged as such on the map. */
+  side?: boolean;
   /** Only the tutorial lends a party; other domains use whatever you bring. */
   borrowedParty?: EnemySpec[];
 }
