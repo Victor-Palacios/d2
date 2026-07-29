@@ -14,13 +14,36 @@ This is how we make creature sprites **now**. The repo is asset-free (plan
 
 ```
 tools/sprites/
-  compose.mjs      char-grid drawing kit (ellipse, rect, smooth, outlineSil, toArt)
-  render.mjs       dependency-free PNG encoder + comparison-strip compositor
-  creatures.mjs    shared recipe helpers + demo builders + a CREATURES registry
-  quiet-crossing.mjs the first-dungeon roster, keyed by art key (CROSSING registry)
-  build.mjs        CLI: render previews to out/ and emit pasteable { palette, rows }
-  integrate.mjs    CLI: replace CREATURES[<artKey>] blocks in src/assets/art.ts
+  compose.mjs        char-grid drawing kit (ellipse, rect, smooth, outlineSil, toArt)
+  paint.mjs          hex-canvas VOLUMETRIC renderer (form-shading, dithered ramps)
+  render.mjs         dependency-free PNG encoder + comparison-strip compositor
+  personality.mjs    face+posture families (applyFace, POSTURE, lean)
+  creatures.mjs      shared recipe helpers + demo builders + a CREATURES registry
+  quiet-crossing.mjs reach-1 roster, flat house style (CROSSING registry)
+  crystal-cavern.mjs reach-2 roster, painterly style (CAVERN registry)
+  build.mjs          CLI: render previews to out/ and emit pasteable { palette, rows }
+  integrate.mjs      CLI: replace CREATURES[<artKey>] blocks in src/assets/art.ts
 ```
+
+## Two rendering styles
+
+There are now **two** ways to build a sprite; pick per creature (or per reach):
+
+- **`compose.mjs` — flat house style.** Single-char palette keys, ellipse
+  shapes, 2–3 flat tonal bands, hard single-colour outline. Crisp, graphic,
+  cohesive; cheap. Used for **The Quiet Crossing** (`quiet-crossing.mjs`).
+- **`paint.mjs` — painterly / volumetric.** Works in raw hex on a canvas, then
+  assigns palette keys at the end (`toPixelArt`, auto-quantizing under the ~90
+  key ceiling). Each part is shaded as an implied **sphere** — a fake normal
+  `z = √(1 − r²)`, a Lambert term, a dark→light `ramp()`, and **ordered
+  dithering** between steps so the gradient reads smooth at low res. Adds rim
+  light, specular, and a **coloured** (not black) outline. Reads much closer to
+  generated / hand-painted pixel art. Used for **The Crystal Cavern**
+  (`crystal-cavern.mjs`). More colours, softer volume, better for gems/ice/
+  metal/translucency — at the cost of the crisp graphic look.
+
+Mixing styles across reaches is intentional: it gives the world visual variety
+as the player descends.
 
 Everything is plain Node (`.mjs`), zero dependencies (Node's built-in `zlib`
 does the PNG). `out/` is git-ignored — previews and `.art.txt` are never
@@ -144,3 +167,12 @@ To **add a brand-new creature**:
   family (`lizard`→fierce, `bat`→clever, `bug`→nervous, `scrap`/`wisp`→uncanny);
   the three Friendly creatures keep `glossyEyes` and `lion` keeps its bespoke
   fierce face. Integrated into `art.ts` and shipped.
+- **2026-07-28 — painterly engine + Crystal Cavern (reach 2).** Added
+  `paint.mjs` (volumetric hex-canvas renderer: `form()` sphere-shading with
+  dithered `ramp()`s, `spec`, coloured `outline`, auto-quantizing `toPixelArt`)
+  and `crystal-cavern.mjs` (`CAVERN`). Redesigned the four Crystal Cavern
+  creatures in this richer style to add world variety vs the flat reach-1 look:
+  `crystalSlime` (glassy gem slime), `prismMoth` (iridescent rainbow wings),
+  `geodeGolem` (matte stone + glowing amethyst core), `crystalWarden`
+  (faceted ice boss). `integrate.mjs` now merges `CROSSING` + `CAVERN`.
+  Integrated and verified in-engine.

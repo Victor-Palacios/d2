@@ -7,6 +7,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { CROSSING } from './quiet-crossing.mjs';
+import { CAVERN } from './crystal-cavern.mjs';
+
+const REG = { ...CROSSING, ...CAVERN };
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ART = join(here, '..', '..', 'src', 'assets', 'art.ts');
@@ -32,11 +35,11 @@ function replaceEntry(src, key, block) {
 }
 
 const want = process.argv.slice(2);
-const keys = want.length ? want : Object.keys(CROSSING);
+const keys = want.length ? want : Object.keys(REG);
 let src = readFileSync(ART, 'utf8');
 for (const key of keys) {
-  const def = CROSSING[key];
-  if (!def) { console.error(`not in CROSSING: ${key}`); continue; }
+  const def = REG[key];
+  if (!def) { console.error(`not in registry: ${key}`); continue; }
   src = replaceEntry(src, key, entrySource(key, def.build()));
   console.log(`integrated ${key} (${def.species})`);
 }
