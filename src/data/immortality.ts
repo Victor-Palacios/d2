@@ -1,7 +1,7 @@
 /**
  * The Immortality set (death theme — the Last Light reward). Each piece is a
  * line of Mary Elizabeth Frye's elegy "Do not stand at my grave and weep"
- * (widely treated as public domain; see docs/NARRATIVE.md §8). Pieces are
+ * (widely treated as public reach; see docs/NARRATIVE.md §8). Pieces are
  * awarded in order, one per soul released, until all twelve are collected —
  * then the Immortality Memento unlocks.
  */

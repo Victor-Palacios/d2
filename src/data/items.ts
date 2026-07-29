@@ -28,7 +28,7 @@ export const ITEMS: Record<string, ItemDef> = {
     id: 'fuelCanister',
     name: 'Fuel Canister',
     price: 90,
-    desc: 'Refills 40 EP of vehicle fuel while crawling a domain.',
+    desc: 'Refills 40 EP of vehicle fuel while crawling a reach.',
   },
   towBeacon: {
     id: 'towBeacon',
@@ -36,12 +36,12 @@ export const ITEMS: Record<string, ItemDef> = {
     price: 200,
     desc: 'Emergency return to The Everwake without losing your haul.',
   },
-  domainMap: {
-    id: 'domainMap',
-    name: 'Domain Map',
+  reachMap: {
+    id: 'reachMap',
+    name: 'Reach Map',
     price: 260,
     desc: 'Marks portals and chests on the crawl HUD. Cosmetic for now.',
   },
 };
 
-export const SHOP_STOCK = ['repairChip', 'bufferCell', 'fuelCanister', 'towBeacon', 'domainMap'];
+export const SHOP_STOCK = ['repairChip', 'bufferCell', 'fuelCanister', 'towBeacon', 'reachMap'];

@@ -115,7 +115,7 @@ export class IntroScene extends GameScene {
     const stack = el('div');
     stack.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:14px;';
     stack.append(
-      el('h1', 'title-main', 'BOOT DOMAIN'),
+      el('h1', 'title-main', 'THE EVERWAKE'),
       el('p', 'title-sub', 'a first-hour HD-2D vertical slice'),
       el(
         'div',

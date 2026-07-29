@@ -2,10 +2,10 @@ import { chromium } from 'playwright';
 
 // Terrain-uniqueness smoke test. Two halves, both deterministic and fight-free:
 //
-//  1. Data: runs window.hd2dGame.validateDomains() over every floor of every
-//     domain (rectangular rows, one start, reachable events/chests/portals,
+//  1. Data: runs window.hd2dGame.validateReaches() over every floor of every
+//     reach (rectangular rows, one start, reachable events/chests/portals,
 //     chest keys that land on C tiles, decor on walkable tiles), and checks each
-//     domain wears its expected terrain skins.
+//     reach wears its expected terrain skins.
 //  2. Build: enters every floor via the debug API (no combat) and confirms the
 //     grid + terrain + decor actually build in three.js — grid size matches the
 //     data, every decor spec was placed, and no decor landed on a wall.
@@ -57,20 +57,20 @@ await page.evaluate(() => {
 });
 
 // --- 1. Data validation -----------------------------------------------------
-console.log('\n=== domain data ===');
-const problems = await page.evaluate(() => window.hd2dGame.validateDomains());
-check('validateDomains reports no problems', problems.length === 0, problems.join(' | '));
+console.log('\n=== reach data ===');
+const problems = await page.evaluate(() => window.hd2dGame.validateReaches());
+check('validateReaches reports no problems', problems.length === 0, problems.join(' | '));
 
 const terrains = await page.evaluate(() => {
   const out = {};
-  for (const [id, dom] of Object.entries(window.hd2dGame.domains)) {
+  for (const [id, dom] of Object.entries(window.hd2dGame.reaches)) {
     out[id] = dom.floors.map((f) => f.theme.terrain ?? 'stone');
   }
   return out;
 });
 console.log('  terrain skins :', JSON.stringify(terrains));
 const expect = {
-  boot: ['stone', 'stone', 'stone'],
+  crossing: ['stone', 'stone', 'stone'],
   crystal: ['crystal', 'metal', 'crystal'],
   jungle: ['jungle', 'jungle', 'jungle'],
   haunted: ['crypt', 'cave', 'crypt'],
@@ -78,9 +78,9 @@ const expect = {
 for (const [id, exp] of Object.entries(expect)) {
   check(`${id} terrain = ${exp.join('/')}`, JSON.stringify(terrains[id]) === JSON.stringify(exp));
 }
-// Between-domain uniqueness: no two domains share the same skin sequence.
+// Between-reach uniqueness: no two reaches share the same skin sequence.
 const seqs = Object.values(terrains).map((t) => t.join(','));
-check('every domain has a distinct terrain sequence', new Set(seqs).size === seqs.length);
+check('every reach has a distinct terrain sequence', new Set(seqs).size === seqs.length);
 
 // --- reach a valid run state, then jump floor by floor -----------------------
 await page.keyboard.press('Enter'); await page.waitForTimeout(700);
@@ -90,12 +90,12 @@ await clearDlg(); await waitScene('hub'); await page.waitForTimeout(500); await 
 
 // --- 2. Build every floor and inspect its grid + decor ----------------------
 const floorList = await page.evaluate(() =>
-  Object.entries(window.hd2dGame.domains).flatMap(([id, dom]) => dom.floors.map((_, i) => [id, i])));
+  Object.entries(window.hd2dGame.reaches).flatMap(([id, dom]) => dom.floors.map((_, i) => [id, i])));
 
 for (const [dom, idx] of floorList) {
   await page.evaluate(async ({ dom, idx }) => {
     const g = window.hd2dGame;
-    g.game.activeDomainId = dom; g.game.floorIndex = idx; g.game.crawl.initialized = false;
+    g.game.activeReachId = dom; g.game.floorIndex = idx; g.game.crawl.initialized = false;
     await g.manager.go('dungeon');
   }, { dom, idx });
   await waitScene('dungeon');
@@ -103,7 +103,7 @@ for (const [dom, idx] of floorList) {
 
   const info = await page.evaluate(() => {
     const g = window.hd2dGame, s = g.manager.activeScene;
-    const floor = g.domains[g.game.activeDomainId].floors[g.game.floorIndex];
+    const floor = g.reaches[g.game.activeReachId].floors[g.game.floorIndex];
     const specs = floor.decor ?? [];
     const onWall = specs.filter((d) => !s.grid.walkable(d.x, d.z)).map((d) => `${d.kind}@${d.x},${d.z}`);
     return {

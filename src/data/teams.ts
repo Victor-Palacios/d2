@@ -1,7 +1,7 @@
 import type { AttributeId } from './elements';
 
 /**
- * The three Guard Teams offered after the Boot Domain boss (plan §5.4).
+ * The three Guard Teams offered after the Quiet Crossing boss (plan §5.4).
  * Picking one sets the player's team attribute and their first own creature.
  */
 
@@ -38,7 +38,7 @@ export const TEAMS: GuardTeam[] = [
     leaderName: 'Analyst Cira',
     starter: 'glidefang',
     color: '#6fb7ff',
-    pitch: 'Read the domain before you drive into it. Adapt, then act.',
+    pitch: 'Read the reach before you drive into it. Adapt, then act.',
     perk: 'Mage team — faster turn order.',
   },
   {

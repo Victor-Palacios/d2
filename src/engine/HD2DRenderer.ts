@@ -282,7 +282,7 @@ export class HD2DRenderer {
 
   /**
    * Applies fog to a scene using the shared fog parameters. `colorOverride`
-   * lets a floor tint its own air (a domain-specific mood) without disturbing
+   * lets a floor tint its own air (a reach-specific mood) without disturbing
    * the global default used everywhere else.
    */
   applyFog(scene: THREE.Scene, densityScale = 1, colorOverride?: string) {

@@ -37,8 +37,8 @@ missing.
 |---|---|---|---|
 | §2.1 | Title + name entry | ✅ | `IntroScene.ts` (M4), `ui/NameEntry.ts` — five slots, on-screen keyboard. |
 | §2.2 | The Everwake hub | ✅ | `HubScene.ts` (M4/M5). *(hub autosave bug — see below.)* |
-| §2.3 | World map / domain select | ✅ | `WorldMapScene.ts`, two-node picker via `ui/CardSelect.ts`. |
-| §2.4 | Boot Domain crawl | ✅ | `DungeonScene.ts` (M1/M3). |
+| §2.3 | World map / reach select | ✅ | `WorldMapScene.ts`, two-node picker via `ui/CardSelect.ts`. |
+| §2.4 | The Quiet Crossing crawl | ✅ | `DungeonScene.ts` (M1/M3). |
 | §2.5 | *(not referenced by any code marker)* | ❔ Unconfirmed | No `plan §2.5` marker exists. Likely the rival-intro / Mission-2 hook, which **is** built (end of `HubScene`), but the mapping can't be confirmed without the plan text. |
 | §2.6 | Guard Team choice | ✅ | `CardSelect.ts` cites §2.6; `data/teams.ts` — three teams set class + starter. |
 | §2.7 | Shop / vendor | ✅ (buying only) | `ui/ShopScreen.ts`, `data/items.ts`. Credits deduct, item enters bag; **using** items is an intentional stub (below). |
@@ -63,7 +63,7 @@ missing.
 | §5.2 | Damage / heal maths, speed order | ✅ | `systems/battle/formula.ts`, turn order in `engine.ts`. See `docs/SYSTEMS.md`. |
 | §5.3 | Headless 3v3 battle model + enemy AI | ✅ | `systems/battle/engine.ts` (rules-only, no Three.js/DOM), driven by `BattleScene.ts` (M2). |
 | §5.4 | Three Guard Teams, each setting class + starter | ✅ | `data/teams.ts`. |
-| §5.5 | Boot Domain tutorial dungeon + vehicle EP | ✅ | `data/bootDomain.ts` (3 floors, borrowed party, boss), EP drain in `DungeonScene.ts`. |
+| §5.5 | The Quiet Crossing tutorial dungeon + vehicle EP | ✅ | `data/quietCrossing.ts` (3 floors, borrowed party, boss), EP drain in `DungeonScene.ts`. |
 | §5.6 | Evolution / DNA-merge | ⚠️ **Data stub, by design** | `evolvesTo` on `Species` (`data/creatures.ts`); **no UI reads it.** The plan specifies a stub here, so this is *complete-as-specified*, not missing. |
 
 ## §6 — Polish pass

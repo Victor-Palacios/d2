@@ -3,12 +3,12 @@ import type { MusicTrack } from '../engine/Audio';
 import type { DialogueScript } from '../systems/dialogue/script';
 
 /**
- * Shared dungeon/domain data model.
+ * Shared dungeon/reach data model.
  *
- * A "domain" is a self-contained crawlable dungeon: a list of floors plus the
+ * A "reach" is a self-contained crawlable dungeon: a list of floors plus the
  * metadata the world map and the crawl scene need. Everything here is plain
- * data — adding a new dungeon is a new file that exports a `Domain`, registered
- * in `domains.ts`. No scene code changes. See `docs/ROADMAP.md`.
+ * data — adding a new dungeon is a new file that exports a `Reach`, registered
+ * in `reaches.ts`. No scene code changes. See `docs/ROADMAP.md`.
  */
 
 export interface EnemySpec {
@@ -28,7 +28,7 @@ export interface EncounterEntry {
 
 /**
  * A purely-decorative billboard placed on the floor at grid coords (x, z).
- * Decor never collides — it dresses a domain's terrain (crystals, gravestones,
+ * Decor never collides — it dresses a reach's terrain (crystals, gravestones,
  * roots, machine pylons…) without touching movement. `kind` indexes the `DECOR`
  * art table in `src/assets/art.ts`.
  */
@@ -58,19 +58,19 @@ export interface DungeonFloor {
   decor?: DecorSpec[];
 }
 
-/** What happens when the player drives into a domain's exit portal. */
-export interface DomainClear {
-  /** Flag set on the run when the domain is cleared. */
+/** What happens when the player drives into a reach's exit portal. */
+export interface ReachClear {
+  /** Flag set on the run when the reach is cleared. */
   flag: string;
   /**
-   * Boot Domain only: return through the licence + Guard-Team ceremony
-   * (`HubScene` arrival 'domainCleared'). Other domains just restore the party
+   * The Quiet Crossing only: return through the licence + Guard-Team ceremony
+   * (`HubScene` arrival 'reachCleared'). Other reaches just restore the party
    * and drop you back in the city.
    */
   licenseCeremony?: boolean;
 }
 
-export interface Domain {
+export interface Reach {
   id: string;
   name: string;
   blurb: string;
@@ -80,9 +80,19 @@ export interface Domain {
   recommendedLevel: number;
   floors: DungeonFloor[];
   startingFuel: number;
-  /** Ambience track while crawling this domain (boss fights still use 'boss'). */
+  /** Ambience track while crawling this reach (boss fights still use 'boss'). */
   music: MusicTrack;
-  onClear: DomainClear;
-  /** Only the tutorial lends a party; other domains use whatever you bring. */
+  onClear: ReachClear;
+  /**
+   * Story gate: a run flag that must be set before this reach can be entered.
+   * Until then the world-map card is shown locked (greyed, non-selectable) with
+   * a hint naming the reach that unlocks it. Usually another reach's
+   * `onClear.flag`, so reaches open in story order. Omit for an always-open
+   * reach (the tutorial).
+   */
+  requires?: string;
+  /** A side path off the main line (e.g. The Overgrowth) — tagged as such on the map. */
+  side?: boolean;
+  /** Only the tutorial lends a party; other reaches use whatever you bring. */
   borrowedParty?: EnemySpec[];
 }

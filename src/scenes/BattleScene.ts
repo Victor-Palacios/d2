@@ -9,7 +9,7 @@ import { elementGlowTexture, elementTileTexture, floorTexture, wallTexture } fro
 import { speciesArt, species } from '../data/creatures';
 import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
-import type { EnemySpec } from '../data/bootDomain';
+import type { EnemySpec } from '../data/quietCrossing';
 import { technique } from '../data/techniques';
 import { COMFORT_PHRASES, IMMORTALITY_TOTAL } from '../data/immortality';
 import { Battle } from '../systems/battle/engine';

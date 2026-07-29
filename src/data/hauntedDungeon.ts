@@ -1,9 +1,9 @@
 import { narrate, say } from '../systems/dialogue/script';
 import type { TileTheme } from '../engine/TileGrid';
-import type { Domain, DungeonFloor } from './dungeon';
+import type { Reach, DungeonFloor } from './dungeon';
 
 /**
- * The Unremembered — a free-select domain (not on the tutorial path).
+ * The Unremembered — a free-select reach (not on the tutorial path).
  *
  * Dim, foggy, oppressive. Its terrain is cracked crypt masonry opening into a
  * rotting, organic cave, strewn with gravestones, dead trees and roots — the
@@ -208,7 +208,7 @@ const FLOORS: DungeonFloor[] = [
   },
 ];
 
-export const HAUNTED_DUNGEON: Domain = {
+export const HAUNTED_DUNGEON: Reach = {
   id: 'haunted',
   name: 'The Unremembered',
   blurb: 'A dimming reach where the nearly-forgotten run their last errands, thinner each time. Say a soul\'s name and you save it from the second, final death.',
@@ -218,4 +218,5 @@ export const HAUNTED_DUNGEON: Domain = {
   startingFuel: 150,
   music: 'haunted',
   onClear: { flag: 'hauntedCleared' },
+  requires: 'crystalCleared',
 };

@@ -1,16 +1,16 @@
 import { narrate, say } from '../systems/dialogue/script';
 import type { TileTheme } from '../engine/TileGrid';
-import type { Domain, DungeonFloor } from './dungeon';
+import type { Reach, DungeonFloor } from './dungeon';
 
 /**
- * The Overgrowth — a free-select domain (not on the tutorial path).
+ * The Overgrowth — a free-select reach (not on the tutorial path).
  *
  * Warm, humid, alive. Its terrain is the new `jungle` skin — mossy earth under
  * dense foliage walls hung with vines — dressed in ferns, palms, bamboo and
  * carved totems, tinted with green haze under a tall canopy. Leans on Nature +
  * Water element plates and its own roster (Frondle / Thorncat / Boggle /
  * Chitter), warded by Verdanox. Pure data — see `dungeon.ts` for the model and
- * `docs/ROADMAP.md` for how domains slot in.
+ * `docs/ROADMAP.md` for how reaches slot in.
  */
 
 const THEME_UPPER: TileTheme = {
@@ -209,7 +209,7 @@ const FLOORS: DungeonFloor[] = [
   },
 ];
 
-export const JUNGLE_DOMAIN: Domain = {
+export const JUNGLE_REACH: Reach = {
   id: 'jungle',
   name: 'The Overgrowth',
   blurb: 'A green reach that never gives anything back — souls who stopped to rest, and were quietly rooted where they sat. Something at its heart keeps them company.',
@@ -219,4 +219,6 @@ export const JUNGLE_DOMAIN: Domain = {
   startingFuel: 135,
   music: 'jungle',
   onClear: { flag: 'jungleCleared' },
+  requires: 'crystalCleared',
+  side: true,
 };

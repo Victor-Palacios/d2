@@ -184,8 +184,15 @@ const CRIES: Record<string, CryLayer[]> = {
 
 export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | 'crystal' | 'haunted' | 'jungle' | null;
 
-/** Simple looping bass/arp patterns, one per mood. Semitone offsets from root. */
-const TRACKS: Record<Exclude<MusicTrack, null>, { root: number; bpm: number; bass: number[]; arp: number[] }> = {
+/**
+ * Simple looping bass/arp patterns, one per mood. Semitone offsets from root.
+ * `birds: true` layers intermittent, randomised bird calls over the loop (see
+ * `chirp()`) — pure ambience, still all synthesised, no samples.
+ */
+const TRACKS: Record<
+  Exclude<MusicTrack, null>,
+  { root: number; bpm: number; bass: number[]; arp: number[]; birds?: boolean }
+> = {
   hub: { root: 174.6, bpm: 96, bass: [0, 0, 7, 5], arp: [12, 16, 19, 16, 12, 19, 24, 19] },
   dungeon: { root: 130.8, bpm: 84, bass: [0, 0, -2, 3], arp: [12, 15, 19, 15, 12, 19, 22, 19] },
   battle: { root: 146.8, bpm: 148, bass: [0, 0, 5, 3], arp: [12, 15, 19, 24, 19, 15, 12, 15] },
@@ -194,8 +201,8 @@ const TRACKS: Record<Exclude<MusicTrack, null>, { root: number; bpm: number; bas
   crystal: { root: 164.8, bpm: 80, bass: [0, 4, 7, 4], arp: [19, 24, 28, 24, 19, 24, 31, 28] },
   // Haunted Dungeon: low, minor, unsettled — a dragging tritone-leaning bass.
   haunted: { root: 98, bpm: 72, bass: [0, 0, -1, -6], arp: [12, 15, 18, 15, 12, 18, 15, 11] },
-  // The Overgrowth: warm, loping, major-pentatonic — a humid, rolling groove.
-  jungle: { root: 138.6, bpm: 104, bass: [0, 3, 5, 3], arp: [12, 14, 17, 21, 17, 14, 12, 17] },
+  // The Overgrowth: warm, organic, laid-back groove on a minor pentatonic, with birds.
+  jungle: { root: 130.8, bpm: 92, bass: [0, 0, 7, 5], arp: [12, 15, 17, 19, 22, 19, 17, 15], birds: true },
 };
 
 class AudioEngine {
@@ -251,6 +258,39 @@ class AudioEngine {
     g.connect(dest);
     osc.start(when);
     osc.stop(when + note.dur + 0.02);
+  }
+
+  /**
+   * A randomised bird call: 1–3 short, high, warbling syllables, each a quick
+   * pitch sweep. No two are alike (frequency, syllable count, waveform and
+   * timing are all jittered), so the jungle never sounds like a loop. Routed
+   * through `musicGain` so it counts as ambience — it mutes and ducks with the
+   * music, never with combat SFX.
+   */
+  private chirp(when: number) {
+    if (!this.ctx || !this.musicGain) return;
+    const syllables = 1 + Math.floor(Math.random() * 3);
+    const base = 1800 + Math.random() * 1700; // ~1.8–3.5 kHz, songbird range
+    let t = when;
+    for (let i = 0; i < syllables; i++) {
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = Math.random() < 0.5 ? 'sine' : 'triangle';
+      const dur = 0.05 + Math.random() * 0.08;
+      const f0 = base * (0.85 + Math.random() * 0.3);
+      const f1 = Math.max(400, f0 * (1 + (Math.random() - 0.35) * 0.7)); // sweep up (usually) or dip
+      const peak = 0.07 + Math.random() * 0.06;
+      osc.frequency.setValueAtTime(f0, t);
+      osc.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(g);
+      g.connect(this.musicGain);
+      osc.start(t);
+      osc.stop(t + dur + 0.02);
+      t += dur + 0.03 + Math.random() * 0.06; // small gap between syllables
+    }
   }
 
   sfx(name: SfxName) {
@@ -340,6 +380,9 @@ class AudioEngine {
         this.musicGain,
         now,
       );
+      // Ambient birds: roll once per step, fire at a random offset so calls
+      // fall off the beat. ~12% per step ≈ a chirp every few seconds.
+      if (t.birds && Math.random() < 0.12) this.chirp(now + Math.random() * (stepMs / 1000));
     }, stepMs);
   }
 }
