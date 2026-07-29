@@ -143,4 +143,4 @@ To **add a brand-new creature**:
   a `faced()` finisher. Migrated five Quiet Crossing builders to their assigned
   family (`lizard`→fierce, `bat`→clever, `bug`→nervous, `scrap`/`wisp`→uncanny);
   the three Friendly creatures keep `glossyEyes` and `lion` keeps its bespoke
-  fierce face. Tooling + docs only — **not yet re-integrated into `art.ts`**.
+  fierce face. Integrated into `art.ts` and shipped.

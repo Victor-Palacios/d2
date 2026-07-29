@@ -162,7 +162,6 @@ To add or redesign a creature, in order:
 - **Bespoke Fierce** — `lion` (the boss) keeps its hand-tuned amber-eyed,
   heavy-browed face, which already embodies Fierce.
 
-> **Not yet live.** `src/assets/art.ts` still holds the pre-personality faces
-> the roster shipped with — the builders above are the updated source of truth
-> but have **not** been re-integrated. Run `node tools/sprites/integrate.mjs`
-> (then `npm run build`) to push the personality faces into the game.
+> **Live.** The five `applyFace` creatures above have been integrated into
+> `src/assets/art.ts` and shipped. Re-run `node tools/sprites/integrate.mjs`
+> (then `npm run build`) after any builder change to update the game.
