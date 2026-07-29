@@ -25,8 +25,12 @@ export class GameOverScene extends GameScene {
     audio.music(null);
     this.screen = el('div', 'screen');
     this.screen.append(
-      el('h1', 'title-main danger', 'BEETLE DOWN'),
-      el('p', 'title-sub', 'The tow line pulled what was left of you back to The Everwake.'),
+      el('h1', 'title-main danger', 'THE LIGHT GOES OUT'),
+      el(
+        'p',
+        'title-sub',
+        'Halden carried what was left of you back to The Everwake by lantern-light.',
+      ),
     );
     const host = el('div', 'panel');
     this.screen.appendChild(host);

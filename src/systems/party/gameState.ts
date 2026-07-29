@@ -46,12 +46,11 @@ export class GameState {
   bag: Record<string, number> = {};
   flags = new Set<string>();
 
-  /** Vehicle fuel while crawling (plan §5.5). */
-  fuel = QUIET_CROSSING.startingFuel;
-  maxFuel = QUIET_CROSSING.startingFuel;
+  /** Light Power (LP) — the lantern's charge while crawling; each step spends 1. */
+  light = QUIET_CROSSING.startingLight;
+  maxLight = QUIET_CROSSING.startingLight;
 
   hasLicense = false;
-  hasOwnVehicle = false;
   teamId: string | null = null;
   teamAttribute: AttributeId | null = null;
 
@@ -71,7 +70,7 @@ export class GameState {
   usedEvents = new Set<string>();
   /** Opened chests, keyed `floorId:x,z`. */
   openedChests = new Set<string>();
-  /** Collected fuel cans, keyed `floorId:x,z`. */
+  /** Collected light shards, keyed `floorId:x,z`. */
   takenPickups = new Set<string>();
 
   /** The Soularium — per-species capture progress (the game's "pokedex"). */
@@ -225,7 +224,7 @@ export class GameState {
   }
 
   resetCrawl() {
-    this.fuel = this.maxFuel;
+    this.light = this.maxLight;
     this.floorIndex = 0;
     this.usedEvents.clear();
     this.openedChests.clear();

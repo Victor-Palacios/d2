@@ -104,7 +104,7 @@ export interface Reach {
   /** Party level the stage is tuned for — shown on the world-map card. */
   recommendedLevel: number;
   floors: DungeonFloor[];
-  startingFuel: number;
+  startingLight: number;
   /** Ambience track while crawling this reach (boss fights still use 'boss'). */
   music: MusicTrack;
   onClear: ReachClear;

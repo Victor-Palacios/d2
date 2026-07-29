@@ -251,7 +251,7 @@ export const JUNGLE_REACH: Reach = {
   color: '#5fd66a',
   recommendedLevel: 7,
   floors: FLOORS,
-  startingFuel: 135,
+  startingLight: 135,
   music: 'jungle',
   onClear: { flag: 'jungleCleared' },
   requires: 'crystalCleared',

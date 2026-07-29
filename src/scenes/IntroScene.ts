@@ -3,7 +3,7 @@ import { GameScene, sleep } from '../engine/SceneManager';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Torch } from '../engine/fx';
 import { floorTexture, wallTexture } from '../engine/pixel';
-import { HUMANS, VEHICLE } from '../assets/art';
+import { HUMANS } from '../assets/art';
 import { audio } from '../engine/Audio';
 import { input } from '../engine/Input';
 import { game } from '../systems/party/gameState';
@@ -86,11 +86,6 @@ export class IntroScene extends GameScene {
       m.receiveShadow = true;
       this.scene.add(m);
     }
-
-    const vehicle = new Billboard(VEHICLE.down, 'veh:down', { height: 1.6 });
-    vehicle.object.position.set(0.9, 0, 0.5);
-    this.scene.add(vehicle.object);
-    this.billboards.push(vehicle);
 
     const mentor = new Billboard(HUMANS.mentor, 'human:mentor', { height: 1.7 });
     mentor.object.position.set(-1.9, 0, -0.4);

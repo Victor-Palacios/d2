@@ -247,7 +247,7 @@ export const HAUNTED_DUNGEON: Reach = {
   color: '#b48cff',
   recommendedLevel: 10,
   floors: FLOORS,
-  startingFuel: 150,
+  startingLight: 150,
   music: 'haunted',
   onClear: { flag: 'hauntedCleared' },
   requires: 'crystalCleared',

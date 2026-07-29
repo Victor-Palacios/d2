@@ -244,7 +244,7 @@ export const CRYSTAL_CAVERN: Reach = {
   color: '#6fe0ff',
   recommendedLevel: 5,
   floors: FLOORS,
-  startingFuel: 130,
+  startingLight: 130,
   music: 'crystal',
   onClear: { flag: 'crystalCleared' },
   requires: 'crossingCleared',

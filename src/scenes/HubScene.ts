@@ -256,9 +256,8 @@ export class HubScene extends GameScene {
       ),
     ]);
     game.hasLicense = true;
-    game.hasOwnVehicle = true;
     game.set('licensed');
-    toast(this.ctx.ui, '<span class="accent">Licence acquired · Own vehicle acquired</span>', 2600);
+    toast(this.ctx.ui, '<span class="accent">Keeper\'s lantern acquired</span>', 2600);
     await sleep(1200);
 
     // The rival is already standing in the room (build() shows them once the
@@ -527,7 +526,7 @@ export class HubScene extends GameScene {
             'Halden',
             'Ground rules. Attack is free, Techniques cost MP, Guard halves the hit and gives MP back.',
             'Assassin beats Mage. Mage beats Hero. Hero beats Assassin. Element plates buff whoever matches them.',
-            'Every step in the reach costs 1 EP. Fuel canisters are worth the detour.',
+            'Every step in the reach spends 1 LP. Light shards are worth the detour.',
           );
         }
         return say(
@@ -537,7 +536,7 @@ export class HubScene extends GameScene {
         );
       case 'vendor':
         if (!game.hasLicense) {
-          return say('Quartermaster Ilsa', 'Supply bay is for licensed drivers. Come back with a licence and credits.');
+          return say('Quartermaster Ilsa', 'Supply bay is for licensed Keepers. Come back with a licence and credits.');
         }
         return say('Quartermaster Ilsa', 'Licensed, then. Take a look — the bay is open.');
       case 'soulstore':

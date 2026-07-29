@@ -26,13 +26,13 @@ export const ITEMS: Record<string, ItemDef> = {
   },
   fuelCanister: {
     id: 'fuelCanister',
-    name: 'Fuel Canister',
+    name: 'Light Shard',
     price: 90,
-    desc: 'Refills 40 EP of vehicle fuel while crawling a reach.',
+    desc: 'Restores 40 LP of lantern-light while crawling a reach.',
   },
   towBeacon: {
     id: 'towBeacon',
-    name: 'Tow Beacon',
+    name: 'Homing Ember',
     price: 200,
     desc: 'Emergency return to The Everwake without losing your haul.',
   },

@@ -385,7 +385,7 @@ export class BattleScene extends GameScene {
     this.hud.setLog(
       this.params.isBoss
         ? 'The warden blocks the hallway. There is no way past it.'
-        : 'Hostile data detected. Defend the beetle!',
+        : 'Hostile data detected. Defend the lantern!',
     );
     // The foes announce themselves — each species with a voice cries in turn.
     this.cryEnemies();
@@ -1087,7 +1087,7 @@ export class BattleScene extends GameScene {
     this.finished = true;
     audio.sfx('defeat');
     this.hud.setBanner('Defeat');
-    this.hud.setLog('The beetle goes dark...');
+    this.hud.setLog('The lantern goes dark...');
     await sleep(1600);
     await this.ctx.go('gameover');
   }

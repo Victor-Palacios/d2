@@ -239,7 +239,7 @@ export const QUIET_CROSSING: Reach = {
   color: '#ffa64d',
   recommendedLevel: 1,
   floors: QUIET_CROSSING_FLOORS,
-  startingFuel: 120,
+  startingLight: 120,
   music: 'dungeon',
   onClear: { flag: 'crossingCleared', licenseCeremony: true },
 };

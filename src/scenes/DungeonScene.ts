@@ -6,7 +6,7 @@ import { Billboard } from '../engine/Billboard';
 import { ParticleField, Portal, Torch } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
-import { DECOR, PROPS, VEHICLE } from '../assets/art';
+import { DECOR, PROPS, HUMANS } from '../assets/art';
 import { reach } from '../data/reaches';
 import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
 import { decorIsSolid } from '../data/dungeon';
@@ -27,7 +27,7 @@ import type { BattleSceneParams } from './BattleScene';
 type Facing = 'up' | 'down' | 'left' | 'right';
 
 const STEP_TIME = 0.19;
-const FUEL_PER_STEP = 1;
+const LIGHT_PER_STEP = 1;
 
 export interface DungeonSceneParams {
   /** Set when returning from a battle so the crawl resumes in place. */
@@ -147,10 +147,10 @@ export class DungeonScene extends GameScene {
     this.particles = new ParticleField(500);
     this.scene.add(this.particles.points);
 
-    // Player vehicle.
-    this.player = new Billboard(VEHICLE.down, 'veh:down', { height: 1.5 });
-    this.player.bob = 0.02;
-    this.player.bobSpeed = 5;
+    // The player, lantern in hand, on foot.
+    this.player = new Billboard(HUMANS.hero, 'player', { height: 1.7 });
+    this.player.bob = 0.03;
+    this.player.bobSpeed = 3;
     this.scene.add(this.player.object);
 
     // Props, portals and torches.
@@ -324,10 +324,9 @@ export class DungeonScene extends GameScene {
   }
 
   private updateFacingArt() {
-    if (this.facing === 'down') this.player.setArt(VEHICLE.down, 'veh:down');
-    else if (this.facing === 'up') this.player.setArt(VEHICLE.up, 'veh:up');
-    else if (this.facing === 'left') this.player.setArt(VEHICLE.side, 'veh:side');
-    else this.player.setArt(VEHICLE.side, 'veh:sideR', true);
+    // Single-pose hero: mirror when walking left, upright otherwise.
+    const mirrored = this.facing === 'left';
+    this.player.setArt(HUMANS.hero, mirrored ? 'playerL' : 'player', mirrored);
   }
 
   private saveCrawl() {
@@ -358,7 +357,7 @@ export class DungeonScene extends GameScene {
     this.moveT = 0;
     audio.sfx('step');
 
-    game.fuel = Math.max(0, game.fuel - FUEL_PER_STEP);
+    game.light = Math.max(0, game.light - LIGHT_PER_STEP);
     this.hud.update(game.party);
   }
 
@@ -373,8 +372,8 @@ export class DungeonScene extends GameScene {
   // --- tile interactions ---------------------------------------------------
 
   private async onTileEntered(tile: Tile) {
-    if (game.fuel <= 0) {
-      await this.outOfFuel();
+    if (game.light <= 0) {
+      await this.outOfLight();
       return;
     }
 
@@ -420,9 +419,9 @@ export class DungeonScene extends GameScene {
           b.dispose();
           this.props.delete(key);
         }
-        game.fuel = Math.min(game.maxFuel, game.fuel + 40);
+        game.light = Math.min(game.maxLight, game.light + 40);
         audio.sfx('pickup');
-        toast(this.ctx.ui, '<span class="ok">+40 EP</span>', 1600);
+        toast(this.ctx.ui, '<span class="ok">+40 LP</span>', 1600);
         this.hud.update(game.party);
       }
       return;
@@ -569,15 +568,15 @@ export class DungeonScene extends GameScene {
     }
   }
 
-  private async outOfFuel() {
+  private async outOfLight() {
     if (this.leaving) return;
     this.leaving = true;
     this.busy = true;
     await this.dialogue.play(
       say(
         'Halden',
-        'Your EP hit zero. Sit tight — I am pulling the beetle back on the tow line.',
-        'Nothing lost but time. Refuel and go again.',
+        'Your lantern guttered out. Sit tight — I am walking you back by the last of mine.',
+        'Nothing lost but time. Gather more light and go again.',
       ),
     );
     game.resetCrawl();
