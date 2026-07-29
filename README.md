@@ -47,6 +47,9 @@ in [`docs/`](docs/):
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** — the path from this first-hour slice
   toward a full monster-collecting dungeon-crawler's first five hours, including
   the element-count trim.
+- **[docs/adding-a-reach.md](docs/adding-a-reach.md)** — a systematic guide to
+  building a new area: terrain skins, decor, layout validation, roster and
+  world-map wiring.
 
 ## Run it locally
 
