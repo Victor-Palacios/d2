@@ -41,8 +41,8 @@ export interface DungeonSceneParams {
  * The dungeon crawl (plan §2.4, M1/M3). Used by every reach, starting with the
  * Quiet Crossing.
  *
- * Tile-by-tile movement in the dig-vehicle with wall collision, chests,
- * element floor plates, a draining EP meter, descent portals and both scripted
+ * Tile-by-tile movement on foot with wall collision, chests, element floor
+ * plates, draining lantern-light (LP), descent portals and both scripted
  * and random encounters — all staged in the shared HD-2D rig.
  */
 export class DungeonScene extends GameScene {

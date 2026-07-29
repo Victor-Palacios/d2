@@ -58,8 +58,8 @@ export interface HubSceneParams {
  * The Everwake, simplified (plan §2.2, M4/M5).
  *
  * One room, walk-around movement, bump-to-talk NPCs and a portal to the world
- * map. This is also where the post-boss progression beats fire: licence, own
- * vehicle, Guard Team choice, rival intro and the Mission 2 briefing.
+ * map. This is also where the post-boss progression beats fire: licence,
+ * Guard Team choice, rival intro and the Mission 2 briefing.
  */
 export class HubScene extends GameScene {
   private scene = new THREE.Scene();
