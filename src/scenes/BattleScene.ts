@@ -96,6 +96,15 @@ export class BattleScene extends GameScene {
   private fled = false;
   /** Auto-battle: party members take the basic Attack until the player cancels. */
   private autoBattle = false;
+  /** Repeat: party members re-issue their last player-chosen command until cancelled. */
+  private repeatBattle = false;
+  /**
+   * The most recent *player-chosen* action per party creature (by uid). Only
+   * manual menu picks are recorded — Auto and Repeat never overwrite it — so
+   * Repeat always replays what the player actually last commanded, and a
+   * technique that recovers its MP resumes instead of being stuck on Attack.
+   */
+  private lastActions = new Map<string, BattleAction>();
   private unsubInput: (() => void) | null = null;
 
   async enter(params?: unknown) {
@@ -146,6 +155,7 @@ export class BattleScene extends GameScene {
     // (L1 *starts* auto via the action menu's 'auto' item; here it stops it.)
     this.unsubInput = input.onAction((a) => {
       if ((a === 'cancel' || a === 'auto') && this.autoBattle) this.setAuto(false);
+      else if (a === 'cancel' && this.repeatBattle) this.setRepeat(false);
     });
 
     void this.run();
@@ -434,7 +444,13 @@ export class BattleScene extends GameScene {
             this.hud.setLog(`${actor.creature.name} attacks on its own.`);
             await sleep(320);
             action = this.autoAction();
+          } else if (this.repeatBattle) {
+            this.hud.setLog(`${actor.creature.name} repeats its last command.`);
+            await sleep(320);
+            action = this.repeatAction(actor);
           } else {
+            // Repeat is offered once a prior round's commands exist to replay.
+            const canRepeat = this.battle.round > 1 && this.lastActions.size > 0;
             // Loop so Boost can be spent (act again) before the real action.
             for (;;) {
               const choice = await this.hud.chooseAction(
@@ -442,6 +458,7 @@ export class BattleScene extends GameScene {
                 actor,
                 (uid) => this.hoverTarget(uid),
                 this.battle.reserves.filter(isUp),
+                canRepeat,
               );
               if (choice.type === 'boost') {
                 if (this.battle.spendBoost('party')) {
@@ -468,8 +485,14 @@ export class BattleScene extends GameScene {
                 this.setAuto(true);
                 await sleep(200);
                 action = this.autoAction();
+              } else if (choice.type === 'repeat') {
+                this.setRepeat(true);
+                await sleep(200);
+                action = this.repeatAction(actor);
               } else {
                 action = choice;
+                // Remember this manual command so Repeat can replay it later.
+                this.lastActions.set(actor.creature.uid, choice);
               }
               break;
             }
@@ -518,10 +541,35 @@ export class BattleScene extends GameScene {
    * turns are not wasted overkilling something already on its last legs.
    */
   private autoAction(): BattleAction {
+    return this.attackAction();
+  }
+
+  /**
+   * A basic Attack, targeting `preferredUid` when it is still a living foe,
+   * otherwise the weakest one — so turns are not wasted overkilling something
+   * already on its last legs. Shared by Auto and by Repeat's MP fallback.
+   */
+  private attackAction(preferredUid?: string): BattleAction {
     const foes = this.battle.living('enemy');
     if (!foes.length) return { type: 'guard' };
-    const target = foes.reduce((weakest, f) => (f.creature.hp < weakest.creature.hp ? f : weakest), foes[0]);
+    const keep = preferredUid ? foes.find((f) => f.creature.uid === preferredUid) : undefined;
+    const target = keep ?? foes.reduce((weakest, f) => (f.creature.hp < weakest.creature.hp ? f : weakest), foes[0]);
     return { type: 'attack', targetUid: target.creature.uid };
+  }
+
+  /**
+   * Repeat: replay this actor's last player-chosen command. If it was a
+   * Technique the actor can no longer afford, fall back to a normal Attack (as
+   * requested); if the actor never issued a command (e.g. it was swapped in),
+   * default to a normal Attack too. Stale targets are re-aimed by the engine.
+   */
+  private repeatAction(actor: Battler): BattleAction {
+    const last = this.lastActions.get(actor.creature.uid);
+    if (!last) return this.attackAction();
+    if (last.type === 'technique' && actor.creature.mp < technique(last.techniqueId).mpCost) {
+      return this.attackAction(last.targetUid);
+    }
+    return last;
   }
 
   /**
@@ -640,10 +688,20 @@ export class BattleScene extends GameScene {
 
   private setAuto(on: boolean) {
     if (this.autoBattle === on) return;
+    if (on) this.setRepeat(false); // the two hands-off modes are mutually exclusive
     this.autoBattle = on;
     this.hud.setAuto(on);
     audio.sfx(on ? 'confirm' : 'cancel');
     if (!on) this.hud.setLog('Auto off — you have the controls.');
+  }
+
+  private setRepeat(on: boolean) {
+    if (this.repeatBattle === on) return;
+    if (on) this.setAuto(false); // the two hands-off modes are mutually exclusive
+    this.repeatBattle = on;
+    this.hud.setRepeat(on);
+    audio.sfx(on ? 'confirm' : 'cancel');
+    if (!on) this.hud.setLog('Repeat off — you have the controls.');
   }
 
   private pulse(actor: Battler) {

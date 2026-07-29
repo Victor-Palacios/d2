@@ -23,8 +23,13 @@ interface FighterCard {
   markEl: HTMLElement;
 }
 
-/** What the action menu can resolve to — a real action, "go auto", "boost", or "flee". */
-export type MenuChoice = BattleAction | { type: 'auto' } | { type: 'boost' } | { type: 'flee' };
+/** What the action menu can resolve to — a real action, "go auto"/"repeat", "boost", or "flee". */
+export type MenuChoice =
+  | BattleAction
+  | { type: 'auto' }
+  | { type: 'repeat' }
+  | { type: 'boost' }
+  | { type: 'flee' };
 
 /** How many announcements stay stacked at once, and how long each one dwells (ms). */
 const LOG_MAX = 4;
@@ -44,6 +49,7 @@ export class BattleHUD {
   private partyWrap: HTMLElement;
   private menuHost: HTMLElement;
   private autoChip: HTMLElement;
+  private repeatChip: HTMLElement;
   private boostChip!: HTMLElement;
   private cards = new Map<string, FighterCard>();
   private menu: Menu | null = null;
@@ -73,6 +79,12 @@ export class BattleHUD {
     this.autoChip.innerHTML = '<span class="accent">AUTO</span> — press ESC or L1 to take over';
     this.autoChip.style.display = 'none';
 
+    // Shown only while Repeat is running (the party re-issues last round's commands).
+    this.repeatChip = el('div', 'panel');
+    this.repeatChip.id = 'repeat-chip';
+    this.repeatChip.innerHTML = '<span class="accent">REPEAT</span> — press ESC to take over';
+    this.repeatChip.style.display = 'none';
+
     // Party Boost gauge — fills on Attack/Guard, spent to act again.
     this.boostChip = el('div', 'panel');
     this.boostChip.id = 'boost-chip';
@@ -84,6 +96,7 @@ export class BattleHUD {
       this.partyWrap,
       this.menuHost,
       this.autoChip,
+      this.repeatChip,
       this.boostChip,
     );
     this.parent.appendChild(this.root);
@@ -91,6 +104,10 @@ export class BattleHUD {
 
   setAuto(on: boolean) {
     this.autoChip.style.display = on ? '' : 'none';
+  }
+
+  setRepeat(on: boolean) {
+    this.repeatChip.style.display = on ? '' : 'none';
   }
 
   build(battle: Battle) {
@@ -297,6 +314,7 @@ export class BattleHUD {
     actor: Battler,
     onTargetHover?: (uid: string | null) => void,
     reserves: CreatureInstance[] = [],
+    canRepeat = false,
   ): Promise<MenuChoice> {
     const c = actor.creature;
 
@@ -323,12 +341,15 @@ export class BattleHUD {
         { value: 'guard', label: 'Guard' },
         { value: 'run', label: 'Run', disabled: battle.isBoss, note: battle.isBoss ? "can't flee" : '50%' },
         { value: 'auto', label: 'Auto', note: 'L1' },
+        { value: 'repeat', label: 'Repeat', disabled: !canRepeat, note: canRepeat ? 'last commands' : '—' },
       ];
       // Commune only appears when a gentle soul is present to hear it.
       if (canCommune) items.splice(6, 0, { value: 'commune', label: 'Commune', note: 'reach out' });
       const root = await this.runMenu(items);
 
       if (root === 'auto') return { type: 'auto' };
+
+      if (root === 'repeat') return { type: 'repeat' };
 
       if (root === 'boost') return { type: 'boost' };
 
