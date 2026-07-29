@@ -154,6 +154,18 @@ To **add a brand-new creature**:
 > antennas) must be drawn ≥2px thick or they vanish. See `bug`/`scrap` in
 > `quiet-crossing.mjs` for the 2×2-stamp helper.
 
+## Evolution lines
+
+`tools/sprites/evolutions.mjs` builds the Quiet Crossing evolution stages. Each
+base grows into a **linear 3–4 stage line** whose every stage is its OWN sprite
+that **holds the base's palette + silhouette** (a grown-up version — bigger,
+more of the signature feature, a fiercer face, a crown/aura at the top), in the
+flat house style. `EVO` maps new art key → builder; `LINES` maps base → ordered
+`[stageId, Name, evolveLevel]`. Integrate with `integrate-evolutions.mjs` (art)
+and the data is authored in `src/data/creatures.ts` (`evolutions` chains; the
+`evolve.ts` system + Transcendence screen drive the actual level-gated,
+reversible transform). Bosses (Regalion, etc.) stay standalone, not evo targets.
+
 ## Changelog (for reproducibility)
 
 - **2026-07-28 — pipeline established + first fixes.** Seeded with three 64px
@@ -198,6 +210,11 @@ To **add a brand-new creature**:
   `geodeGolem` (matte stone + glowing amethyst core), `crystalWarden`
   (faceted ice boss). `integrate.mjs` now merges `CROSSING` + `CAVERN`.
   Integrated and verified in-engine.
+- **2026-07-28 — Quiet Crossing evolution lines.** Gave all 8 first-dungeon
+  creatures linear 3–4 stage evolution lines, each stage a NEW own-art sprite
+  holding the base's style (`evolutions.mjs`, `integrate-evolutions.mjs`, 20 new
+  species in `creatures.ts`). Replaced the earlier borrowed-art / boss-linked
+  branches per the "hold predecessor's style" direction; bosses stay standalone.
 - **2026-07-28 — human style (third style) + all NPCs redesigned.** Added
   `humans.mjs` (parametric cel-shaded "storybook" people, warm-cool lantern
   light) and `integrate-humans.mjs`. Replaced the legacy 14×18 shared-silhouette
