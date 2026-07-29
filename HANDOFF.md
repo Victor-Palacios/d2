@@ -165,10 +165,13 @@ These were each learned by shipping the bug first.
 
 ## 8. Debug surface
 
-`window.hd2dGame` exposes `{ manager, hd2d, game, debug, stats, saves }` —
+`window.hd2dGame` exposes `{ manager, hd2d, game, debug, stats, saves, audio }` —
 current scene and live scene instance, every HD-2D parameter, the run state, a
-frame counter, and the save API. It is what the smoke tests drive, and it is the
-fastest way to reproduce anything without replaying the slice.
+frame counter, the save API, and the audio engine (handy for auditioning monster
+cries: `hd2dGame.audio.cry('regalion')` — see
+[docs/monster-cries.md](docs/monster-cries.md)). It is what the smoke tests
+drive, and it is the fastest way to reproduce anything without replaying the
+slice.
 
 ```js
 hd2dGame.game.floorIndex = 2;            // jump to the boss floor
