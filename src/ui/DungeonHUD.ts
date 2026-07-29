@@ -81,8 +81,7 @@ export class DungeonHUD {
       b.hp(c.hp, c.maxHp);
       b.mp(c.mp, c.maxMp);
       const icon = classIcon(c.attribute);
-      b.label.innerHTML =
-        c.hp > 0 ? `${icon}${esc(c.name)}` : `${icon}<span class="danger">${esc(c.name)}</span>`;
+      b.label.innerHTML = c.hp > 0 ? `${icon}${esc(c.name)}` : `${icon}<span class="danger">${esc(c.name)}</span>`;
     }
   }
 

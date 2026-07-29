@@ -46,13 +46,20 @@ export function openPartyArrange(parent: HTMLElement): Promise<void> {
         : 'UP/DOWN choose · Z/ENTER grab · X close';
     };
 
-    const close = () => { unsub(); remove(root); resolve(); };
+    const close = () => {
+      unsub();
+      remove(root);
+      resolve();
+    };
 
     const unsub = input.onAction((a) => {
       if (a === 'up' || a === 'down') {
         const dir = a === 'up' ? -1 : 1;
         if (grabbedUid) {
-          if (game.reorderParty(grabbedUid, dir)) { index += dir; audio.sfx('blip'); }
+          if (game.reorderParty(grabbedUid, dir)) {
+            index += dir;
+            audio.sfx('blip');
+          }
           index = Math.max(0, Math.min(game.party.length - 1, index));
         } else {
           index = Math.max(0, Math.min(game.party.length - 1, index + dir));
@@ -60,12 +67,23 @@ export function openPartyArrange(parent: HTMLElement): Promise<void> {
         }
         render();
       } else if (a === 'confirm') {
-        if (grabbedUid) { grabbedUid = null; audio.sfx('confirm'); }
-        else { grabbedUid = game.party[index]?.uid ?? null; audio.sfx('confirm'); }
+        if (grabbedUid) {
+          grabbedUid = null;
+          audio.sfx('confirm');
+        } else {
+          grabbedUid = game.party[index]?.uid ?? null;
+          audio.sfx('confirm');
+        }
         render();
       } else if (a === 'cancel' || a === 'menu' || a === 'start') {
-        if (grabbedUid) { grabbedUid = null; audio.sfx('cancel'); render(); }
-        else { audio.sfx('cancel'); close(); }
+        if (grabbedUid) {
+          grabbedUid = null;
+          audio.sfx('cancel');
+          render();
+        } else {
+          audio.sfx('cancel');
+          close();
+        }
       }
     });
 

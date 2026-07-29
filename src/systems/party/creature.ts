@@ -105,7 +105,7 @@ export function hasEquipEffect(c: CreatureInstance, effect: string): boolean {
 
 /** EXP needed to advance from `level` to the next. A gentle super-linear curve. */
 export function xpToNext(level: number): number {
-  return Math.round(12 * Math.pow(level, 1.5));
+  return Math.round(12 * level ** 1.5);
 }
 
 /**
@@ -115,7 +115,7 @@ export function xpToNext(level: number): number {
  */
 export function xpFromEnemy(monsterLevel: number, enemyLevel: number): number {
   const base = enemyLevel * 8;
-  const scale = Math.min(4, Math.max(0.25, Math.pow(2, (enemyLevel - monsterLevel) / 3)));
+  const scale = Math.min(4, Math.max(0.25, 2 ** ((enemyLevel - monsterLevel) / 3)));
   return Math.max(1, Math.round(base * scale));
 }
 

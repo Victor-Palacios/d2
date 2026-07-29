@@ -60,11 +60,7 @@ export interface DecorSpec {
  * under (hanging vines). Every other kind is solid unless a `DecorSpec` opts
  * out with `solid: false`.
  */
-export const PASSABLE_DECOR_KINDS = new Set<string>([
-  'mushroomGlow',
-  'jungleFlower',
-  'vineHang',
-]);
+export const PASSABLE_DECOR_KINDS = new Set<string>(['mushroomGlow', 'jungleFlower', 'vineHang']);
 
 /** Whether a decor instance blocks the party's movement. */
 export function decorIsSolid(d: DecorSpec): boolean {

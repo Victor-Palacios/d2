@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { GameScene, sleep } from '../engine/SceneManager';
-import type { SceneContext } from '../engine/SceneManager';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Torch, Aura } from '../engine/fx';
 import { battleAura } from '../data/battleFx';
@@ -98,10 +97,6 @@ export class BattleScene extends GameScene {
   /** Auto-battle: party members take the basic Attack until the player cancels. */
   private autoBattle = false;
   private unsubInput: (() => void) | null = null;
-
-  constructor(ctx: SceneContext) {
-    super(ctx);
-  }
 
   async enter(params?: unknown) {
     this.params = params as BattleSceneParams;
@@ -204,8 +199,14 @@ export class BattleScene extends GameScene {
       inst.instanceMatrix.needsUpdate = true;
       this.scene.add(inst);
     };
-    buildInst(positions.filter((p) => ((p.x / 2 + p.z / 2) & 1) === 0), matA);
-    buildInst(positions.filter((p) => ((p.x / 2 + p.z / 2) & 1) !== 0), matB);
+    buildInst(
+      positions.filter((p) => ((p.x / 2 + p.z / 2) & 1) === 0),
+      matA,
+    );
+    buildInst(
+      positions.filter((p) => ((p.x / 2 + p.z / 2) & 1) !== 0),
+      matB,
+    );
 
     // A low perimeter wall gives the arena depth and catches the key light.
     const wallMat = new THREE.MeshStandardMaterial({
@@ -532,31 +533,48 @@ export class BattleScene extends GameScene {
     };
 
     if (reach === 'crossing' && !game.has('tut.melee')) {
-      return teach('tut.melee', say('Halden',
-        'One more thing before the scraps get real. Your basic Attack — and some heavy Techniques — are melee: they only reach the front row.',
-        'A soul in the Rear is covered while an ally holds the front of its column, so melee cannot touch it. Ranged Techniques ignore cover and reach anyone.',
-        'So keep a fragile caster in the Rear, a sturdy body in the Vanguard ahead of it. Use Move to set your line.'));
+      return teach(
+        'tut.melee',
+        say(
+          'Halden',
+          'One more thing before the scraps get real. Your basic Attack — and some heavy Techniques — are melee: they only reach the front row.',
+          'A soul in the Rear is covered while an ally holds the front of its column, so melee cannot touch it. Ranged Techniques ignore cover and reach anyone.',
+          'So keep a fragile caster in the Rear, a sturdy body in the Vanguard ahead of it. Use Move to set your line.',
+        ),
+      );
     }
 
     if (reach === 'crystal' && !game.has('tut.reaction')) {
-      return teach('tut.reaction', say('Halden',
-        'The Reliquary runs hot and cold at once — a good place to learn reactions. Hit a soul with one element and it leaves a mark; you will see a ◈ on its card.',
-        'Strike that mark with a DIFFERENT element before it fades and the two detonate — Steam, Wildfire, Short-Circuit: bonus damage, and it Breaks faster.',
-        'Two casters of different elements can pop a reaction every round. Mix your elements; do not just hammer one.'));
+      return teach(
+        'tut.reaction',
+        say(
+          'Halden',
+          'The Reliquary runs hot and cold at once — a good place to learn reactions. Hit a soul with one element and it leaves a mark; you will see a ◈ on its card.',
+          'Strike that mark with a DIFFERENT element before it fades and the two detonate — Steam, Wildfire, Short-Circuit: bonus damage, and it Breaks faster.',
+          'Two casters of different elements can pop a reaction every round. Mix your elements; do not just hammer one.',
+        ),
+      );
     }
 
     if (reach === 'haunted') {
       if (!game.has('tut.breakChain')) {
-        return teach('tut.breakChain', say('Halden',
-          'These are already half-gone. Break one and it cannot even shield itself — so when a soul is BROKEN, pile on before it recovers.',
-          'Each hit landed on it extends a chain: every link bites harder, and a long enough chain banks you a Boost charge.',
-          'Order your turns onto the broken one, and spend Boost to squeeze in an extra hit and keep the chain alive.'));
+        return teach(
+          'tut.breakChain',
+          say(
+            'Halden',
+            'These are already half-gone. Break one and it cannot even shield itself — so when a soul is BROKEN, pile on before it recovers.',
+            'Each hit landed on it extends a chain: every link bites harder, and a long enough chain banks you a Boost charge.',
+            'Order your turns onto the broken one, and spend Boost to squeeze in an extra hit and keep the chain alive.',
+          ),
+        );
       }
       if (!game.has('tut.commune') && this.battle.communeTargets('enemy').length > 0) {
         return teach('tut.commune', [
-          ...say('Halden',
-            'Wait — that one isn\'t attacking. It\'s just frightened. You don\'t have to put it down.',
-            'Use Commune. Speak to it a few turns, until it understands; it settles and leaves in peace — and you still log its soul if you win the fight.'),
+          ...say(
+            'Halden',
+            "Wait — that one isn't attacking. It's just frightened. You don't have to put it down.",
+            'Use Commune. Speak to it a few turns, until it understands; it settles and leaves in peace — and you still log its soul if you win the fight.',
+          ),
           ...narrate('Some of what waits down here does not need to be beaten. Only heard.'),
         ]);
       }
@@ -570,7 +588,7 @@ export class BattleScene extends GameScene {
    */
   private resolvePacify(uid: string) {
     const t = this.battle.find(uid);
-    if (!t || t.side !== 'enemy') return;
+    if (t?.side !== 'enemy') return;
     game.understandSoul(t.creature.speciesId);
     audio.sfx('blip');
     this.hud.setLog(`${t.creature.name} is at peace — win the fight to log its soul.`);
@@ -585,7 +603,7 @@ export class BattleScene extends GameScene {
     for (const h of result.hits) {
       if (h.damage <= 0) continue;
       const target = this.battle.find(h.targetUid);
-      if (!target || target.side !== 'enemy') continue;
+      if (target?.side !== 'enemy') continue;
       if (game.syphonHit(target.creature.speciesId)) {
         audio.sfx('blip');
         this.hud.setLog(`${target.creature.name}'s soul is full — win the fight to claim it!`);
@@ -603,7 +621,10 @@ export class BattleScene extends GameScene {
     for (const b of this.battle.side('enemy')) {
       if (!game.syphonReady(b.creature.speciesId)) continue;
       const cap = game.captureSpecies(b.creature.speciesId, b.creature.level);
-      claimed.push({ name: cap.creature.name, where: cap.toParty ? 'joined your party' : 'sent to the Soul Sanctuary' });
+      claimed.push({
+        name: cap.creature.name,
+        where: cap.toParty ? 'joined your party' : 'sent to the Soul Sanctuary',
+      });
     }
     return claimed;
   }
@@ -707,7 +728,13 @@ export class BattleScene extends GameScene {
         const tech = technique(result.techniqueId ?? 'strike');
         const color = ELEMENTS[tech.element].color;
         const react = !!hit.reaction;
-        this.particles.emit(worldTop, { count: react ? 30 : 18, color, speed: react ? 3.4 : 2.6, life: 0.55, gravity: -3 });
+        this.particles.emit(worldTop, {
+          count: react ? 30 : 18,
+          color,
+          speed: react ? 3.4 : 2.6,
+          life: 0.55,
+          gravity: -3,
+        });
         const s = this.screenPos(worldTop);
         const superEffective = hit.crit || hit.breakdown?.effectiveness === 'super';
         const big = superEffective || react;
@@ -844,7 +871,9 @@ export class BattleScene extends GameScene {
     const light = this.battle.side('enemy')[0];
     this.hud.setActive(light.creature.uid);
     this.hud.setBanner('A Trembling Light');
-    this.hud.setLog('A cracked lantern drifts near, a small flame shivering inside. It cannot fight, and will not be made to. It is trying, gently, to leave.');
+    this.hud.setLog(
+      'A cracked lantern drifts near, a small flame shivering inside. It cannot fight, and will not be made to. It is trying, gently, to leave.',
+    );
     await sleep(1900);
 
     let turns = 3;
@@ -863,21 +892,33 @@ export class BattleScene extends GameScene {
         this.hud.setLog('You say: "Remember who you are."');
         await sleep(1200);
         if (this.battle.rng() < chance) awarded = true;
-        else { this.hud.setLog('The flame gutters, reaching for a name it almost has. Not yet.'); await sleep(1200); turns -= 1; }
+        else {
+          this.hud.setLog('The flame gutters, reaching for a name it almost has. Not yet.');
+          await sleep(1200);
+          turns -= 1;
+        }
       } else if (choice === 'comfort') {
         rememberStreak = 0;
         comforted = true;
         const phrase = COMFORT_PHRASES[Math.floor(this.battle.rng() * COMFORT_PHRASES.length)];
         this.hud.setLog(`You say: "${phrase}"`);
         await sleep(1300);
-        if (this.battle.rng() < 0.10) awarded = true;
-        else { this.hud.setLog('It leans toward the warmth of your voice, a little steadier now.'); await sleep(1200); turns -= 1; }
+        if (this.battle.rng() < 0.1) awarded = true;
+        else {
+          this.hud.setLog('It leans toward the warmth of your voice, a little steadier now.');
+          await sleep(1200);
+          turns -= 1;
+        }
       } else {
         rememberStreak = 0;
         this.hud.setLog('You say: "You are free."');
         await sleep(1300);
         if (comforted) awarded = true;
-        else { left = true; this.hud.setLog('But it was not ready. Startled, the flame slips away — taking nothing you offered.'); await sleep(1800); }
+        else {
+          left = true;
+          this.hud.setLog('But it was not ready. Startled, the flame slips away — taking nothing you offered.');
+          await sleep(1800);
+        }
       }
     }
 
@@ -919,7 +960,11 @@ export class BattleScene extends GameScene {
     if (piece) {
       audio.sfx('chest');
       this.hud.setLog(`It leaves a line behind: "${piece.line}"`);
-      toast(this.ctx.ui, `<span class="accent">◆ Immortality ${piece.index + 1}/${IMMORTALITY_TOTAL}</span> — "${piece.line}"`, 3200);
+      toast(
+        this.ctx.ui,
+        `<span class="accent">◆ Immortality ${piece.index + 1}/${IMMORTALITY_TOTAL}</span> — "${piece.line}"`,
+        3200,
+      );
       await sleep(2400);
       if (game.immortality >= IMMORTALITY_TOTAL) {
         this.hud.setLog('The elegy is whole. A life remembered entire — the Immortality Memento is yours.');
@@ -981,11 +1026,7 @@ export class BattleScene extends GameScene {
     }
     this.particles.update(dt);
     // Slow drift keeps the arena from feeling like a static screenshot.
-    this.ctx.hd2d.cameraTarget.set(
-      Math.sin(time * 0.25) * 0.35,
-      0,
-      CAMERA_BIAS_Z + Math.cos(time * 0.2) * 0.2,
-    );
+    this.ctx.hd2d.cameraTarget.set(Math.sin(time * 0.25) * 0.35, 0, CAMERA_BIAS_Z + Math.cos(time * 0.2) * 0.2);
   }
 
   async exit() {

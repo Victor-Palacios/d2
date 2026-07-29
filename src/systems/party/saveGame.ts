@@ -225,7 +225,6 @@ export function applySave(data: SaveData) {
 /** Human-readable age, for the title screen. */
 export function describeSave(data: SaveData): string {
   const mins = Math.floor((Date.now() - data.savedAt) / 60000);
-  const when =
-    mins < 1 ? 'just now' : mins < 60 ? `${mins} min ago` : `${Math.floor(mins / 60)} h ago`;
+  const when = mins < 1 ? 'just now' : mins < 60 ? `${mins} min ago` : `${Math.floor(mins / 60)} h ago`;
   return `${data.label} · ${when}`;
 }

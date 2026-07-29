@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { GameScene, sleep } from '../engine/SceneManager';
-import type { SceneContext } from '../engine/SceneManager';
 import { TILE, TileGrid } from '../engine/TileGrid';
 import type { Tile } from '../engine/TileGrid';
 import { Billboard } from '../engine/Billboard';
@@ -77,10 +76,6 @@ export class DungeonScene extends GameScene {
   private leaving = false;
   private legend!: HTMLElement;
   private unsubInput: (() => void) | null = null;
-
-  constructor(ctx: SceneContext) {
-    super(ctx);
-  }
 
   // -------------------------------------------------------------------------
 
@@ -164,10 +159,14 @@ export class DungeonScene extends GameScene {
       const world = this.grid.worldPos(t.x, t.z);
       if (t.kind === 'chest') {
         const opened = game.openedChests.has(`${this.floor.id}:${key}`);
-        const b = new Billboard(opened ? PROPS.chestOpen : PROPS.chestClosed, opened ? 'prop:chestOpen' : 'prop:chestClosed', {
-          height: 0.85,
-          emissive: opened ? 0.5 : 0.06,
-        });
+        const b = new Billboard(
+          opened ? PROPS.chestOpen : PROPS.chestClosed,
+          opened ? 'prop:chestOpen' : 'prop:chestClosed',
+          {
+            height: 0.85,
+            emissive: opened ? 0.5 : 0.06,
+          },
+        );
         b.bob = 0;
         b.object.position.copy(world);
         this.scene.add(b.object);
@@ -260,10 +259,14 @@ export class DungeonScene extends GameScene {
     const host = el('div', 'panel');
     host.id = 'pause-menu';
     host.appendChild(el('h2', undefined, 'Paused'));
-    const menu = new Menu(host, [
-      { value: 'resume', label: 'Resume crawl' },
-      { value: 'suspend', label: 'Suspend & quit', note: 'temp' },
-    ], { cancellable: true });
+    const menu = new Menu(
+      host,
+      [
+        { value: 'resume', label: 'Resume crawl' },
+        { value: 'suspend', label: 'Suspend & quit', note: 'temp' },
+      ],
+      { cancellable: true },
+    );
     this.ctx.ui.appendChild(host);
 
     const choice = await menu.open();
@@ -296,8 +299,7 @@ export class DungeonScene extends GameScene {
     this.dialogue = new DialogueBox(this.ctx.ui);
     this.legend = document.createElement('div');
     this.legend.id = 'legend';
-    this.legend.innerHTML =
-      'MOVE arrows/WASD · ESC pause &amp; suspend · E/R1 Soularium · ` debug · M mute';
+    this.legend.innerHTML = 'MOVE arrows/WASD · ESC pause &amp; suspend · E/R1 Soularium · ` debug · M mute';
     this.ctx.ui.appendChild(this.legend);
 
     this.unsubInput = input.onAction((a) => {
@@ -632,7 +634,7 @@ export class DungeonScene extends GameScene {
       this.moveT += dt / STEP_TIME;
       const t = Math.min(1, this.moveT);
       // Ease-out so each tile step has a little weight.
-      const e = 1 - Math.pow(1 - t, 2.2);
+      const e = 1 - (1 - t) ** 2.2;
       this.player.object.position.lerpVectors(this.moveFrom, this.moveTo, e);
       if (t >= 1) this.finishStep();
     } else if (!this.busy && !this.dialogue.visible && this.buffered) {

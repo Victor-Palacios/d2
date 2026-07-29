@@ -70,7 +70,9 @@ export class Menu {
   }
 
   private refresh() {
-    this.nodes.forEach((n, i) => n.classList.toggle('sel', i === this.index));
+    this.nodes.forEach((n, i) => {
+      n.classList.toggle('sel', i === this.index);
+    });
   }
 
   private moveTo(i: number, sound = true) {
@@ -127,7 +129,10 @@ export class Menu {
           // L1 shortcut: activate an 'auto' item if this menu offers one
           // (the battle action menu does; other menus simply ignore it).
           const i = this.items.findIndex((it) => it.value === 'auto' && !it.disabled);
-          if (i >= 0) { this.moveTo(i, false); this.choose(); }
+          if (i >= 0) {
+            this.moveTo(i, false);
+            this.choose();
+          }
         } else if (a === 'cancel' && this.opts.cancellable) {
           audio.sfx('cancel');
           this.finish(null);

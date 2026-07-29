@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { GameScene, sleep } from '../engine/SceneManager';
-import type { SceneContext } from '../engine/SceneManager';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Torch } from '../engine/fx';
 import { floorTexture, wallTexture } from '../engine/pixel';
@@ -41,10 +40,6 @@ export class IntroScene extends GameScene {
   private nameEntry: NameEntry | null = null;
   private dialogue!: DialogueBox;
   private unsub: (() => void) | null = null;
-
-  constructor(ctx: SceneContext) {
-    super(ctx);
-  }
 
   async enter() {
     this.buildDiorama();
@@ -117,11 +112,7 @@ export class IntroScene extends GameScene {
     stack.append(
       el('h1', 'title-main', 'THE EVERWAKE'),
       el('p', 'title-sub', 'a first-hour HD-2D vertical slice'),
-      el(
-        'div',
-        'hint dim',
-        'All names, sprites and audio are original placeholders. Click once to enable sound.',
-      ),
+      el('div', 'hint dim', 'All names, sprites and audio are original placeholders. Click once to enable sound.'),
     );
     this.screen.appendChild(stack);
     this.ctx.ui.appendChild(this.screen);
@@ -241,9 +232,15 @@ export class IntroScene extends GameScene {
     game.addItem('quickLocket');
 
     await this.dialogue.play([
-      ...say('Halden', `${s.name}. It chose you as much as you chose it. Keep it well — a bonded soul does not fade while it rides with you.`),
+      ...say(
+        'Halden',
+        `${s.name}. It chose you as much as you chose it. Keep it well — a bonded soul does not fade while it rides with you.`,
+      ),
       ...narrate(`${s.name} settles into your lantern.`),
-      ...say('Halden', 'Take these, too. A blade, a shroud, a locket — what the dead leave behind. Fit them to your souls from the menu. Small comforts, but the dark is long.'),
+      ...say(
+        'Halden',
+        'Take these, too. A blade, a shroud, a locket — what the dead leave behind. Fit them to your souls from the menu. Small comforts, but the dark is long.',
+      ),
     ]);
   }
 

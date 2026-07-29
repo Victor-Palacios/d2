@@ -436,7 +436,8 @@ export const SPECIES: Record<string, Species> = {
     ],
     evolutions: [{ to: 'banshade', level: 10 }],
     communable: true,
-    blurb: 'A frightened process that never finished terminating. It is not angry — only lost, and would rather be spoken to than struck.',
+    blurb:
+      'A frightened process that never finished terminating. It is not angry — only lost, and would rather be spoken to than struck.',
   },
   gravemaw: {
     id: 'gravemaw',
@@ -936,7 +937,8 @@ export const SPECIES: Record<string, Species> = {
     ],
     // Terminal by nature — it is a soul on the edge of moving on, not a fighter
     // with a future form.
-    blurb: 'A soul almost ready to move on — a trembling flame in a cracked lantern. It would sooner drift away than fight.',
+    blurb:
+      'A soul almost ready to move on — a trembling flame in a cracked lantern. It would sooner drift away than fight.',
   },
 };
 

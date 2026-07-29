@@ -7,17 +7,7 @@ import { ELEMENTS } from '../data/elements';
 /** World size of one dungeon tile. */
 export const TILE = 2;
 
-export type TileKind =
-  | 'void'
-  | 'wall'
-  | 'floor'
-  | 'start'
-  | 'portal'
-  | 'exit'
-  | 'chest'
-  | 'fuel'
-  | 'element'
-  | 'event';
+export type TileKind = 'void' | 'wall' | 'floor' | 'start' | 'portal' | 'exit' | 'chest' | 'fuel' | 'element' | 'event';
 
 export interface Tile {
   x: number;
@@ -149,11 +139,7 @@ export class TileGrid {
   }
 
   worldPos(x: number, z: number, y = 0): THREE.Vector3 {
-    return new THREE.Vector3(
-      (x - (this.width - 1) / 2) * TILE,
-      y,
-      (z - (this.depth - 1) / 2) * TILE,
-    );
+    return new THREE.Vector3((x - (this.width - 1) / 2) * TILE, y, (z - (this.depth - 1) / 2) * TILE);
   }
 
   forEach(fn: (t: Tile) => void) {
@@ -219,8 +205,14 @@ export class TileGrid {
       group.add(inst);
     };
     // Checkerboard the two floor textures so large rooms don't read as one slab.
-    makeFloorInstances(floors.filter((t) => (t.x + t.z) % 2 === 0), floorMatA);
-    makeFloorInstances(floors.filter((t) => (t.x + t.z) % 2 !== 0), floorMatB);
+    makeFloorInstances(
+      floors.filter((t) => (t.x + t.z) % 2 === 0),
+      floorMatA,
+    );
+    makeFloorInstances(
+      floors.filter((t) => (t.x + t.z) % 2 !== 0),
+      floorMatB,
+    );
 
     // --- walls -------------------------------------------------------------
     const WALL_H = this.theme.wallHeight ?? 2.6;

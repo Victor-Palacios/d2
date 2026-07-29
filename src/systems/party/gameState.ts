@@ -87,6 +87,7 @@ export class GameState {
 
   /** The entry for a species, creating a blank one on first access. */
   soul(speciesId: string): SoulEntry {
+    // biome-ignore lint/suspicious/noAssignInExpressions: idiomatic lazy-init of the soul entry
     return (this.soularium[speciesId] ??= { syphon: 0, captured: false, seen: false });
   }
 

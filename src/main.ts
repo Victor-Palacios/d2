@@ -85,7 +85,7 @@ const stats = { frames: 0, fps: 0 };
 // walled-off portal, orphaned event, floating decor). Silent in a clean build.
 if (import.meta.env?.DEV) {
   const problems = validateReaches();
-  if (problems.length) console.error('[validateReaches]\n' + problems.join('\n'));
+  if (problems.length) console.error(`[validateReaches]\n${problems.join('\n')}`);
 }
 
 void manager.go('intro');

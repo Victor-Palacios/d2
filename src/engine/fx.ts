@@ -38,7 +38,11 @@ export class ParticleField {
   private sizes: Float32Array;
   private cursor = 0;
 
-  constructor(private capacity = 400, color = '#ffffff', size = 0.18) {
+  constructor(
+    private capacity = 400,
+    color = '#ffffff',
+    size = 0.18,
+  ) {
     const geo = new THREE.BufferGeometry();
     this.positions = new Float32Array(capacity * 3);
     this.colors = new Float32Array(capacity * 3);
@@ -149,7 +153,10 @@ export class Aura {
   private phase = Math.random() * 10;
   private scratch = new THREE.Vector3();
 
-  constructor(private field: ParticleField, private cfg: BattleAura) {
+  constructor(
+    private field: ParticleField,
+    private cfg: BattleAura,
+  ) {
     if (cfg.light) {
       this.light = new THREE.PointLight(cfg.light.color, cfg.light.intensity, cfg.light.range ?? 5, 1.8);
     }
@@ -225,7 +232,10 @@ export class Torch {
   private phase = Math.random() * 10;
   private emitAccum = 0;
 
-  constructor(private field: ParticleField, intensity = 6) {
+  constructor(
+    private field: ParticleField,
+    intensity = 6,
+  ) {
     this.billboard = new Billboard(PROPS.torch, 'prop:torch', {
       height: 0.85,
       emissive: 1.7,
@@ -261,7 +271,11 @@ export class Portal {
   private ring: THREE.Mesh;
   private emitAccum = 0;
 
-  constructor(private field: ParticleField, color = 0x6fd3ff, private isExit = false) {
+  constructor(
+    private field: ParticleField,
+    color = 0x6fd3ff,
+    private isExit = false,
+  ) {
     const discGeo = new THREE.CircleGeometry(0.85, 24);
     discGeo.rotateX(-Math.PI / 2);
     const discMat = new THREE.MeshStandardMaterial({

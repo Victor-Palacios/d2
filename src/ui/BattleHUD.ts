@@ -69,7 +69,15 @@ export class BattleHUD {
     this.boostChip = el('div', 'panel');
     this.boostChip.id = 'boost-chip';
 
-    this.root.append(this.banner, this.log, this.enemyWrap, this.partyWrap, this.menuHost, this.autoChip, this.boostChip);
+    this.root.append(
+      this.banner,
+      this.log,
+      this.enemyWrap,
+      this.partyWrap,
+      this.menuHost,
+      this.autoChip,
+      this.boostChip,
+    );
     this.parent.appendChild(this.root);
   }
 
@@ -276,7 +284,12 @@ export class BattleHUD {
       const items: MenuItem[] = [
         { value: 'attack', label: 'Attack' },
         { value: 'technique', label: 'Technique', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
-        { value: 'boost', label: 'Boost', disabled: charges < 1, note: charges > 0 ? `act again · ▲${charges}` : 'empty' },
+        {
+          value: 'boost',
+          label: 'Boost',
+          disabled: charges < 1,
+          note: charges > 0 ? `act again · ▲${charges}` : 'empty',
+        },
         { value: 'move', label: 'Move', disabled: !canMove, note: canMove ? undefined : 'no room' },
         { value: 'swap', label: 'Swap', disabled: !canSwap, note: canSwap ? undefined : '—' },
         { value: 'guard', label: 'Guard' },
@@ -352,11 +365,16 @@ export class BattleHUD {
         if (!techId) continue;
         const t = technique(techId);
         // 'all' needs no aim; row/column/single all aim at an anchor foe.
-        if (techShape(t) === 'all') return { type: 'technique', techniqueId: techId, targetUid: battle.living('enemy')[0].creature.uid };
+        if (techShape(t) === 'all')
+          return { type: 'technique', techniqueId: techId, targetUid: battle.living('enemy')[0].creature.uid };
         // Melee Techniques respect cover (front line only); ranged/Ether reach any
         // living foe. Heals aim at the party.
         const candidates =
-          t.kind === 'heal' ? battle.living('party') : isMeleeTechnique(t) ? battle.meleeTargets('enemy') : battle.living('enemy');
+          t.kind === 'heal'
+            ? battle.living('party')
+            : isMeleeTechnique(t)
+              ? battle.meleeTargets('enemy')
+              : battle.living('enemy');
         const uid = await this.pickTarget(actor, candidates, onTargetHover);
         if (!uid) continue;
         return { type: 'technique', techniqueId: techId, targetUid: uid };
@@ -376,7 +394,10 @@ export class BattleHUD {
       note: `${b.creature.hp}/${b.creature.maxHp}`,
     }));
     // Default to the actor when it is a valid target (self-heal), otherwise the first.
-    const startIndex = Math.max(0, candidates.findIndex((b) => b.creature.uid === actor.creature.uid));
+    const startIndex = Math.max(
+      0,
+      candidates.findIndex((b) => b.creature.uid === actor.creature.uid),
+    );
     this.menuHost.style.display = '';
     this.menu?.destroy();
     this.menu = new Menu(this.menuHost, items, {

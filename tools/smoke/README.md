@@ -8,12 +8,16 @@ itself) was only visible by actually playing it.
 ## Running
 
 ```bash
+npm install                # playwright is now a pinned devDependency
 npm run build
 npm run preview            # serves on :4173 by default
-npm i -D playwright        # not a project dependency; install ad hoc
 
 URL=http://localhost:4173/ node tools/smoke/save.mjs
 ```
+
+Playwright is pinned in `devDependencies`, so `npm install` (or `npm ci`) is all
+you need — no ad-hoc install. Chromium itself still comes from Playwright's own
+download (or set `CHROME` to a system binary).
 
 Environment variables:
 

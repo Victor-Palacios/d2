@@ -97,7 +97,13 @@ const FLOORS: DungeonFloor[] = [
     encounters: [
       { weight: 3, enemies: [{ species: 'shardling', level: 5 }] },
       { weight: 2, enemies: [{ species: 'prismoth', level: 6 }] },
-      { weight: 2, enemies: [{ species: 'shardling', level: 5 }, { species: 'prismoth', level: 5 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'shardling', level: 5 },
+          { species: 'prismoth', level: 5 },
+        ],
+      },
       { weight: 1, enemies: [{ species: 'geodon', level: 7 }] },
     ],
   },
@@ -152,8 +158,20 @@ const FLOORS: DungeonFloor[] = [
     encounters: [
       { weight: 3, enemies: [{ species: 'shardling', level: 7 }] },
       { weight: 3, enemies: [{ species: 'geodon', level: 7 }] },
-      { weight: 2, enemies: [{ species: 'prismoth', level: 8 }, { species: 'shardling', level: 7 }] },
-      { weight: 1, enemies: [{ species: 'geodon', level: 8 }, { species: 'prismoth', level: 8 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'prismoth', level: 8 },
+          { species: 'shardling', level: 7 },
+        ],
+      },
+      {
+        weight: 1,
+        enemies: [
+          { species: 'geodon', level: 8 },
+          { species: 'prismoth', level: 8 },
+        ],
+      },
     ],
   },
 
@@ -187,12 +205,19 @@ const FLOORS: DungeonFloor[] = [
         kind: 'boss',
         enemies: [{ species: 'glaciark', level: 9 }],
         intro: [
-          ...narrate('At the vault\'s heart, a woman kneels over a pane of ice. Inside it, a girl is laughing — frozen mid-laugh, forever.'),
-          ...say('Sena Vale', 'Don\'t. If you bring warmth in here, she fades. I froze her so she would never have to end. I will not let you thaw my sister.'),
+          ...narrate(
+            "At the vault's heart, a woman kneels over a pane of ice. Inside it, a girl is laughing — frozen mid-laugh, forever.",
+          ),
+          ...say(
+            'Sena Vale',
+            "Don't. If you bring warmth in here, she fades. I froze her so she would never have to end. I will not let you thaw my sister.",
+          ),
         ],
         outro: [
-          ...say('Sena Vale', 'She was already gone, wasn\'t she. I only kept the shape.'),
-          ...narrate('The ice loosens its grip. Somewhere, at last, a soul is allowed to move on — and a portal home glimmers open behind you.'),
+          ...say('Sena Vale', "She was already gone, wasn't she. I only kept the shape."),
+          ...narrate(
+            'The ice loosens its grip. Somewhere, at last, a soul is allowed to move on — and a portal home glimmers open behind you.',
+          ),
         ],
       },
     },
@@ -200,7 +225,13 @@ const FLOORS: DungeonFloor[] = [
     encounterRate: 0.03,
     encounters: [
       { weight: 2, enemies: [{ species: 'shardling', level: 8 }] },
-      { weight: 1, enemies: [{ species: 'prismoth', level: 8 }, { species: 'geodon', level: 8 }] },
+      {
+        weight: 1,
+        enemies: [
+          { species: 'prismoth', level: 8 },
+          { species: 'geodon', level: 8 },
+        ],
+      },
     ],
   },
 ];
@@ -208,7 +239,8 @@ const FLOORS: DungeonFloor[] = [
 export const CRYSTAL_CAVERN: Reach = {
   id: 'crystal',
   name: 'The Reliquary',
-  blurb: 'A hall of kept light, where souls are frozen in glass so they can never fade — and never rest. Someone here refuses to let go.',
+  blurb:
+    'A hall of kept light, where souls are frozen in glass so they can never fade — and never rest. Someone here refuses to let go.',
   color: '#6fe0ff',
   recommendedLevel: 5,
   floors: FLOORS,

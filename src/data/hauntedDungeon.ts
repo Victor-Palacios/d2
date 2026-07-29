@@ -99,7 +99,13 @@ const FLOORS: DungeonFloor[] = [
       { weight: 1, enemies: [{ species: 'lastlight', level: 11 }] }, // rare: a soul about to move on
       { weight: 3, enemies: [{ species: 'wispling', level: 10 }] },
       { weight: 2, enemies: [{ species: 'gravemaw', level: 11 }] },
-      { weight: 2, enemies: [{ species: 'wispling', level: 10 }, { species: 'gravemaw', level: 10 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'wispling', level: 10 },
+          { species: 'gravemaw', level: 10 },
+        ],
+      },
       { weight: 1, enemies: [{ species: 'cryptguard', level: 11 }] },
     ],
   },
@@ -155,8 +161,20 @@ const FLOORS: DungeonFloor[] = [
       { weight: 1, enemies: [{ species: 'lastlight', level: 11 }] }, // rare: a soul about to move on
       { weight: 3, enemies: [{ species: 'gravemaw', level: 12 }] },
       { weight: 3, enemies: [{ species: 'wispling', level: 11 }] },
-      { weight: 2, enemies: [{ species: 'cryptguard', level: 12 }, { species: 'wispling', level: 11 }] },
-      { weight: 1, enemies: [{ species: 'cryptguard', level: 13 }, { species: 'gravemaw', level: 12 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'cryptguard', level: 12 },
+          { species: 'wispling', level: 11 },
+        ],
+      },
+      {
+        weight: 1,
+        enemies: [
+          { species: 'cryptguard', level: 13 },
+          { species: 'gravemaw', level: 12 },
+        ],
+      },
     ],
   },
 
@@ -189,11 +207,18 @@ const FLOORS: DungeonFloor[] = [
         kind: 'boss',
         enemies: [{ species: 'revenance', level: 14 }],
         intro: [
-          ...narrate('The fog gathers into a shape that used to be a person. It has forgotten which one — no one has said its name in so long that even it cannot remember.'),
-          ...say('the Unnamed', 'I had a name. Say it. Give me back one word and I will let you pass. Stay. Keep me company. Do not let me finish forgetting.'),
+          ...narrate(
+            'The fog gathers into a shape that used to be a person. It has forgotten which one — no one has said its name in so long that even it cannot remember.',
+          ),
+          ...say(
+            'the Unnamed',
+            'I had a name. Say it. Give me back one word and I will let you pass. Stay. Keep me company. Do not let me finish forgetting.',
+          ),
         ],
         outro: [
-          ...narrate('You cannot give back what the world let go. But you can give it something: a name of your own choosing, or the mercy of none.'),
+          ...narrate(
+            'You cannot give back what the world let go. But you can give it something: a name of your own choosing, or the mercy of none.',
+          ),
           ...say('the Unnamed', 'Oh. That will do. That will do.'),
           ...narrate('The last of it unravels, quiet now. A way home opens in the settling dark.'),
         ],
@@ -203,7 +228,13 @@ const FLOORS: DungeonFloor[] = [
     encounterRate: 0.04,
     encounters: [
       { weight: 2, enemies: [{ species: 'wispling', level: 12 }] },
-      { weight: 1, enemies: [{ species: 'cryptguard', level: 13 }, { species: 'gravemaw', level: 12 }] },
+      {
+        weight: 1,
+        enemies: [
+          { species: 'cryptguard', level: 13 },
+          { species: 'gravemaw', level: 12 },
+        ],
+      },
     ],
   },
 ];
@@ -211,7 +242,8 @@ const FLOORS: DungeonFloor[] = [
 export const HAUNTED_DUNGEON: Reach = {
   id: 'haunted',
   name: 'The Unremembered',
-  blurb: 'A dimming reach where the nearly-forgotten run their last errands, thinner each time. Say a soul\'s name and you save it from the second, final death.',
+  blurb:
+    "A dimming reach where the nearly-forgotten run their last errands, thinner each time. Say a soul's name and you save it from the second, final death.",
   color: '#b48cff',
   recommendedLevel: 10,
   floors: FLOORS,

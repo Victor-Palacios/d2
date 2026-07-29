@@ -93,8 +93,7 @@ export function validateFloor(floor: DungeonFloor): string[] {
   for (const d of floor.decor ?? []) {
     if (decorIsSolid(d)) solidDecor.add(`${d.x},${d.z}`);
   }
-  const traversable = (x: number, z: number): boolean =>
-    walkable(x, z) && !solidDecor.has(`${x},${z}`);
+  const traversable = (x: number, z: number): boolean => walkable(x, z) && !solidDecor.has(`${x},${z}`);
 
   // reachability: flood-fill traversable tiles from the start
   if (start) {
@@ -134,10 +133,7 @@ export function validateFloor(floor: DungeonFloor): string[] {
       errs.push(`decor '${d.kind}' at ${d.x},${d.z} is out of bounds`);
     } else if (!walkable(d.x, d.z)) {
       errs.push(`decor '${d.kind}' at ${d.x},${d.z} sits on a non-walkable tile '${ch}'`);
-    } else if (
-      decorIsSolid(d) &&
-      (standTiles.has(ch) || ELEMENT_CHARS.has(ch) || (ch >= '1' && ch <= '9'))
-    ) {
+    } else if (decorIsSolid(d) && (standTiles.has(ch) || ELEMENT_CHARS.has(ch) || (ch >= '1' && ch <= '9'))) {
       errs.push(`solid decor '${d.kind}' at ${d.x},${d.z} blocks an interactive tile '${ch}'`);
     }
     if (!(d.kind in DECOR)) errs.push(`decor kind '${d.kind}' has no art in DECOR`);

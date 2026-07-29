@@ -21,7 +21,10 @@ export class NameEntry {
   private unsubs: (() => void)[] = [];
   private resolve: ((v: string) => void) | null = null;
 
-  constructor(private parent: HTMLElement, defaultName = 'REN') {
+  constructor(
+    private parent: HTMLElement,
+    defaultName = 'REN',
+  ) {
     this.value = defaultName.toUpperCase().slice(0, MAX_LEN);
 
     this.root = el('div', 'screen');
@@ -91,7 +94,9 @@ export class NameEntry {
       this.slots[i].textContent = this.value[i] ?? '';
       this.slots[i].classList.toggle('cur', i === this.value.length);
     }
-    this.keys.forEach((k, i) => k.classList.toggle('sel', i === this.index));
+    this.keys.forEach((k, i) => {
+      k.classList.toggle('sel', i === this.index);
+    });
   }
 
   private move(dx: number, dy: number) {
@@ -151,7 +156,8 @@ export class NameEntry {
           else if (a === 'up') this.move(0, -1);
           else if (a === 'down') this.move(0, 1);
           else if (a === 'confirm') this.press();
-          else if (a === 'start') this.confirm(); // Start / Options submits the name
+          else if (a === 'start')
+            this.confirm(); // Start / Options submits the name
           else if (a === 'cancel') this.backspace();
         }),
       );

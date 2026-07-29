@@ -144,7 +144,7 @@ export class Input {
     let present = false;
 
     for (const pad of getPads()) {
-      if (!pad || !pad.connected) continue;
+      if (!pad?.connected) continue;
       present = true;
 
       for (const [index, action] of Object.entries(PAD_BUTTONS)) {

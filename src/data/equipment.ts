@@ -34,7 +34,7 @@ export const EQUIPMENT: Record<string, Equipment> = {
     name: 'Cinder Edge',
     slot: 'arms',
     off: 6,
-    desc: 'A blade that kept a little of its owner\'s warmth. +6 OFF.',
+    desc: "A blade that kept a little of its owner's warmth. +6 OFF.",
   },
   focusReliquary: {
     id: 'focusReliquary',
@@ -78,7 +78,7 @@ export const EQUIPMENT: Record<string, Equipment> = {
     name: 'Immortality',
     slot: 'memento',
     effect: 'crit',
-    desc: 'A whole life, remembered. The wearer lands only criticals for a battle\'s first three rounds.',
+    desc: "A whole life, remembered. The wearer lands only criticals for a battle's first three rounds.",
   },
   haldensSerial: {
     id: 'haldensSerial',

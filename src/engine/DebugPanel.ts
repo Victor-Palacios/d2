@@ -71,16 +71,20 @@ export class DebugPanel {
     world.add(p, 'supersample', 0.5, 2, 0.05).onChange(apply);
     world.add(p, 'smaa').onChange(apply);
 
-    this.gui.add(
-      {
-        reset: () => {
-          Object.assign(p, DEFAULT_PARAMS);
-          apply();
-          this.gui.controllersRecursive().forEach((c) => c.updateDisplay());
+    this.gui
+      .add(
+        {
+          reset: () => {
+            Object.assign(p, DEFAULT_PARAMS);
+            apply();
+            this.gui.controllersRecursive().forEach((c) => {
+              c.updateDisplay();
+            });
+          },
         },
-      },
-      'reset',
-    ).name('Reset to defaults');
+        'reset',
+      )
+      .name('Reset to defaults');
 
     this.setVisible(false);
   }
@@ -96,7 +100,9 @@ export class DebugPanel {
 
   /** Keeps the panel honest when code changes params behind its back. */
   refresh() {
-    this.gui.controllersRecursive().forEach((c) => c.updateDisplay());
+    this.gui.controllersRecursive().forEach((c) => {
+      c.updateDisplay();
+    });
     this.hd2d.applyParams();
   }
 }

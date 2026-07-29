@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { GameScene, sleep } from '../engine/SceneManager';
-import type { SceneContext } from '../engine/SceneManager';
 import { TileGrid } from '../engine/TileGrid';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Portal, Torch } from '../engine/fx';
@@ -85,10 +84,6 @@ export class HubScene extends GameScene {
   private busy = false;
   private leaving = false;
   private unsubInput: (() => void) | null = null;
-
-  constructor(ctx: SceneContext) {
-    super(ctx);
-  }
 
   async enter(params?: unknown) {
     const p = (params ?? {}) as HubSceneParams;
@@ -194,7 +189,10 @@ export class HubScene extends GameScene {
           `${game.playerName}. Halden vouched for you, so here is the short version.`,
           'Carry a lantern into the Quiet Crossing, tend what lingers there, and come back with your light still lit. Then you keep in full.',
         ),
-        ...say('Halden', `${game.party[0]?.name ?? 'Your bonded soul'} rides with you — and keep whatever else you meet in your Soularium, so it is not forgotten twice.`),
+        ...say(
+          'Halden',
+          `${game.party[0]?.name ?? 'Your bonded soul'} rides with you — and keep whatever else you meet in your Soularium, so it is not forgotten twice.`,
+        ),
         ...narrate('The south portal leads out to the reaches.'),
       ]);
     } else if (kind === 'towed') {
@@ -252,7 +250,10 @@ export class HubScene extends GameScene {
         'The Vigil let you pass on your first crossing. That is either talent or mercy, and I will take either.',
         `You keep in full now, ${game.playerName}.`,
       ),
-      ...say('Halden', 'The lantern is yours to carry, and your bonded soul has earned its place in it. Tend the reaches gently. Most of what you meet only wants to be remembered — or let go.'),
+      ...say(
+        'Halden',
+        'The lantern is yours to carry, and your bonded soul has earned its place in it. Tend the reaches gently. Most of what you meet only wants to be remembered — or let go.',
+      ),
     ]);
     game.hasLicense = true;
     game.hasOwnVehicle = true;
@@ -277,16 +278,33 @@ export class HubScene extends GameScene {
     game.set('haldenGone');
 
     await this.dialogue.play([
-      ...narrate('You come back to the Everwake with all three reaches quiet behind you. The lanterns are lit. Halden is not at his radio.'),
-      ...narrate('You find him in the back, his detective serial still murmuring a chapter from the end. He is not an echo. He is a person, and he is dying the ordinary way.'),
-      ...say('Halden', `Ah. ${game.playerName}. I hoped it would be you who found me. Sit down. You do not have to fix your face.`),
+      ...narrate(
+        'You come back to the Everwake with all three reaches quiet behind you. The lanterns are lit. Halden is not at his radio.',
+      ),
+      ...narrate(
+        'You find him in the back, his detective serial still murmuring a chapter from the end. He is not an echo. He is a person, and he is dying the ordinary way.',
+      ),
+      ...say(
+        'Halden',
+        `Ah. ${game.playerName}. I hoped it would be you who found me. Sit down. You do not have to fix your face.`,
+      ),
     ]);
 
     await this.dialogue.play([
-      ...narrate('Without deciding to, you raise the lantern — the gesture that kept every soul in the reaches. Keep him. Hold him. Do not let him fade.'),
-      ...narrate('Nothing happens. The lantern will not take him. He is not a lingering thing to be drawn in; he is a whole life, and a whole life cannot be kept that way.'),
-      ...say('Halden', 'No. Put it down. You cannot syphon a person — only the echo one leaves. I taught you to keep souls. I never taught you this, because I could not do it myself.'),
-      ...say('Halden', 'Keeping was never the same as loving. Some things you honour by holding on. The ones that matter most, you honour by letting go. That is the question the lantern was always asking you.'),
+      ...narrate(
+        'Without deciding to, you raise the lantern — the gesture that kept every soul in the reaches. Keep him. Hold him. Do not let him fade.',
+      ),
+      ...narrate(
+        'Nothing happens. The lantern will not take him. He is not a lingering thing to be drawn in; he is a whole life, and a whole life cannot be kept that way.',
+      ),
+      ...say(
+        'Halden',
+        'No. Put it down. You cannot syphon a person — only the echo one leaves. I taught you to keep souls. I never taught you this, because I could not do it myself.',
+      ),
+      ...say(
+        'Halden',
+        'Keeping was never the same as loving. Some things you honour by holding on. The ones that matter most, you honour by letting go. That is the question the lantern was always asking you.',
+      ),
       ...narrate('His hand goes still. The serial plays on to no one.'),
     ]);
 
@@ -294,28 +312,42 @@ export class HubScene extends GameScene {
     if (choice === 'name') {
       game.set('mourn:name');
       await this.dialogue.play([
-        ...narrate('You write his name where it will be read, so the second death cannot have him. He will be remembered — held, a little, against his own advice.'),
+        ...narrate(
+          'You write his name where it will be read, so the second death cannot have him. He will be remembered — held, a little, against his own advice.',
+        ),
       ]);
     } else if (choice === 'work') {
       game.set('mourn:work');
       game.addItem('haldensSerial');
       await this.dialogue.play([
-        ...narrate('You take his chair, his radio, the serial with its last chapter unread. The duty is yours now. You carry the unfinished story with you.'),
+        ...narrate(
+          'You take his chair, his radio, the serial with its last chapter unread. The duty is yours now. You carry the unfinished story with you.',
+        ),
       ]);
-      toast(this.ctx.ui, "<span class=\"accent\">Got Halden's Serial</span> — a Memento", 2600);
+      toast(this.ctx.ui, '<span class="accent">Got Halden\'s Serial</span> — a Memento', 2600);
     } else {
       game.set('mourn:letgo');
       await this.dialogue.play([
-        ...narrate('You keep nothing. You let the story stay unfinished, the chair stay empty, the name go unwritten. It is the hardest thing he taught you, and the last.'),
+        ...narrate(
+          'You keep nothing. You let the story stay unfinished, the chair stay empty, the name go unwritten. It is the hardest thing he taught you, and the last.',
+        ),
       ]);
     }
 
     await sleep(700);
     await this.dialogue.play([
       ...narrate('Word travels the reaches. Grief does not soften the others. It sharpens them.'),
-      ...say('Sena Vale', 'So you have felt it now. That is why I froze Lire — so I would never have to. Bring me a soul you love and I will do the same for you. You need never lose another.'),
-      ...say('Wren', 'I have added Halden to the Book. I add everyone. If every name is written down, then no one is truly gone — they are not gone — tell me they are not gone.'),
-      ...narrate('And you: you have been keeping souls since the first lantern. You wonder, now, whether it was ever tending them — or only refusing, again and again, to let a single one go.'),
+      ...say(
+        'Sena Vale',
+        'So you have felt it now. That is why I froze Lire — so I would never have to. Bring me a soul you love and I will do the same for you. You need never lose another.',
+      ),
+      ...say(
+        'Wren',
+        'I have added Halden to the Book. I add everyone. If every name is written down, then no one is truly gone — they are not gone — tell me they are not gone.',
+      ),
+      ...narrate(
+        'And you: you have been keeping souls since the first lantern. You wonder, now, whether it was ever tending them — or only refusing, again and again, to let a single one go.',
+      ),
     ]);
     game.set('actTwo');
     toast(this.ctx.ui, '<span class="accent">Act II — every philosophy hardens</span>', 3000);
@@ -352,31 +384,50 @@ export class HubScene extends GameScene {
     game.set('jungleWakeDone');
 
     await this.dialogue.play([
-      ...narrate('The Overgrowth lets go behind you — root by root, soul by soul, the way you unwound it. By the time you reach the Everwake, one of the freed has followed the light home.'),
-      ...narrate('Liora Fen stands unsteady by the wake-fire, learning legs that were roots for longer than she can count. The souls she kept have already crossed. She waited, to watch each one go.'),
-      ...say('Liora Fen', 'They are gone. All of them. I thought that would feel like losing.', 'It feels like a window opening in a room I had forgotten was shut.'),
-      ...say('Liora Fen', `I told the ones I caught that I was giving them rest. ${game.playerName}, I was keeping myself company. I could not sit in that green alone, so I made sure I never had to.`),
+      ...narrate(
+        'The Overgrowth lets go behind you — root by root, soul by soul, the way you unwound it. By the time you reach the Everwake, one of the freed has followed the light home.',
+      ),
+      ...narrate(
+        'Liora Fen stands unsteady by the wake-fire, learning legs that were roots for longer than she can count. The souls she kept have already crossed. She waited, to watch each one go.',
+      ),
+      ...say(
+        'Liora Fen',
+        'They are gone. All of them. I thought that would feel like losing.',
+        'It feels like a window opening in a room I had forgotten was shut.',
+      ),
+      ...say(
+        'Liora Fen',
+        `I told the ones I caught that I was giving them rest. ${game.playerName}, I was keeping myself company. I could not sit in that green alone, so I made sure I never had to.`,
+      ),
     ]);
 
     const kind = await this.chooseLiora();
     if (kind === 'lonely') {
       game.set('mourn:liora:kind');
       await this.dialogue.play(
-        say('Liora Fen', 'Lonely. Yes. You could have called it something worse and been just as right. Thank you for the gentler true thing.'),
+        say(
+          'Liora Fen',
+          'Lonely. Yes. You could have called it something worse and been just as right. Thank you for the gentler true thing.',
+        ),
       );
     } else {
       game.set('mourn:liora:true');
       await this.dialogue.play(
-        say('Liora Fen', 'Cruel. Yes — I stole years and called it kindness so I could keep stealing them. You did not look away from that. Good. Neither will I.'),
+        say(
+          'Liora Fen',
+          'Cruel. Yes — I stole years and called it kindness so I could keep stealing them. You did not look away from that. Good. Neither will I.',
+        ),
       );
     }
 
     game.addItem('lioraStep');
     await this.dialogue.play([
       ...say('Liora Fen', 'Here. The first step of a walk I stopped taking. I have no more use for standing still.'),
-      ...narrate('She presses a worn charm into your hand — and then she is walking, at last, toward the dark that is only dark until you reach it.'),
+      ...narrate(
+        'She presses a worn charm into your hand — and then she is walking, at last, toward the dark that is only dark until you reach it.',
+      ),
     ]);
-    toast(this.ctx.ui, "<span class=\"accent\">Got Liora's Step</span> — a Memento", 2600);
+    toast(this.ctx.ui, '<span class="accent">Got Liora\'s Step</span> — a Memento', 2600);
   }
 
   /** Liora's small farewell choice: name the truth of what her keeping was. */
@@ -559,7 +610,7 @@ export class HubScene extends GameScene {
     if (this.moving) {
       this.moveT += dt / 0.17;
       const t = Math.min(1, this.moveT);
-      this.player.object.position.lerpVectors(this.moveFrom, this.moveTo, 1 - Math.pow(1 - t, 2.2));
+      this.player.object.position.lerpVectors(this.moveFrom, this.moveTo, 1 - (1 - t) ** 2.2);
       if (t >= 1) {
         this.moving = false;
         void this.onArrive();

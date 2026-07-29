@@ -377,11 +377,7 @@ export class HD2DRenderer {
 
     const pitch = THREE.MathUtils.degToRad(p.pitch);
     const yaw = THREE.MathUtils.degToRad(p.yaw);
-    this.camOffset.set(
-      Math.sin(yaw) * Math.cos(pitch),
-      Math.sin(pitch),
-      Math.cos(yaw) * Math.cos(pitch),
-    );
+    this.camOffset.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
     this.camOffset.multiplyScalar(p.distance);
 
     this.camera.position.copy(this.smoothedTarget).add(this.camOffset);
@@ -394,11 +390,7 @@ export class HD2DRenderer {
       this.shake.amount *= Math.exp(-dt * 7);
     }
 
-    this.camera.lookAt(
-      this.smoothedTarget.x,
-      this.smoothedTarget.y + p.height,
-      this.smoothedTarget.z,
-    );
+    this.camera.lookAt(this.smoothedTarget.x, this.smoothedTarget.y + p.height, this.smoothedTarget.z);
   }
 
   render(dt: number) {

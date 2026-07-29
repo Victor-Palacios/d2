@@ -9,7 +9,11 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "check:naming": "node tools/check-naming.mjs"
+    "check:naming": "node tools/check-naming.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check .",
+    "format": "biome format --write ."
   },
   "repository": {
     "type": "git",
@@ -22,8 +26,11 @@
     "three": "^0.185.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.6",
     "@types/three": "^0.185.1",
+    "playwright": "^1.62.0",
     "typescript": "^7.0.2",
-    "vite": "^8.1.5"
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
   }
 }

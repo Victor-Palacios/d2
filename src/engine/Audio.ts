@@ -232,7 +232,8 @@ class AudioEngine {
       if (this.ctx.state === 'suspended') void this.ctx.resume();
       return;
     }
-    const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const Ctor =
+      window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return;
     this.ctx = new Ctor();
     this.master = this.ctx.createGain();
@@ -395,14 +396,14 @@ class AudioEngine {
       const bass = t.bass[Math.floor(s / 4) % t.bass.length];
       if (s % 4 === 0) {
         this.tone(
-          { freq: t.root * Math.pow(2, bass / 12) * 0.5, time: 0, dur: stepMs / 700, type: 'triangle', gain: 0.16 },
+          { freq: t.root * 2 ** (bass / 12) * 0.5, time: 0, dur: stepMs / 700, type: 'triangle', gain: 0.16 },
           this.musicGain,
           now,
         );
       }
       const arp = t.arp[s % t.arp.length];
       this.tone(
-        { freq: t.root * Math.pow(2, (arp + bass) / 12), time: 0, dur: stepMs / 1100, type: 'square', gain: 0.05 },
+        { freq: t.root * 2 ** ((arp + bass) / 12), time: 0, dur: stepMs / 1100, type: 'square', gain: 0.05 },
         this.musicGain,
         now,
       );

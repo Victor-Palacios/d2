@@ -90,7 +90,7 @@ export class DialogueBox {
     if (on) {
       // If a line is already sitting fully revealed, start its beat now.
       const c = this.current;
-      if (c && c.isComplete()) this.armAuto(c);
+      if (c?.isComplete()) this.armAuto(c);
     } else {
       this.clearAutoTimer();
     }

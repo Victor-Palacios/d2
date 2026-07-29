@@ -67,7 +67,9 @@ export async function openTranscend(parent: HTMLElement): Promise<void> {
     if (ready.length) {
       paths +=
         '<br><span class="ok">Ready to evolve:</span> ' +
-        ready.map((o) => `${esc(species(o.to).name)}${o.branch ? ` <span class="dim">(${esc(o.branch)})</span>` : ''}`).join(' · ');
+        ready
+          .map((o) => `${esc(species(o.to).name)}${o.branch ? ` <span class="dim">(${esc(o.branch)})</span>` : ''}`)
+          .join(' · ');
     } else {
       const pending = allEvolutions(c).filter((o) => c.level < o.level);
       if (pending.length) {
@@ -90,9 +92,7 @@ export async function openTranscend(parent: HTMLElement): Promise<void> {
 
   const announce = (r: EvolveResult, verb: string) => {
     audio.sfx('confirm');
-    const moves = r.gainedMoves.length
-      ? ` Learns ${r.gainedMoves.map((m) => technique(m).name).join(', ')}.`
-      : '';
+    const moves = r.gainedMoves.length ? ` Learns ${r.gainedMoves.map((m) => technique(m).name).join(', ')}.` : '';
     toast(parent, `<strong>${esc(r.name)}</strong> ${verb} ${esc(species(r.toId).name)}!${moves}`, 2200);
   };
 
