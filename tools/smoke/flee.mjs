@@ -60,7 +60,7 @@ console.log('menu items         :', JSON.stringify(items));
 console.log('Run offered        :', items.includes('Run'));
 console.log('fled to dungeon    :', escaped);
 // A flee is not a win: the scripted fight event stays unconsumed.
-const eventUnused = await page.evaluate(() => ![...window.hd2dGame.game.usedEvents].some((e) => e.includes('boot-1:2')));
+const eventUnused = await page.evaluate(() => ![...window.hd2dGame.game.usedEvents].some((e) => e.includes('crossing-1:2')));
 console.log('fight not consumed :', eventUnused);
 
 // A successful flee (dungeon, event not consumed) is itself proof Run was

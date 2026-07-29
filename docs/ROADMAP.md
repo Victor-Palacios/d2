@@ -3,7 +3,7 @@
 Where this goes next. The current build is a complete **first-hour vertical
 slice** (see `docs/PLAN_AUDIT.md`); this charts the path toward reproducing the
 *shape* of a **classic monster-collecting dungeon-crawler**'s first ~5 hours —
-multiple domains, a real progression loop, DNA-merge evolution, and recruiting —
+multiple reaches, a real progression loop, DNA-merge evolution, and recruiting —
 without breaking the two
 things that make the slice good: it is **fully procedural** (no binary assets)
 and its **battle model is headless** (pure rules, no renderer).
@@ -15,7 +15,7 @@ shippable increment, not a release.
 
 ## Guiding principles (don't regress these)
 
-1. **Data-driven, not code-driven.** New content is a data edit. Domains,
+1. **Data-driven, not code-driven.** New content is a data edit. Reachs,
    creatures, techniques, teams all already live in `src/data/`. Keep it there.
 2. **No binary assets** (plan §0.2). Every new creature is a pixel map in
    `art.ts`; every new sound is an oscillator in `Audio.ts`.
@@ -51,7 +51,7 @@ machine→fire, dark→water, by feel.)
 | `src/data/elements.ts` | Narrow `ElementId` to `'fire' \| 'water' \| 'nature'`; trim `ELEMENTS`. |
 | `src/data/techniques.ts` | Re-element the ~4 `machine`/`dark` techniques onto the three survivors. |
 | `src/data/creatures.ts` | Re-element machine/dark species; keep their sprites. |
-| `src/data/bootDomain.ts` | Remove `M`/`D` plate glyphs from floor rows; keep `F`/`W`/`N`. |
+| `src/data/quietCrossing.ts` | Remove `M`/`D` plate glyphs from floor rows; keep `F`/`W`/`N`. |
 | `src/engine/TileGrid.ts` | Drop the retired plate kinds from the legend. |
 | `src/assets/art.ts` / `pixel.ts` | Retire the two unused plate colour generators. |
 | README "Balance knobs" / legend | Update the tile legend. |
@@ -84,7 +84,7 @@ The single biggest gap: **there is no XP / level-up today** (`docs/SYSTEMS.md`
 - **Test:** extend `tools/smoke/` with a headless "grind N fights, assert level
   and stat deltas" run against `engine.ts`.
 
-*Why first:* every later system (recruiting, evolution, harder domains)
+*Why first:* every later system (recruiting, evolution, harder reaches)
 assumes creatures get stronger. Build the spine before the limbs.
 
 ## M8 — Recruiting / capturing (Soul Syphon)
@@ -131,22 +131,22 @@ Syphon** mechanic instead of a capture item.
   creature) — the `evolutions` model can grow a `mergeWith` field for it; and
   evolution-driven encounter tables so evolved forms appear in the wild.
 
-## M10 — More domains + procedural floors
+## M10 — More reaches + procedural floors
 
-One tutorial dungeon becomes several servers/domains.
+One tutorial dungeon becomes several servers/reaches.
 
-- ✅ **Done (partial):** the singleton `BOOT_DOMAIN` is now a **registry**
-  (`src/data/domains.ts` + `domain(id)`); `game.activeDomainId` drives the crawl,
-  and the world map free-selects any registered domain. Two hand-authored
-  domains shipped — **Crystal Cavern** (`crystalCavern.ts`) and **Haunted
+- ✅ **Done (partial):** the singleton `QUIET_CROSSING` is now a **registry**
+  (`src/data/reaches.ts` + `reach(id)`); `game.activeReachId` drives the crawl,
+  and the world map free-selects any registered reach. Two hand-authored
+  reaches shipped — **Crystal Cavern** (`crystalCavern.ts`) and **Haunted
   Dungeon** (`hauntedDungeon.ts`) — each with its own roster, theme and ambience
   track. Adding another is a data file + one registry line; no scene changes.
-  Covered by `tools/smoke/domains.mjs`.
-- **⚠️ Depends on M8 (recruiting).** These domains are wired and winnable, but a
-  post-boot party is a **single starter**, which cannot realistically clear a
+  Covered by `tools/smoke/reaches.mjs`.
+- **⚠️ Depends on M8 (recruiting).** These reaches are wired and winnable, but a
+  post-tutorial party is a **single starter**, which cannot realistically clear a
   3-enemy floor or a warden. Until recruiting/party-building lands, they are
   balanced only for a full party (e.g. the borrowed trio). Recruiting is the
-  gating feature that makes the extra domains actually playable — do M8 next.
+  gating feature that makes the extra reaches actually playable — do M8 next.
 - **Still to do:** a **procedural floor generator** for replayable grinding
   (emit the same `rows` format `TileGrid` parses; hand-author boss floors), and
   a difficulty curve tied to the M7 level math.
@@ -176,14 +176,14 @@ One tutorial dungeon becomes several servers/domains.
 ```
 Element trim ──▶ M7 XP ──▶ M8 Recruit ──▶ M9 Evolve
                     │                          │
-                    └────────▶ M10 Domains ◀───┘ ──▶ M11 Story ──▶ M12 Depth
+                    └────────▶ M10 Reachs ◀───┘ ──▶ M11 Story ──▶ M12 Depth
 ```
 
 - **Element trim** is the cheapest win and shrinks every table the later
   milestones touch — do it first.
 - **M7** unblocks everything; nothing else is meaningful without growth.
 - **M8/M9/M10** can proceed in parallel once M7 lands; they share the roster and
-  domain data layers but touch different UI.
+  reach data layers but touch different UI.
 - **Autosave fix (in M12)** is the one item that should be pulled *forward* the
   instant a playthrough exceeds a few minutes.
 

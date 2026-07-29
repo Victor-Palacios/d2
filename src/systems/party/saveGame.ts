@@ -21,13 +21,16 @@ import type { AttributeId } from '../../data/elements';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 7;
 /**
- * Oldest save this build can still read. Because every change so far is additive
- * and `applySave` defaults missing fields, all versions from 1 up migrate
- * forward — so raise this only on a genuinely breaking change.
+ * Oldest save this build can still read. Normally we keep this at 1 because
+ * changes are additive, but v5/v6 renamed the tutorial reach's id and clear
+ * flag, and the persisted `activeReachId` field. An older save carries an id
+ * that no longer resolves and would throw, so this is a genuinely breaking
+ * change: drop anything older and start fresh. v7 adds the mag/res stats, which
+ * `applySave` back-fills from the species curve — so a v6 save still loads.
  */
-export const MIN_SAVE_VERSION = 1;
+export const MIN_SAVE_VERSION = 6;
 
 const AUTO_KEY = 'hd2d.save.auto';
 const SUSPEND_KEY = 'hd2d.save.suspend';
@@ -53,7 +56,7 @@ export interface SaveData {
     hasOwnVehicle: boolean;
     teamId: string | null;
     teamAttribute: AttributeId | null;
-    activeDomainId: string;
+    activeReachId: string;
     floorIndex: number;
     crawl: typeof game.crawl;
     usedEvents: string[];
@@ -94,7 +97,7 @@ export function snapshot(kind: SaveKind, scene: SaveData['scene'], label: string
       hasOwnVehicle: game.hasOwnVehicle,
       teamId: game.teamId,
       teamAttribute: game.teamAttribute,
-      activeDomainId: game.activeDomainId,
+      activeReachId: game.activeReachId,
       floorIndex: game.floorIndex,
       crawl: { ...game.crawl },
       usedEvents: [...game.usedEvents],
@@ -185,7 +188,7 @@ export function applySave(data: SaveData) {
   game.hasOwnVehicle = s.hasOwnVehicle;
   game.teamId = s.teamId;
   game.teamAttribute = s.teamAttribute;
-  game.activeDomainId = s.activeDomainId ?? 'boot';
+  game.activeReachId = s.activeReachId ?? 'crossing';
   game.floorIndex = s.floorIndex;
   game.crawl = { ...s.crawl };
   game.usedEvents = new Set(s.usedEvents);
@@ -200,7 +203,7 @@ export function applySave(data: SaveData) {
     if (c.xp === undefined) c.xp = 0;
     if (!c.equip) c.equip = {};
     // Saves from before the magick pass have no mag/res — recompute from the
-    // species growth curve at the creature's level (v5).
+    // species growth curve at the creature's level (v7).
     if (c.mag === undefined || c.res === undefined) {
       const s = SPECIES[c.speciesId];
       if (s) {

@@ -15,7 +15,7 @@ tune the game without reverse-engineering the formula first.
 | Creature base stats and growth | `src/data/creatures.ts` |
 | Levelled stats (`base + growth·(level-1)`) | `src/systems/party/creature.ts` |
 | Battle rewards, post-fight recovery | `src/scenes/BattleScene.ts` |
-| EP drain, refuel, tow | `src/scenes/DungeonScene.ts`, `src/data/bootDomain.ts` |
+| EP drain, refuel, tow | `src/scenes/DungeonScene.ts`, `src/data/quietCrossing.ts` |
 
 Every constant named below is a balance knob. Change it and the game changes —
 nothing here is hard-coded twice.
@@ -170,10 +170,10 @@ act with a magical component, so a durable support and a caster both make decent
 healers, and neither a glass cannon nor a pure bruiser is great at it. The weights
 (and scale) are balance knobs in `formula.ts`.
 
-Example: **Mist Veil** (power 42) cast by Gloomote (off 35 at level 11) →
-42 + 35 × 0.4 = 42 + 14 = **56 HP**, capped at the target's missing HP. Heals
-scale with the *healer's* offence, so a strong attacker is also a strong medic —
-a deliberate simplification (no separate "magic" stat).
+Example: **Mist Veil** (power 42) cast by Gloomote at level 11 (res 30, mag 47) →
+stat = 30 × 0.7 + 47 × 0.3 = **35.1**; heal = 42 + 35.1 × 0.4 = **56 HP**, capped
+at the target's missing HP. A durable, high-Resolve support is the strongest
+medic, with the caster's Magick topping it up.
 
 ### Guard
 
@@ -302,7 +302,7 @@ While crawling, EP is the resource that makes the dungeon a place you can lose:
 
 | Thing | Value | Where |
 |---|---|---|
-| Starting / max EP | **120** | `BOOT_DOMAIN.startingFuel` |
+| Starting / max EP | **120** | `QUIET_CROSSING.startingFuel` |
 | Drain per step | **1** | `FUEL_PER_STEP`, `DungeonScene` |
 | Fuel canister pickup | **+40** | `DungeonScene` (crawl `$` tiles) |
 | Shop Fuel Canister item | **+40 EP** | `data/items.ts` |
@@ -310,7 +310,7 @@ While crawling, EP is the resource that makes the dungeon a place you can lose:
 
 EP is why suspend-saves are consumed on load (see `HANDOFF.md` / README): if you
 could reload a suspend save, running out of EP would cost nothing. Autosave, by
-contrast, only ever happens in town / on the domain map — safe ground — so it
+contrast, only ever happens in town / on the reach map — safe ground — so it
 never rescues you from a bad crawl.
 
 ---

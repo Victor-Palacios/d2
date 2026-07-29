@@ -13,9 +13,9 @@ A section-by-section audit of the build against the original design plan
 > read-through, not a re-derivation.
 
 **Verdict at a glance:** every plan section and milestone the code references is
-**implemented**, with two deliberate stubs (§5.6 evolution, in-battle items)
-and one known bug (hub autosave — `HANDOFF.md` §2). Nothing tracked is silently
-missing.
+**implemented**, with one deliberate stub (in-battle items) and one known bug
+(hub autosave — `HANDOFF.md` §2). §5.6 evolution, once a stub, is now a full
+Pokémon × Digimon hybrid. Nothing tracked is silently missing.
 
 ---
 
@@ -37,8 +37,8 @@ missing.
 |---|---|---|---|
 | §2.1 | Title + name entry | ✅ | `IntroScene.ts` (M4), `ui/NameEntry.ts` — five slots, on-screen keyboard. |
 | §2.2 | The Everwake hub | ✅ | `HubScene.ts` (M4/M5). *(hub autosave bug — see below.)* |
-| §2.3 | World map / domain select | ✅ | `WorldMapScene.ts`, two-node picker via `ui/CardSelect.ts`. |
-| §2.4 | Boot Domain crawl | ✅ | `DungeonScene.ts` (M1/M3). |
+| §2.3 | World map / reach select | ✅ | `WorldMapScene.ts`, two-node picker via `ui/CardSelect.ts`. |
+| §2.4 | The Quiet Crossing crawl | ✅ | `DungeonScene.ts` (M1/M3). |
 | §2.5 | *(not referenced by any code marker)* | ❔ Unconfirmed | No `plan §2.5` marker exists. Likely the rival-intro / Mission-2 hook, which **is** built (end of `HubScene`), but the mapping can't be confirmed without the plan text. |
 | §2.6 | Guard Team choice | ✅ | `CardSelect.ts` cites §2.6; `data/teams.ts` — three teams set class + starter. |
 | §2.7 | Shop / vendor | ✅ (buying only) | `ui/ShopScreen.ts`, `data/items.ts`. Credits deduct, item enters bag; **using** items is an intentional stub (below). |
@@ -63,7 +63,7 @@ missing.
 | §5.2 | Damage / heal maths, speed order | ✅ | `systems/battle/formula.ts`, turn order in `engine.ts`. See `docs/SYSTEMS.md`. |
 | §5.3 | Headless 3v3 battle model + enemy AI | ✅ | `systems/battle/engine.ts` (rules-only, no Three.js/DOM), driven by `BattleScene.ts` (M2). |
 | §5.4 | Three Guard Teams, each setting class + starter | ✅ | `data/teams.ts`. |
-| §5.5 | Boot Domain tutorial dungeon + vehicle EP | ✅ | `data/bootDomain.ts` (3 floors, borrowed party, boss), EP drain in `DungeonScene.ts`. |
+| §5.5 | The Quiet Crossing tutorial dungeon + vehicle EP | ✅ | `data/quietCrossing.ts` (3 floors, borrowed party, boss), EP drain in `DungeonScene.ts`. |
 | §5.6 | Evolution / transcendence | ✅ **Implemented (Pokémon × Digimon hybrid)** | `evolutions` tree on `Species` (`data/creatures.ts`); headless `systems/party/evolve.ts` (`evolve`/`devolve`); **Transcend** screen (`ui/TranscendScreen.ts`). Level-gated, branching, reversible. Ships alongside the magick pass (Mag/Res) and level 1–20 learnsets. Covered by `tools/smoke/transcend.mjs`; see `docs/SYSTEMS.md §7`. DNA-merge remains a future branch condition. |
 
 ## §6 — Polish pass
@@ -101,11 +101,9 @@ demonstrable:
 
 ## Deliberate stubs (complete-as-specified, not gaps)
 
-1. **Evolution (§5.6)** — data model only (`evolvesTo`), no UI. Matches
-   the plan.
-2. **In-battle item use** — the **Item** action exists but is disabled; buying
+1. **In-battle item use** — the **Item** action exists but is disabled; buying
    works, using does not (`data/items.ts` notes "Battle use not wired up yet").
-3. **Auto-battle uses only the free Attack** — intentional, so it can't spend MP
+2. **Auto-battle uses only the free Attack** — intentional, so it can't spend MP
    you were saving (`HANDOFF.md` §5).
 
 ## Known defect (tracked, not a plan gap)

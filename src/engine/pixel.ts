@@ -136,7 +136,7 @@ function cached(id: string, build: () => HTMLCanvasElement, srgb = true): THREE.
 }
 
 /**
- * Terrain "skins". Each domain picks one so a crystal reliquary, a rotting
+ * Terrain "skins". Each reach picks one so a crystal reliquary, a rotting
  * crypt and a machine vault no longer share the same brick-and-flagstone look —
  * only the grid mechanics are shared, never the surfaces. `stone` is the
  * original speckled-flagstone / brick baseline; the rest are new.
@@ -157,7 +157,7 @@ function floorBorder(ctx: CanvasRenderingContext2D, base: string, res: number, a
  *
  * The cache key folds in `base`, `style` and `seed` as well as `id`: the same
  * `id` ('a'/'b') is reused by every floor, so keying on `id` alone made the
- * first-built domain's colours leak into every other domain. Keying on the
+ * first-built reach's colours leak into every other reach. Keying on the
  * inputs keeps each theme's surface its own.
  */
 export function floorTexture(

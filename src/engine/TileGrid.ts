@@ -58,7 +58,7 @@ export const DEFAULT_THEME: TileTheme = {
 };
 
 /**
- * Legend used by the floor layouts in `src/data/bootDomain.ts`:
+ * Legend used by the floor layouts in `src/data/quietCrossing.ts`:
  *
  * ```
  *   ' '  nothing (void)          '#'  wall

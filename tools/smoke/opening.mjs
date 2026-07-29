@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 
 // Reworked opening: choose a partner right after New Game (no borrowed trio),
-// Boot Domain enemies are Lv1, battle fields at most 3 monsters, and a low-level
+// The Quiet Crossing enemies are Lv1, battle fields at most 3 monsters, and a low-level
 // party can clear it (including the Lv3 warden). See tools/smoke/README.md.
 
 const browser = await chromium.launch({
@@ -54,7 +54,7 @@ await page.evaluate(() => {
 });
 console.log('party size now :', (await party()).length);
 
-// Boot Domain floor 1 -> walk down into the scripted fight.
+// The Quiet Crossing floor 1 -> walk down into the scripted fight.
 await press('ArrowDown', 5); await press('ArrowLeft', 3); await press('ArrowDown', 2);
 await waitScene('worldmap'); await page.waitForTimeout(600);
 await page.locator('.card', { hasText: 'The Quiet Crossing' }).click();

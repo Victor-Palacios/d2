@@ -113,7 +113,7 @@ const MAGE_GROWTH: Stats = { hp: 6, mp: 2.8, off: 1.6, def: 1.7, spd: 1.7, mag: 
 const ASSASSIN_GROWTH: Stats = { hp: 6, mp: 2, off: 2.5, def: 1.7, spd: 2.1, mag: 1.4, res: 1.5 };
 
 export const SPECIES: Record<string, Species> = {
-  // === Boot Domain rookies ================================================
+  // === The Quiet Crossing rookies =========================================
   emberling: {
     id: 'emberling',
     name: 'Emberling',
@@ -448,7 +448,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 20, tech: 'wildgrowth' },
     ],
     evolutions: [{ to: 'gravestalker', level: 10 }],
-    blurb: 'Eats whatever the domain leaves rotting in the dark.',
+    blurb: 'Eats whatever the reach leaves rotting in the dark.',
   },
   cryptguard: {
     id: 'cryptguard',
@@ -472,7 +472,7 @@ export const SPECIES: Record<string, Species> = {
   },
 
   // --- The Overgrowth -----------------------------------------------------
-  // A jungle roster. Art is reused from fitting existing sprites (the domain's
+  // A jungle roster. Art is reused from fitting existing sprites (the reach's
   // identity rides on its bespoke terrain + decor); stats/element/attribute are
   // its own. Swap `art` for dedicated sprites later — nothing else changes.
   frondle: {
@@ -558,7 +558,7 @@ export const SPECIES: Record<string, Species> = {
   // === Evolved forms ======================================================
   // Advanced ("Revenant"-tier) forms grown from the rookies above. Art is reused
   // from the roster's bigger/cooler sprites (see docs/adding-monsters.md — the
-  // domain's identity rides on terrain; dedicated sprites are a follow-up).
+  // reach's identity rides on terrain; dedicated sprites are a follow-up).
 
   // Emberling → (Cinder branch). A feral re-class: the hero's heat turned into
   // an assassin's speed.
@@ -792,7 +792,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 12, tech: 'thornspell' },
       { level: 18, tech: 'wildgrowth' },
     ],
-    blurb: 'It stopped waiting for the domain to leave something rotting and went looking.',
+    blurb: 'It stopped waiting for the reach to leave something rotting and went looking.',
   },
   // Thorncat → the path that walks itself.
   thornpanther: {
@@ -851,7 +851,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 14, tech: 'maelstrom' },
       { level: 18, tech: 'renewingTide' },
     ],
-    blurb: 'Warden of the Crystal Cavern. It has never felt warmth.',
+    blurb: 'Warden of the Reliquary. It has never felt warmth.',
   },
   revenance: {
     id: 'revenance',
@@ -870,7 +870,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 10, tech: 'abyssalBolt' },
       { level: 14, tech: 'voidNova' },
     ],
-    blurb: 'Warden of the Haunted Dungeon. It remembers being deleted.',
+    blurb: 'Warden of the Unremembered. It remembers being unmade.',
   },
   verdanox: {
     id: 'verdanox',

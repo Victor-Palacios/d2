@@ -33,7 +33,7 @@ content). Keep it that way.
 
 | Feature | Notes |
 |---|---|
-| Full slice | title → name → hub → world map → 3-floor Boot Domain → boss → licence → Guard Team → rival → shop → Mission 2 hook |
+| Full slice | title → name → hub → world map → 3-floor Quiet Crossing → boss → licence → Guard Team → rival → shop → Mission 2 hook |
 | HD-2D rig | shared by crawl and battle; every parameter live-tunable via `` ` `` |
 | 3v3 battle | speed order, Attack/Technique/Guard/Auto, class + element multipliers, enemy AI |
 | Auto-battle | basic Attack only, weakest target, Esc to stop; verified it spends **no MP** over 14 s hands-off |
@@ -94,7 +94,7 @@ The four items the owner asked for are written and live in [`docs/`](docs/):
    missing.
 2. **Roadmap** — [`docs/ROADMAP.md`](docs/ROADMAP.md): a path toward a full
    monster-collecting crawler's first ~5 hours (XP loop, recruiting, evolution,
-   more domains).
+   more reaches).
 3. **Scope trim (five elements → three)** — folded into the roadmap as the first,
    cheapest task, with rationale and an exact edit list.
 4. **Systems explainer** — [`docs/SYSTEMS.md`](docs/SYSTEMS.md): types, class
@@ -114,7 +114,7 @@ outstanding.
   wolf an Assassin). The borrowed tutorial trio is deliberately one of each
   class, and the boss is a Hero countered by the party's Mage — the mentor's
   hint text depends on that, so re-balancing classes means re-checking
-  `src/data/bootDomain.ts` dialogue.
+  `src/data/quietCrossing.ts` dialogue.
 - **Auto-battle uses only the free Attack.** Not an oversight: leaving it on must
   never spend MP you were saving.
 - **Suspend saves are consumed on load.** Also deliberate — it is a bookmark, not

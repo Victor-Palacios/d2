@@ -1,8 +1,8 @@
 import { chromium } from 'playwright';
 
 // Verifies the per-stage level recommendation on the world-map cards and the
-// rebalanced progression curve (boot < crystal < haunted), reading the rendered
-// cards and the loaded domain data — no fights, so it is fast and deterministic.
+// rebalanced progression curve (crossing < crystal < haunted), reading the rendered
+// cards and the loaded reach data — no fights, so it is fast and deterministic.
 // See tools/smoke/README.md.
 
 const browser = await chromium.launch({
@@ -52,14 +52,14 @@ const cards = await page.evaluate(() =>
 for (const c of cards) console.log(`${c.title.padEnd(18)} | ${c.body}`);
 
 const rec = (title) => { const c = cards.find((x) => x.title === title); const m = c && c.body.match(/Recommended Lv (\d+)/); return m ? Number(m[1]) : null; };
-const boot = rec('The Quiet Crossing'), crystal = rec('The Reliquary'), haunted = rec('The Unremembered');
-console.log('\nrecommended levels :', JSON.stringify({ boot, crystal, haunted }));
+const crossing = rec('The Quiet Crossing'), crystal = rec('The Reliquary'), haunted = rec('The Unremembered');
+console.log('\nrecommended levels :', JSON.stringify({ crossing, crystal, haunted }));
 const cityHasNoRec = !cards.find((x) => x.title === 'The Everwake')?.body.includes('Recommended');
 console.log('city has no rec    :', cityHasNoRec);
-const ordered = boot != null && crystal != null && haunted != null && boot < crystal && crystal < haunted;
-console.log('progression rises  :', ordered, `(${boot} < ${crystal} < ${haunted})`);
+const ordered = crossing != null && crystal != null && haunted != null && crossing < crystal && crystal < haunted;
+console.log('progression rises  :', ordered, `(${crossing} < ${crystal} < ${haunted})`);
 
-const ok = ordered && boot === 1 && crystal === 5 && haunted === 10 && cityHasNoRec;
+const ok = ordered && crossing === 1 && crystal === 5 && haunted === 10 && cityHasNoRec;
 console.log('\nSTAGES OK :', ok);
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();
