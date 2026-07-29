@@ -25,9 +25,31 @@ tools/sprites/
   integrate.mjs      CLI: replace CREATURES[<artKey>] blocks in src/assets/art.ts
 ```
 
-## Two rendering styles
+## Styles: one per area + one for people
 
-There are now **two** ways to build a sprite; pick per creature (or per reach):
+The world gets visual variety by giving **each reach its own sprite style**, and
+**humans a style of their own** — so where you are is legible at a glance.
+
+| Group | Style | Engine |
+|---|---|---|
+| Reach 1 · The Quiet Crossing | flat, bold, graphic house style | `compose.mjs` |
+| Reach 2 · The Crystal Cavern | painterly, dithered, volumetric | `paint.mjs` |
+| Reach 3 · The Overgrowth | *(planned — its own style)* | TBD |
+| Reach 4 · Haunted Dungeon | *(planned — its own style)* | TBD |
+| **Humans (all NPCs + hero)** | cel-shaded "storybook" people | `humans.mjs` |
+
+**Human style** (`humans.mjs`): taller, properly-proportioned characters (~30×48,
+vs the old 14×18 blobs), clean lineart, and **warm-cool cel shading** — a warm
+key light from screen-left (the lantern motif) with a cool shadow to the right,
+in flat bands (no dithering). Each character is an individual: a muted wardrobe
+with **one saturated accent** colour, a distinct hairstyle (short / long / spiky
+/ cap / hood), and an expression (neutral / smile / stern). Deliberately unlike
+the creatures — people should not read as monsters. Parametric `human(opts)`
+builds the whole cast; `integrate-humans.mjs` writes them into `art.ts`.
+
+## Two creature rendering styles
+
+There are **two** ways to build a creature sprite; pick per creature (or per reach):
 
 - **`compose.mjs` — flat house style.** Single-char palette keys, ellipse
   shapes, 2–3 flat tonal bands, hard single-colour outline. Crisp, graphic,
@@ -176,3 +198,9 @@ To **add a brand-new creature**:
   `geodeGolem` (matte stone + glowing amethyst core), `crystalWarden`
   (faceted ice boss). `integrate.mjs` now merges `CROSSING` + `CAVERN`.
   Integrated and verified in-engine.
+- **2026-07-28 — human style (third style) + all NPCs redesigned.** Added
+  `humans.mjs` (parametric cel-shaded "storybook" people, warm-cool lantern
+  light) and `integrate-humans.mjs`. Replaced the legacy 14×18 shared-silhouette
+  `human()` generator and redrew all nine characters (hero, mentor, chief,
+  rival, vendor, soulkeeper, three leaders), each an individual. Establishes the
+  "distinct style per area + humans" plan in the table above.
