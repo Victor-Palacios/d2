@@ -18,7 +18,6 @@ const scene = () => page.evaluate(() => window.hd2dGame.manager.current);
 const dlg = () => page.evaluate(() => { const d = document.querySelector('#dialogue'); return !!d && d.style.display !== 'none'; });
 const clearDlg = async (m = 60) => { for (let i = 0; i < m; i++) { if (!(await dlg())) return; await page.keyboard.press('Enter'); await page.waitForTimeout(150); } };
 const waitScene = async (n, ms = 40000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if ((await scene()) === n) return true; await page.waitForTimeout(200); } return false; };
-const press = async (k, n = 1, gap = 300) => { for (let i = 0; i < n; i++) { await page.keyboard.press(k); await page.waitForTimeout(gap); } };
 
 await page.goto(process.env.URL ?? 'http://localhost:4195/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
@@ -37,14 +36,17 @@ await page.evaluate(() => { const g = window.hd2dGame;
   // Three extra so the fight deploys 3 and keeps 1 in reserve (for the swap test).
   ['sprigling', 'cogling', 'dropletta'].forEach((id) => g.game.addMonster(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'x' + id, speciesId: id, name: id })))); });
 
-// Into The Quiet Crossing floor 1 and across the gateway into the first fight.
-await press('ArrowDown', 5); await press('ArrowLeft', 3); await press('ArrowDown', 2);
-await waitScene('worldmap'); await page.waitForTimeout(600);
-await page.locator('.card', { hasText: 'The Quiet Crossing' }).click();
-await waitScene('dungeon'); await page.waitForTimeout(900); await clearDlg();
-await press('ArrowDown', 4);
-for (let i = 0; i < 8 && (await scene()) === 'dungeon'; i++) { await page.keyboard.press('ArrowRight'); await page.waitForTimeout(320); if (await dlg()) await clearDlg(); }
+// Launch the first fight directly via the scene manager. This is robust against
+// world-map / floor UI churn (gating, mission labels, layout tweaks); the actual
+// crawl -> battle transition is covered by walk.mjs. The party is 4 strong, so
+// the fight deploys 3 and keeps 1 in reserve for the swap test below.
+await page.evaluate(() => {
+  const g = window.hd2dGame;
+  g.game.activeReachId = 'crossing';
+  g.manager.go('battle', { enemies: [{ species: 'mitebug', level: 2 }, { species: 'scrapmite', level: 2 }], returnTo: 'hub' });
+});
 await waitScene('battle', 20000); await page.waitForTimeout(1200);
+await clearDlg(); await page.waitForTimeout(500); await clearDlg(); // intro + melee tutorial
 
 const r = await page.evaluate(() => {
   const b = window.hd2dGame.manager.activeScene.battle;
