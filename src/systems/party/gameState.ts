@@ -113,6 +113,19 @@ export class GameState {
     return was < 100 && e.syphon >= 100;
   }
 
+  /**
+   * Commune resolution: a wild soul talked into peace is *understood*, which
+   * fills its syphon exactly like a full drain would. The claim itself still
+   * happens on victory (`finalizeCaptures`), so this is the gentle, no-damage
+   * path to the same reward.
+   */
+  understandSoul(speciesId: string) {
+    const e = this.soul(speciesId);
+    if (e.captured) return;
+    e.seen = true;
+    e.syphon = 100;
+  }
+
   /** True once a wild species' syphon is full but it hasn't been claimed yet. */
   syphonReady(speciesId: string): boolean {
     const e = this.soul(speciesId);

@@ -143,7 +143,11 @@ supply bay → Mission 2 briefing.
   Attack / Technique / Guard / **Auto**, MP costs, AoE and heal techniques,
   class triangle (Assassin > Mage > Hero > Assassin, ×1.25 / ×0.8), element-plate
   buffs (×1.2), damage variance, faint / victory / defeat, and an enemy AI that
-  prefers advantageous targets and finishes off the wounded.
+  prefers advantageous targets and finishes off the wounded. Each monster also
+  wears a **signature aura** — a continuous element-tinted mote trail (the
+  Warden burns with a warm glow) that swells when it takes its turn, so a fight
+  reads as distinct creatures rather than interchangeable sprites. Auras are
+  data (`src/data/battleFx.ts`); the first dungeon's roster is wired up.
 - **Auto-battle**: pick **Auto** and the party keeps swinging with the free
   basic Attack, targeting the weakest living foe, until you press **Esc**. It
   deliberately never spends MP, uses techniques or touches items, so leaving it
@@ -298,6 +302,7 @@ Everything is behind a data layer, so swapping art is a data edit:
 | To replace | Edit |
 |---|---|
 | A creature's sprite | the pixel map in `src/assets/art.ts` (`CREATURES`) |
+| A monster's battle aura (signature FX) | `src/data/battleFx.ts` (`BATTLE_AURAS`) |
 | A creature's stats, class, element, techniques | `src/data/creatures.ts` |
 | Techniques / damage numbers | `src/data/techniques.ts`, `src/systems/battle/formula.ts` |
 | NPCs and the vehicle | `HUMANS` / `VEHICLE` in `src/assets/art.ts` |

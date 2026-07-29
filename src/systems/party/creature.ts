@@ -29,6 +29,8 @@ export interface CreatureInstance {
   equip: { arms?: string; shroud?: string; memento?: string };
   /** Set while the creature is guarding this round. */
   guarding: boolean;
+  /** Gentle soul: the battle's Commune action can pacify it (from `Species.communable`). */
+  communable?: boolean;
 }
 
 let uidCounter = 0;
@@ -69,6 +71,7 @@ export function makeCreature(speciesId: string, level: number, nickname?: string
     techniques: movesKnownAt(s, level),
     equip: {},
     guarding: false,
+    communable: s.communable ?? false,
   };
 }
 

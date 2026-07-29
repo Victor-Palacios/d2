@@ -2,7 +2,7 @@ import { el, esc, meter, remove } from './dom';
 import { Menu } from './Menu';
 import type { MenuItem } from './Menu';
 import type { Battle, BattleAction, Battler } from '../systems/battle/engine';
-import { BOOST_MAX } from '../systems/battle/engine';
+import { BOOST_MAX, isMeleeTechnique } from '../systems/battle/engine';
 import type { CreatureInstance } from '../systems/party/creature';
 import { technique, techShape } from '../data/techniques';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
@@ -18,6 +18,8 @@ interface FighterCard {
   syphon?: () => void;
   /** Stagger meter / BROKEN tag (Phase D). */
   staggerEl: HTMLElement;
+  /** Lingering elemental-reaction mark pip. */
+  markEl: HTMLElement;
 }
 
 /** What the action menu can resolve to — a real action, "go auto", "boost", or "flee". */
@@ -116,7 +118,12 @@ export class BattleHUD {
     const staggerEl = el('div', 'stagger-meter');
     root.appendChild(staggerEl);
 
-    const card: FighterCard = { root, hp, mp, staggerEl };
+    // Elemental-reaction mark: a small element-coloured pip appended to the name.
+    const markEl = el('i', 'react-mark');
+    markEl.style.display = 'none';
+    name.appendChild(markEl);
+
+    const card: FighterCard = { root, hp, mp, staggerEl, markEl };
 
     // Enemy cards carry a Soul Syphon meter (or a captured ★) so the player can
     // read how close a wild monster is to being logged in the Soularium.
@@ -156,10 +163,30 @@ export class BattleHUD {
       card.syphon?.();
       card.root.classList.toggle('down', c.hp <= 0);
       card.root.classList.toggle('broken', b.staggered);
+      card.root.classList.toggle('pacified', b.pacified);
       if (c.guarding) card.root.classList.add('guarding');
-      if (b.staggered) {
+
+      // Elemental-reaction mark pip: element-coloured, hidden when none is live.
+      const mark = battle.activeMark(b);
+      if (mark && !b.pacified) {
+        const md = ELEMENTS[mark];
+        card.markEl.style.display = '';
+        card.markEl.style.color = md.color;
+        card.markEl.textContent = '◈';
+        card.markEl.title = `Marked ${md.name} — a different element will react`;
+      } else {
+        card.markEl.style.display = 'none';
+      }
+
+      if (b.pacified) {
+        card.staggerEl.className = 'stagger-meter pacified';
+        card.staggerEl.innerHTML = '<b>AT PEACE</b>';
+      } else if (b.staggered) {
         card.staggerEl.className = 'stagger-meter broken';
-        card.staggerEl.innerHTML = '<b>BROKEN</b>';
+        card.staggerEl.innerHTML = b.chain >= 2 ? `<b>BROKEN ×${b.chain}</b>` : '<b>BROKEN</b>';
+      } else if (b.commune > 0) {
+        card.staggerEl.className = 'stagger-meter commune';
+        card.staggerEl.innerHTML = `<span class="dim">Understanding</span><i class="stagger-bar"><i style="width:${Math.round(b.commune)}%"></i></i>`;
       } else if (b.stagger > 0) {
         card.staggerEl.className = 'stagger-meter';
         card.staggerEl.innerHTML = `<span class="dim">Stagger</span><i class="stagger-bar"><i style="width:${Math.round(b.stagger)}%"></i></i>`;
@@ -244,8 +271,9 @@ export class BattleHUD {
       const canTechnique = c.techniques.some((id) => c.mp >= technique(id).mpCost);
       const canMove = battle.emptyCells(actor.side).length > 0;
       const canSwap = reserves.length > 0;
+      const canCommune = battle.communeTargets('enemy').length > 0;
       const charges = battle.boost.party;
-      const root = await this.runMenu([
+      const items: MenuItem[] = [
         { value: 'attack', label: 'Attack' },
         { value: 'technique', label: 'Technique', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
         { value: 'boost', label: 'Boost', disabled: charges < 1, note: charges > 0 ? `act again · ▲${charges}` : 'empty' },
@@ -254,7 +282,10 @@ export class BattleHUD {
         { value: 'guard', label: 'Guard' },
         { value: 'run', label: 'Run', disabled: battle.isBoss, note: battle.isBoss ? "can't flee" : '50%' },
         { value: 'auto', label: 'Auto', note: 'L1' },
-      ]);
+      ];
+      // Commune only appears when a gentle soul is present to hear it.
+      if (canCommune) items.splice(6, 0, { value: 'commune', label: 'Commune', note: 'reach out' });
+      const root = await this.runMenu(items);
 
       if (root === 'auto') return { type: 'auto' };
 
@@ -263,6 +294,12 @@ export class BattleHUD {
       if (root === 'run') return { type: 'flee' };
 
       if (root === 'guard') return { type: 'guard' };
+
+      if (root === 'commune') {
+        const uid = await this.pickTarget(actor, battle.communeTargets('enemy'), onTargetHover);
+        if (!uid) continue;
+        return { type: 'commune', targetUid: uid };
+      }
 
       if (root === 'attack') {
         // A basic Attack is melee: it cannot reach a covered Rear foe.
@@ -298,13 +335,16 @@ export class BattleHUD {
         const items: MenuItem[] = c.techniques.map((id) => {
           const t = technique(id);
           const shape = techShape(t);
+          // Note reads: "6 MP · melee" / "10 MP · row" — so reach and shape are
+          // both legible before committing.
+          const tags = [shape === 'single' ? '' : shape, isMeleeTechnique(t) ? 'melee' : ''].filter(Boolean);
           return {
             value: id,
             label: t.name,
             // Techniques are tinted by their element so the plate bonus and the
             // resistance you are about to hit are readable at a glance.
             color: ELEMENTS[t.element].color,
-            note: `${t.mpCost} MP${shape === 'single' ? '' : ` · ${shape}`}`,
+            note: `${t.mpCost} MP${tags.length ? ` · ${tags.join(' · ')}` : ''}`,
             disabled: c.mp < t.mpCost,
           };
         });
@@ -313,8 +353,10 @@ export class BattleHUD {
         const t = technique(techId);
         // 'all' needs no aim; row/column/single all aim at an anchor foe.
         if (techShape(t) === 'all') return { type: 'technique', techniqueId: techId, targetUid: battle.living('enemy')[0].creature.uid };
-        // Techniques are ranged/Ether: they reach any living target, cover or not.
-        const candidates = t.kind === 'heal' ? battle.living('party') : battle.living('enemy');
+        // Melee Techniques respect cover (front line only); ranged/Ether reach any
+        // living foe. Heals aim at the party.
+        const candidates =
+          t.kind === 'heal' ? battle.living('party') : isMeleeTechnique(t) ? battle.meleeTargets('enemy') : battle.living('enemy');
         const uid = await this.pickTarget(actor, candidates, onTargetHover);
         if (!uid) continue;
         return { type: 'technique', techniqueId: techId, targetUid: uid };

@@ -40,6 +40,14 @@ export interface Technique {
   aoe?: boolean;
   /** Area shape; defaults to `single` (or `all` when `aoe` is set). */
   shape?: TechniqueShape;
+  /**
+   * Melee (a close-in physical blow) vs ranged/Ether (the default). Melee gets
+   * the Vanguard/Rear row damage modifiers and, crucially, is stopped by cover:
+   * it cannot reach a Rear foe shielded by a living Vanguard ally. Ranged/Ether
+   * ignores both. This is the front/back trade-off's teeth — see
+   * `isMeleeTechnique` in `systems/battle/engine.ts`.
+   */
+  melee?: boolean;
   desc: string;
 }
 
@@ -63,7 +71,8 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 0,
     power: 30,
     element: 'machine',
-    desc: 'A plain physical hit. Costs no MP.',
+    melee: true,
+    desc: 'A plain physical hit. Costs no MP. Melee — reaches only the front line.',
   },
 
   emberFang: {
@@ -73,7 +82,8 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 6,
     power: 46,
     element: 'fire',
-    desc: 'Bites with superheated jaws.',
+    melee: true,
+    desc: 'Bites with superheated jaws. Melee — reaches only the front line.',
   },
   cinderBurst: {
     id: 'cinderBurst',
@@ -115,7 +125,8 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 6,
     power: 44,
     element: 'water',
-    desc: 'A heavy slap of pressurised data-water.',
+    melee: true,
+    desc: 'A heavy slap of pressurised data-water. Melee — reaches only the front line.',
   },
   mistVeil: {
     id: 'mistVeil',
@@ -151,7 +162,8 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 8,
     power: 48,
     element: 'machine',
-    desc: 'Overclocks its frame into a charge.',
+    melee: true,
+    desc: 'Overclocks its frame into a charge. Melee — reaches only the front line.',
   },
   scrapShot: {
     id: 'scrapShot',
@@ -231,7 +243,8 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 9,
     power: 53,
     element: 'machine',
-    desc: 'Overloads its core into a grinding slam.',
+    melee: true,
+    desc: 'Overloads its core into a grinding slam. Melee — reaches only the front line.',
   },
 
   // --- Haunted Dungeon ----------------------------------------------------
@@ -286,7 +299,8 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 10,
     power: 62,
     element: 'fire',
-    desc: 'A blazing single-target rake.',
+    melee: true,
+    desc: 'A blazing single-target rake. Melee — reaches only the front line.',
   },
 
   // --- Advanced / capstone techniques (learnset payoffs) ------------------

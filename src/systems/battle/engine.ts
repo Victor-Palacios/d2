@@ -67,16 +67,79 @@ export interface Battler {
   stagger: number;
   /** Broken: skips the next turn and takes bonus damage until then. */
   staggered: boolean;
+  /** Hits landed while Broken — drives the escalating break-chain bonus. */
+  chain: number;
+  /** Lingering elemental mark left by the last damaging hit, for reactions. */
+  reactionTag?: ElementId;
+  /** Round the current mark was applied (for its short time-to-live). */
+  reactionRound?: number;
+  /** Understanding built by Commune, 0..COMMUNE_MAX. */
+  commune: number;
+  /** Pacified by Commune: it has left the fight in peace (no longer acts or is targetable). */
+  pacified: boolean;
 }
 
 /**
- * A "melee" action reaches only the enemy Vanguard (and any exposed Rear). The
- * free basic Attack is melee; every MP Technique is treated as ranged/Ether and
- * ignores cover. Kept as one rule so the front/back trade-off stays legible.
+ * A "melee" action reaches only the enemy Vanguard (and any exposed Rear) and
+ * takes the front/back row modifiers; ranged/Ether ignores both. This is now a
+ * data property (`Technique.melee`) rather than a hard-coded id, so a whole
+ * class of physical Techniques (fangs, slaps, slams, claws) share the melee
+ * trade-off with the free basic Attack instead of it being the lone melee move.
  */
 export function isMeleeTechnique(tech: Technique): boolean {
-  return tech.id === 'strike';
+  return !!tech.melee;
 }
+
+/**
+ * Elemental reactions (element as a real second lever, layered on top of the
+ * class triangle). A damaging hit leaves a short-lived elemental *mark* on the
+ * target; a follow-up of a **different** element detonates it — bonus damage and
+ * faster Break — then clears the mark. Same-element hits just refresh it. The
+ * whole rule is "switch elements to combo", which is one line to teach.
+ */
+export const REACTION_MULT = 1.4;
+export const REACTION_STAGGER = 20;
+/** A mark set on round R stays live for hits in rounds R and R+1. */
+export const REACTION_TTL_ROUNDS = 1;
+/** Flavour names per unordered element pair — mechanically all identical. */
+const REACTION_NAMES: Record<string, string> = {
+  'fire|water': 'Steam Burst',
+  'fire|nature': 'Wildfire',
+  'nature|water': 'Overgrowth',
+  'machine|water': 'Short-Circuit',
+  'fire|machine': 'Meltdown',
+  'machine|nature': 'Rust Bloom',
+  'dark|fire': 'Emberdark',
+  'dark|water': 'Blight',
+  'dark|nature': 'Wither',
+  'dark|machine': 'Corruption',
+};
+
+/** The reaction name for an (unordered) pair of distinct elements. */
+export function reactionName(a: ElementId, b: ElementId): string {
+  const key = [a, b].sort().join('|');
+  return REACTION_NAMES[key] ?? 'Elemental Reaction';
+}
+
+/**
+ * Break chains (ties Break + Boost + turn order into a coordination burst).
+ * Every hit landed on a Broken target before it recovers extends a chain: the
+ * Break damage bonus escalates per link, and a long enough chain banks the
+ * attacking side a Boost charge. Rewards ordering your turns onto a broken foe.
+ */
+export const CHAIN_STEP = 0.15;
+export const CHAIN_DAMAGE_MAX = 2.25;
+export const CHAIN_BOOST_AT = 3;
+
+/**
+ * Commune (empathy as a resolution verb, generalised from the Last Light).
+ * Speaking to a gentle `communable` soul fills an understanding meter instead of
+ * damaging it; full, the soul is *pacified* — it leaves the fight in peace and
+ * is understood (claimed like a full Soul Syphon on victory).
+ */
+export const COMMUNE_MAX = 100;
+export const COMMUNE_GAIN = 34;
+export const COMMUNE_VARIANCE = 12;
 
 /** Maximum stored Boost charges per side (grid battle, Phase C). */
 export const BOOST_MAX = 3;
@@ -113,7 +176,9 @@ export type BattleAction =
   /** Reposition to an empty cell on your own grid (consumes the turn). */
   | { type: 'shift'; cell: Cell }
   /** Bench the actor and field a reserve in its cell (consumes the turn). */
-  | { type: 'swap'; reserveUid: string };
+  | { type: 'swap'; reserveUid: string }
+  /** Speak to a gentle `communable` foe to pacify it instead of fighting. */
+  | { type: 'commune'; targetUid: string };
 
 export interface Hit {
   targetUid: string;
@@ -122,6 +187,10 @@ export interface Hit {
   fainted: boolean;
   /** Guaranteed critical (Immortality Memento) — drives the crit FX/log. */
   crit?: boolean;
+  /** Reaction detonated on this hit (element mismatch), for FX/log. */
+  reaction?: string;
+  /** Chain length this hit landed at, if it struck a Broken target. */
+  chain?: number;
   breakdown?: DamageBreakdown;
 }
 
@@ -134,6 +203,8 @@ export interface TurnResult {
   log: string[];
   /** Set when the actor changed cell (shift/swap) so the scene can re-place it. */
   moved?: boolean;
+  /** UID of a foe pacified by Commune this turn, so the scene can resolve it. */
+  pacified?: string;
 }
 
 export type BattleOutcome = 'ongoing' | 'victory' | 'defeat';
@@ -158,7 +229,13 @@ export class Battle {
   round = 0;
   /** Turn order for the current round; consumed front to back. */
   private queue: Battler[] = [];
-  private rng: () => number;
+  /**
+   * The single random source for the whole fight. Public so the scene can route
+   * *its* rolls (flee, enemy Boost timing, the Last Light) through it too — with
+   * a seeded `rng` in the config that makes an entire played battle reproducible,
+   * not just the pure model.
+   */
+  readonly rng: () => number;
 
   /** Element plate under each of the 6 cells per side, row-major (row*3+col). */
   private plates: Record<Side, (ElementId | undefined)[]>;
@@ -186,10 +263,10 @@ export class Battle {
     enemyCells.forEach((cell, i) => { if (cfg.enemyTiles?.[i]) this.plates.enemy[cellIndex(cell)] = cfg.enemyTiles[i]; });
 
     cfg.party.forEach((c, i) =>
-      this.battlers.push({ creature: c, side: 'party', slot: i, cell: partyCells[i], tile: this.plateAt('party', partyCells[i]), stagger: 0, staggered: false }),
+      this.battlers.push({ creature: c, side: 'party', slot: i, cell: partyCells[i], tile: this.plateAt('party', partyCells[i]), stagger: 0, staggered: false, chain: 0, commune: 0, pacified: false }),
     );
     cfg.enemies.forEach((c, i) =>
-      this.battlers.push({ creature: c, side: 'enemy', slot: i, cell: enemyCells[i], tile: this.plateAt('enemy', enemyCells[i]), stagger: 0, staggered: false }),
+      this.battlers.push({ creature: c, side: 'enemy', slot: i, cell: enemyCells[i], tile: this.plateAt('enemy', enemyCells[i]), stagger: 0, staggered: false, chain: 0, commune: 0, pacified: false }),
     );
   }
 
@@ -208,8 +285,13 @@ export class Battle {
     return this.battlers.filter((b) => b.side === side);
   }
 
+  /** A battler still in play: alive and not pacified (a pacified soul has left). */
+  private inPlay(b: Battler): boolean {
+    return isUp(b.creature) && !b.pacified;
+  }
+
   living(side: Side): Battler[] {
-    return this.side(side).filter((b) => isUp(b.creature));
+    return this.side(side).filter((b) => this.inPlay(b));
   }
 
   /**
@@ -219,8 +301,20 @@ export class Battle {
   isCovered(b: Battler): boolean {
     if (b.cell.row !== 1) return false;
     return this.side(b.side).some(
-      (a) => a !== b && isUp(a.creature) && a.cell.row === 0 && a.cell.col === b.cell.col,
+      (a) => a !== b && this.inPlay(a) && a.cell.row === 0 && a.cell.col === b.cell.col,
     );
+  }
+
+  /** Living, gentle foes on `side` that the Commune action can reach. */
+  communeTargets(side: Side): Battler[] {
+    return this.living(side).filter((b) => b.creature.communable);
+  }
+
+  /** The live elemental mark on a battler, if it hasn't timed out. */
+  activeMark(b: Battler): ElementId | undefined {
+    if (!b.reactionTag) return undefined;
+    if (this.round - (b.reactionRound ?? -99) > REACTION_TTL_ROUNDS) return undefined;
+    return b.reactionTag;
   }
 
   /** Living units on `side` that a melee attack is allowed to reach. */
@@ -247,7 +341,7 @@ export class Battle {
     this.fieldPulse = PULSE_CYCLE[(this.round - 1) % PULSE_CYCLE.length];
     for (const b of this.battlers) b.creature.guarding = false;
     this.queue = this.battlers
-      .filter((b) => isUp(b.creature))
+      .filter((b) => this.inPlay(b))
       .map((b) => ({ b, roll: effSpd(b.creature) * (0.88 + this.rng() * 0.24) }))
       .sort((a, z) => z.roll - a.roll)
       .map((x) => x.b);
@@ -258,7 +352,7 @@ export class Battle {
   nextTurn(): Battler | null {
     while (this.queue.length) {
       const b = this.queue.shift()!;
-      if (isUp(b.creature)) return b;
+      if (this.inPlay(b)) return b;
     }
     return null;
   }
@@ -277,13 +371,14 @@ export class Battle {
 
   /** Inserts a battler at the front of the turn queue for an immediate extra turn. */
   requeueFront(b: Battler) {
-    if (isUp(b.creature)) this.queue.unshift(b);
+    if (this.inPlay(b)) this.queue.unshift(b);
   }
 
-  /** Ends a Break: clears the staggered flag and empties the meter. */
+  /** Ends a Break: clears the staggered flag, the chain and empties the meter. */
   clearStagger(b: Battler) {
     b.staggered = false;
     b.stagger = 0;
+    b.chain = 0;
   }
 
   private targetsFor(actor: Battler, tech: Technique, targetUid: string): Battler[] {
@@ -357,6 +452,26 @@ export class Battle {
       return result;
     }
 
+    if (action.type === 'commune') {
+      result.actionLabel = 'Commune';
+      const t = this.find(action.targetUid);
+      if (!t || !this.inPlay(t) || !t.creature.communable) {
+        result.log.push(`${c.name} reaches out — but there is no one there to answer.`);
+        return result;
+      }
+      const gain = COMMUNE_GAIN + Math.floor(this.rng() * COMMUNE_VARIANCE);
+      t.commune = Math.min(COMMUNE_MAX, t.commune + gain);
+      result.log.push(`${c.name} speaks gently to ${t.creature.name}.`);
+      if (t.commune >= COMMUNE_MAX) {
+        t.pacified = true;
+        result.pacified = t.creature.uid;
+        result.log.push(`${t.creature.name} understands. It quiets, and is at peace.`);
+      } else {
+        result.log.push(`${t.creature.name} is listening — ${t.commune}% understood.`);
+      }
+      return result;
+    }
+
     const tech = technique(action.type === 'attack' ? 'strike' : action.techniqueId);
     result.actionLabel = tech.name;
     result.techniqueId = tech.id;
@@ -396,11 +511,25 @@ export class Battle {
         defenderRow: t.cell.row,
         rng: this.rng,
       });
-      // Post-multipliers: a broken target takes extra, the `crit` field pulse
-      // boosts every damaging action this round, and an Immortality Memento
-      // makes the wearer's hits guaranteed criticals for the first three rounds.
+      // Elemental reaction: a mark of a *different* element detonates for bonus
+      // damage. Read the live mark before this hit overwrites it.
+      const mark = this.activeMark(t);
+      const reacts = !!mark && mark !== tech.element;
+      const reactName = reacts ? reactionName(mark!, tech.element) : undefined;
+
+      // Post-multipliers, all multiplicative: a broken target takes extra
+      // (escalating with the chain), a reaction detonates, the `crit` field pulse
+      // boosts every damaging action this round, and an Immortality Memento makes
+      // the wearer's hits guaranteed criticals for the first three rounds.
       let dealt = breakdown.amount;
-      if (t.staggered) dealt = Math.round(dealt * BREAK_DAMAGE_MULT);
+      let chainN = 0;
+      if (t.staggered) {
+        t.chain += 1;
+        chainN = t.chain;
+        const mult = Math.min(CHAIN_DAMAGE_MAX, BREAK_DAMAGE_MULT + CHAIN_STEP * (chainN - 1));
+        dealt = Math.round(dealt * mult);
+      }
+      if (reacts) dealt = Math.round(dealt * REACTION_MULT);
       if (this.fieldPulse === 'crit') dealt = Math.round(dealt * CRIT_PULSE_MULT);
       const critHit = hasEquipEffect(c, 'crit') && this.round <= 3;
       if (critHit) dealt = Math.round(dealt * CRIT_MULT);
@@ -408,22 +537,39 @@ export class Battle {
 
       t.creature.hp = Math.max(0, t.creature.hp - dealt);
       const fainted = isDown(t.creature);
-      result.hits.push({ targetUid: t.creature.uid, damage: dealt, heal: 0, fainted, crit: critHit, breakdown });
+      result.hits.push({ targetUid: t.creature.uid, damage: dealt, heal: 0, fainted, crit: critHit, reaction: reactName, chain: chainN || undefined, breakdown });
 
       if (critHit) result.log.push('A remembered life strikes true — critical!');
+      if (reactName) result.log.push(`${reactName}! The clashing ${mark}/${tech.element} energies detonate!`);
       if (breakdown.attackerTileBonus) result.log.push(`The ${actor.tile} plate amplifies it!`);
       if (breakdown.effectiveness === 'super') result.log.push('Class advantage — it hits hard!');
       else if (breakdown.effectiveness === 'weak') result.log.push('Class disadvantage — it is resisted.');
-      if (t.staggered) result.log.push(`${t.creature.name} is broken — it takes extra damage!`);
+      if (chainN >= 2) result.log.push(`${chainN}-chain — the Break bites deeper!`);
+      else if (t.staggered) result.log.push(`${t.creature.name} is broken — it takes extra damage!`);
       if (breakdown.guarded) result.log.push(`${t.creature.name} guards against it.`);
       if (fainted) result.log.push(`${t.creature.name} is knocked out!`);
 
-      // Stagger accrual (living targets only): faster on class advantage or a
-      // plate-amplified hit. Full meter -> Break on the next check.
+      // A long enough chain banks the attacking side a Boost — coordinating your
+      // turns onto a broken foe pays you back with another action.
+      if (chainN === CHAIN_BOOST_AT) {
+        this.gainBoost(actor.side);
+        result.log.push('The chain holds — a Boost charge is banked!');
+      }
+
+      // Elemental mark bookkeeping: a reaction consumes the mark (you must
+      // re-establish it); otherwise this hit leaves its own element behind.
+      if (!fainted) {
+        if (reacts) t.reactionTag = undefined;
+        else { t.reactionTag = tech.element; t.reactionRound = this.round; }
+      }
+
+      // Stagger accrual (living, not-yet-broken targets): faster on class
+      // advantage, a plate-amplified hit, or an elemental reaction.
       if (!fainted && !t.staggered) {
         let gain = STAGGER_HIT;
         if (breakdown.effectiveness === 'super') gain += STAGGER_SUPER;
         if (breakdown.attackerTileBonus) gain += STAGGER_PLATE;
+        if (reacts) gain += REACTION_STAGGER;
         t.stagger = Math.min(STAGGER_MAX, t.stagger + gain);
         if (t.stagger >= STAGGER_MAX) {
           t.staggered = true;
@@ -456,11 +602,49 @@ export class Battle {
   }
 
   /**
+   * Whether a side should cash a banked Boost for an extra turn *now*. The
+   * decision lives in the model (not the scene) so it is tactical and testable:
+   * an exposed opening — a Broken or nearly-dead foe on the board — is worth
+   * pressing; bosses press harder. Routed through the injected `rng`.
+   */
+  shouldSpendBoost(actor: Battler): boolean {
+    if (this.boost[actor.side] < 1) return false;
+    const oppSide: Side = actor.side === 'party' ? 'enemy' : 'party';
+    const foes = this.living(oppSide);
+    const pressWorthy = foes.some((f) => f.staggered || f.creature.hp / f.creature.maxHp < 0.3);
+    const base = this.isBoss ? 0.5 : 0.18;
+    const p = pressWorthy ? Math.min(0.85, base + 0.4) : base;
+    return this.rng() < p;
+  }
+
+  /**
+   * A grid move the enemy AI would want: step onto its own element plate for the
+   * ×1.2 offence bonus, or — if it is an exposed Rear unit being picked off —
+   * duck to the safety of the front. Null when standing pat is fine.
+   */
+  private chooseEnemyShift(actor: Battler): BattleAction | null {
+    const cells = this.emptyCells(actor.side);
+    if (!cells.length) return null;
+    // Prefer a matching element plate we are not already standing on.
+    if (actor.tile !== actor.creature.element) {
+      const plated = cells.find((cell) => this.plateAt(actor.side, cell) === actor.creature.element);
+      if (plated) return { type: 'shift', cell: plated };
+    }
+    // Exposed in the Rear with no cover: move up to the front line.
+    if (actor.cell.row === 1 && !this.isCovered(actor)) {
+      const front = cells.find((cell) => cell.row === 0);
+      if (front) return { type: 'shift', cell: front };
+    }
+    return null;
+  }
+
+  /**
    * Enemy AI (plan §5.3, Phase D). Scores foes on damage, finishing blows, an
    * exposed back-line caster, plate-buffed threats and existing Break state,
    * then draws with a softmax so it is deliberate without being scripted. It
-   * heals when hurt, favours a multi-target shape against a stacked column, and
-   * occasionally feints with a Guard.
+   * repositions on the grid when there is a clear gain, heals when hurt, favours
+   * a multi-target shape against a stacked column, and occasionally feints with
+   * a Guard.
    */
   chooseEnemyAction(actor: Battler): BattleAction {
     const oppSide: Side = actor.side === 'party' ? 'enemy' : 'party';
@@ -468,6 +652,11 @@ export class Battle {
     if (!foes.length) return { type: 'guard' };
 
     const c = actor.creature;
+
+    // Grid sense: occasionally take a clearly-beneficial reposition instead of
+    // attacking, so the enemy engages with the formation systems the player does.
+    const shift = this.chooseEnemyShift(actor);
+    if (shift && this.rng() < 0.35) return shift;
     const scored = foes.map((f) => {
       let score = this.rng() * 0.3;
       if (f.creature.hp / f.creature.maxHp < 0.35) score += 0.6; // finish the wounded

@@ -74,6 +74,7 @@ const stats = { frames: 0, fps: 0 };
   formula,
   tech: technique,
   roster,
+  audio,
   reaches: REACHES,
   validateReaches,
 };

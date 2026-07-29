@@ -31,6 +31,7 @@ Environment variables:
 | `save.mjs` | Autosave, suspend save, Continue, and that a suspend save is **consumed** on load (three simulated sessions across page reloads) |
 | `pad.mjs` | Controller support, using a synthetic standard-mapping gamepad injected via `addInitScript` |
 | `hud.mjs` | Battle HUD screenshots — class-coloured borders, HP/MP meters, element-tinted techniques |
+| `auras.mjs` | Per-monster battle auras (`src/data/battleFx.ts`): enters a first-dungeon fight and asserts every fielded species gets a signature aura, only the Warden carries a glow light, and the auras actively emit. Pumps `scene.update()` at a fixed dt so it holds on the GPU-less container (~1 fps). |
 | `autosave.mjs` | Focused check that the hub autosave writes (arrival race, resolved) |
 | `reaches.mjs` | World map → The Reliquary (floor + boss + clear) and, through the unlock chain, The Unremembered (floor); proves the reach registry, per-reach data/art/music, and the generic clear path. Boosts the party via the debug API so fights resolve deterministically (this checks flow, not balance). |
 | `gates.mjs` | Story gating: on a fresh run only The Quiet Crossing is open; clearing it unlocks The Reliquary; clearing that unlocks both The Unremembered and the side-path Overgrowth. Reads the locked/open state of the world-map cards; no fights, so it is fast and deterministic. |
@@ -39,6 +40,7 @@ Environment variables:
 | `store.mjs` | Soul Store (summon a logged species, buy a party-slot upgrade) and Soul Sanctuary (bench a party member via R1 → Soul menu). Seeds a logged species + credits via the debug API. |
 | `grid.mjs` | Grid battle system, all four phases against the live engine: formation cells + melee cover + row damage (A); AoE shapes, reposition, swap, plate-on-cell (B); the Boost gauge (C); Break/stagger, field pulse, and the smarter AI (D). See [docs/battle-grid.md](../../docs/battle-grid.md). |
 | `transcend.mjs` | Magick pass, learnsets and the evolution system against the live headless APIs: level-gated learnsets, the physical/magical (Off/Def vs Mag/Res) damage split, RES/MAG-blended heals, level-10 **branching** evolution with a refusal on ambiguous branches, exact **de-evolution**, the multi-stage Scrapmite→Cogling→Cogknight line, and a sweep that builds every species and resolves every evolution. No scene navigation, so it is fast and deterministic. |
+| `mechanics.mjs` | The layered battle systems against the live engine: data-driven melee (row modifier + cover), elemental reactions (different-element follow-up detonates), break-chains (escalating bonus + a banked Boost), Commune (a communable foe is pacified and leaves play), and that the injected RNG + smarter AI (Boost timing, grid shifts) are exposed. See [docs/SYSTEMS.md](../../docs/SYSTEMS.md) §9. |
 | `stages.mjs` | World-map per-stage level recommendation and the rebalanced progression curve (The Quiet Crossing Lv1 → The Reliquary Lv5 → The Unremembered Lv10). Reads the rendered cards + reach data; no fights, so it is fast and deterministic. |
 | `flee.mjs` | The Run action escapes a non-boss fight back to the crawl without consuming the encounter. |
 | `menu.mjs` | The grid main menu (R1 / E / Start) renders Party / Gear / Soularium / Sanctuary, and party reordering ("move monster positions") swaps the fielded order. |
@@ -46,6 +48,7 @@ Environment variables:
 | `lastlight.mjs` | The Last Light grief encounter: Comfort → Let Go releases the soul, granting the next Immortality poem piece and a 20× EXP boon; twelve pieces unlock the Immortality Memento. |
 | `midpoint.mjs` | The Act-II midpoint: clearing all three reaches triggers the unanswerable death (Halden) once — the Keeping fails, the player authors the farewell, and every philosophy hardens. |
 | `jungle.mjs` | The Overgrowth's aftermath: clearing the jungle brings Liora Fen to the Everwake to cross; the player names the truth of her keeping and receives Liora's Step (a Memento). Fires once and does not trigger the midpoint. |
+| `cries.mjs` | Monster battle cries (`audio.cry`): instruments the Web Audio graph to confirm each authored species voice (the starter trio plus every monster in The Quiet Crossing — Mitebug, Sprigling, Scrapmite, Gloomote, Dropletta and the warden Regalion) builds its oscillator layers and pitch glides, and that a species with no cry stays silent. Headless has no speakers, but the synth graph still schedules, so it is fast and deterministic. |
 
 ## Two environment traps that cost real time
 
