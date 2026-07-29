@@ -47,6 +47,8 @@ in [`docs/`](docs/):
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** — the path from this first-hour slice
   toward a full monster-collecting dungeon-crawler's first five hours, including
   the element-count trim.
+- **[docs/battle-fx.md](docs/battle-fx.md)** — per-monster battle auras: the
+  data model, the runtime, and how to extend them to the other reaches.
 
 ## Run it locally
 
