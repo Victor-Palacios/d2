@@ -246,7 +246,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 19, tech: 'renewingTide' },
     ],
     evolutions: [{ to: 'tidecaller', level: 10 }],
-    blurb: 'Mostly buffer. Surprisingly hard to delete.',
+    blurb: 'Mostly padding. Surprisingly hard to put down.',
   },
   gloomote: {
     id: 'gloomote',
@@ -288,7 +288,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 20, tech: 'railvolt' },
     ],
     evolutions: [{ to: 'aegisaur', level: 12 }],
-    blurb: 'Firewall unit. Built to stand in the doorway.',
+    blurb: 'Built to stand in the doorway. It still does.',
   },
   fenrix: {
     id: 'fenrix',
@@ -349,7 +349,7 @@ export const SPECIES: Record<string, Species> = {
     // Early bloomer: the first stage of the three-stage Scrapmite → Cogling →
     // Cogknight line, so it evolves well before the L10 norm.
     evolutions: [{ to: 'cogling', level: 8 }],
-    blurb: 'A salvage drone that forgot what it was salvaging.',
+    blurb: 'It went out to salvage something, and forgot what.',
   },
 
   // --- Crystal Cavern -----------------------------------------------------
@@ -437,7 +437,7 @@ export const SPECIES: Record<string, Species> = {
     evolutions: [{ to: 'banshade', level: 10 }],
     communable: true,
     blurb:
-      'A frightened process that never finished terminating. It is not angry — only lost, and would rather be spoken to than struck.',
+      'A frightened thing that never finished dying. It is not angry — only lost, and would rather be spoken to than struck.',
   },
   gravemaw: {
     id: 'gravemaw',
@@ -685,7 +685,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 12, tech: 'maelstrom' },
       { level: 18, tech: 'renewingTide' },
     ],
-    blurb: 'The buffer that would not delete, grown until the sea takes its calls.',
+    blurb: 'The one that would not go quiet, grown until the sea itself answers to it.',
   },
   // Bulwarq → the whole wall.
   aegisaur: {
@@ -782,7 +782,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 12, tech: 'dirge' },
       { level: 18, tech: 'voidNova' },
     ],
-    blurb: 'The process finished terminating, and found it had a voice after all.',
+    blurb: 'It finished dying at last, and found it had a voice after all.',
   },
   // Gravemaw → the hunger given legs.
   gravestalker: {

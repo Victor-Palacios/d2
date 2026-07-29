@@ -465,7 +465,7 @@ export class HubScene extends GameScene {
       await this.dialogue.play([
         ...say(
           leader.leaderName,
-          `Briefing, ${game.playerName}. Sector two — the the Cache reach — has been dropping packets for a week.`,
+          `Briefing, ${game.playerName}. The Cache reach has been letting souls slip through uncrossed for a week now.`,
           'Refit at the supply bay, then take the map when you are ready. That is your mission.',
         ),
       ]);
@@ -518,7 +518,7 @@ export class HubScene extends GameScene {
         return say(
           'Chief Marrow',
           `Licensed and teamed. You are ${leader ? leader.name : 'Guard'} now, ${game.playerName}.`,
-          'Sector two is your problem. Mine is the paperwork you just made.',
+          'The next reach is your problem. Mine is the paperwork you just made.',
         );
       case 'mentor':
         if (!game.hasLicense) {

@@ -76,7 +76,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
             MENTOR,
             "Radio check. You are carrying a keeper's lantern across the Quiet Crossing — the threshold every soul passes on its way to rest.",
             'Arrow keys or WASD move you one tile at a time. Every step spends a little of your light — watch your lantern.',
-            'Let it gutter out and you are carried home, the dark left unattended.',
+            'Let it gutter out and you are spirited away, the dark left unattended.',
           ),
           ...say(MENTOR, 'The soul you bonded with rides in your lantern. It answers for you; you decide how.'),
           ...say(

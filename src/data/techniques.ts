@@ -400,7 +400,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 13,
     power: 62,
     element: 'dark',
-    desc: 'A bolt drawn from the space between processes.',
+    desc: 'A bolt drawn from the space between the living and the dead.',
   },
 
   // Big-MP area finishers: the payoff for a deep MP pool (so MP is a real

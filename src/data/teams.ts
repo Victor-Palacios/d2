@@ -49,7 +49,7 @@ export const TEAMS: GuardTeam[] = [
     leaderName: 'Handler Skull',
     starter: 'nightnip',
     color: '#c77dff',
-    pitch: 'The corrupt sectors need someone willing to go in dirty. That is us.',
+    pitch: 'The worst reaches need someone willing to go in dirty. That is us.',
     perk: 'Assassin team — heavier offence.',
   },
 ];

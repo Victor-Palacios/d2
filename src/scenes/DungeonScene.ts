@@ -8,6 +8,7 @@ import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { DECOR, PROPS, HUMANS } from '../assets/art';
 import { reach } from '../data/reaches';
+import { ITEMS } from '../data/items';
 import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
 import { decorIsSolid } from '../data/dungeon';
 import { ELEMENTS } from '../data/elements';
@@ -401,7 +402,7 @@ export class DungeonScene extends GameScene {
         }
         if (loot?.item) {
           game.addItem(loot.item);
-          bits.push('<span class="ok">+1 Repair Chip</span>');
+          bits.push(`<span class="ok">+1 ${ITEMS[loot.item]?.name ?? 'keepsake'}</span>`);
         }
         toast(this.ctx.ui, bits.join(' &nbsp; ') || 'Empty.', 2200);
         this.hud.update(game.party);

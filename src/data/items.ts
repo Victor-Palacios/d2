@@ -14,13 +14,13 @@ export interface ItemDef {
 export const ITEMS: Record<string, ItemDef> = {
   repairChip: {
     id: 'repairChip',
-    name: 'Repair Chip',
+    name: 'Mending Balm',
     price: 120,
     desc: 'Restores 60 HP to one creature. (Battle use not wired up yet.)',
   },
   bufferCell: {
     id: 'bufferCell',
-    name: 'Buffer Cell',
+    name: 'Focus Draught',
     price: 150,
     desc: 'Restores 30 MP to one creature.',
   },
