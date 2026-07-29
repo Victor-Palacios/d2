@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { GameScene, sleep } from '../engine/SceneManager';
 import type { SceneContext } from '../engine/SceneManager';
 import { Billboard } from '../engine/Billboard';
-import { ParticleField, Torch } from '../engine/fx';
+import { ParticleField, Torch, Aura } from '../engine/fx';
+import { battleAura } from '../data/battleFx';
 import { audio } from '../engine/Audio';
 import { input } from '../engine/Input';
 import { elementGlowTexture, elementTileTexture, floorTexture, wallTexture } from '../engine/pixel';
@@ -87,6 +88,8 @@ export class BattleScene extends GameScene {
   private particles!: ParticleField;
   private torches: Torch[] = [];
   private sprites = new Map<string, Billboard>();
+  /** Per-fighter signature aura (only for species with a `BattleAura`). */
+  private auras = new Map<string, Aura>();
   private homePos = new Map<string, THREE.Vector3>();
   private highlight: THREE.PointLight | null = null;
   private finished = false;
@@ -307,6 +310,16 @@ export class BattleScene extends GameScene {
       this.homePos.set(b.creature.uid, pos.clone());
       this.scene.add(bb.object);
       this.sprites.set(b.creature.uid, bb);
+
+      // A signature aura for the species, if the first-dungeon roster defines
+      // one. Only wardens carry a glow — the arena's light budget is small.
+      const cfg = battleAura(b.creature.speciesId);
+      if (cfg) {
+        const aura = new Aura(this.particles, cfg);
+        if (aura.light) this.scene.add(aura.light);
+        this.auras.set(b.creature.uid, aura);
+      }
+
       if (!isUp(b.creature)) {
         bb.setOpacity(0.28);
         bb.mesh.rotation.z = Math.PI * 0.12;
@@ -320,6 +333,8 @@ export class BattleScene extends GameScene {
       this.scene.remove(bb.object);
       bb.dispose();
     }
+    for (const a of this.auras.values()) a.dispose();
+    this.auras.clear();
     this.sprites.clear();
     this.homePos.clear();
     this.buildFighters();
@@ -605,6 +620,9 @@ export class BattleScene extends GameScene {
     const bb = this.sprites.get(actor.creature.uid);
     if (bb) bb.setScale(1.08);
     for (const [uid, s] of this.sprites) if (uid !== actor.creature.uid) s.setScale(1);
+    // A swell of the actor's own aura as it takes the floor — a species tell.
+    const aura = this.auras.get(actor.creature.uid);
+    if (aura && bb) aura.burst(bb.object.position, species(actor.creature.speciesId).height);
   }
 
   private hoverTarget(uid: string | null) {
@@ -947,6 +965,15 @@ export class BattleScene extends GameScene {
   override update(dt: number, time: number) {
     for (const bb of this.sprites.values()) bb.update(dt, this.ctx.hd2d.camera, time);
     for (const t of this.torches) t.update(dt, this.ctx.hd2d.camera, time);
+    // Each monster's signature aura trails its live sprite position; a fainted
+    // fighter's aura goes quiet.
+    for (const [uid, aura] of this.auras) {
+      const bb = this.sprites.get(uid);
+      const battler = this.battle.find(uid);
+      if (!bb || !battler) continue;
+      const height = species(battler.creature.speciesId).height;
+      aura.update(dt, time, bb.object.position, height, isUp(battler.creature));
+    }
     this.particles.update(dt);
     // Slow drift keeps the arena from feeling like a static screenshot.
     this.ctx.hd2d.cameraTarget.set(
@@ -963,6 +990,7 @@ export class BattleScene extends GameScene {
     this.hud.destroy();
     this.dialogue.destroy();
     for (const bb of this.sprites.values()) bb.dispose();
+    for (const a of this.auras.values()) a.dispose();
     this.particles.dispose();
     this.scene.clear();
   }
