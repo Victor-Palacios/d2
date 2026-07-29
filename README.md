@@ -50,8 +50,9 @@ in [`docs/`](docs/):
 - **[docs/adding-a-reach.md](docs/adding-a-reach.md)** — a systematic guide to
   building a new area: terrain skins, decor, layout validation, roster and
   world-map wiring.
-- **[docs/battle-fx.md](docs/battle-fx.md)** — per-monster battle auras: the
-  data model, the runtime, and how to extend them to the other reaches.
+- **[docs/battle-fx.md](docs/battle-fx.md)** — battle FX in two layers:
+  per-monster signature auras and per-move (per-technique) effects — the data
+  models, the runtime, and how to extend them.
 
 ## Run it locally
 
@@ -152,7 +153,10 @@ supply bay → Mission 2 briefing.
   wears a **signature aura** — a continuous element-tinted mote trail (the
   Warden burns with a warm glow) that swells when it takes its turn, so a fight
   reads as distinct creatures rather than interchangeable sprites. Auras are
-  data (`src/data/battleFx.ts`); the first dungeon's roster is wired up.
+  data (`src/data/battleFx.ts`); the first dungeon's roster is wired up. Every
+  **move** also has its own shaped effect — a melee slash, a flying bolt, an area
+  nova or a mending bloom — derived from the technique's element, delivery and
+  power (`src/data/moveFx.ts`), so attacks read differently from one another.
 - **Auto-battle**: pick **Auto** and the party keeps swinging with the free
   basic Attack, targeting the weakest living foe, until you press **Esc**. It
   deliberately never spends MP, uses techniques or touches items, so leaving it
@@ -308,6 +312,7 @@ Everything is behind a data layer, so swapping art is a data edit:
 |---|---|
 | A creature's sprite | the pixel map in `src/assets/art.ts` (`CREATURES`) |
 | A monster's battle aura (signature FX) | `src/data/battleFx.ts` (`BATTLE_AURAS`) |
+| A move's battle effect (per-technique FX) | `src/data/moveFx.ts` (`ELEMENT_LOOK` / `MOVE_FX_OVERRIDES`) |
 | A creature's stats, class, element, techniques | `src/data/creatures.ts` |
 | Techniques / damage numbers | `src/data/techniques.ts`, `src/systems/battle/formula.ts` |
 | NPCs and the vehicle | `HUMANS` / `VEHICLE` in `src/assets/art.ts` |

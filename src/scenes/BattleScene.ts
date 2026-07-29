@@ -11,6 +11,8 @@ import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
 import type { EnemySpec } from '../data/quietCrossing';
 import { technique } from '../data/techniques';
+import { moveFx } from '../data/moveFx';
+import type { MoveFx } from '../data/moveFx';
 import { COMFORT_PHRASES, IMMORTALITY_TOTAL } from '../data/immortality';
 import { Battle } from '../systems/battle/engine';
 import type { BattleAction, Battler, TurnResult } from '../systems/battle/engine';
@@ -691,16 +693,33 @@ export class BattleScene extends GameScene {
 
     for (const line of result.log.slice(0, 1)) this.hud.setLog(line);
 
+    // The move's own signature FX (melee slash / flying bolt / area nova /
+    // mending bloom), derived from the technique — see data/moveFx.ts. Guard
+    // and other hitless actions get none.
+    const tech = technique(result.techniqueId ?? 'strike');
+    const cssColor = ELEMENTS[tech.element].color;
+    const fx = result.hits.length ? moveFx(tech) : null;
     const heal = result.hits.some((h) => h.heal > 0);
-    // The attacker calls out as it charges — its own species cry leads the lunge
-    // so it is heard clean, a beat before the impact sfx lands under it (firing
-    // both at once masked the cry). Only on an offensive move (not Guard/heal).
+
+    // Wind-up: a puff of the move's element gathers on the caster the instant
+    // before it delivers.
+    const casterHeight = species(actor.creature.speciesId).height;
+    if (fx && bb) {
+      const top = bb.object.position.clone();
+      top.y += casterHeight * 0.6;
+      this.castTelegraph(top, fx);
+    }
+
+    // The attacker calls out as it charges — its own species cry leads the
+    // delivery so it is heard clean, a beat before the impact sfx lands under it
+    // (firing both at once masked the cry). Offensive move only (not Guard/heal).
     if (result.hits.length && !heal && result.actionLabel !== 'Guard') {
       audio.cry(actor.creature.speciesId);
     }
 
-    if (result.hits.length && bb && home) {
-      // Lunge toward the opposing side, then snap back.
+    // Delivery motion. A melee blow lunges in; a ranged bolt stays put and
+    // fires a projectile; area/heal moves gather in place.
+    if (fx && bb && home && fx.delivery === 'melee') {
       const dir = actor.side === 'party' ? -1 : 1;
       await this.tween(0.16, (t) => {
         bb.object.position.z = home.z + dir * 1.1 * t;
@@ -711,38 +730,62 @@ export class BattleScene extends GameScene {
     else if (heal) audio.sfx('heal');
     else if (result.hits.length) audio.sfx('hit');
 
+    // A ranged bolt streaks from the caster to its target before it detonates.
+    if (fx && bb && fx.delivery === 'bolt') {
+      const primary = result.hits[0];
+      const ptarget = this.battle.find(primary.targetUid);
+      const ptbb = this.sprites.get(primary.targetUid);
+      if (ptarget && ptbb) {
+        const from = bb.object.position.clone();
+        from.y += casterHeight * 0.6;
+        const to = ptbb.object.position.clone();
+        to.y += species(ptarget.creature.speciesId).height * 0.55;
+        await this.flyBolt(from, to, fx);
+      }
+    }
+
     for (const hit of result.hits) {
       const target = this.battle.find(hit.targetUid);
       const tbb = this.sprites.get(hit.targetUid);
-      if (!target || !tbb) continue;
+      if (!target || !tbb || !fx) continue;
 
       const worldTop = tbb.object.position.clone();
       worldTop.y += species(target.creature.speciesId).height * 0.9;
 
       if (hit.heal > 0) {
-        this.particles.emit(worldTop, { count: 14, color: 0x7bdc8a, speed: 1.4, life: 0.8, gravity: 1.2, upBias: 1 });
+        this.particles.emit(worldTop, {
+          count: fx.impact.count,
+          color: fx.color,
+          speed: fx.impact.speed,
+          spread: fx.impact.spread,
+          life: fx.impact.life,
+          gravity: fx.gravity,
+          upBias: fx.upBias,
+          size: fx.size,
+        });
         const s = this.screenPos(worldTop);
-        this.hud.float(s.x, s.y, `+${hit.heal}`, '#7bdc8a');
+        this.hud.float(s.x, s.y, `+${hit.heal}`, cssColor);
       } else {
         tbb.hit(1);
-        const tech = technique(result.techniqueId ?? 'strike');
-        const color = ELEMENTS[tech.element].color;
         const react = !!hit.reaction;
         this.particles.emit(worldTop, {
-          count: react ? 30 : 18,
-          color,
-          speed: react ? 3.4 : 2.6,
-          life: 0.55,
-          gravity: -3,
+          count: react ? Math.round(fx.impact.count * 1.5) : fx.impact.count,
+          color: fx.color,
+          speed: react ? fx.impact.speed * 1.3 : fx.impact.speed,
+          spread: react ? fx.impact.spread * 1.3 : fx.impact.spread,
+          life: fx.impact.life,
+          gravity: fx.gravity,
+          upBias: fx.upBias,
+          size: fx.size,
         });
         const s = this.screenPos(worldTop);
         const superEffective = hit.crit || hit.breakdown?.effectiveness === 'super';
         const big = superEffective || react;
         this.hud.float(s.x, s.y, String(hit.damage), big ? '#ffd166' : '#ff9a8a');
-        this.ctx.hd2d.addShake(react ? 0.26 : superEffective ? 0.2 : 0.11);
+        this.ctx.hd2d.addShake(react ? fx.shake * 1.6 : superEffective ? fx.shake * 1.3 : fx.shake);
         if (react) {
           audio.sfx('crit');
-          this.hud.float(s.x, s.y - 30, hit.reaction!, color);
+          this.hud.float(s.x, s.y - 30, hit.reaction!, cssColor);
         } else if (superEffective) audio.sfx('crit');
         if (hit.chain && hit.chain >= 2) this.hud.float(s.x, s.y - 52, `${hit.chain}-chain`, '#ffd166');
       }
@@ -756,7 +799,8 @@ export class BattleScene extends GameScene {
       }
     }
 
-    if (result.hits.length && bb && home) {
+    // Only a melee lunge needs undoing — ranged/area casters never left home.
+    if (fx && bb && home && fx.delivery === 'melee') {
       await this.tween(0.14, (t) => {
         const dir = actor.side === 'party' ? -1 : 1;
         bb.object.position.z = home.z + dir * 1.1 * (1 - t);
@@ -784,6 +828,44 @@ export class BattleScene extends GameScene {
       await sleep(620);
     }
     await sleep(260);
+  }
+
+  /** A puff of the move's element gathering on the caster, just before it lands. */
+  private castTelegraph(top: THREE.Vector3, fx: MoveFx) {
+    this.particles.emit(top, {
+      count: fx.cast.count,
+      speed: fx.cast.speed,
+      spread: fx.cast.spread,
+      life: fx.cast.life,
+      gravity: fx.gravity * 0.4,
+      upBias: fx.upBias * 0.6,
+      size: fx.size,
+      color: fx.color,
+    });
+  }
+
+  /**
+   * A ranged projectile: a knot of element-tinted motes streaks from the caster
+   * to its target, trailing sparks, then hands off to the impact burst. Duration
+   * scales with distance so a far shot doesn't teleport.
+   */
+  private async flyBolt(from: THREE.Vector3, to: THREE.Vector3, fx: MoveFx) {
+    const dist = from.distanceTo(to);
+    const dur = Math.min(0.45, Math.max(0.16, dist / fx.boltSpeed));
+    const p = new THREE.Vector3();
+    await this.tween(dur, (t) => {
+      p.lerpVectors(from, to, t);
+      this.particles.emit(p, {
+        count: 2,
+        speed: 0.7,
+        spread: 0.22,
+        life: 0.28,
+        gravity: fx.gravity * 0.3,
+        upBias: 0.2,
+        size: fx.size,
+        color: fx.color,
+      });
+    });
   }
 
   private tween(seconds: number, fn: (t: number) => void): Promise<void> {

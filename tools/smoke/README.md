@@ -36,6 +36,7 @@ Environment variables:
 | `pad.mjs` | Controller support, using a synthetic standard-mapping gamepad injected via `addInitScript` |
 | `hud.mjs` | Battle HUD screenshots — class-coloured borders, HP/MP meters, element-tinted techniques |
 | `auras.mjs` | Per-monster battle auras (`src/data/battleFx.ts`): enters a first-dungeon fight and asserts every fielded species gets a signature aura, only the Warden carries a glow light, and the auras actively emit. Pumps `scene.update()` at a fixed dt so it holds on the GPU-less container (~1 fps). |
+| `moveFx.mjs` | Per-move battle effects (`src/data/moveFx.ts`): drives one move of every delivery archetype (melee / bolt / nova / mend) through the real turn animation and asserts each fires its shaped FX, with the ranged bolt (trail + burst) out-sparking the plain heal. |
 | `autosave.mjs` | Focused check that the hub autosave writes (arrival race, resolved) |
 | `reaches.mjs` | World map → The Reliquary (floor + boss + clear) and, through the unlock chain, The Unremembered (floor); proves the reach registry, per-reach data/art/music, and the generic clear path. Boosts the party via the debug API so fights resolve deterministically (this checks flow, not balance). |
 | `gates.mjs` | Story gating: on a fresh run only The Quiet Crossing is open; clearing it unlocks The Reliquary; clearing that unlocks both The Unremembered and the side-path Overgrowth. Reads the locked/open state of the world-map cards; no fights, so it is fast and deterministic. |
