@@ -138,5 +138,5 @@ Voiced today (`CRIES` in `src/engine/Audio.ts`):
 Everything else — the Crystal Cavern, Overgrowth and Haunted Dungeon rosters,
 and their wardens — is **not voiced yet** and stays silent. Adding those is
 pure data: one `CRIES` entry each, following the cookbook above. A good next
-pass is one domain's roster at a time, matched to its element (water = bloops,
+pass is one reach's roster at a time, matched to its element (water = bloops,
 dark = moans, machine = whirs, nature = warbles).

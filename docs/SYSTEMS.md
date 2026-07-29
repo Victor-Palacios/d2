@@ -261,7 +261,7 @@ Then a small breather so you are not sent into the next step empty:
 from every defeated enemy, scaled by the level gap (`xpFromEnemy`), and
 `grantXp` applies level-ups off the species `growth` curve (`statsAt`), healing
 the HP/MP delta. Under-levelled monsters gain more, so the party self-levels
-toward each domain's recommended level. Any learnset move whose level a monster
+toward each reach's recommended level. Any learnset move whose level a monster
 crosses on the way up is taught then and there (see §7).
 
 ---
