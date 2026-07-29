@@ -1,4 +1,5 @@
 import type { Reach, DungeonFloor } from './dungeon';
+import { decorIsSolid } from './dungeon';
 import { REACHES } from './reaches';
 import { DECOR } from '../assets/art';
 
@@ -86,7 +87,16 @@ export function validateFloor(floor: DungeonFloor): string[] {
   const hasPortal = rows.some((r) => r.includes('>') || r.includes('<'));
   if (!isBoss && !hasPortal) errs.push('non-boss floor has no descent/exit portal');
 
-  // reachability: flood-fill walkable tiles from the start
+  // solid decor turns its walkable tile into an obstacle — the flood-fill must
+  // treat it as a wall so a prop dropped into a corridor is caught as a soft-lock
+  const solidDecor = new Set<string>();
+  for (const d of floor.decor ?? []) {
+    if (decorIsSolid(d)) solidDecor.add(`${d.x},${d.z}`);
+  }
+  const traversable = (x: number, z: number): boolean =>
+    walkable(x, z) && !solidDecor.has(`${x},${z}`);
+
+  // reachability: flood-fill traversable tiles from the start
   if (start) {
     const seen = new Set<string>([`${start.x},${start.z}`]);
     const stack: Coord[] = [start];
@@ -101,7 +111,7 @@ export function validateFloor(floor: DungeonFloor): string[] {
         const nx = x + dx;
         const nz = z + dz;
         const k = `${nx},${nz}`;
-        if (!seen.has(k) && walkable(nx, nz)) {
+        if (!seen.has(k) && traversable(nx, nz)) {
           seen.add(k);
           stack.push({ x: nx, z: nz });
         }
@@ -114,12 +124,21 @@ export function validateFloor(floor: DungeonFloor): string[] {
     }
   }
 
-  // decor: in bounds, on a walkable tile, and a known kind
+  // decor: in bounds, on a walkable tile, and a known kind. Solid decor must
+  // also stay off tiles the party has to stand on (start + interactive tiles),
+  // or that tile becomes impossible to use.
+  const standTiles = new Set(['S', 'C', '$', '>', '<']);
   for (const d of floor.decor ?? []) {
+    const ch = at(d.x, d.z);
     if (d.z < 0 || d.z >= rows.length || d.x < 0 || d.x >= width) {
       errs.push(`decor '${d.kind}' at ${d.x},${d.z} is out of bounds`);
     } else if (!walkable(d.x, d.z)) {
-      errs.push(`decor '${d.kind}' at ${d.x},${d.z} sits on a non-walkable tile '${at(d.x, d.z)}'`);
+      errs.push(`decor '${d.kind}' at ${d.x},${d.z} sits on a non-walkable tile '${ch}'`);
+    } else if (
+      decorIsSolid(d) &&
+      (standTiles.has(ch) || ELEMENT_CHARS.has(ch) || (ch >= '1' && ch <= '9'))
+    ) {
+      errs.push(`solid decor '${d.kind}' at ${d.x},${d.z} blocks an interactive tile '${ch}'`);
     }
     if (!(d.kind in DECOR)) errs.push(`decor kind '${d.kind}' has no art in DECOR`);
   }

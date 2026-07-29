@@ -87,6 +87,9 @@ export class TileGrid {
   /** Wall tiles flagged as "accent" get the boss-approach material. */
   private accent = new Set<string>();
 
+  /** Walkable tiles blocked by solid decor — impassable, but still floor. */
+  private blocked = new Set<string>();
+
   constructor(rows: string[], theme: TileTheme = DEFAULT_THEME) {
     this.theme = theme;
     this.depth = rows.length;
@@ -130,6 +133,19 @@ export class TileGrid {
   walkable(x: number, z: number): boolean {
     const t = this.at(x, z);
     return !!t && t.kind !== 'wall' && t.kind !== 'void';
+  }
+
+  /** Marks a walkable tile as blocked by solid decor. */
+  blockTile(x: number, z: number) {
+    this.blocked.add(`${x},${z}`);
+  }
+
+  /**
+   * Whether the party can step onto (x, z): a walkable tile not occupied by
+   * solid decor. Use this for movement; `walkable()` is pure grid geometry.
+   */
+  passable(x: number, z: number): boolean {
+    return this.walkable(x, z) && !this.blocked.has(`${x},${z}`);
   }
 
   worldPos(x: number, z: number, y = 0): THREE.Vector3 {

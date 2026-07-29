@@ -109,7 +109,7 @@ const FLOORS: DungeonFloor[] = [
     fog: 1.2,
     decor: [
       { x: 5, z: 4, kind: 'machinePylon', height: 1.4, emissive: 0.4 },
-      { x: 10, z: 4, kind: 'conduit', height: 1.0, emissive: 0.5 },
+      { x: 8, z: 4, kind: 'conduit', height: 1.0, emissive: 0.5 },
       { x: 14, z: 5, kind: 'conduit', height: 1.0, emissive: 0.5 },
       { x: 12, z: 8, kind: 'machinePylon', height: 1.4, emissive: 0.4 },
       { x: 2, z: 8, kind: 'iceShard', height: 0.8, emissive: 0.4 },

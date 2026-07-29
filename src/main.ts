@@ -20,6 +20,7 @@ import { technique } from './data/techniques';
 import * as roster from './data/creatures';
 import { REACHES } from './data/reaches';
 import { validateReaches } from './data/validateReaches';
+import { decorIsSolid } from './data/dungeon';
 
 const canvas = document.getElementById('gl') as HTMLCanvasElement;
 const ui = document.getElementById('ui') as HTMLElement;
@@ -77,6 +78,7 @@ const stats = { frames: 0, fps: 0 };
   audio,
   reaches: REACHES,
   validateReaches,
+  decorIsSolid,
 };
 
 // Fail loud in dev if a floor's data drifts out of consistency (dead chest key,

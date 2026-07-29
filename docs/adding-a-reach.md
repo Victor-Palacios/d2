@@ -79,11 +79,15 @@ Unremembered `crypt`+`cave`). A cohesive single-skin area (jungle) is also fine.
 
 ## 2. Decor
 
-Decor is a scatter of **non-colliding** billboards — the cheapest way to make a
-floor read as a place. `DungeonFloor.decor?: DecorSpec[]`:
+Decor is a scatter of billboards — the cheapest way to make a floor read as a
+place. `DungeonFloor.decor?: DecorSpec[]`:
 
 ```ts
-interface DecorSpec { x: number; z: number; kind: string; height?: number; emissive?: number; }
+interface DecorSpec {
+  x: number; z: number; kind: string;
+  height?: number; emissive?: number;
+  solid?: boolean;   // collides? defaults per-kind (see below)
+}
 ```
 
 `kind` indexes the `DECOR` table in `src/assets/art.ts` (small `{palette, rows}`
@@ -93,16 +97,29 @@ pixel maps). Current kinds: crystal (`crystalCluster`, `crystalPillar`,
 jungle (`fern`, `palmTree`, `vineHang`, `jungleFlower`, `bamboo`, `mossLog`,
 `totem`), generic (`crate`, `rubble`).
 
+**Collision.** Decor is *solid by default* — the party cannot step onto a tile
+holding a solid prop, so rocks/crystals/pillars/trees are real obstacles. The
+default is per-kind: `PASSABLE_DECOR_KINDS` in `dungeon.ts` lists the kinds that
+*don't* block (flat floor detail you walk over — `mushroomGlow`, `jungleFlower`
+— and overhead dressing you walk under — `vineHang`). Override any single
+instance with `solid: true`/`false`. `decorIsSolid(spec)` is the one source of
+truth (used by the scene, the validator and the smoke test).
+
 Rules:
 - **Decor must sit on a walkable floor tile** (not `#`/`=`/void). A billboard on
   a wall clips into the 3D box. The validator enforces this.
-- It never affects movement — the player drives straight through it. Place decor
-  beside foliage/pillars, in corners, off the main path.
-- `DungeonScene.placeDecor()` renders/updates/disposes them; no scene edits
-  needed to add decor to a floor.
+- **Solid decor must not block the only path to a target, or sit on a tile the
+  party has to stand on** (start, chest, fuel, portal/exit, element, event). The
+  validator flood-fills *through* solid decor and flags both mistakes — a prop
+  dropped into a one-wide corridor is a soft-lock. Place solid decor beside
+  pillars, in corners, off the main path; keep chokepoints and interactive tiles
+  clear (or mark that instance `solid: false`).
+- `DungeonScene.placeDecor()` renders/updates/disposes billboards and calls
+  `grid.blockTile()` for solid ones; movement checks `grid.passable()`
+  (`walkable()` stays pure grid geometry). No scene edits needed to add decor.
 
 Add new decor sprites by appending to `DECOR` (keep them ≤~16px wide, `.` =
-transparent).
+transparent). If the new kind is flat/overhead, add it to `PASSABLE_DECOR_KINDS`.
 
 ## 3. Floor layouts
 
@@ -124,9 +141,12 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
   moved chest with a stale key silently gives "Empty."
 - non-boss floors have a `>` (or `<`); boss floors don't need one (the exit
   portal spawns when the warden falls).
-- **reachability**: a flood-fill from `S` must reach every event, chest, fuel,
-  portal and element tile. A walled-off portal is a soft-lock.
-- decor is in-bounds, on a walkable tile, and its `kind` exists in `DECOR`.
+- **reachability**: a flood-fill from `S` — treating solid decor as a wall —
+  must reach every event, chest, fuel, portal and element tile. A walled-off
+  portal (by geometry *or* by a solid prop) is a soft-lock.
+- decor is in-bounds, on a walkable tile, and its `kind` exists in `DECOR`;
+  solid decor never sits on an interactive tile (start/chest/fuel/portal/
+  element/event).
 
 **Workflow — validate before you trust ASCII.** Do not eyeball coordinates.
 Design each floor in a throwaway Node script that mirrors `validateFloor`

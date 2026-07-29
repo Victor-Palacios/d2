@@ -10,6 +10,7 @@ import { audio } from '../engine/Audio';
 import { DECOR, PROPS, VEHICLE } from '../assets/art';
 import { reach } from '../data/reaches';
 import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
+import { decorIsSolid } from '../data/dungeon';
 import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
 import { game } from '../systems/party/gameState';
@@ -207,9 +208,11 @@ export class DungeonScene extends GameScene {
   }
 
   /**
-   * Scatters the floor's decorative billboards. Decor is non-colliding by
-   * design — it lives outside the grid, so the player drives straight through
-   * it; it only exists to give each reach's terrain its own silhouette.
+   * Scatters the floor's decorative billboards. Solid decor (rocks, crystals,
+   * pillars, trees…) blocks its tile so the party can't walk through it; flat
+   * ground detail and overhead dressing stay passable (see `decorIsSolid`). Each
+   * reach's terrain gets its own silhouette without changing floor-to-floor
+   * movement.
    */
   private placeDecor() {
     for (const d of this.floor.decor ?? []) {
@@ -223,6 +226,7 @@ export class DungeonScene extends GameScene {
       b.object.position.copy(this.grid.worldPos(d.x, d.z));
       this.scene.add(b.object);
       this.decor.push(b);
+      if (decorIsSolid(d)) this.grid.blockTile(d.x, d.z);
     }
   }
 
@@ -340,7 +344,7 @@ export class DungeonScene extends GameScene {
       this.facing = dir;
       this.updateFacingArt();
     }
-    if (!this.grid.walkable(nx, nz)) {
+    if (!this.grid.passable(nx, nz)) {
       audio.sfx('bump');
       return;
     }
