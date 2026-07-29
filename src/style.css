@@ -1009,42 +1009,72 @@ body {
   opacity: 0.4;
 }
 
-/* --- party arrange (move positions) -------------------------------------- */
-.party-list {
-  width: min(520px, 84vw);
-  margin: 4px auto 0;
-  text-align: left;
-  padding: 8px;
-}
-.party-row {
+/* --- formation editor (arrange the fielded party on the 2×3 grid) -------- */
+.formation-wrap {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-left: 3px solid var(--elem-color, var(--edge));
-  margin-bottom: 4px;
-  font-size: 13px;
+  gap: 16px;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 4px auto 0;
+  flex-wrap: wrap;
 }
-.party-row .slot {
-  flex: 0 0 28px;
+.formation-foe {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  opacity: 0.5;
+  text-align: center;
+  margin-bottom: 6px;
+}
+.formation-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.formation-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.row-tag {
+  flex: 0 0 40px;
+  align-self: center;
   font-size: 10px;
   letter-spacing: 0.08em;
-  opacity: 0.6;
+  opacity: 0.55;
+  text-align: right;
 }
-.party-row .who {
-  flex: 1;
+.form-cell {
+  width: 128px;
+  height: 58px;
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: box-shadow 0.1s, transform 0.1s;
+}
+.form-cell.empty {
+  border-style: dashed;
+  opacity: 0.5;
+}
+.form-cell.occupied {
+  border-left: 3px solid var(--elem-color, var(--edge));
+}
+.form-cell .who {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
-.party-row.fielded .slot {
-  color: var(--accent);
-  opacity: 1;
-}
-.party-row.sel {
+.form-cell.sel {
+  border-color: var(--accent);
   background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
 }
-.party-row.grabbed {
+.form-cell.grabbed {
   background: color-mix(in srgb, var(--accent) 22%, transparent);
   box-shadow: 0 0 12px rgba(255, 209, 102, 0.4);
 }
@@ -1246,4 +1276,53 @@ body {
 @keyframes flameGutter {
   0%, 100% { transform: scaleX(1) scaleY(0.86) skewX(-6deg); opacity: 0.55; }
   50%      { transform: scaleX(0.9) scaleY(1) skewX(7deg); opacity: 0.85; }
+}
+.formation-bench {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--edge);
+  max-width: 452px;
+}
+.bench-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border: 1px solid var(--edge);
+  border-left: 3px solid var(--elem-color, var(--edge));
+  border-radius: 6px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.bench-chip.sel {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.08);
+}
+.bench-chip.grabbed {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: 0 0 12px rgba(255, 209, 102, 0.4);
+}
+.bench-empty {
+  font-size: 12px;
+  padding: 6px 4px;
+}
+.formation-info {
+  width: min(320px, 86vw);
+  text-align: left;
+}
+.formation-info .desc {
+  min-height: 120px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.tag-slot {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-top: 4px;
 }

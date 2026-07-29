@@ -18,20 +18,13 @@ import { Battle } from '../systems/battle/engine';
 import type { BattleAction, Battler, TurnResult } from '../systems/battle/engine';
 import { makeCreature, isUp, reviveFainted, grantXp, xpFromEnemy } from '../systems/party/creature';
 import type { CreatureInstance } from '../systems/party/creature';
-import { game } from '../systems/party/gameState';
+import { game, MAX_FIELDED } from '../systems/party/gameState';
 import { BattleHUD } from '../ui/BattleHUD';
 import { DialogueBox } from '../ui/DialogueBox';
 import { toast } from '../ui/Toast';
 import type { DialogueScript } from '../systems/dialogue/script';
 import { say, narrate } from '../systems/dialogue/script';
 import type { DungeonSceneParams } from './DungeonScene';
-
-/**
- * Hard ceiling on how many souls deploy at once (the 2×3 grid holds more, but
- * the front line is three columns). The live cap is `game.fieldCap` — one soul
- * per human keeper — and never exceeds this.
- */
-const MAX_FIELDED = 4;
 
 /** Chance a Run attempt succeeds (bosses cannot be fled). */
 const FLEE_CHANCE = 0.5;
@@ -119,6 +112,9 @@ export class BattleScene extends GameScene {
       enemies,
       partyTiles: this.params.partyTiles,
       enemyTiles: this.params.enemyTiles,
+      // Deploy each fielded member into the cell the player set in the Party
+      // screen (Vanguard/Rear × column); the i-th living member takes slot i.
+      partyCells: game.formation.slice(0, active.length).map((c) => ({ ...c })),
       isBoss: this.params.isBoss,
       rng: this.params.rng,
     });

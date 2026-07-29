@@ -20,7 +20,7 @@ export async function openSoulMenu(parent: HTMLElement): Promise<void> {
       {
         value: 'party',
         label: 'Party',
-        sublabel: 'arrange the fielded three',
+        sublabel: 'formation — who fights & where',
         icon: menuIcon('party', '#8fd0ff'),
         color: '#8fd0ff',
       },
