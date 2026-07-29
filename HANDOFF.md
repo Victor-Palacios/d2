@@ -86,7 +86,8 @@ recorded in §6.
 
 ## 4. Requested docs — delivered
 
-The four items the owner asked for are written and live in [`docs/`](docs/):
+The four items the owner asked for are written and live in [`docs/`](docs/)
+(item 5, the audio guide, was added later alongside the jungle work):
 
 1. **Plan audit** — [`docs/PLAN_AUDIT.md`](docs/PLAN_AUDIT.md): the original plan
    walked section by section (reconstructed from the `plan §…` markers in the
@@ -99,6 +100,9 @@ The four items the owner asked for are written and live in [`docs/`](docs/):
    cheapest task, with rationale and an exact edit list.
 4. **Systems explainer** — [`docs/SYSTEMS.md`](docs/SYSTEMS.md): types, class
    advantage, damage, guard, EP and rewards with worked numbers.
+5. **Audio guide** — [`docs/audio.md`](docs/audio.md): how the procedural sound
+   engine works and, step by step, how to add a music track and a randomised
+   ambience layer (the jungle's birds are the reference).
 
 **Next actual build work** (all code) is the roadmap's M7 onward. The **XP/level
 loop is now done** (`grantXp`/`xpFromEnemy`, awarded in `BattleScene.onVictory`);

@@ -315,7 +315,7 @@ Everything is behind a data layer, so swapping art is a data edit:
 | Tile / wall textures | the generators in `src/engine/pixel.ts` (one per `TerrainStyle`) |
 | A reach's terrain look | `terrain` / `wallHeight` / `fogColor` on each floor's `TileTheme` |
 | Decorative props (crystals, gravestones, roots…) | `DECOR` in `src/assets/art.ts` + a floor's `decor: []` list |
-| Sound effects and music | `src/engine/Audio.ts` |
+| Sound effects, music and ambience | `src/engine/Audio.ts` — see [docs/audio.md](docs/audio.md) |
 | A monster's battle cry (its voice) | `CRIES` in `src/engine/Audio.ts` — see [docs/monster-cries.md](docs/monster-cries.md) |
 
 To use image files instead of procedural pixel maps, replace `spriteTexture()`
