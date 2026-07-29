@@ -105,18 +105,23 @@ Syphon** mechanic instead of a capture item.
   (project the billboard's world position to screen) rather than only on the HUD
   card; and battle should draw at most 3 active party monsters (3-on-screen).
 
-## M9 — DNA-merge Evolution (cash the §5.6 stub)
+## M9 — Evolution / transcendence (§5.6)
 
-The data model is **already there**: `evolvesTo` on every `Species`
-(`data/creatures.ts`), deliberately carried for exactly this.
-
-- Evolution screen: pick a creature meeting a requirement (level, and later a
-  second creature for DNA-merge), preview the result, confirm.
-- Merge rules in a new `systems/party/evolve.ts` (headless, testable) — a level
-  reset with carried-over stat bonuses is the genre hook that makes the level cap
-  interesting.
-- Author the evolved-form roster in `creatures.ts` + `art.ts` (Regalion already
-  exists as Emberling's target — use it as the reference chain).
+- ✅ **Done — a Pokémon × Digimon hybrid.** The stub is cashed: `evolutions` (a
+  branching, level-gated tree) on `Species`; a headless, tested
+  `systems/party/evolve.ts` with `evolve`/`devolve`; and a **Transcend** screen
+  (`ui/TranscendScreen.ts`, R1 → menu). Level-triggered (10 for most, not all),
+  **branching** (identity-preserving), and **reversible** (de-evolution). ~14
+  evolved forms authored in `creatures.ts` (art reused from the roster's
+  bigger/cooler sprites, per `docs/adding-monsters.md`). Covered by
+  `tools/smoke/transcend.mjs`. See `docs/SYSTEMS.md §7`.
+- ✅ **Also landed — the magick pass + learnsets.** Two damage channels
+  (Offense/Defense physical, Magick/Resolve magical) so Mages are real casters;
+  and level 1–20 `learnset`s on every species, taught on level-up.
+- **Still to do (polish):** dedicated sprites for the evolved forms (they reuse
+  existing art today); a **DNA-merge** branch condition (consume a second
+  creature) — the `evolutions` model can grow a `mergeWith` field for it; and
+  evolution-driven encounter tables so evolved forms appear in the wild.
 
 ## M10 — More reaches + procedural floors
 

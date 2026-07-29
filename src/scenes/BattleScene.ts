@@ -519,7 +519,7 @@ export class BattleScene extends GameScene {
    * exactly once — and at most one per fight, in curriculum order, so the new
    * systems are introduced slowly across the three story areas:
    *
-   * - **The Quiet Crossing (boot):** melee vs ranged reach and cover.
+   * - **The Quiet Crossing:** melee vs ranged reach and cover.
    * - **The Reliquary (crystal):** elemental reactions.
    * - **The Unremembered (haunted):** break-chains, then Commune once a gentle
    *   soul is actually on the field.

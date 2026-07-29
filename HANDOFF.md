@@ -35,7 +35,7 @@ content). Keep it that way.
 |---|---|
 | Full slice | title → name → hub → world map → 3-floor Quiet Crossing → boss → licence → Guard Team → rival → shop → Mission 2 hook |
 | HD-2D rig | shared by crawl and battle; every parameter live-tunable via `` ` `` |
-| 3v3 battle | speed order, Attack/Technique/Guard/Auto, class + element multipliers, enemy AI |
+| 3v3 grid battle | formation/cover, Boost, Break, field pulse, class + element multipliers, softmax AI — **plus the layered systems added this session**: melee-reach, elemental reactions, break-chains, Commune (see §9 and [docs/SYSTEMS.md](docs/SYSTEMS.md) §9) |
 | Auto-battle | basic Attack only, weakest target, Esc to stop; verified it spends **no MP** over 14 s hands-off |
 | Controller | Gamepad API polled in `Input.poll()`; verified with a synthetic pad |
 | Suspend save | verified across three page reloads, and that loading **consumes** it |
@@ -86,7 +86,8 @@ recorded in §6.
 
 ## 4. Requested docs — delivered
 
-The four items the owner asked for are written and live in [`docs/`](docs/):
+The four items the owner asked for are written and live in [`docs/`](docs/)
+(item 5, the audio guide, was added later alongside the jungle work):
 
 1. **Plan audit** — [`docs/PLAN_AUDIT.md`](docs/PLAN_AUDIT.md): the original plan
    walked section by section (reconstructed from the `plan §…` markers in the
@@ -99,10 +100,15 @@ The four items the owner asked for are written and live in [`docs/`](docs/):
    cheapest task, with rationale and an exact edit list.
 4. **Systems explainer** — [`docs/SYSTEMS.md`](docs/SYSTEMS.md): types, class
    advantage, damage, guard, EP and rewards with worked numbers.
+5. **Audio guide** — [`docs/audio.md`](docs/audio.md): how the procedural sound
+   engine works and, step by step, how to add a music track and a randomised
+   ambience layer (the jungle's birds are the reference).
 
-**Next actual build work** (all code) is the roadmap's M7 onward — start with the
-element trim and the XP/level loop. Nothing from the original doc-request list is
-outstanding.
+**Next actual build work** (all code) is the roadmap's M7 onward. The **XP/level
+loop is now done** (`grantXp`/`xpFromEnemy`, awarded in `BattleScene.onVictory`);
+the cheapest remaining item is the **element trim** (five → three), which now
+also drops reaction-pair names but is still a data edit, not a rebalance. Nothing
+from the original doc-request list is outstanding.
 
 ---
 
@@ -165,13 +171,95 @@ These were each learned by shipping the bug first.
 
 ## 8. Debug surface
 
-`window.hd2dGame` exposes `{ manager, hd2d, game, debug, stats, saves }` —
+`window.hd2dGame` exposes `{ manager, hd2d, game, debug, stats, saves, audio }` —
 current scene and live scene instance, every HD-2D parameter, the run state, a
-frame counter, and the save API. It is what the smoke tests drive, and it is the
-fastest way to reproduce anything without replaying the slice.
+frame counter, the save API, and the audio engine (handy for auditioning monster
+cries: `hd2dGame.audio.cry('regalion')` — see
+[docs/monster-cries.md](docs/monster-cries.md)). It is what the smoke tests
+drive, and it is the fastest way to reproduce anything without replaying the
+slice.
 
 ```js
 hd2dGame.game.floorIndex = 2;            // jump to the boss floor
 await hd2dGame.manager.go('dungeon');
 hd2dGame.hd2d.params.supersample = 1;    // then hd2d.applyParams()
 ```
+
+---
+
+## 9. Layered battle mechanics (added this session)
+
+Six changes on top of the base 3v3 grid model — three refinements, three new
+systems — each introduced to the player **one at a time across the three story
+reaches** by a flag-gated tutorial. The numbers reference lives in
+[`docs/SYSTEMS.md`](docs/SYSTEMS.md) §9; this section is the *how it's wired and
+how to extend it* view. The whole battle model stays headless (no Three.js/DOM in
+`systems/battle/`), per the ROADMAP invariant.
+
+### What changed, and where
+
+| Change | Kind | Lives in |
+|---|---|---|
+| All battle RNG through one injected `rng` (flee, enemy Boost, Last Light); a seeded `rng` in `BattleSceneParams` makes a whole fight reproducible | refinement | `engine.ts` (`rng` now public), `BattleScene.ts` |
+| Melee is a data flag (`Technique.melee`), not `id==='strike'` — a class of physical moves get row modifiers + respect cover | refinement | `techniques.ts`, `engine.ts` `isMeleeTechnique`, `BattleHUD.ts` (tag + cover-aware targeting) |
+| Enemy AI uses the grid (`chooseEnemyShift`) and times Boost spend (`shouldSpendBoost`) — both in the model | refinement | `engine.ts` |
+| **Elemental reactions** — a hit marks a target; a different-element follow-up detonates (bonus dmg + faster Break) | new | `engine.ts` (`REACTION_*`, `activeMark`, `reactionName`), FX in `BattleScene.ts`, mark pip in `BattleHUD.ts` |
+| **Break-chains** — hits on a Broken foe escalate the bonus and bank a Boost at the threshold | new | `engine.ts` (`CHAIN_*`, `Battler.chain`) |
+| **Commune** — pacify a `communable` foe with words; it leaves play and is understood (claimed like a full Soul Syphon on victory) | new | `engine.ts` (`COMMUNE_*`, `Battler.pacified/commune`, `communeTargets`), `creatures.ts`/`creature.ts` (`communable`), `gameState.ts` (`understandSoul`), `BattleScene.ts` (`resolvePacify` + FX), `BattleHUD.ts` (action + meter) |
+
+### The staged-tutorial pattern (how to add another)
+
+`BattleScene.maybeTutorial()` runs once at the top of each fight (after the intro,
+before the first round). It shows **at most one** lesson per fight, gated on
+`game.flags` (persisted in saves), keyed by `game.activeReachId`:
+
+- `crossing` → `tut.melee`  ·  `crystal` → `tut.reaction`  ·  `haunted` →
+  `tut.breakChain`, then `tut.commune` (only once a `communable` foe is present).
+
+To introduce a new mechanic slowly: pick a reach, add a `!game.has('tut.x')`
+branch that `teach('tut.x', say('Halden', …))`. Order matters — earlier branches
+win the single per-fight slot, so later mechanics naturally surface in later
+fights. The mentor voice is `'Halden'`.
+
+### How to extend each system
+
+- **Make a technique melee:** set `melee: true` in `techniques.ts`. It then takes
+  `VANGUARD/REAR_MELEE_DEALT` and can't hit a covered Rear foe. Nothing else needed.
+- **Tune reactions:** `REACTION_MULT` / `REACTION_STAGGER` / `REACTION_TTL_ROUNDS`
+  in `engine.ts`; add pair flavour in `REACTION_NAMES` (maths is uniform per pair).
+- **Tune break-chains:** `CHAIN_STEP` / `CHAIN_DAMAGE_MAX` / `CHAIN_BOOST_AT`.
+- **Make a species communable:** set `communable: true` in `creatures.ts`. It is
+  copied onto the `CreatureInstance` in `makeCreature` (so the headless engine
+  never imports the species table). Commune reward flows through the existing
+  Soul Syphon: `resolvePacify` → `game.understandSoul` → `finalizeCaptures` on win.
+- **Reproducible fight (tests):** pass `rng` in `BattleSceneParams` — every roll,
+  including flee/Boost/Last Light, routes through `battle.rng`.
+
+### Save / compatibility
+
+- New `Battler` fields (`chain`, `reactionTag`, `commune`, `pacified`) are
+  **per-battle only** — never serialized, rebuilt each fight in the constructor.
+- `communable` on `CreatureInstance` is additive and defaults to `false`, so old
+  saves load fine (party monsters aren't communable anyway).
+
+### Smoke tests — and a navigation gotcha worth keeping
+
+- [`tools/smoke/mechanics.mjs`](tools/smoke/README.md) asserts all six changes
+  against the live engine; `grid.mjs` still covers the four base grid phases.
+- **Both now launch the fight directly** — `manager.go('battle', { enemies,
+  returnTo })` from the hub — instead of walking the crawl. The old keystroke
+  navigation broke when the world map gained story gating (a locked card whose
+  text matched the `.card` selector) and the floor layout shifted. Direct launch
+  is immune to that churn; the crawl→battle **transition** is still covered by
+  `walk.mjs` (verified passing). If you write a new engine smoke test, copy the
+  direct-launch preamble from `mechanics.mjs`, not the old world-map click.
+
+### Still open / natural next steps
+
+- **Element trim (5→3)** now also collapses reaction-pair names — still a data
+  edit (ROADMAP). Consider whether a 3-element reaction set wants richer effects
+  (status per pair) rather than a uniform multiplier.
+- More `communable` species beyond Wispling, and a per-species Commune difficulty
+  (`COMMUNE_GAIN` is global today).
+- Learn-technique-on-level-up (the one remaining M7 item) would let melee/ranged
+  and element coverage grow with a monster.

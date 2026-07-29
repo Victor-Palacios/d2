@@ -74,7 +74,11 @@ technique flavour, not a rebalance. See `docs/ROADMAP.md`.
 From `computeDamage()` in `src/systems/battle/formula.ts`:
 
 ```
-base   = technique.power × attacker.off / (defender.def + 40)
+# stat pair is picked by the technique's category (physical vs magical):
+atkStat = magical ? attacker.mag : attacker.off
+defStat = magical ? defender.res : defender.def
+
+base   = technique.power × atkStat / (defStat + 40)
 amount = base × classMult
          × (1.2 if attacker on its own element plate)
          × (1/1.2 if defender on its own element plate)
@@ -83,10 +87,21 @@ amount = base × classMult
 amount = max(1, round(amount))                     // always at least 1
 ```
 
-The `+ 40` on defence is a softening term: it stops low-level defence values
+**Two damage channels (magick pass).** Every creature has four combat stats in
+two pairs: **Offense/Defense** (physical) and **Magick/Resolve** (magical). A
+technique's `category` (`physical` | `magical`, defaulting to physical; heals are
+always magical) decides which attacker stat drives it and which defender stat
+resists it. `techCategory()` in `techniques.ts` resolves it. This is what makes a
+Mage a *caster*: Mages carry low `off` but high `mag`, so their spells hit hard
+while their fists don't — and an enemy with high `def` but low `res` is a wall to
+blades and paper to bolts. The class triangle (below) multiplies *on top* of
+whichever channel is in play.
+
+The `+ 40` on the defensive stat is a softening term: it stops low-level values
 from making early hits swing wildly, and keeps the curve gentle. `power` values
-live in `techniques.ts` (Strike = 30, most signature moves 44–52, AoE moves
-lower per-hit at 34–40, the boss's Sun Claw a spike at 62).
+live in `techniques.ts` (Strike = 30, mid moves 44–52, AoE moves lower per-hit at
+34–46, single-target capstones 58–62; the big-MP area finishers cost 16–22 MP so
+a deep MP pool finally buys something).
 
 `effectiveness` in the returned breakdown is `'super'` when classMult > 1,
 `'weak'` when < 1, else `'normal'` — that is what drives the "it hits hard!" /
@@ -97,25 +112,43 @@ lower per-hit at 34–40, the boss's Sun Claw a spike at 62).
 **Fenrix** (Assassin, Nature) at level 12 uses **Strike** (power 30) on
 **Gloomote** (Mage, Dark) at level 11.
 
+Strike is **physical**, so it reads Off vs Def.
+
 - Fenrix `off` = base 18 + growth 2.5 × 11 = **46** (`statsAt`)
-- Gloomote `def` = base 11 + growth 1.9 × 10 = **30**
-- `base` = 30 × 46 / (30 + 40) = 1380 / 70 = **19.7**
-- Assassin **beats** Mage → classMult **×1.25** → 24.6
-- No plate, no guard, ±6% variance → **≈ 23–26 damage**, logged *super effective*.
+- Gloomote `def` = base 11 + growth 1.7 × 10 = **28**
+- `base` = 30 × 46 / (28 + 40) = 1380 / 68 = **20.3**
+- Assassin **beats** Mage → classMult **×1.25** → 25.4
+- No plate, no guard, ±6% variance → **≈ 24–27 damage**, logged *super effective*.
 
 Now stand Fenrix on a **Nature** plate (its own element): × 1.2 →
-24.6 × 1.2 = 29.6 → **≈ 28–31 damage**.
+25.4 × 1.2 = 30.5 → **≈ 29–32 damage**.
 
 ### Worked example B — class disadvantage
 
 **Cogling** (Hero) level 10 uses **Bolt Drive** (power 48) on **Dropletta**
 (Mage) level 10.
 
-- Cogling `off` = 15 + 2.2 × 9 = **34.8**
-- Dropletta `def` = 14 + 1.9 × 9 = **31.1**
-- `base` = 48 × 34.8 / (31.1 + 40) = 1670 / 71.1 = **23.5**
+Bolt Drive is **physical** too (Off vs Def).
+
+- Cogling `off` = 15 + 2.1 × 9 = **33.9**
+- Dropletta `def` = 14 + 1.7 × 9 = **29.3**
+- `base` = 48 × 33.9 / (29.3 + 40) = 1627 / 69.3 = **23.5**
 - Mage **beats** Hero → classMult **×0.8** → 18.8
 - → **≈ 18–20 damage**, logged *resisted*.
+
+### Worked example C — the magick channel
+
+**Gloomote** (Mage, Dark) level 11 uses **Gloom Lance** (power 50, *magical*) on
+**Cogling** (Hero) level 10 — then the same, but Cogling casts nothing back.
+
+- Gloomote `mag` = base 21 + growth 2.6 × 10 = **47**
+- Cogling `res` = base 13 + growth 2.1 × 9 = **32**
+- `base` = 50 × 47 / (32 + 40) = 2350 / 72 = **32.6**
+- Mage **beats** Hero → ×1.25 → 40.8 → **≈ 38–43 damage**.
+
+The same Gloomote throwing a **physical** Strike (off ≈ 13 + 1.6×10 = 29) at that
+Cogling's **def** (16 + 2.2×9 ≈ 36) lands ~9 before class — a third as much. The
+caster wants spells; the split is doing its job.
 
 Same attacker, same technique — the class matchup alone is a **~30% swing**
 between examples A-style advantage and B-style disadvantage (1.25 vs 0.8 =
@@ -130,13 +163,19 @@ between examples A-style advantage and B-style disadvantage (1.25 vs 0.8 =
 From `computeHeal()`:
 
 ```
-heal = round(technique.power + healer.off × 0.4)
+stat = healer.res × 0.7 + healer.mag × 0.3      // HEAL_RES_WEIGHT / HEAL_MAG_WEIGHT
+heal = round(technique.power + stat × 0.4)        // HEAL_STAT_SCALE
 ```
 
-Example: **Mist Veil** (power 42) cast by Gloomote (off 35 at level 11) →
-42 + 35 × 0.4 = 42 + 14 = **56 HP**, capped at the target's missing HP. Heals
-scale with the *healer's* offence, so a strong attacker is also a strong medic —
-a deliberate simplification (no separate "magic" stat).
+A heal blends **Resolve** (mostly) and **Magick** — mending reads as a protective
+act with a magical component, so a durable support and a caster both make decent
+healers, and neither a glass cannon nor a pure bruiser is great at it. The weights
+(and scale) are balance knobs in `formula.ts`.
+
+Example: **Mist Veil** (power 42) cast by Gloomote at level 11 (res 30, mag 47) →
+stat = 30 × 0.7 + 47 × 0.3 = **35.1**; heal = 42 + 35.1 × 0.4 = **56 HP**, capped
+at the target's missing HP. A durable, high-Resolve support is the strongest
+medic, with the caster's Magick topping it up.
 
 ### Guard
 
@@ -222,11 +261,60 @@ Then a small breather so you are not sent into the next step empty:
 from every defeated enemy, scaled by the level gap (`xpFromEnemy`), and
 `grantXp` applies level-ups off the species `growth` curve (`statsAt`), healing
 the HP/MP delta. Under-levelled monsters gain more, so the party self-levels
-toward each domain's recommended level.
+toward each reach's recommended level. Any learnset move whose level a monster
+crosses on the way up is taught then and there (see §7).
 
 ---
 
-## 7. EP (vehicle fuel) — the crawl's real cost
+## 7. Movesets and transcendence (evolution)
+
+> Extending these systems (adding a species, a learnset move, or an evolution
+> branch)? See the how-to guide in [`docs/creature-progression.md`](creature-progression.md).
+
+### Learnsets — moves from level 1 to 20
+
+Every species carries a `learnset: { level, tech }[]` (`data/creatures.ts`). A
+creature knows every entry whose `level` is ≤ its own; `movesKnownAt()` resolves
+that (in learn order, de-duplicated) when a creature is made, and `grantXp()`
+teaches anything newly reached on level-up (`movesLearnedBetween()`). The free
+**Strike** (physical, power 30) is always available and is not in any learnset.
+
+Movesets are role/element-shaped: Mages lean magical, Heroes mix in tanky
+physical hits, Assassins get fast single-target physical finishers. Late entries
+are the capstones and the big-MP area finishers — the payoff for a deep MP pool.
+
+### Growth curves
+
+`statsAt()` uses `base + growth × (level − 1)`. Species build on one of three role
+curves in `creatures.ts` — `HERO_GROWTH` (hardens def/res), `MAGE_GROWTH`
+(deepens mp/mag), `ASSASSIN_GROWTH` (sharpens off/spd) — then may bump a stat or
+two. Invest levels in a class and it pays off on that class's own axis.
+
+### Transcendence — a Pokémon × Digimon hybrid
+
+Evolution lives in `systems/party/evolve.ts` (headless) and the `evolutions` field
+on each species. It borrows deliberately from both franchises:
+
+- **Level-triggered** (Pokémon): a branch unlocks at a set level — **10 for
+  most**, but not all (Gloomote/Bulwarq/Shardling at 12, the Scrapmite → Cogling
+  → Cogknight line's first step at 8, several forms terminal).
+- **Branching** (Digimon): a species may offer more than one form (Emberling →
+  Regalion *or* Cinderfang). Branches stay thematically bound to the base, so a
+  line keeps its identity — the fix for the usual Digimon criticism that any
+  starter can reach any top form.
+- **Reversible** (Digimon): **de-evolution** returns a soul to the shape it was.
+  The reverse map is derived from the forward tree, so it is always exact and
+  needs no extra data on the creature or in the save.
+
+Evolution is **out-of-battle and explicit** (the **Transcend** screen, R1 → menu):
+reaching the level makes a creature *eligible*; the player picks when and which
+branch. The transform keeps level/XP/equipment and the current HP/MP *fraction*,
+then recomputes stats and moveset from the new species — so evolve → devolve →
+evolve is lossless.
+
+---
+
+## 8. EP (vehicle fuel) — the crawl's real cost
 
 While crawling, EP is the resource that makes the dungeon a place you can lose:
 
@@ -242,24 +330,6 @@ EP is why suspend-saves are consumed on load (see `HANDOFF.md` / README): if you
 could reload a suspend save, running out of EP would cost nothing. Autosave, by
 contrast, only ever happens in town / on the reach map — safe ground — so it
 never rescues you from a bad crawl.
-
----
-
-## 8. Quick tuning cheatsheet
-
-| Want to… | Change |
-|---|---|
-| Make class matchups swingier | `ATTRIBUTE_ADVANTAGE` / `ATTRIBUTE_DISADVANTAGE` in `elements.ts` |
-| Make plates matter more | `ELEMENT_TILE_BONUS` in `elements.ts` |
-| Make fights longer / shorter | the `+ 40` defence term or technique `power` in `formula.ts` / `techniques.ts` |
-| Make Guard stronger | `GUARD_REDUCTION` (lower = tankier) / `GUARD_MP_RESTORE` |
-| Reduce fight randomness | `VARIANCE` in `formula.ts`, and the `0.88..1.12` band in `engine.ts` |
-| Change how rich the player gets | the `11` / `40` per-level reward in `BattleScene.ts` |
-| Make the crawl more punishing | `FUEL_PER_STEP` up, or `startingFuel` down |
-| Tune elemental reactions | `REACTION_MULT` / `REACTION_STAGGER` / `REACTION_TTL_ROUNDS` in `engine.ts` |
-| Tune break-chains | `CHAIN_STEP` / `CHAIN_DAMAGE_MAX` / `CHAIN_BOOST_AT` in `engine.ts` |
-| Tune Commune length | `COMMUNE_GAIN` / `COMMUNE_VARIANCE` in `engine.ts`; `communable` in `creatures.ts` |
-| Change which Techniques are melee | the `melee` flag in `techniques.ts` |
 
 ---
 
@@ -306,3 +376,25 @@ leaves play (excluded from `living()`, cover, targeting and the turn queue), and
 the scene records it as *understood* (`game.understandSoul`) so it is claimed
 like a full Soul Syphon on victory — the gentle, no-damage capture path. Pacify
 every foe and the fight is won.
+
+---
+
+## 10. Quick tuning cheatsheet
+
+| Want to… | Change |
+|---|---|
+| Make class matchups swingier | `ATTRIBUTE_ADVANTAGE` / `ATTRIBUTE_DISADVANTAGE` in `elements.ts` |
+| Retune a stat channel | a technique's `category` in `techniques.ts`, or a role growth curve in `creatures.ts` |
+| Change when a creature evolves | the `level` on its `evolutions` entry in `creatures.ts` |
+| Add/adjust a learned move | its `learnset` entry in `creatures.ts` |
+| Retune heal weighting | `HEAL_RES_WEIGHT` / `HEAL_MAG_WEIGHT` / `HEAL_STAT_SCALE` in `formula.ts` |
+| Make plates matter more | `ELEMENT_TILE_BONUS` in `elements.ts` |
+| Make fights longer / shorter | the `+ 40` defence term or technique `power` in `formula.ts` / `techniques.ts` |
+| Make Guard stronger | `GUARD_REDUCTION` (lower = tankier) / `GUARD_MP_RESTORE` |
+| Reduce fight randomness | `VARIANCE` in `formula.ts`, and the `0.88..1.12` band in `engine.ts` |
+| Change how rich the player gets | the `11` / `40` per-level reward in `BattleScene.ts` |
+| Make the crawl more punishing | `FUEL_PER_STEP` up, or `startingFuel` down |
+| Tune elemental reactions | `REACTION_MULT` / `REACTION_STAGGER` / `REACTION_TTL_ROUNDS` in `engine.ts` |
+| Tune break-chains | `CHAIN_STEP` / `CHAIN_DAMAGE_MAX` / `CHAIN_BOOST_AT` in `engine.ts` |
+| Tune Commune length | `COMMUNE_GAIN` / `COMMUNE_VARIANCE` in `engine.ts`; `communable` in `creatures.ts` |
+| Change which Techniques are melee | the `melee` flag in `techniques.ts` |

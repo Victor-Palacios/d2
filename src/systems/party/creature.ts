@@ -1,4 +1,4 @@
-import { species } from '../../data/creatures';
+import { species, movesKnownAt, movesLearnedBetween } from '../../data/creatures';
 import type { Species, Stats } from '../../data/creatures';
 import type { AttributeId, ElementId } from '../../data/elements';
 import { equipment } from '../../data/equipment';
@@ -18,6 +18,10 @@ export interface CreatureInstance {
   off: number;
   def: number;
   spd: number;
+  /** Magick — magical attack. */
+  mag: number;
+  /** Resolve — magical defence. */
+  res: number;
   /** EXP banked toward the next level (see `xpToNext`). */
   xp: number;
   techniques: string[];
@@ -39,6 +43,8 @@ export function statsAt(s: Species, level: number): Stats {
     off: Math.round(s.base.off + s.growth.off * n),
     def: Math.round(s.base.def + s.growth.def * n),
     spd: Math.round(s.base.spd + s.growth.spd * n),
+    mag: Math.round(s.base.mag + s.growth.mag * n),
+    res: Math.round(s.base.res + s.growth.res * n),
   };
 }
 
@@ -59,8 +65,10 @@ export function makeCreature(speciesId: string, level: number, nickname?: string
     off: st.off,
     def: st.def,
     spd: st.spd,
+    mag: st.mag,
+    res: st.res,
     xp: 0,
-    techniques: s.techniques.slice(),
+    techniques: movesKnownAt(s, level),
     equip: {},
     guarding: false,
     communable: s.communable ?? false,
@@ -71,7 +79,7 @@ export const isDown = (c: CreatureInstance): boolean => c.hp <= 0;
 export const isUp = (c: CreatureInstance): boolean => c.hp > 0;
 
 /** Sum of a stat's bonuses from the creature's three equipment slots. */
-export function equipBonus(c: CreatureInstance, key: 'off' | 'def' | 'spd'): number {
+export function equipBonus(c: CreatureInstance, key: 'off' | 'def' | 'spd' | 'mag' | 'res'): number {
   const e = c.equip;
   if (!e) return 0;
   let b = 0;
@@ -85,6 +93,8 @@ export function equipBonus(c: CreatureInstance, key: 'off' | 'def' | 'spd'): num
 export const effOff = (c: CreatureInstance): number => c.off + equipBonus(c, 'off');
 export const effDef = (c: CreatureInstance): number => c.def + equipBonus(c, 'def');
 export const effSpd = (c: CreatureInstance): number => c.spd + equipBonus(c, 'spd');
+export const effMag = (c: CreatureInstance): number => c.mag + equipBonus(c, 'mag');
+export const effRes = (c: CreatureInstance): number => c.res + equipBonus(c, 'res');
 
 /** True if any equipped item carries the given battle-special effect. */
 export function hasEquipEffect(c: CreatureInstance, effect: string): boolean {
@@ -118,6 +128,7 @@ export function grantXp(c: CreatureInstance, amount: number): number | null {
   const s = species(c.speciesId);
   c.xp = (c.xp ?? 0) + amount;
   let leveled = false;
+  const startLevel = c.level;
   while (c.xp >= xpToNext(c.level)) {
     c.xp -= xpToNext(c.level);
     c.level++;
@@ -131,7 +142,15 @@ export function grantXp(c: CreatureInstance, amount: number): number | null {
     c.off = st.off;
     c.def = st.def;
     c.spd = st.spd;
+    c.mag = st.mag;
+    c.res = st.res;
     leveled = true;
+  }
+  // Teach any moves whose learn level the creature crossed this grant.
+  if (leveled) {
+    for (const tech of movesLearnedBetween(s, startLevel, c.level)) {
+      if (!c.techniques.includes(tech)) c.techniques.push(tech);
+    }
   }
   return leveled ? c.level : null;
 }

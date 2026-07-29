@@ -1,6 +1,7 @@
 import type { CreatureInstance } from '../party/creature';
-import { effOff, effDef } from '../party/creature';
+import { effOff, effDef, effMag, effRes } from '../party/creature';
 import type { Technique } from '../../data/techniques';
+import { techCategory } from '../../data/techniques';
 import type { ElementId } from '../../data/elements';
 import { ELEMENT_TILE_BONUS, attributeMultiplier } from '../../data/elements';
 
@@ -16,6 +17,17 @@ export const GUARD_REDUCTION = 0.5;
 /** Fraction of max MP a Guard restores. */
 export const GUARD_MP_RESTORE = 0.12;
 export const VARIANCE = 0.06;
+
+/**
+ * Heal scaling. A heal blends the caster's **Resolve** and **Magick** — mending
+ * is mostly a protective act (Res) with a magical component (Mag). Weights sum to
+ * 1; the blended stat is then scaled by `HEAL_STAT_SCALE` and added to the
+ * technique's flat power. Tunable — raise the Mag weight to make casters the best
+ * healers, or the Res weight to reward durable supports.
+ */
+export const HEAL_RES_WEIGHT = 0.7;
+export const HEAL_MAG_WEIGHT = 0.3;
+export const HEAL_STAT_SCALE = 0.4;
 
 /**
  * Formation row modifiers (grid battle, Phase A).
@@ -58,8 +70,13 @@ export interface DamageInput {
 export function computeDamage(input: DamageInput): DamageBreakdown {
   const { attacker, defender, technique, rng = Math.random } = input;
 
-  // Effective Offense/Defense include equipped Arms / Shrouds / Mementos.
-  const base = (technique.power * effOff(attacker)) / (effDef(defender) + 40);
+  // Pick the stat pair by channel: physical rides Offense vs Defense, magical
+  // rides Magick vs Resolve. Effective stats fold in equipped Arms / Shrouds /
+  // Mementos.
+  const magical = techCategory(technique) === 'magical';
+  const atkStat = magical ? effMag(attacker) : effOff(attacker);
+  const defStat = magical ? effRes(defender) : effDef(defender);
+  const base = (technique.power * atkStat) / (defStat + 40);
 
   const attributeMult = attributeMultiplier(attacker.attribute, defender.attribute);
 
@@ -93,5 +110,7 @@ export function computeDamage(input: DamageInput): DamageBreakdown {
 }
 
 export function computeHeal(healer: CreatureInstance, technique: Technique): number {
-  return Math.round(technique.power + healer.off * 0.4);
+  // Blend of Resolve (mostly) and Magick, then scaled onto the flat heal power.
+  const stat = effRes(healer) * HEAL_RES_WEIGHT + effMag(healer) * HEAL_MAG_WEIGHT;
+  return Math.round(technique.power + stat * HEAL_STAT_SCALE);
 }

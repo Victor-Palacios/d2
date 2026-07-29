@@ -38,10 +38,16 @@ export async function openGear(parent: HTMLElement): Promise<void> {
   root.appendChild(el('div', 'hint', 'UP/DOWN browse · Z/ENTER select · X back'));
   parent.appendChild(root);
 
+  const bonus = (c: CreatureInstance, key: 'off' | 'def' | 'spd' | 'mag' | 'res') => {
+    const b = equipBonus(c, key);
+    return b ? `<b>+${b}</b>` : '';
+  };
   const stat = (c: CreatureInstance) =>
-    `<span class="dim">OFF</span> ${c.off}<b>+${equipBonus(c, 'off')}</b> · ` +
-    `<span class="dim">DEF</span> ${c.def}<b>+${equipBonus(c, 'def')}</b> · ` +
-    `<span class="dim">SPD</span> ${c.spd}<b>+${equipBonus(c, 'spd')}</b>`;
+    `<span class="dim">OFF</span> ${c.off}${bonus(c, 'off')} · ` +
+    `<span class="dim">DEF</span> ${c.def}${bonus(c, 'def')} · ` +
+    `<span class="dim">SPD</span> ${c.spd}${bonus(c, 'spd')}<br>` +
+    `<span class="dim">MAG</span> ${c.mag}${bonus(c, 'mag')} · ` +
+    `<span class="dim">RES</span> ${c.res}${bonus(c, 'res')}`;
 
   const showMember = (c: CreatureInstance) => {
     clear(desc);
@@ -75,7 +81,8 @@ export async function openGear(parent: HTMLElement): Promise<void> {
       if (c.equip?.[slot]) opts.push({ value: 'remove', label: 'Remove', note: equipment(c.equip[slot]!).name });
       for (const id of owned) {
         const e = equipment(id);
-        const bonus = e.off ? `+${e.off} OFF` : e.def ? `+${e.def} DEF` : e.spd ? `+${e.spd} SPD` : e.effect ?? '';
+        const bonus = e.off ? `+${e.off} OFF` : e.def ? `+${e.def} DEF` : e.spd ? `+${e.spd} SPD`
+          : e.mag ? `+${e.mag} MAG` : e.res ? `+${e.res} RES` : e.effect ?? '';
         opts.push({ value: id, label: e.name, note: `${bonus} ×${game.itemCount(id)}` });
       }
       if (!opts.length) opts.push({ value: 'none', label: 'no gear for this slot', disabled: true });

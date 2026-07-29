@@ -72,7 +72,8 @@ export async function openSanctuary(parent: HTMLElement): Promise<void> {
     desc.innerHTML =
       `<strong>${esc(c.name)}</strong> <span class="dim">Lv${c.level} · ${ATTRIBUTES[c.attribute].name} · ${ELEMENTS[c.element].name}</span>` +
       `<br><span class="dim">HP</span> ${c.maxHp} &nbsp; <span class="dim">MP</span> ${c.maxMp}` +
-      `<br><span class="dim">OFF</span> ${c.off} &nbsp; <span class="dim">DEF</span> ${c.def} &nbsp; <span class="dim">SPD</span> ${c.spd}`;
+      `<br><span class="dim">OFF</span> ${c.off} &nbsp; <span class="dim">DEF</span> ${c.def} &nbsp; <span class="dim">SPD</span> ${c.spd}` +
+      `<br><span class="dim">MAG</span> ${c.mag} &nbsp; <span class="dim">RES</span> ${c.res}`;
   };
 
   for (;;) {
