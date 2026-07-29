@@ -138,3 +138,9 @@ To **add a brand-new creature**:
   split two teardrops, `slime` (Dropletta) → a round BALL and `wisp` (Gloomote)
   → a wide-headed SHADE with trailing tendrils. Each honors the original
   silhouette. Re-integrated and re-verified in-engine.
+- **2026-07-28 — personality families.** Added the face+posture system
+  (`personality.mjs`, [monster-personalities.md](monster-personalities.md)) and
+  a `faced()` finisher. Migrated five Quiet Crossing builders to their assigned
+  family (`lizard`→fierce, `bat`→clever, `bug`→nervous, `scrap`/`wisp`→uncanny);
+  the three Friendly creatures keep `glossyEyes` and `lion` keeps its bespoke
+  fierce face. Tooling + docs only — **not yet re-integrated into `art.ts`**.
