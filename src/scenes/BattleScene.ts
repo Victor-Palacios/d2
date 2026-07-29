@@ -385,7 +385,7 @@ export class BattleScene extends GameScene {
     this.hud.setLog(
       this.params.isBoss
         ? 'The warden blocks the hallway. There is no way past it.'
-        : 'Hostile data detected. Defend the lantern!',
+        : 'An echo turns to face you. Keep your lantern lit.',
     );
     // The foes announce themselves — each species with a voice cries in turn.
     this.cryEnemies();
@@ -916,7 +916,7 @@ export class BattleScene extends GameScene {
       if (nl !== null) levelUps.push(`${c.name} → Lv${nl}`);
     }
 
-    this.hud.setLog(`The data dissolves. +${reward} credits.`);
+    this.hud.setLog(`The echo is quieted. +${reward} credits.`);
     await sleep(1500);
 
     for (const msg of levelUps) {

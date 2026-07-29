@@ -371,7 +371,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 20, tech: 'renewingTide' },
     ],
     evolutions: [{ to: 'glaciark', level: 12 }],
-    blurb: 'A gem-slime that refracts every packet that hits it.',
+    blurb: 'A gem-slime that refracts every blow that hits it.',
   },
   prismoth: {
     id: 'prismoth',

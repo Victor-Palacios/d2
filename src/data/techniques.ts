@@ -126,7 +126,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     power: 44,
     element: 'water',
     melee: true,
-    desc: 'A heavy slap of pressurised data-water. Melee — reaches only the front line.',
+    desc: 'A heavy slap of pressurised black water. Melee — reaches only the front line.',
   },
   mistVeil: {
     id: 'mistVeil',
@@ -182,7 +182,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 8,
     power: 50,
     element: 'dark',
-    desc: 'Impales with a spike of corrupt code.',
+    desc: 'Impales with a spike of cold dark.',
   },
   nightSpiral: {
     id: 'nightSpiral',
@@ -223,7 +223,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 7,
     power: 47,
     element: 'water',
-    desc: 'A spear of supercooled data-ice.',
+    desc: 'A spear of supercooled ice.',
   },
   prismStorm: {
     id: 'prismStorm',
@@ -256,7 +256,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 7,
     power: 48,
     element: 'dark',
-    desc: 'A bolt of corrupted, whispering code.',
+    desc: 'A bolt of whispering dark.',
   },
   graveRot: {
     id: 'graveRot',
@@ -469,7 +469,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 18,
     power: 70,
     element: 'water',
-    desc: 'A rising tide of clean data mends an ally.',
+    desc: 'A rising tide of clear water mends an ally.',
   },
   lifebloom: {
     id: 'lifebloom',
