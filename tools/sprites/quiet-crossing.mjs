@@ -265,14 +265,17 @@ export function lion() {
   return finish(g, P);
 }
 
+// `personality` assigns each creature one of the five families in
+// docs/monster-personalities.md. It's the design target for the face/posture
+// (via personality.mjs) and keeps the roster varied by the documented rule.
 export const CROSSING = {
-  lizard: { species: 'Emberling', element: 'fire', build: lizard },
-  wing: { species: 'Glidefang', element: 'water', build: wing },
-  bat: { species: 'Nightnip', element: 'dark', build: bat },
-  bug: { species: 'Mitebug', element: 'nature', build: bug },
-  plant: { species: 'Sprigling', element: 'nature', build: plant },
-  scrap: { species: 'Scrapmite', element: 'machine', build: scrap },
-  wisp: { species: 'Gloomote', element: 'dark', build: wisp },
-  slime: { species: 'Dropletta', element: 'water', build: slime },
-  lion: { species: 'Regalion', element: 'fire', build: lion },
+  lizard: { species: 'Emberling', element: 'fire', personality: 'fierce', build: lizard },
+  wing: { species: 'Glidefang', element: 'water', personality: 'friendly', build: wing },
+  bat: { species: 'Nightnip', element: 'dark', personality: 'clever', build: bat },
+  bug: { species: 'Mitebug', element: 'nature', personality: 'nervous', build: bug },
+  plant: { species: 'Sprigling', element: 'nature', personality: 'friendly', build: plant },
+  scrap: { species: 'Scrapmite', element: 'machine', personality: 'uncanny', build: scrap },
+  wisp: { species: 'Gloomote', element: 'dark', personality: 'uncanny', build: wisp },
+  slime: { species: 'Dropletta', element: 'water', personality: 'friendly', build: slime },
+  lion: { species: 'Regalion', element: 'fire', personality: 'fierce', build: lion },
 };

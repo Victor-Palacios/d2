@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { radialTexture } from './pixel';
 import { Billboard } from './Billboard';
 import { PROPS } from '../assets/art';
+import type { BattleAura } from '../data/battleFx';
 
 /**
  * Particle and light FX for the polish pass (plan §6, M6): torch flicker, hit
@@ -128,6 +129,91 @@ export class ParticleField {
   dispose() {
     this.points.geometry.dispose();
     (this.points.material as THREE.Material).dispose();
+  }
+}
+
+/**
+ * A monster's signature battle aura: a continuous trickle of element-tinted
+ * motes rising off (or sinking from) the sprite for the whole fight, plus an
+ * optional warm glow for wardens. Draws on the shared `ParticleField`, so it
+ * costs no new draw call — just a steady handful of additive points.
+ *
+ * The controller is species-agnostic; the personality is entirely in the
+ * `BattleAura` data (`src/data/battleFx.ts`). One instance per fielded
+ * fighter, positioned each frame from the sprite's live world position.
+ */
+export class Aura {
+  /** Present only when the config asks for a glow (wardens). Added to the scene by the caller. */
+  readonly light: THREE.PointLight | null = null;
+  private emitAccum = 0;
+  private phase = Math.random() * 10;
+  private scratch = new THREE.Vector3();
+
+  constructor(private field: ParticleField, private cfg: BattleAura) {
+    if (cfg.light) {
+      this.light = new THREE.PointLight(cfg.light.color, cfg.light.intensity, cfg.light.range ?? 5, 1.8);
+    }
+  }
+
+  private spawn(base: THREE.Vector3, height: number) {
+    const r = this.cfg.originSpread ?? 0.25;
+    this.scratch.set(
+      base.x + (Math.random() - 0.5) * 2 * r,
+      base.y + height * this.cfg.originY,
+      base.z + (Math.random() - 0.5) * 2 * r,
+    );
+    this.field.emit(this.scratch, {
+      count: 1,
+      speed: this.cfg.speed ?? 0.4,
+      spread: this.cfg.spread ?? 0.7,
+      life: this.cfg.life ?? 1,
+      gravity: this.cfg.gravity ?? 0.3,
+      upBias: this.cfg.upBias ?? 0.5,
+      size: this.cfg.size ?? 0.08,
+      color: this.cfg.color,
+    });
+  }
+
+  /**
+   * @param base   world position of the sprite's feet
+   * @param height sprite height in world units
+   * @param active false once the fighter has fainted — the aura goes quiet
+   */
+  update(dt: number, time: number, base: THREE.Vector3, height: number, active: boolean) {
+    if (this.light) {
+      this.light.position.set(base.x, base.y + height * 0.55, base.z);
+      const flicker = 0.82 + Math.sin(time * 8 + this.phase) * 0.12 + Math.sin(time * 17.7 + this.phase) * 0.06;
+      this.light.intensity = active ? (this.cfg.light?.intensity ?? 3) * flicker : 0;
+    }
+    if (!active) return;
+    this.emitAccum += dt;
+    const interval = 1 / this.cfg.rate;
+    // Cap the catch-up after a long frame so a stall can't dump a burst.
+    let budget = 6;
+    while (this.emitAccum >= interval && budget-- > 0) {
+      this.emitAccum -= interval;
+      this.spawn(base, height);
+    }
+    if (this.emitAccum > interval) this.emitAccum = 0;
+  }
+
+  /** A brief swell of the same motes — the tell that this monster is acting. */
+  burst(base: THREE.Vector3, height: number) {
+    this.scratch.set(base.x, base.y + height * this.cfg.originY, base.z);
+    this.field.emit(this.scratch, {
+      count: 12,
+      speed: (this.cfg.speed ?? 0.4) + 1.4,
+      spread: 1,
+      life: (this.cfg.life ?? 1) * 0.8,
+      gravity: this.cfg.gravity ?? 0.3,
+      upBias: this.cfg.upBias ?? 0.5,
+      size: this.cfg.size ?? 0.08,
+      color: this.cfg.color,
+    });
+  }
+
+  dispose() {
+    this.light?.parent?.remove(this.light);
   }
 }
 

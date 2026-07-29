@@ -64,6 +64,7 @@ const stats = { frames: 0, fps: 0 };
   debug,
   stats,
   saves,
+  audio,
   reaches: REACHES,
   validateReaches,
 };
