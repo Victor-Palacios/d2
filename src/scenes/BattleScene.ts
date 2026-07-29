@@ -656,9 +656,12 @@ export class BattleScene extends GameScene {
       const id = b.creature.speciesId;
       if (seen.has(id) || !audio.hasCry(id)) continue;
       seen.add(id);
-      window.setTimeout(() => audio.cry(id), i * 220);
+      window.setTimeout(() => audio.cry(id), i * 260);
       i++;
     }
+    // Dip the music under the roll-call so each foe's voice reads clearly, then
+    // let it swell back as the fight begins.
+    if (i > 0) audio.duck(i * 0.26 + 0.7);
   }
 
   private async animateTurn(actor: Battler, result: TurnResult) {
@@ -666,6 +669,14 @@ export class BattleScene extends GameScene {
     const home = this.homePos.get(actor.creature.uid);
 
     for (const line of result.log.slice(0, 1)) this.hud.setLog(line);
+
+    const heal = result.hits.some((h) => h.heal > 0);
+    // The attacker calls out as it charges — its own species cry leads the lunge
+    // so it is heard clean, a beat before the impact sfx lands under it (firing
+    // both at once masked the cry). Only on an offensive move (not Guard/heal).
+    if (result.hits.length && !heal && result.actionLabel !== 'Guard') {
+      audio.cry(actor.creature.speciesId);
+    }
 
     if (result.hits.length && bb && home) {
       // Lunge toward the opposing side, then snap back.
@@ -675,12 +686,6 @@ export class BattleScene extends GameScene {
       });
     }
 
-    const heal = result.hits.some((h) => h.heal > 0);
-    // The attacker calls out as it strikes — its own species cry, layered under
-    // the impact sfx. Only on an offensive move (not Guard, not a pure heal).
-    if (result.hits.length && !heal && result.actionLabel !== 'Guard') {
-      audio.cry(actor.creature.speciesId);
-    }
     if (result.actionLabel === 'Guard') audio.sfx('guard');
     else if (heal) audio.sfx('heal');
     else if (result.hits.length) audio.sfx('hit');

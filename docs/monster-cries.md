@@ -57,11 +57,22 @@ Both live in `src/scenes/BattleScene.ts`:
 
 1. **Opening roll-call** — `cryEnemies()` is called once the fight's banner is
    up. Each *distinct* enemy species that has a voice cries in turn, staggered
-   ~220 ms so a mixed pack reads as several creatures rather than one blur.
+   ~260 ms so a mixed pack reads as several creatures rather than one blur. The
+   music is **ducked** (`audio.duck()`) under the roll-call so the voices read
+   clearly, then swells back as the fight begins.
 2. **On attack** — in `animateTurn()`, the acting monster calls out as it
-   lunges, layered under the impact sfx. It fires only on an **offensive** move
+   *charges*: the cry **leads the lunge**, a beat (~0.16 s) before the impact
+   sfx lands. It fires only on an **offensive** move
    (`result.hits.length && !heal && actionLabel !== 'Guard'`), so a Guard or a
    pure heal stays quiet.
+
+**Audibility matters — don't bury the cry.** A cry rendered at the same peak
+as the `hit` sfx, played at the same instant, is inaudible (the ear locks onto
+the percussive impact). Two things keep cries heard: `CRY_BOOST` in
+`Audio.ts` lifts every cry ~2× above the rest of the mix, and the per-attack
+cry *leads* the impact instead of playing under it. If you tune levels, keep a
+cry's rendered peak clearly above `sfx('hit')` (~0.074) — the authored voices
+land ~0.09–0.16.
 
 Adding a voice needs **no** change to these hooks — they already call
 `audio.cry(speciesId)` for whoever is acting/appearing. Authoring a `CRIES`
@@ -71,8 +82,9 @@ entry is the whole job.
 
 1. **Pick the species id** from `src/data/creatures.ts` (e.g. `mitebug`).
 2. **Add a `CRIES` entry** in `src/engine/Audio.ts` — a `CryLayer[]` matched to
-   the creature (see the cookbook below). Keep total gain modest; the whole cry
-   should sit *under* the impact sfx, not over it.
+   the creature (see the cookbook below). Author per-layer `gain` in the
+   ~0.05–0.18 band as before; `CRY_BOOST` then lifts the whole cry above the
+   mix at playback, so a cry is heard, not buried under the impact sfx.
 3. **Cover it in the smoke test**: add the id to `SPECIES` in
    `tools/smoke/cries.mjs`. Keep `NEGATIVE` pointed at some species that has
    **no** cry (the silent-case assertion).

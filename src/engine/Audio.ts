@@ -205,6 +205,15 @@ const TRACKS: Record<
   jungle: { root: 130.8, bpm: 92, bass: [0, 0, 7, 5], arp: [12, 15, 17, 19, 22, 19, 17, 15], birds: true },
 };
 
+/** Resting music level. Kept in one place so `duck()` can restore it exactly. */
+const MUSIC_LEVEL = 0.34;
+/**
+ * Monster cries are the one sound meant to grab the ear (a Pokémon-style call),
+ * so they are lifted above the rest of the mix. Without this a cry renders at
+ * roughly the same peak as the impact sfx it plays under and is masked by it.
+ */
+const CRY_BOOST = 2;
+
 class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -230,7 +239,7 @@ class AudioEngine {
     this.master.gain.value = this.muted ? 0 : this.volume;
     this.master.connect(this.ctx.destination);
     this.musicGain = this.ctx.createGain();
-    this.musicGain.gain.value = 0.34;
+    this.musicGain.gain.value = MUSIC_LEVEL;
     this.musicGain.connect(this.master);
     this.sfxGain = this.ctx.createGain();
     this.sfxGain.gain.value = 1;
@@ -324,7 +333,7 @@ class AudioEngine {
       lfo.start(when);
       lfo.stop(when + l.dur + 0.02);
     }
-    const peak = l.gain ?? 0.12;
+    const peak = (l.gain ?? 0.12) * CRY_BOOST;
     g.gain.setValueAtTime(0.0001, when);
     g.gain.exponentialRampToValueAtTime(peak, when + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, when + l.dur);
@@ -350,6 +359,23 @@ class AudioEngine {
   /** Species ids that currently have an authored cry. */
   hasCry(speciesId: string): boolean {
     return speciesId in CRIES;
+  }
+
+  /**
+   * Briefly dip the music so a foreground moment — the opening roll-call of
+   * monster cries — is heard clean, then bring it back. Like a Pokémon battle
+   * that quiets under the cry. No-op before audio is unlocked.
+   */
+  duck(secs = 1.4, depth = 0.35) {
+    if (!this.ctx || !this.musicGain) return;
+    const g = this.musicGain.gain;
+    const t = this.ctx.currentTime;
+    const low = MUSIC_LEVEL * depth;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(MUSIC_LEVEL, t);
+    g.linearRampToValueAtTime(low, t + 0.06);
+    g.setValueAtTime(low, t + secs * 0.65);
+    g.linearRampToValueAtTime(MUSIC_LEVEL, t + secs);
   }
 
   music(track: MusicTrack) {
