@@ -15,6 +15,23 @@ Guidance for AI agents (and humans) working in this repo. Read
   runs `tsc --noEmit` first, so a type error fails the deploy rather than
   shipping a broken bundle. Build before you push.
 
+## Naming — IMPORTANT
+
+The crawlable areas are **reaches**, never "domains", and the tutorial area is
+**The Quiet Crossing**, never "boot" / "Boot Domain". These words were renamed
+out of the whole project on purpose — do not reintroduce them in code,
+identifiers, comments, docs, dialogue, or commit messages.
+
+- Areas: type `Reach`, registry `REACHES` / `REACH_ORDER` in
+  `src/data/reaches.ts`; ids are `crossing` / `crystal` / `jungle` / `haunted`;
+  clear flags are `crossingCleared` etc.
+- The only legitimate substring in the tree is the `boots` sprite-colour field in
+  `src/assets/art.ts` — that one is fine.
+- A guard enforces this: run **`npm run check:naming`** before you push (it is
+  also a CI job, `.github/workflows/naming-guard.yml`, that fails on any push
+  reintroducing the banned words). This file is the one place the words may
+  appear, so the guard skips it.
+
 ## Build & test
 
 ```bash

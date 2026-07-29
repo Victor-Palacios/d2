@@ -6,8 +6,9 @@ Unremembered). It documents the terrain-uniqueness system so a future session
 can add an area end to end without rediscovering the invariants.
 
 > **Naming note.** An "area" is a `Reach` in code (`src/data/dungeon.ts`). The
-> registry is `src/data/reaches.ts` (`REACHES` + `REACH_ORDER`). Older commits
-> and some docs say "domain" — same thing, since renamed.
+> registry is `src/data/reaches.ts` (`REACHES` + `REACH_ORDER`). "Reach" is the
+> only accepted term — the areas were renamed out of an older word; don't
+> reintroduce it (a CI check enforces this — see `CLAUDE.md` §Naming).
 
 ## The one principle
 
