@@ -140,7 +140,7 @@ export const SPECIES: Record<string, Species> = {
     ],
     // Branches: the steady warden-form, or a faster feral form (Digimon-style
     // fork). Both stay Fire, so Emberling's identity carries into either.
-    evolutions: [{ to: 'emberforge', level: 10 }],
+    evolutions: [{ to: 'emberforge', level: 2 }],
     blurb: 'A soul that burned bright and went out angry. It lingers on all the heat it never got to spend.',
   },
   glidefang: {
@@ -161,7 +161,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 15, tech: 'glacierSpire' },
       { level: 19, tech: 'maelstrom' },
     ],
-    evolutions: [{ to: 'gustwing', level: 10 }],
+    evolutions: [{ to: 'gustwing', level: 2 }],
     blurb: 'A soul at peace, riding the last warm drafts. It waits to cross without any fear at all.',
   },
   nightnip: {
@@ -182,7 +182,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'voidNova' },
     ],
-    evolutions: [{ to: 'duskfang', level: 10 }],
+    evolutions: [{ to: 'duskfang', level: 2 }],
     blurb: 'A soul that hid from its own ending — quick, funny, and gone before the dark could say its name.',
   },
   sprigling: {
@@ -202,7 +202,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'wildgrowth' },
       { level: 20, tech: 'lifebloom' },
     ],
-    evolutions: [{ to: 'bloomkin', level: 10 }],
+    evolutions: [{ to: 'bloomkin', level: 2 }],
     blurb: 'Roots itself into any surface it can find.',
   },
   cogling: {
@@ -222,7 +222,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'rendingStrike' },
       { level: 20, tech: 'railvolt' },
     ],
-    evolutions: [{ to: 'cogknight', level: 10 }],
+    evolutions: [{ to: 'cogknight', level: 2 }],
     blurb: 'Maintenance unit. Technically still under warranty.',
   },
   dropletta: {
@@ -242,7 +242,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 15, tech: 'glacierSpire' },
       { level: 19, tech: 'renewingTide' },
     ],
-    evolutions: [{ to: 'wellspring', level: 10 }],
+    evolutions: [{ to: 'wellspring', level: 2 }],
     blurb: 'Mostly padding. Surprisingly hard to put down.',
   },
   gloomote: {
@@ -264,7 +264,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 20, tech: 'voidNova' },
     ],
     // Evolves later than most, and straight into the Haunted warden line.
-    evolutions: [{ to: 'gloomshade', level: 10 }],
+    evolutions: [{ to: 'gloomshade', level: 2 }],
     blurb: 'A drifting fragment of unrecovered memory.',
   },
   bulwarq: {
@@ -284,7 +284,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'overload' },
       { level: 20, tech: 'railvolt' },
     ],
-    evolutions: [{ to: 'aegisaur', level: 12 }],
+    evolutions: [{ to: 'aegisaur', level: 2 }],
     blurb: 'Built to stand in the doorway. It still does.',
   },
   fenrix: {
@@ -304,7 +304,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'thornspell' },
       { level: 20, tech: 'wildgrowth' },
     ],
-    evolutions: [{ to: 'direfang', level: 10 }],
+    evolutions: [{ to: 'direfang', level: 2 }],
     blurb: 'A pack-hunter routine that never got shut down.',
   },
   mitebug: {
@@ -324,7 +324,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 17, tech: 'thornspell' },
     ],
     // Fodder that graduates — a little later than the L10 default.
-    evolutions: [{ to: 'chitterling', level: 9 }],
+    evolutions: [{ to: 'chitterling', level: 2 }],
     blurb: 'Chews through unattended memory blocks.',
   },
   scrapmite: {
@@ -345,7 +345,7 @@ export const SPECIES: Record<string, Species> = {
     ],
     // Early bloomer: the first stage of the three-stage Scrapmite → Boltframe →
     // Dynamo line, so it evolves well before the L10 norm.
-    evolutions: [{ to: 'boltframe', level: 9 }],
+    evolutions: [{ to: 'boltframe', level: 2 }],
     blurb: 'It went out to salvage something, and forgot what.',
   },
 
@@ -367,7 +367,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'maelstrom' },
       { level: 20, tech: 'renewingTide' },
     ],
-    evolutions: [{ to: 'glaciark', level: 12 }],
+    evolutions: [{ to: 'glaciark', level: 2 }],
     blurb: 'A gem-slime that refracts every blow that hits it.',
   },
   prismoth: {
@@ -388,7 +388,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'glacierSpire' },
       { level: 20, tech: 'maelstrom' },
     ],
-    evolutions: [{ to: 'prismatide', level: 10 }],
+    evolutions: [{ to: 'prismatide', level: 2 }],
     blurb: 'Wings split the light into blades before it strikes.',
   },
   geodon: {
@@ -431,7 +431,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'voidNova' },
     ],
-    evolutions: [{ to: 'banshade', level: 10 }],
+    evolutions: [{ to: 'banshade', level: 2 }],
     communable: true,
     blurb:
       'A frightened thing that never finished dying. It is not angry — only lost, and would rather be spoken to than struck.',
@@ -453,7 +453,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'thornspell' },
       { level: 20, tech: 'wildgrowth' },
     ],
-    evolutions: [{ to: 'gravestalker', level: 10 }],
+    evolutions: [{ to: 'gravestalker', level: 2 }],
     blurb: 'Eats whatever the reach leaves rotting in the dark.',
   },
   cryptguard: {
@@ -518,7 +518,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'thornspell' },
       { level: 20, tech: 'wildgrowth' },
     ],
-    evolutions: [{ to: 'thornpanther', level: 10 }],
+    evolutions: [{ to: 'thornpanther', level: 2 }],
     blurb: 'It stalked these paths in life and never learned that they end.',
   },
   boggle: {
@@ -538,7 +538,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'glacierSpire' },
       { level: 20, tech: 'renewingTide' },
     ],
-    evolutions: [{ to: 'boggart', level: 10 }],
+    evolutions: [{ to: 'boggart', level: 2 }],
     blurb: 'A soul that sank into the warm dark and decided the sinking was rest.',
   },
   chitter: {
@@ -843,7 +843,10 @@ export const SPECIES: Record<string, Species> = {
   glaciark: {
     id: 'glaciark',
     name: 'Glaciark',
-    attribute: 'hero',
+    // Evolves from shardling (a mage), so it stays a mage — evolution lines are
+    // class-pure (see systems/party/evolve.ts). Its tanky stats/growth are its
+    // own; the attribute is only the class tag the purity rule keys on.
+    attribute: 'mage',
     element: 'water',
     art: 'crystalWarden',
     height: 2.3,
@@ -954,7 +957,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 15, tech: 'pyreLance' },
       { level: 19, tech: 'infernoCore' },
     ],
-    evolutions: [{ to: 'ashwarden', level: 20 }],
+    evolutions: [{ to: 'ashwarden', level: 3 }],
     blurb: 'An evolved Emberling — larger, brighter-burning, and surer of the light it carries.',
   },
   ashwarden: {
@@ -974,7 +977,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 15, tech: 'pyreLance' },
       { level: 19, tech: 'infernoCore' },
     ],
-    evolutions: [{ to: 'pyrelord', level: 30 }],
+    evolutions: [{ to: 'pyrelord', level: 4 }],
     blurb: 'An evolved Emberling — larger, brighter-burning, and surer of the light it carries.',
   },
   pyrelord: {
@@ -1014,7 +1017,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 15, tech: 'glacierSpire' },
       { level: 19, tech: 'maelstrom' },
     ],
-    evolutions: [{ to: 'tempestrix', level: 22 }],
+    evolutions: [{ to: 'tempestrix', level: 3 }],
     blurb: 'An evolved Glidefang — larger, brighter-burning, and surer of the light it carries.',
   },
   tempestrix: {
@@ -1055,7 +1058,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'voidNova' },
     ],
-    evolutions: [{ to: 'nightmaw', level: 20 }],
+    evolutions: [{ to: 'nightmaw', level: 3 }],
     blurb: 'An evolved Nightnip — larger, brighter-burning, and surer of the light it carries.',
   },
   nightmaw: {
@@ -1076,7 +1079,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'voidNova' },
     ],
-    evolutions: [{ to: 'umbranox', level: 30 }],
+    evolutions: [{ to: 'umbranox', level: 4 }],
     blurb: 'An evolved Nightnip — larger, brighter-burning, and surer of the light it carries.',
   },
   umbranox: {
@@ -1115,7 +1118,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 13, tech: 'savageBite' },
       { level: 17, tech: 'thornspell' },
     ],
-    evolutions: [{ to: 'carapex', level: 20 }],
+    evolutions: [{ to: 'carapex', level: 3 }],
     blurb: 'An evolved Mitebug — larger, brighter-burning, and surer of the light it carries.',
   },
   carapex: {
@@ -1153,7 +1156,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'wildgrowth' },
       { level: 20, tech: 'lifebloom' },
     ],
-    evolutions: [{ to: 'thornward', level: 20 }],
+    evolutions: [{ to: 'thornward', level: 3 }],
     blurb: 'An evolved Sprigling — larger, brighter-burning, and surer of the light it carries.',
   },
   thornward: {
@@ -1173,7 +1176,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'wildgrowth' },
       { level: 20, tech: 'lifebloom' },
     ],
-    evolutions: [{ to: 'verdammon', level: 30 }],
+    evolutions: [{ to: 'verdammon', level: 4 }],
     blurb: 'An evolved Sprigling — larger, brighter-burning, and surer of the light it carries.',
   },
   verdammon: {
@@ -1211,7 +1214,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 13, tech: 'quakeCore' },
       { level: 17, tech: 'rendingStrike' },
     ],
-    evolutions: [{ to: 'dynamo', level: 20 }],
+    evolutions: [{ to: 'dynamo', level: 3 }],
     blurb: 'An evolved Scrapmite — larger, brighter-burning, and surer of the light it carries.',
   },
   dynamo: {
@@ -1250,7 +1253,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'voidNova' },
     ],
-    evolutions: [{ to: 'oblivion', level: 22 }],
+    evolutions: [{ to: 'oblivion', level: 3 }],
     blurb: 'An evolved Gloomote — larger, brighter-burning, and surer of the light it carries.',
   },
   oblivion: {
@@ -1290,7 +1293,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 15, tech: 'glacierSpire' },
       { level: 19, tech: 'renewingTide' },
     ],
-    evolutions: [{ to: 'tidalby', level: 20 }],
+    evolutions: [{ to: 'tidalby', level: 3 }],
     blurb: 'An evolved Dropletta — larger, brighter-burning, and surer of the light it carries.',
   },
   tidalby: {
@@ -1310,7 +1313,7 @@ export const SPECIES: Record<string, Species> = {
       { level: 15, tech: 'glacierSpire' },
       { level: 19, tech: 'renewingTide' },
     ],
-    evolutions: [{ to: 'maelstrom', level: 30 }],
+    evolutions: [{ to: 'maelstrom', level: 4 }],
     blurb: 'An evolved Dropletta — larger, brighter-burning, and surer of the light it carries.',
   },
   maelstrom: {

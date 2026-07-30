@@ -5,6 +5,7 @@ import { openSoularium } from './SoulariumScreen';
 import { openSanctuary } from './SanctuaryScreen';
 import { openPartyArrange } from './PartyScreen';
 import { openGear } from './GearScreen';
+import { openMoves } from './MovesScreen';
 import { openTranscend } from './TranscendScreen';
 
 /**
@@ -29,6 +30,13 @@ export async function openSoulMenu(parent: HTMLElement): Promise<void> {
         sublabel: 'arms · shrouds · mementos',
         icon: menuIcon('arrange', '#7bdc8a'),
         color: '#7bdc8a',
+      },
+      {
+        value: 'moves',
+        label: 'Moves',
+        sublabel: 'field up to five',
+        icon: menuIcon('moves', '#ffb4a2'),
+        color: '#ffb4a2',
       },
       {
         value: 'soularium',
@@ -59,6 +67,7 @@ export async function openSoulMenu(parent: HTMLElement): Promise<void> {
 
     if (choice === 'party') await openPartyArrange(parent);
     else if (choice === 'gear') await openGear(parent);
+    else if (choice === 'moves') await openMoves(parent);
     else if (choice === 'soularium') await openSoularium(parent);
     else if (choice === 'sanctuary') await openSanctuary(parent);
     else if (choice === 'transcend') await openTranscend(parent);

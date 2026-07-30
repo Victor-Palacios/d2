@@ -42,6 +42,9 @@ const MENU_ICONS: Record<string, string> = {
   arrange: '<path d="M12 2 L7 8 H17 Z"/><path d="M12 22 L7 16 H17 Z"/>',
   // Transcend — a soul ascending (stacked rising chevrons).
   transcend: '<path d="M6 13 L12 7 L18 13"/><path d="M6 18 L12 12 L18 18"/>',
+  // Moves — a list of techniques with a toggle switch on the last row.
+  moves:
+    '<path d="M5 7 H15"/><path d="M5 12 H15"/><path d="M5 17 H11"/><rect x="14" y="15" width="6" height="4" rx="2"/><circle cx="18" cy="17" r="1.2" fill="currentColor"/>',
 };
 
 /** Inline SVG glyph for a grid-menu entry, tinted with `color`. */

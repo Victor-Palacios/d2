@@ -52,6 +52,7 @@ export function mkCreature(over: Partial<CreatureInstance> = {}): CreatureInstan
     res: over.res ?? 30,
     xp: over.xp ?? 0,
     techniques: over.techniques ?? ['strike'],
+    loadout: over.loadout ?? (over.techniques ?? ['strike']).slice(0, 5),
     equip: over.equip ?? {},
     guarding: over.guarding ?? false,
     communable: over.communable,

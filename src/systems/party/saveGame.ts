@@ -1,5 +1,5 @@
 import type { CreatureInstance } from './creature';
-import { statsAt } from './creature';
+import { statsAt, MAX_ACTIVE_MOVES } from './creature';
 import { SPECIES } from '../../data/creatures';
 import { game, START_PARTY_CAP } from './gameState';
 import type { AttributeId } from '../../data/elements';
@@ -21,14 +21,16 @@ import type { AttributeId } from '../../data/elements';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 /**
  * Oldest save this build can still read. Normally we keep this at 1 because
  * changes are additive, but v5/v6 renamed the tutorial reach's id and clear
  * flag, and the persisted `activeReachId` field. An older save carries an id
  * that no longer resolves and would throw, so this is a genuinely breaking
  * change: drop anything older and start fresh. v7 adds the mag/res stats, which
- * `applySave` back-fills from the species curve — so a v6 save still loads.
+ * `applySave` back-fills from the species curve — so a v6 save still loads. v9
+ * adds the per-creature move `loadout`, back-filled from the known pool — so a
+ * v8 save still loads.
  */
 export const MIN_SAVE_VERSION = 8;
 
@@ -199,6 +201,9 @@ export function applySave(data: SaveData) {
   for (const c of [...game.party, ...game.sanctuary]) {
     if (c.xp === undefined) c.xp = 0;
     if (!c.equip) c.equip = {};
+    // v9: creatures saved before loadouts existed had no `loadout`. Seed it from
+    // the known pool (first ≤5) so the battle menu and toggle screen have data.
+    if (!Array.isArray(c.loadout)) c.loadout = (c.techniques ?? []).slice(0, MAX_ACTIVE_MOVES);
     // Saves from before the magick pass have no mag/res — recompute from the
     // species growth curve at the creature's level (v7).
     if (c.mag === undefined || c.res === undefined) {

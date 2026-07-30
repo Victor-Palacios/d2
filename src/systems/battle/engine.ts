@@ -1,5 +1,5 @@
 import type { CreatureInstance } from '../party/creature';
-import { isDown, isUp, effSpd, hasEquipEffect } from '../party/creature';
+import { isDown, isUp, effSpd, hasEquipEffect, activeMoves } from '../party/creature';
 import type { ElementId } from '../../data/elements';
 import type { Technique } from '../../data/techniques';
 import { technique, techShape } from '../../data/techniques';
@@ -707,7 +707,8 @@ export class Battle {
     const target = this.softmaxPick(scored);
 
     // Heal itself / an ally when badly hurt and the technique is available.
-    const healTech = c.techniques.map((id) => technique(id)).find((t) => t.kind === 'heal' && c.mp >= t.mpCost);
+    const moves = activeMoves(c);
+    const healTech = moves.map((id) => technique(id)).find((t) => t.kind === 'heal' && c.mp >= t.mpCost);
     if (healTech) {
       const hurt = this.living(actor.side)
         .filter((b) => b.creature.hp / b.creature.maxHp < 0.4)
@@ -717,7 +718,7 @@ export class Battle {
       }
     }
 
-    const usable = c.techniques.map((id) => technique(id)).filter((t) => t.kind === 'damage' && c.mp >= t.mpCost);
+    const usable = moves.map((id) => technique(id)).filter((t) => t.kind === 'damage' && c.mp >= t.mpCost);
 
     if (usable.length && this.rng() < 0.72) {
       // Prefer a multi-target shape when it would actually catch two or more.

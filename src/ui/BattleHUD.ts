@@ -4,6 +4,7 @@ import type { MenuItem } from './Menu';
 import type { Battle, BattleAction, Battler } from '../systems/battle/engine';
 import { BOOST_MAX, isMeleeTechnique } from '../systems/battle/engine';
 import type { CreatureInstance } from '../systems/party/creature';
+import { activeMoves } from '../systems/party/creature';
 import { technique, techShape } from '../data/techniques';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
 import { classIcon } from './icons';
@@ -275,8 +276,10 @@ export class BattleHUD {
     const c = actor.creature;
 
     for (;;) {
-      // Technique is greyed out unless the creature can afford at least one.
-      const canTechnique = c.techniques.some((id) => c.mp >= technique(id).mpCost);
+      // Only the loadout (≤5 active moves) is fieldable; Technique is greyed out
+      // unless the creature can afford at least one of them.
+      const moves = activeMoves(c);
+      const canTechnique = moves.some((id) => c.mp >= technique(id).mpCost);
       const canMove = battle.emptyCells(actor.side).length > 0;
       const canSwap = reserves.length > 0;
       const canCommune = battle.communeTargets('enemy').length > 0;
@@ -345,7 +348,7 @@ export class BattleHUD {
       }
 
       if (root === 'technique') {
-        const items: MenuItem[] = c.techniques.map((id) => {
+        const items: MenuItem[] = moves.map((id) => {
           const t = technique(id);
           const shape = techShape(t);
           // Note reads: "6 MP · melee" / "10 MP · row" — so reach and shape are
