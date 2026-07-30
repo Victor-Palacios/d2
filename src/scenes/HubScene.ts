@@ -323,7 +323,9 @@ export class HubScene extends GameScene {
     game.set('senaJoined');
     game.joinCompanion(makeCreature('senaVale', 6));
     await this.dialogue.play([
-      ...narrate('Sena Vale is waiting at the wake-fire when you come back from the Reliquary. The frost has gone out of her hands.'),
+      ...narrate(
+        'Sena Vale is waiting at the wake-fire when you come back from the Reliquary. The frost has gone out of her hands.',
+      ),
       ...say(
         'Sena Vale',
         'I have nothing left to guard. You took that from me — or gave it back. I cannot yet tell which.',
@@ -339,7 +341,9 @@ export class HubScene extends GameScene {
     game.set('kadeJoined');
     game.joinCompanion(makeCreature('kade', 10));
     await this.dialogue.play([
-      ...narrate('Kade is sitting on the Everwake steps — for once not a reach ahead of you. He does not look up straight away.'),
+      ...narrate(
+        'Kade is sitting on the Everwake steps — for once not a reach ahead of you. He does not look up straight away.',
+      ),
       ...say(
         'Kade',
         'I always ran the next reach first. Fastest keeper they had. You know why? So I never had to stand still long enough to feel any of it.',
@@ -364,17 +368,29 @@ export class HubScene extends GameScene {
         id: 'search',
         when: has('wrenJoined') && has('crossingCleared') && !has('senaJoined'),
         lines: [
-          ...say('Wren', `So — the one you are looking for. Do you have a name for me to write, ${game.playerName}? A face?`),
+          ...say(
+            'Wren',
+            `So — the one you are looking for. Do you have a name for me to write, ${game.playerName}? A face?`,
+          ),
           ...narrate('You find you cannot say it. Not yet.'),
-          ...say('Wren', 'That is all right. Some names take the whole road to say out loud. I will leave the line blank until you can.'),
+          ...say(
+            'Wren',
+            'That is all right. Some names take the whole road to say out loud. I will leave the line blank until you can.',
+          ),
         ],
       },
       {
         id: 'twoStances',
         when: has('senaJoined') && !has('kadeJoined'),
         lines: [
-          ...say('Sena Vale', 'You write them all down, Wren — every soul. Does it not exhaust you, holding that many?'),
-          ...say('Wren', 'Less than freezing one and standing guard over it forever. I only have to remember them. You had to refuse the whole world.'),
+          ...say(
+            'Sena Vale',
+            'You write them all down, Wren — every soul. Does it not exhaust you, holding that many?',
+          ),
+          ...say(
+            'Wren',
+            'Less than freezing one and standing guard over it forever. I only have to remember them. You had to refuse the whole world.',
+          ),
           ...say('Sena Vale', '...Fair. Teach me the lighter way, then. I am tired of being cold.'),
         ],
       },
@@ -383,7 +399,7 @@ export class HubScene extends GameScene {
         when: has('kadeJoined') && !has('midpointDone'),
         lines: [
           ...narrate('The three of them are quiet by the wake-fire. It is Kade who breaks it.'),
-          ...say('Kade', "We are all here for the same reason, are we not. Somebody we could not keep."),
+          ...say('Kade', 'We are all here for the same reason, are we not. Somebody we could not keep.'),
           ...say('Wren', 'That is the whole of the Everwake, Kade. That is everyone who ever picked up a lantern.'),
         ],
       },
@@ -391,19 +407,23 @@ export class HubScene extends GameScene {
         id: 'afterMidpoint',
         when: has('actTwo'),
         lines: [
-          ...narrate("Halden's chair sits empty. The party gathers around it anyway — the way you gather around a fire that has gone out but is still warm."),
+          ...narrate(
+            "Halden's chair sits empty. The party gathers around it anyway — the way you gather around a fire that has gone out but is still warm.",
+          ),
           ...say('Sena Vale', 'He would tell us to let him go.'),
           ...say('Kade', 'He would. And we will. Just — not tonight.'),
-          ...say('Wren', `Tonight we say his name. And when you are ready, ${game.playerName}: the road still has one soul left on it. The one you came here looking for.`),
+          ...say(
+            'Wren',
+            `Tonight we say his name. And when you are ready, ${game.playerName}: the road still has one soul left on it. The one you came here looking for.`,
+          ),
         ],
       },
     ];
-    const next = beats.find((b) => b.when && !game.has('banter:' + b.id));
+    const next = beats.find((b) => b.when && !game.has(`banter:${b.id}`));
     if (!next) return;
-    game.set('banter:' + next.id);
+    game.set(`banter:${next.id}`);
     await this.dialogue.play(next.lines);
   }
-
 
   /**
    * The midpoint (design framework §11.4 / docs/NARRATIVE.md): the unanswerable

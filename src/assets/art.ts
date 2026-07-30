@@ -662,7 +662,6 @@ export const HUMANS: Record<string, PixelArt> = {
   },
 };
 
-
 // ---------------------------------------------------------------------------
 // Creatures. Placeholder species (see src/data/creatures.ts for the stat blocks).
 // ---------------------------------------------------------------------------
@@ -2193,7 +2192,19 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   emberforge: {
-    palette: { S: '#100a08', k: '#2a1408', u: '#3a1a10', r: '#c0381c', o: '#ff7a2e', y: '#ffb84f', f: '#ffe08a', w: '#fff6e8', p: '#241021', s: '#ffffff', g: '#ff5a2a' },
+    palette: {
+      S: '#100a08',
+      k: '#2a1408',
+      u: '#3a1a10',
+      r: '#c0381c',
+      o: '#ff7a2e',
+      y: '#ffb84f',
+      f: '#ffe08a',
+      w: '#fff6e8',
+      p: '#241021',
+      s: '#ffffff',
+      g: '#ff5a2a',
+    },
     rows: [
       '.........................................kkk............................',
       '........................................koook...........................',
@@ -2269,7 +2280,19 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   ashwarden: {
-    palette: { S: '#100a08', k: '#2a1408', u: '#3a1a10', r: '#c0381c', o: '#ff7a2e', y: '#ffb84f', f: '#ffe08a', w: '#fff6e8', p: '#241021', s: '#ffffff', g: '#ff5a2a' },
+    palette: {
+      S: '#100a08',
+      k: '#2a1408',
+      u: '#3a1a10',
+      r: '#c0381c',
+      o: '#ff7a2e',
+      y: '#ffb84f',
+      f: '#ffe08a',
+      w: '#fff6e8',
+      p: '#241021',
+      s: '#ffffff',
+      g: '#ff5a2a',
+    },
     rows: [
       '.............................................kkk...............................',
       '............................................koook..............................',
@@ -2351,7 +2374,19 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   pyrelord: {
-    palette: { S: '#100a08', k: '#2a1408', u: '#3a1a10', r: '#c0381c', o: '#ff7a2e', y: '#ffb84f', f: '#ffe08a', w: '#fff6e8', p: '#241021', s: '#ffffff', g: '#ff5a2a' },
+    palette: {
+      S: '#100a08',
+      k: '#2a1408',
+      u: '#3a1a10',
+      r: '#c0381c',
+      o: '#ff7a2e',
+      y: '#ffb84f',
+      f: '#ffe08a',
+      w: '#fff6e8',
+      p: '#241021',
+      s: '#ffffff',
+      g: '#ff5a2a',
+    },
     rows: [
       '.................................kkk...kkk...kkk...kkk.................................',
       '................................kofok.kofok.kofok.kofok................................',
@@ -2441,7 +2476,18 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   gustwing: {
-    palette: { S: '#08131a', k: '#123040', D: '#2f7fb0', b: '#4fb0e0', h: '#a6e6ff', w: '#ecffff', p: '#0e2a38', s: '#ffffff', c: '#ff9ab0', t: '#c9f6ff' },
+    palette: {
+      S: '#08131a',
+      k: '#123040',
+      D: '#2f7fb0',
+      b: '#4fb0e0',
+      h: '#a6e6ff',
+      w: '#ecffff',
+      p: '#0e2a38',
+      s: '#ffffff',
+      c: '#ff9ab0',
+      t: '#c9f6ff',
+    },
     rows: [
       '..........kkkkkkkkk.......................................kkkkkkkkk.........',
       '.........kbbbbhhhhhkkk.................................kkkhhhhhbbbbk........',
@@ -2502,7 +2548,18 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   tempestrix: {
-    palette: { S: '#08131a', k: '#123040', D: '#2f7fb0', b: '#4fb0e0', h: '#a6e6ff', w: '#ecffff', p: '#0e2a38', s: '#ffffff', c: '#ff9ab0', t: '#c9f6ff' },
+    palette: {
+      S: '#08131a',
+      k: '#123040',
+      D: '#2f7fb0',
+      b: '#4fb0e0',
+      h: '#a6e6ff',
+      w: '#ecffff',
+      p: '#0e2a38',
+      s: '#ffffff',
+      c: '#ff9ab0',
+      t: '#c9f6ff',
+    },
     rows: [
       '.............kkkkkkk...............................................kkkkkkk............',
       '...........kkbbbbbhhkk...........................................kkhhbbbbbkk..........',
@@ -2571,7 +2628,20 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   duskfang: {
-    palette: { S: '#0a0814', k: '#1a1226', u: '#33265a', v: '#6b4aa0', V: '#9a7ad0', w: '#fff2ff', p: '#160f26', s: '#ffffff', c: '#ff9ab0', f: '#fffbe8', e: '#4a2a5a', g: '#cbb8ff' },
+    palette: {
+      S: '#0a0814',
+      k: '#1a1226',
+      u: '#33265a',
+      v: '#6b4aa0',
+      V: '#9a7ad0',
+      w: '#fff2ff',
+      p: '#160f26',
+      s: '#ffffff',
+      c: '#ff9ab0',
+      f: '#fffbe8',
+      e: '#4a2a5a',
+      g: '#cbb8ff',
+    },
     rows: [
       '.........................kkk.............kkk........................',
       '........................kvvvk...........kvvvk.......................',
@@ -2628,7 +2698,20 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   nightmaw: {
-    palette: { S: '#0a0814', k: '#1a1226', u: '#33265a', v: '#6b4aa0', V: '#9a7ad0', w: '#fff2ff', p: '#160f26', s: '#ffffff', c: '#ff9ab0', f: '#fffbe8', e: '#4a2a5a', g: '#cbb8ff' },
+    palette: {
+      S: '#0a0814',
+      k: '#1a1226',
+      u: '#33265a',
+      v: '#6b4aa0',
+      V: '#9a7ad0',
+      w: '#fff2ff',
+      p: '#160f26',
+      s: '#ffffff',
+      c: '#ff9ab0',
+      f: '#fffbe8',
+      e: '#4a2a5a',
+      g: '#cbb8ff',
+    },
     rows: [
       '.............................kkk.............kkk............................',
       '............................kvvvk...........kvvvk...........................',
@@ -2691,7 +2774,20 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   umbranox: {
-    palette: { S: '#0a0814', k: '#1a1226', u: '#33265a', v: '#6b4aa0', V: '#9a7ad0', w: '#fff2ff', p: '#160f26', s: '#ffffff', c: '#ff9ab0', f: '#fffbe8', e: '#4a2a5a', g: '#cbb8ff' },
+    palette: {
+      S: '#0a0814',
+      k: '#1a1226',
+      u: '#33265a',
+      v: '#6b4aa0',
+      V: '#9a7ad0',
+      w: '#fff2ff',
+      p: '#160f26',
+      s: '#ffffff',
+      c: '#ff9ab0',
+      f: '#fffbe8',
+      e: '#4a2a5a',
+      g: '#cbb8ff',
+    },
     rows: [
       '................................kkkkk...........kkkkk...............................',
       '...............................kvvvvvk.........kvvvvvk..............................',
@@ -2759,7 +2855,19 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   chitterling: {
-    palette: { S: '#0a1208', k: '#1c2a16', r: '#356a2c', o: '#6ab048', y: '#9bd86a', h: '#c4ef9a', w: '#fbffee', p: '#1c2a16', s: '#ffffff', c: '#ff9a9a', a: '#20301a' },
+    palette: {
+      S: '#0a1208',
+      k: '#1c2a16',
+      r: '#356a2c',
+      o: '#6ab048',
+      y: '#9bd86a',
+      h: '#c4ef9a',
+      w: '#fbffee',
+      p: '#1c2a16',
+      s: '#ffffff',
+      c: '#ff9a9a',
+      a: '#20301a',
+    },
     rows: [
       '........................kkk...............kkk......................',
       '.......................kyyyk.kkkkkkkkkkk.kyyyk.....................',
@@ -2812,7 +2920,19 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   carapex: {
-    palette: { S: '#0a1208', k: '#1c2a16', r: '#356a2c', o: '#6ab048', y: '#9bd86a', h: '#c4ef9a', w: '#fbffee', p: '#1c2a16', s: '#ffffff', c: '#ff9a9a', a: '#20301a' },
+    palette: {
+      S: '#0a1208',
+      k: '#1c2a16',
+      r: '#356a2c',
+      o: '#6ab048',
+      y: '#9bd86a',
+      h: '#c4ef9a',
+      w: '#fbffee',
+      p: '#1c2a16',
+      s: '#ffffff',
+      c: '#ff9a9a',
+      a: '#20301a',
+    },
     rows: [
       '.............................kkk...............kkk...........................',
       '............................kyyykkkkkkkkkkkkkkkyyyk..........................',
@@ -2872,7 +2992,23 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   bloomkin: {
-    palette: { S: '#0a1208', k: '#1c2a16', L: '#5aa838', l: '#9bd86a', v: '#2f6a2a', m: '#f0e6c2', d: '#ccb98a', o: '#e8d8a8', P: '#ff8fb0', Q: '#ffb8d0', w: '#fbffee', p: '#1c2a16', s: '#ffffff', c: '#ff9ab0', b: '#8a5a3a' },
+    palette: {
+      S: '#0a1208',
+      k: '#1c2a16',
+      L: '#5aa838',
+      l: '#9bd86a',
+      v: '#2f6a2a',
+      m: '#f0e6c2',
+      d: '#ccb98a',
+      o: '#e8d8a8',
+      P: '#ff8fb0',
+      Q: '#ffb8d0',
+      w: '#fbffee',
+      p: '#1c2a16',
+      s: '#ffffff',
+      c: '#ff9ab0',
+      b: '#8a5a3a',
+    },
     rows: [
       '.................................kkk...............................',
       '...............................kkPPPkk.............................',
@@ -2949,7 +3085,23 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   thornward: {
-    palette: { S: '#0a1208', k: '#1c2a16', L: '#5aa838', l: '#9bd86a', v: '#2f6a2a', m: '#f0e6c2', d: '#ccb98a', o: '#e8d8a8', P: '#ff8fb0', Q: '#ffb8d0', w: '#fbffee', p: '#1c2a16', s: '#ffffff', c: '#ff9ab0', b: '#8a5a3a' },
+    palette: {
+      S: '#0a1208',
+      k: '#1c2a16',
+      L: '#5aa838',
+      l: '#9bd86a',
+      v: '#2f6a2a',
+      m: '#f0e6c2',
+      d: '#ccb98a',
+      o: '#e8d8a8',
+      P: '#ff8fb0',
+      Q: '#ffb8d0',
+      w: '#fbffee',
+      p: '#1c2a16',
+      s: '#ffffff',
+      c: '#ff9ab0',
+      b: '#8a5a3a',
+    },
     rows: [
       '...................................kkkkkkk.................................',
       '..................................kPPPPPPPk................................',
@@ -3036,7 +3188,23 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   verdammon: {
-    palette: { S: '#0a1208', k: '#1c2a16', L: '#5aa838', l: '#9bd86a', v: '#2f6a2a', m: '#f0e6c2', d: '#ccb98a', o: '#e8d8a8', P: '#ff8fb0', Q: '#ffb8d0', w: '#fbffee', p: '#1c2a16', s: '#ffffff', c: '#ff9ab0', b: '#8a5a3a' },
+    palette: {
+      S: '#0a1208',
+      k: '#1c2a16',
+      L: '#5aa838',
+      l: '#9bd86a',
+      v: '#2f6a2a',
+      m: '#f0e6c2',
+      d: '#ccb98a',
+      o: '#e8d8a8',
+      P: '#ff8fb0',
+      Q: '#ffb8d0',
+      w: '#fbffee',
+      p: '#1c2a16',
+      s: '#ffffff',
+      c: '#ff9ab0',
+      b: '#8a5a3a',
+    },
     rows: [
       '..........................................kk........................................',
       '.........................................kPPk.......................................',
@@ -3137,7 +3305,20 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   boltframe: {
-    palette: { S: '#080a10', k: '#14161f', D: '#3a4152', b: '#5f6b82', h: '#9fb0cc', n: '#0e202a', g: '#7fe6ff', y: '#ffce5a', w: '#ffffff', p: '#0e202a', s: '#ffffff', r: '#c85a4a' },
+    palette: {
+      S: '#080a10',
+      k: '#14161f',
+      D: '#3a4152',
+      b: '#5f6b82',
+      h: '#9fb0cc',
+      n: '#0e202a',
+      g: '#7fe6ff',
+      y: '#ffce5a',
+      w: '#ffffff',
+      p: '#0e202a',
+      s: '#ffffff',
+      r: '#c85a4a',
+    },
     rows: [
       '................................kkk.....kkk........................',
       '...............................kgggk...kgggk.......................',
@@ -3209,7 +3390,20 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   dynamo: {
-    palette: { S: '#080a10', k: '#14161f', D: '#3a4152', b: '#5f6b82', h: '#9fb0cc', n: '#0e202a', g: '#7fe6ff', y: '#ffce5a', w: '#ffffff', p: '#0e202a', s: '#ffffff', r: '#c85a4a' },
+    palette: {
+      S: '#080a10',
+      k: '#14161f',
+      D: '#3a4152',
+      b: '#5f6b82',
+      h: '#9fb0cc',
+      n: '#0e202a',
+      g: '#7fe6ff',
+      y: '#ffce5a',
+      w: '#ffffff',
+      p: '#0e202a',
+      s: '#ffffff',
+      r: '#c85a4a',
+    },
     rows: [
       '.................................kkk.kkk.....kkk.............................',
       '................................kgggkgggk...kgggk............................',
@@ -3290,7 +3484,18 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   gloomshade: {
-    palette: { S: '#0a0814', k: '#16112a', u: '#2e2456', v: '#5b46a0', V: '#8f78d8', g: '#cbb8ff', w: '#fff2ff', p: '#160f26', s: '#ffffff', c: '#ff9ab0' },
+    palette: {
+      S: '#0a0814',
+      k: '#16112a',
+      u: '#2e2456',
+      v: '#5b46a0',
+      V: '#8f78d8',
+      g: '#cbb8ff',
+      w: '#fff2ff',
+      p: '#160f26',
+      s: '#ffffff',
+      c: '#ff9ab0',
+    },
     rows: [
       '..........................kkkkkkkkk.........................',
       '.......................kkkVVVVVVVVvkkk......................',
@@ -3354,7 +3559,18 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   oblivion: {
-    palette: { S: '#0a0814', k: '#16112a', u: '#2e2456', v: '#5b46a0', V: '#8f78d8', g: '#cbb8ff', w: '#fff2ff', p: '#160f26', s: '#ffffff', c: '#ff9ab0' },
+    palette: {
+      S: '#0a0814',
+      k: '#16112a',
+      u: '#2e2456',
+      v: '#5b46a0',
+      V: '#8f78d8',
+      g: '#cbb8ff',
+      w: '#fff2ff',
+      p: '#160f26',
+      s: '#ffffff',
+      c: '#ff9ab0',
+    },
     rows: [
       '..............................kkkkkkkkkkk.............................',
       '...........................kkkVVVVVVVVVVvkkk..........................',
@@ -3427,7 +3643,18 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   wellspring: {
-    palette: { S: '#08131a', k: '#0e2a38', D: '#2f8fc0', b: '#57c0e6', h: '#a6ecff', w: '#ecffff', p: '#0e2a38', s: '#ffffff', c: '#ff9ab0', t: '#c9f6ff' },
+    palette: {
+      S: '#08131a',
+      k: '#0e2a38',
+      D: '#2f8fc0',
+      b: '#57c0e6',
+      h: '#a6ecff',
+      w: '#ecffff',
+      p: '#0e2a38',
+      s: '#ffffff',
+      c: '#ff9ab0',
+      t: '#c9f6ff',
+    },
     rows: [
       '............................kk.....kk...........................',
       '...........................khhk...khhk..........................',
@@ -3485,7 +3712,18 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   tidalby: {
-    palette: { S: '#08131a', k: '#0e2a38', D: '#2f8fc0', b: '#57c0e6', h: '#a6ecff', w: '#ecffff', p: '#0e2a38', s: '#ffffff', c: '#ff9ab0', t: '#c9f6ff' },
+    palette: {
+      S: '#08131a',
+      k: '#0e2a38',
+      D: '#2f8fc0',
+      b: '#57c0e6',
+      h: '#a6ecff',
+      w: '#ecffff',
+      p: '#0e2a38',
+      s: '#ffffff',
+      c: '#ff9ab0',
+      t: '#c9f6ff',
+    },
     rows: [
       '............................kkk....kkk....kkk...........................',
       '...........................khhhk..khhhk..khhhk..........................',
@@ -3549,7 +3787,18 @@ export const CREATURES: Record<string, PixelArt> = {
     ],
   },
   maelstrom: {
-    palette: { S: '#08131a', k: '#0e2a38', D: '#2f8fc0', b: '#57c0e6', h: '#a6ecff', w: '#ecffff', p: '#0e2a38', s: '#ffffff', c: '#ff9ab0', t: '#c9f6ff' },
+    palette: {
+      S: '#08131a',
+      k: '#0e2a38',
+      D: '#2f8fc0',
+      b: '#57c0e6',
+      h: '#a6ecff',
+      w: '#ecffff',
+      p: '#0e2a38',
+      s: '#ffffff',
+      c: '#ff9ab0',
+      t: '#c9f6ff',
+    },
     rows: [
       '.............................kk.....kk.....kk.....kk............................',
       '............................khhk...khhk...khhk...khhk...........................',
