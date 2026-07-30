@@ -14,6 +14,9 @@ page.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
 page.on('pageerror', (e) => errs.push(String(e)));
 
 await page.goto(URL, { waitUntil: 'domcontentloaded' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForFunction(() => !!(window.hd2dGame && window.hd2dGame.creature && window.hd2dGame.evolve));
 
 const r = await page.evaluate(() => {

@@ -21,6 +21,9 @@ const press = async (k, n = 1, gap = 300) => { for (let i = 0; i < n; i++) { awa
 const menuItems = () => page.evaluate(() => [...document.querySelectorAll('#action-menu .menu li')].map((n) => n.textContent.trim()));
 
 await page.goto(process.env.URL ?? 'http://localhost:4173/', { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const g = window.hd2dGame; const p = g.hd2d.params; p.supersample = 0.35; p.dofEnabled = false; p.bloomEnabled = false; g.hd2d.applyParams(); });
 

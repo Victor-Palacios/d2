@@ -103,21 +103,69 @@ export class IntroScene extends GameScene {
   private showTitle() {
     this.screen = el('div', 'screen transparent');
     const stack = el('div');
-    stack.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:14px;';
+    stack.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:16px;';
     stack.append(
-      el('h1', 'title-main', 'THE EVERWAKE'),
-      el('p', 'title-sub', 'a first-hour HD-2D vertical slice'),
-      el('div', 'hint dim', 'All names, sprites and audio are original placeholders. Click once to enable sound.'),
+      el('h1', 'title-main title-game', 'LOST SOULS'),
+      el('p', 'title-sub', 'A keeper and the souls that lingered'),
     );
     this.screen.appendChild(stack);
+    this.screen.appendChild(
+      el(
+        'div',
+        'hint dim title-note',
+        'All names, sprites and audio are original placeholders. Press any button to begin.',
+      ),
+    );
     this.ctx.ui.appendChild(this.screen);
 
-    // Any input unlocks audio; the menu itself drives the rest.
-    this.unsub = input.onAction(() => audio.unlock());
-    this.screen.addEventListener('click', () => audio.unlock());
     audio.music('hub');
+    void this.titleFlow(stack);
+  }
 
-    void this.titleMenu(stack);
+  /**
+   * Digimon-World-2-style title: the game name fills the screen and waits for
+   * any button; only then does the Continue / New Game menu appear. Kept
+   * detached because it awaits player input — a scene's `enter()` must never
+   * block on the player (see HANDOFF §6).
+   */
+  private async titleFlow(stack: HTMLElement) {
+    if (this.disposed) return;
+    const prompt = el('div', 'title-press', 'PRESS ANY BUTTON');
+    stack.appendChild(prompt);
+
+    await this.waitForAnyButton();
+    if (this.disposed) return;
+    audio.unlock();
+    audio.sfx('confirm');
+    remove(prompt);
+
+    await this.titleMenu(stack);
+  }
+
+  /**
+   * Resolves on the first mapped action (key or pad) or a click on the title.
+   * The listener iterates a copy inside `input.fire`, and the menu opened next
+   * subscribes afterwards, so the revealing press is never also consumed as a
+   * menu selection (HANDOFF §6, invariant 3).
+   */
+  private waitForAnyButton(): Promise<void> {
+    return new Promise((resolve) => {
+      const finish = () => {
+        this.unsub?.();
+        this.unsub = null;
+        this.screen?.removeEventListener('click', onClick);
+        resolve();
+      };
+      const onClick = () => {
+        audio.unlock();
+        finish();
+      };
+      this.unsub = input.onAction(() => {
+        audio.unlock();
+        finish();
+      });
+      this.screen?.addEventListener('click', onClick);
+    });
   }
 
   private async titleMenu(stack: HTMLElement) {

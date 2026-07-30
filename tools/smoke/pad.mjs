@@ -20,6 +20,9 @@ await page.addInitScript(() => {
 });
 
 await page.goto((process.env.URL ?? 'http://localhost:5199/'), { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await page.evaluate(() => {
   const g = window.hd2dGame; const p = g.hd2d.params;

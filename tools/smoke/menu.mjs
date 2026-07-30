@@ -21,6 +21,9 @@ const cards = () => page.evaluate(() => [...document.querySelectorAll('.grid-car
 const party = () => page.evaluate(() => window.hd2dGame.game.party.map((c) => c.speciesId));
 
 await page.goto(process.env.URL ?? 'http://localhost:4173/', { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const g = window.hd2dGame, p = g.hd2d.params; p.supersample = 0.4; p.dofEnabled = false; p.bloomEnabled = false; g.hd2d.applyParams(); });
 

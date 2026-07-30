@@ -31,6 +31,9 @@ const pickPartner = async () => {
 };
 
 await page.goto(process.env.URL ?? 'http://localhost:4193/', { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const gg = window.hd2dGame; const p = gg.hd2d.params;
   p.supersample = 0.35; p.dofEnabled = false; p.tiltEnabled = false; p.bloomEnabled = false;

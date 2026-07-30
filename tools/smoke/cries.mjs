@@ -57,6 +57,9 @@ await page.addInitScript(() => {
 });
 
 await page.goto((process.env.URL ?? 'http://localhost:5261/'), { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1200);
 // Unlock audio (needs a gesture) — a click, then confirm the context is live.
 await page.mouse.click(400, 225);
