@@ -393,15 +393,27 @@ Soularium/Sanctuary while your *party* is the people who walk with you.
 
 The three carry the three relationships to death (Remember / Preserve / Avoid),
 so the party itself argues the dramatic question — and when the midpoint hardens
-each philosophy, it is your own companions turning. Battle now fields all four
-(`ACTIVE_PARTY = 4`). Covered by `tools/smoke/companions.mjs`.
+each philosophy, it is your own companions turning (Kade included). Battle now
+fields all four (`ACTIVE_PARTY = 4`).
+
+**Between-reach banter** keeps them alive in the downtime: on a quiet return to
+the Everwake (a visit with no scripted beat), `HubScene.partyBanter` plays the
+first eligible unseen exchange and flags it so it never repeats. The four beats
+track the throughline — Wren asks who you are looking for (the search thread from
+the prologue, deliberately left unpaid until the finale); Preserve and Remember
+argue; the three admit they are all here for "somebody we could not keep"; and
+after the midpoint they gather at Halden's empty chair and point you at the one
+soul still on the road — the one you came looking for. Covered by
+`tools/smoke/companions.mjs`.
 
 ## 12. Still ahead (tracked, not yet built)
 
-- Act-III: characters borrow from their opponents (§11.5) and a finale
-  temptation (§11.6) that exposes what the player valued.
-- Deeper companion arcs — banter between reaches, and Sena/Wren/Kade
-  paying off their turns from the midpoint.
+- **Act III + the finale** (§11.5–11.6): the lost soul the search has been
+  pointing at since the prologue, and a temptation that exposes what the player
+  valued. This is the one dangling thread by design — every companion beat now
+  aims the player at it.
+- Optional extra texture — companion banter *inside* the crawl (not just the
+  hub), and reactive lines to specific wardens.
 
 > **Closing test (framework closing principle):** every change above was made
 > against one question — *what does this reveal about living that could only be

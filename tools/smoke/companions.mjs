@@ -20,6 +20,15 @@ const dlg = () => page.evaluate(() => { const d = document.querySelector('#dialo
 const wait = async (n, ms = 30000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if ((await scene()) === n) return true; await page.waitForTimeout(200); } return false; };
 const party = () => page.evaluate(() => window.hd2dGame.game.party.map((c) => ({ id: c.speciesId, companion: !!c.companion })));
 const hasCompanion = async (id) => (await party()).some((c) => c.id === id && c.companion);
+const flag = (f) => page.evaluate((x) => window.hd2dGame.game.has(x), f);
+const advanceUntilFlag = async (f, tries = 60) => {
+  for (let i = 0; i < tries; i++) {
+    if (await flag(f)) return true;
+    if (await dlg()) await page.keyboard.press('Enter');
+    await page.waitForTimeout(180);
+  }
+  return flag(f);
+};
 // Advance dialogue until `id` is a companion in the party (join scene done).
 const advanceUntilJoined = async (id, tries = 90) => {
   for (let i = 0; i < tries; i++) {
@@ -45,8 +54,13 @@ const wren = await advanceUntilJoined('wren');
 const afterWren = await party();
 console.log('Wren joins at the Everwake :', wren, JSON.stringify(afterWren));
 
+// Quiet return with only the Crossing cleared: between-reach party banter fires.
+await page.evaluate(async () => { window.hd2dGame.game.set('crossingCleared'); await window.hd2dGame.manager.go('hub', {}); });
+const banter = await advanceUntilFlag('banter:search');
+console.log('quiet-return banter fires  :', banter);
+
 // Clear the Reliquary and return: Sena Vale joins.
-await page.evaluate(async () => { window.hd2dGame.game.set('crossingCleared'); window.hd2dGame.game.set('crystalCleared'); await window.hd2dGame.manager.go('hub', {}); });
+await page.evaluate(async () => { window.hd2dGame.game.set('crystalCleared'); await window.hd2dGame.manager.go('hub', {}); });
 const sena = await advanceUntilJoined('senaVale');
 console.log('Sena joins after Reliquary :', sena);
 
@@ -67,7 +81,7 @@ console.log('companion cannot be benched  :', benchRefused);
 
 const ids = full.map((c) => c.id);
 const partyOfFour = full.length === 4 && ['wren', 'senaVale', 'kade'].every((id) => ids.includes(id));
-const ok = wren && sena && kade && partyOfFour && benchRefused;
+const ok = wren && banter && sena && kade && partyOfFour && benchRefused;
 console.log('\nCOMPANIONS OK :', ok);
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();

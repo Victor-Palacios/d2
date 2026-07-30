@@ -214,15 +214,20 @@ export class HubScene extends GameScene {
       await this.rivalAndBriefing();
     }
 
+    // Did a scripted beat play this arrival? Quiet returns get party banter.
+    let beat = kind === 'first' || kind === 'towed' || kind === 'reachCleared' || kind === 'teamChosen';
+
     // Companions join at story beats — on the next return to the Everwake after
     // the reach that earns them. Each fires once (guarded by its flag). Placed
     // before the midpoint so the party is whole when Halden dies.
     if (game.has('crystalCleared') && !game.has('senaJoined')) {
       await this.senaJoin();
+      beat = true;
       if (this.disposed) return;
     }
     if (game.has('hauntedCleared') && !game.has('kadeJoined')) {
       await this.kadeJoin();
+      beat = true;
       if (this.disposed) return;
     }
 
@@ -231,6 +236,7 @@ export class HubScene extends GameScene {
     // (fires once), independent of the main-line midpoint below.
     if (game.has('jungleCleared') && !game.has('jungleWakeDone')) {
       await this.jungleAftermath();
+      beat = true;
       if (this.disposed) return;
     }
 
@@ -243,6 +249,14 @@ export class HubScene extends GameScene {
       !game.has('midpointDone')
     ) {
       await this.midpoint();
+      beat = true;
+    }
+
+    // A quiet return between reaches: one line of party banter, state-aware and
+    // once each, so the companions develop between the big beats.
+    if (!beat && game.has('prologueDone')) {
+      await this.partyBanter();
+      if (this.disposed) return;
     }
 
     this.busy = false;
@@ -336,6 +350,60 @@ export class HubScene extends GameScene {
     toast(this.ctx.ui, '<span class="accent">Kade joins your party</span>', 2600);
   }
 
+  /**
+   * Between-reach party banter. On a quiet return to the Everwake, plays the
+   * first eligible unseen exchange, then flags it so it never repeats. The beats
+   * track the throughline — the search, the two stances meeting, the three
+   * together, and the party after Act II — so the companions develop in the
+   * downtime, not only at the big scenes.
+   */
+  private async partyBanter() {
+    const has = (f: string) => game.has(f);
+    const beats: { id: string; when: boolean; lines: DialogueScript }[] = [
+      {
+        id: 'search',
+        when: has('wrenJoined') && has('crossingCleared') && !has('senaJoined'),
+        lines: [
+          ...say('Wren', `So — the one you are looking for. Do you have a name for me to write, ${game.playerName}? A face?`),
+          ...narrate('You find you cannot say it. Not yet.'),
+          ...say('Wren', 'That is all right. Some names take the whole road to say out loud. I will leave the line blank until you can.'),
+        ],
+      },
+      {
+        id: 'twoStances',
+        when: has('senaJoined') && !has('kadeJoined'),
+        lines: [
+          ...say('Sena Vale', 'You write them all down, Wren — every soul. Does it not exhaust you, holding that many?'),
+          ...say('Wren', 'Less than freezing one and standing guard over it forever. I only have to remember them. You had to refuse the whole world.'),
+          ...say('Sena Vale', '...Fair. Teach me the lighter way, then. I am tired of being cold.'),
+        ],
+      },
+      {
+        id: 'threeTogether',
+        when: has('kadeJoined') && !has('midpointDone'),
+        lines: [
+          ...narrate('The three of them are quiet by the wake-fire. It is Kade who breaks it.'),
+          ...say('Kade', "We are all here for the same reason, are we not. Somebody we could not keep."),
+          ...say('Wren', 'That is the whole of the Everwake, Kade. That is everyone who ever picked up a lantern.'),
+        ],
+      },
+      {
+        id: 'afterMidpoint',
+        when: has('actTwo'),
+        lines: [
+          ...narrate("Halden's chair sits empty. The party gathers around it anyway — the way you gather around a fire that has gone out but is still warm."),
+          ...say('Sena Vale', 'He would tell us to let him go.'),
+          ...say('Kade', 'He would. And we will. Just — not tonight.'),
+          ...say('Wren', `Tonight we say his name. And when you are ready, ${game.playerName}: the road still has one soul left on it. The one you came here looking for.`),
+        ],
+      },
+    ];
+    const next = beats.find((b) => b.when && !game.has('banter:' + b.id));
+    if (!next) return;
+    game.set('banter:' + next.id);
+    await this.dialogue.play(next.lines);
+  }
+
 
   /**
    * The midpoint (design framework §11.4 / docs/NARRATIVE.md): the unanswerable
@@ -407,7 +475,7 @@ export class HubScene extends GameScene {
 
     await sleep(700);
     await this.dialogue.play([
-      ...narrate('Word travels the reaches. Grief does not soften the others. It sharpens them.'),
+      ...narrate('Grief does not soften the three who walk with you. It sharpens them, each along their own edge.'),
       ...say(
         'Sena Vale',
         'So you have felt it now. That is why I froze Lire — so I would never have to. Bring me a soul you love and I will do the same for you. You need never lose another.',
@@ -415,6 +483,11 @@ export class HubScene extends GameScene {
       ...say(
         'Wren',
         'I have added Halden to the Book. I add everyone. If every name is written down, then no one is truly gone — they are not gone — tell me they are not gone.',
+      ),
+      ...say(
+        'Kade',
+        'I stopped running. For you, for him — and he died anyway.',
+        'Give me one reason I should not go back to never standing still long enough for it to catch me.',
       ),
       ...narrate(
         'And you: you have been keeping souls since the first lantern. You wonder, now, whether it was ever tending them — or only refusing, again and again, to let a single one go.',
@@ -577,20 +650,19 @@ export class HubScene extends GameScene {
   }
 
   private scriptFor(npc: Npc): DialogueScript {
-    const leader = game.teamId ? team(game.teamId) : null;
     switch (npc.id) {
       case 'chief':
         if (!game.hasLicense) {
           return say(
             'Chief Marrow',
             'The Quiet Crossing. Three floors, one warden. Take the south portal when you are ready.',
-            'And Halden will not stop asking, so: bring his creatures back.',
+            'Keep your light lit and bring it home. That is the whole of the job — and the hard part.',
           );
         }
         return say(
           'Chief Marrow',
-          `Licensed and teamed. You are ${leader ? leader.name : 'Guard'} now, ${game.playerName}.`,
-          'The next reach is your problem. Mine is the paperwork you just made.',
+          `A licensed keeper whose lantern stayed lit. Rarer than you would think, ${game.playerName}.`,
+          'The reaches past the Crossing are yours to tend now. Mine is the paperwork you just made.',
         );
       case 'mentor':
         if (!game.hasLicense) {
@@ -603,8 +675,8 @@ export class HubScene extends GameScene {
         }
         return say(
           'Halden',
-          'My three are back in their bay and only slightly on fire, so I will call that a success.',
-          'Your starter is yours to raise now. Merging creatures comes later — not today.',
+          'You have the measure of it now — meet what lingers, and decide, each time, whether to keep it or let it go.',
+          'Your bonded souls are yours to raise. Merging them comes later — not today.',
         );
       case 'vendor':
         if (!game.hasLicense) {
