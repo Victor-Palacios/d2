@@ -21,8 +21,11 @@ tools/sprites/
   creatures.mjs      shared recipe helpers + demo builders + a CREATURES registry
   quiet-crossing.mjs reach-1 roster, flat house style (CROSSING registry)
   crystal-cavern.mjs reach-2 roster, painterly style (CAVERN registry)
+  overgrowth.mjs     reach-3 roster, gouache-canopy style (OVERGROWTH registry)
+  haunted.mjs        reach-4 roster, spectral-ink style (HAUNTED registry)
   build.mjs          CLI: render previews to out/ and emit pasteable { palette, rows }
   integrate.mjs      CLI: replace CREATURES[<artKey>] blocks in src/assets/art.ts
+  integrate-reaches.mjs CLI: insert Overgrowth keys (+ repoint species) & replace Haunted keys
 ```
 
 ## Styles: one per area + one for people
@@ -33,10 +36,12 @@ The world gets visual variety by giving **each reach its own sprite style**, and
 | Group | Style | Engine |
 |---|---|---|
 | Reach 1 · The Quiet Crossing | flat, bold, graphic house style | `compose.mjs` |
-| Reach 2 · The Crystal Cavern | painterly, dithered, volumetric | `paint.mjs` |
-| Reach 3 · The Overgrowth | *(planned — its own style)* | TBD |
-| Reach 4 · Haunted Dungeon | *(planned — its own style)* | TBD |
+| Reach 2 · The Crystal Cavern | painterly, dithered, volumetric | `paint.mjs` → `crystal-cavern.mjs` |
+| Reach 3 · The Overgrowth | gouache canopy — warm sun, green shadows, dappled sunflecks, mossy outline | `paint.mjs` → `overgrowth.mjs` |
+| Reach 4 · Haunted Dungeon | spectral ink — monochrome ash, one emissive accent, hollow eyes, dissolve-to-mist | `paint.mjs` → `haunted.mjs` |
 | **Humans (all NPCs + hero)** | cel-shaded "storybook" people | `humans.mjs` |
+
+All four reaches now have a distinct look, so a single glance says where you are.
 
 **Human style** (`humans.mjs`): taller, properly-proportioned characters (~30×48,
 vs the old 14×18 blobs), clean lineart, and **warm-cool cel shading** — a warm
@@ -47,25 +52,38 @@ with **one saturated accent** colour, a distinct hairstyle (short / long / spiky
 the creatures — people should not read as monsters. Parametric `human(opts)`
 builds the whole cast; `integrate-humans.mjs` writes them into `art.ts`.
 
-## Two creature rendering styles
+## Creature rendering styles
 
-There are **two** ways to build a creature sprite; pick per creature (or per reach):
+Two **engines** build creature sprites; the volumetric one carries **three**
+per-reach style treatments on top, so each reach reads differently:
 
 - **`compose.mjs` — flat house style.** Single-char palette keys, ellipse
   shapes, 2–3 flat tonal bands, hard single-colour outline. Crisp, graphic,
   cohesive; cheap. Used for **The Quiet Crossing** (`quiet-crossing.mjs`).
 - **`paint.mjs` — painterly / volumetric.** Works in raw hex on a canvas, then
-  assigns palette keys at the end (`toPixelArt`, auto-quantizing under the ~90
-  key ceiling). Each part is shaded as an implied **sphere** — a fake normal
+  assigns palette keys at the end (`toPixelArt`, auto-quantizing under the key
+  ceiling). Each part is shaded as an implied **sphere** — a fake normal
   `z = √(1 − r²)`, a Lambert term, a dark→light `ramp()`, and **ordered
   dithering** between steps so the gradient reads smooth at low res. Adds rim
-  light, specular, and a **coloured** (not black) outline. Reads much closer to
-  generated / hand-painted pixel art. Used for **The Crystal Cavern**
-  (`crystal-cavern.mjs`). More colours, softer volume, better for gems/ice/
-  metal/translucency — at the cost of the crisp graphic look.
+  light, specular, and a **coloured** (not black) outline. The three reaches
+  that use it each apply a distinct treatment:
+  - **Crystal Cavern** (`crystal-cavern.mjs`): cool glassy gems/ice/stone, high
+    rim light, glossy specular. Faceted and hard.
+  - **Overgrowth** (`overgrowth.mjs`) — *gouache canopy*: a warm sun keys from
+    high-left, shadows are baked **green** (never black), then `dapple()`
+    scatters deterministic **sun-flecks** over the body, `sunrim()` catches the
+    top-left edge, and a soft **mossy** outline wraps it. Warm, organic, leafy.
+  - **Haunted Dungeon** (`haunted.mjs`) — *spectral ink*: near-monochrome cold
+    **ash** ramps at very low ambient, plus exactly **one emissive accent** per
+    creature that rims the silhouette (`rimGlow`), burns in the hollow eyes
+    (`glowEyes`), and marks the light it carries. `mist()` dithers the lower
+    body away into the dark so wraiths trail off. Cold, translucent, floating.
 
 Mixing styles across reaches is intentional: it gives the world visual variety
-as the player descends.
+as the player descends. (The Overgrowth species were repointed off the shared
+Quiet-Crossing art keys onto new `og*` keys so the jungle stops borrowing the
+tutorial's sprites; the Haunted keys are unique to their roster and were
+repainted in place, so a species' evolution keeps the look.)
 
 Everything is plain Node (`.mjs`), zero dependencies (Node's built-in `zlib`
 does the PNG). `out/` is git-ignored — previews and `.art.txt` are never
@@ -221,3 +239,18 @@ reversible transform). Bosses (Regalion, etc.) stay standalone, not evo targets.
   `human()` generator and redrew all nine characters (hero, mentor, chief,
   rival, vendor, soulkeeper, three leaders), each an individual. Establishes the
   "distinct style per area + humans" plan in the table above.
+- **2026-07-30 — reaches 3 & 4 get their own styles (all remaining dungeons).**
+  Added two per-reach treatments on the volumetric engine and redrew both
+  rosters:
+  - **The Overgrowth** (`overgrowth.mjs`, *gouache canopy*): `bogfrog` (Boggle),
+    `leafbeetle` (Chitter), `fernguard` (Frondle), `junglecat` (Thorncat),
+    `verdanox` (Verdanox boss). New `og*` art keys; the five jungle species were
+    repointed off the shared Quiet-Crossing `slime`/`bug`/`plant`/`wolf`/`lion`
+    keys so the jungle no longer looks like the tutorial.
+  - **The Haunted Dungeon** (`haunted.mjs`, *spectral ink*): `cursedArmor`
+    (Cryptguard), `graveCrawler` (Gravemaw), `wraithWisp` (Wispling), `revenant`
+    (Revenance), `lastlight` (Lastlight boss) — repainted in place, so each
+    species' evolution keeps the look.
+  `integrate-reaches.mjs` does the insert-and-repoint + in-place replace in one
+  pass (it quotes palette keys, since dense sprites reach non-identifier keys).
+  Verified in-engine with forced battles in both reaches.
