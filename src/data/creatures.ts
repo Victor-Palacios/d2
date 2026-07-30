@@ -1332,7 +1332,66 @@ export const SPECIES: Record<string, Species> = {
     ],
     blurb: 'The fullest form of Dropletta. What began as a flicker now holds a steady, unafraid light.',
   },
+
+  // === Companions ==========================================================
+  // The three keepers who walk with the Unfinished (see docs/NARRATIVE.md §4).
+  // Not wild, not capturable, not summonable — only added by `game.joinCompanion`
+  // at story beats. They reuse human sprites and carry no evolutions.
+  wren: {
+    id: 'wren',
+    name: 'Wren',
+    attribute: 'mage',
+    element: 'dark',
+    art: 'wrenSprite',
+    height: 1.6,
+    base: { hp: 46, mp: 26, off: 12, def: 13, spd: 14, mag: 17, res: 15 },
+    growth: { ...MAGE_GROWTH, mag: 2.4, res: 2.1 },
+    learnset: [
+      { level: 1, tech: 'gloomLance' },
+      { level: 1, tech: 'mistVeil' },
+      { level: 5, tech: 'hexBolt' },
+      { level: 10, tech: 'nightSpiral' },
+      { level: 15, tech: 'shadowRend' },
+    ],
+    blurb: 'Keeper of the Book of Names. Says every name aloud so the second death cannot have it.',
+  },
+  senaVale: {
+    id: 'senaVale',
+    name: 'Sena Vale',
+    attribute: 'hero',
+    element: 'water',
+    art: 'senaSprite',
+    height: 1.62,
+    base: { hp: 58, mp: 20, off: 16, def: 20, spd: 12, mag: 14, res: 18 },
+    growth: { ...HERO_GROWTH, def: 2.5, res: 2.3 },
+    learnset: [
+      { level: 1, tech: 'frostLance' },
+      { level: 1, tech: 'mistVeil' },
+      { level: 8, tech: 'glacierSpire' },
+      { level: 14, tech: 'prismStorm' },
+    ],
+    blurb: 'She froze her sister to spare her the ending, and learned too late what it cost. Guards what still lives.',
+  },
+  kade: {
+    id: 'kade',
+    name: 'Kade',
+    attribute: 'assassin',
+    element: 'fire',
+    art: 'kadeSprite',
+    height: 1.6,
+    base: { hp: 50, mp: 18, off: 20, def: 13, spd: 21, mag: 10, res: 10 },
+    growth: { ...ASSASSIN_GROWTH, off: 2.6, spd: 2.4 },
+    learnset: [
+      { level: 1, tech: 'emberFang' },
+      { level: 1, tech: 'emberWave' },
+      { level: 12, tech: 'cinderBurst' },
+      { level: 16, tech: 'emberRend' },
+    ],
+    blurb: 'The keeper who is always one reach ahead — outrunning, it turns out, a death of his own.',
+  },
 };
+
+export const COMPANION_IDS = ['wren', 'senaVale', 'kade'] as const;
 
 export function species(id: string): Species {
   const s = SPECIES[id];

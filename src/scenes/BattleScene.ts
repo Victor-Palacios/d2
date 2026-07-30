@@ -26,8 +26,8 @@ import type { DialogueScript } from '../systems/dialogue/script';
 import { say, narrate } from '../systems/dialogue/script';
 import type { DungeonSceneParams } from './DungeonScene';
 
-/** Monsters fielded on screen at once (the rest of the party are reserves). */
-const ACTIVE_PARTY = 3;
+/** Fielded on screen at once: the full party of four (you + three companions). */
+const ACTIVE_PARTY = 4;
 
 /** Chance a Run attempt succeeds (bosses cannot be fled). */
 const FLEE_CHANCE = 0.5;

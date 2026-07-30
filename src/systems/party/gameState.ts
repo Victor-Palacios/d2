@@ -153,13 +153,34 @@ export class GameState {
     return false;
   }
 
-  /** Send a party member to the Sanctuary. Refuses to empty the party. */
+  /** Send a party member to the Sanctuary. Refuses to empty the party or bench a companion. */
   partyToSanctuary(uid: string): boolean {
     if (this.party.length <= 1) return false;
     const i = this.party.findIndex((c) => c.uid === uid);
     if (i < 0) return false;
+    if (this.party[i].companion) return false; // companions are permanent
     this.sanctuary.push(this.party.splice(i, 1)[0]);
     return true;
+  }
+
+  /**
+   * A story companion (Wren / Sena / Kade) joins the party for good. Guarantees
+   * a party slot by benching a non-companion soul to the Sanctuary if the party
+   * is full, so a captured soul can never crowd a companion out. Idempotent by
+   * speciesId, so re-firing a join beat is harmless.
+   */
+  joinCompanion(c: CreatureInstance): void {
+    if ([...this.party, ...this.sanctuary].some((m) => m.companion && m.speciesId === c.speciesId)) return;
+    c.companion = true;
+    while (this.party.length >= this.partyCap) {
+      const idx = this.party.findIndex((m) => !m.companion);
+      if (idx < 0) {
+        this.partyCap++;
+        break;
+      }
+      this.sanctuary.push(this.party.splice(idx, 1)[0]);
+    }
+    this.party.push(c);
   }
 
   /** Bring a Sanctuary member into the party, if there's a free slot. */

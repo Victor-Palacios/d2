@@ -668,6 +668,11 @@ export const HUMANS: Record<string, PixelArt> = {
 // ---------------------------------------------------------------------------
 
 export const CREATURES: Record<string, PixelArt> = {
+  // Companion battlers reuse existing human sprites (placeholder art, per the
+  // project's all-procedural ethos) so they read as people, not monsters.
+  wrenSprite: HUMANS.soulkeeper,
+  senaSprite: HUMANS.leaderBlue,
+  kadeSprite: HUMANS.rival,
   // Fire lizard rookie
   lizard: {
     palette: {

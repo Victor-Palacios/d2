@@ -9,7 +9,7 @@ import { HUMANS } from '../assets/art';
 import { TEAMS, team } from '../data/teams';
 import { game } from '../systems/party/gameState';
 import { saveAuto } from '../systems/party/saveGame';
-import { fullRestore } from '../systems/party/creature';
+import { fullRestore, makeCreature } from '../systems/party/creature';
 import { DialogueBox } from '../ui/DialogueBox';
 import { Menu } from '../ui/Menu';
 import { openShop } from '../ui/ShopScreen';
@@ -139,7 +139,6 @@ export class HubScene extends GameScene {
       { id: 'chief', art: 'chief', char: '1' },
       { id: 'mentor', art: 'mentor', char: '2' },
       { id: 'vendor', art: 'vendor', char: '3' },
-      { id: 'rival', art: 'rival', char: '4' },
       { id: 'soulstore', art: 'soulkeeper', char: '5' },
     ];
 
@@ -147,8 +146,8 @@ export class HubScene extends GameScene {
       if (t.kind !== 'event') return;
       const entry = roster.find((r) => r.char === t.eventId);
       if (!entry) return;
-      // The rival only shows up once you are licensed.
-      if (entry.id === 'rival' && !game.has('crossingCleared')) return;
+      // Halden is at his radio until the midpoint takes him.
+      if (entry.id === 'mentor' && game.has('haldenGone')) return;
       const b = new Billboard(HUMANS[entry.art], `human:${entry.art}`, { height: 1.6 });
       b.bob = 0.025;
       b.object.position.copy(this.grid.worldPos(t.x, t.z));
@@ -185,13 +184,17 @@ export class HubScene extends GameScene {
     if (kind === 'first') {
       await this.dialogue.play([
         ...say(
-          'Chief Marrow',
-          `${game.playerName}. Halden vouched for you, so here is the short version.`,
-          'Carry a lantern into the Quiet Crossing, tend what lingers there, and come back with your light still lit. Then you keep in full.',
+          'Halden',
+          `This is the Everwake, ${game.playerName} — the last lit room before the dark. Souls gather here who cannot yet cross, and keepers tend them until they can.`,
+          'You will not tend them alone. No keeper should — the dark is long, and grief is heavy to carry by yourself.',
         ),
+      ]);
+      await this.wrenJoin();
+      if (this.disposed) return;
+      await this.dialogue.play([
         ...say(
           'Halden',
-          `${game.party[0]?.name ?? 'Your bonded soul'} rides with you — and keep whatever else you meet in your Soularium, so it is not forgotten twice.`,
+          'Start at the Quiet Crossing, the pair of you. Tend what lingers, keep your light lit, and keep whatever you meet in your Soularium so it is not forgotten twice.',
         ),
         ...narrate('The south portal leads out to the reaches.'),
       ]);
@@ -209,6 +212,18 @@ export class HubScene extends GameScene {
       await this.licenseCeremony();
     } else if (kind === 'teamChosen') {
       await this.rivalAndBriefing();
+    }
+
+    // Companions join at story beats — on the next return to the Everwake after
+    // the reach that earns them. Each fires once (guarded by its flag). Placed
+    // before the midpoint so the party is whole when Halden dies.
+    if (game.has('crystalCleared') && !game.has('senaJoined')) {
+      await this.senaJoin();
+      if (this.disposed) return;
+    }
+    if (game.has('hauntedCleared') && !game.has('kadeJoined')) {
+      await this.kadeJoin();
+      if (this.disposed) return;
     }
 
     // The Overgrowth's own aftermath: clearing it unroots the souls Liora Fen
@@ -259,11 +274,68 @@ export class HubScene extends GameScene {
     game.set('licensed');
     toast(this.ctx.ui, '<span class="accent">Keeper\'s lantern acquired</span>', 2600);
     await sleep(1200);
-
-    // The rival is already standing in the room (build() shows them once the
-    // the Quiet Crossing is cleared), so go straight into the next story beat.
-    await this.rivalAndBriefing();
+    await this.dialogue.play([
+      ...say(
+        'Wren',
+        'Two reaches lie open past the Crossing — the Reliquary, all kept light, and the Overgrowth, all patient green. I have a name waiting in each.',
+      ),
+      ...say(
+        'Halden',
+        'Go where the grief is loudest. That is always where you are needed — and, if you are honest with yourself, where you are looking.',
+      ),
+    ]);
   }
+
+  // --- companions: the three keepers who join the journey ------------------
+
+  /** Wren, the Bereaved Witness, joins at the Everwake (opening). */
+  private async wrenJoin() {
+    game.set('wrenJoined');
+    game.joinCompanion(makeCreature('wren', 2));
+    await this.dialogue.play([
+      ...narrate('A woman looks up from a great ledger, every page filled with names in a small, patient hand.'),
+      ...say(
+        'Wren',
+        `So you are the new keeper. Good. I am Wren — I keep the Book of Names, so the ones who cross are not forgotten a second time.`,
+        'You are looking for someone. Everyone who comes here is. I will help you look — and write down everyone we meet on the way. No one leaves this book.',
+      ),
+      ...narrate('Wren closes the ledger, takes up a lantern of her own, and falls in beside you.'),
+    ]);
+    toast(this.ctx.ui, '<span class="accent">Wren joins your party</span>', 2600);
+  }
+
+  /** Sena Vale, the Defier, joins after the Reliquary — nothing left to guard. */
+  private async senaJoin() {
+    game.set('senaJoined');
+    game.joinCompanion(makeCreature('senaVale', 6));
+    await this.dialogue.play([
+      ...narrate('Sena Vale is waiting at the wake-fire when you come back from the Reliquary. The frost has gone out of her hands.'),
+      ...say(
+        'Sena Vale',
+        'I have nothing left to guard. You took that from me — or gave it back. I cannot yet tell which.',
+        'I kept one soul frozen for years and called it love. I would like to learn the other kind of love before I run out of people to try it on.',
+      ),
+      ...say('Sena Vale', 'Let me carry a lantern beside yours until I do.'),
+    ]);
+    toast(this.ctx.ui, '<span class="accent">Sena Vale joins your party</span>', 2600);
+  }
+
+  /** Kade, the rival who was always a reach ahead, joins after the Unremembered. */
+  private async kadeJoin() {
+    game.set('kadeJoined');
+    game.joinCompanion(makeCreature('kade', 10));
+    await this.dialogue.play([
+      ...narrate('Kade is sitting on the Everwake steps — for once not a reach ahead of you. He does not look up straight away.'),
+      ...say(
+        'Kade',
+        'I always ran the next reach first. Fastest keeper they had. You know why? So I never had to stand still long enough to feel any of it.',
+        'The Unremembered caught me standing still. There is a name in there I have been outrunning for years, and it finally said mine back.',
+      ),
+      ...say('Kade', 'I am done running it. Slow me down — I will keep pace with you instead.'),
+    ]);
+    toast(this.ctx.ui, '<span class="accent">Kade joins your party</span>', 2600);
+  }
+
 
   /**
    * The midpoint (design framework §11.4 / docs/NARRATIVE.md): the unanswerable

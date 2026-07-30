@@ -164,10 +164,12 @@ down.").
   let it hold me — and then I let it hold everyone who came after, so I would
   never sit alone."* *Heading:* released in her aftermath side-beat (§11a); she
   crosses.
-- **Kade** — the rival, a second-year keeper. *Goal:* stay ahead of you.
-  **Voice:** cocky, clipped, competitive; casual jabs ("rookie"). Line: *"Try to
-  keep up, rookie."* *Heading:* thin so far (carries some pre-pivot framing) — a
-  candidate for development.
+- **Kade** — a second-year keeper, the Avoider; **joins the party** after the
+  Unremembered (§11b). *Goal:* stay a reach ahead — really, outrun a grief.
+  **Voice:** cocky and clipped while he's running ("Try to keep up, rookie"); when
+  he joins, the edge drops and it goes quiet and honest ("There is a name in
+  there I have been outrunning for years"). Write him fast and flip before the
+  join, steady after.
 - **Chief Marrow** — runs the Everwake. **Voice:** dry, administrative, wry;
   speaks in duties, paperwork, short verdicts ("That is either talent or mercy,
   and I will take either").
@@ -371,11 +373,35 @@ taking, "carried so its bearer never does." Fires once, gated on `jungleCleared`
 → `jungleWakeDone`; it does not touch or trigger the midpoint. Implemented in
 `HubScene.jungleAftermath()`; covered by `tools/smoke/jungle.mjs`.
 
+## 11b. The party of four — companions who join (built)
+
+The journey is walked by a fixed party of **four**: the Unfinished's first
+bonded soul plus **three companion keepers who join at story beats**, each a real
+party battler with a class, an element, and an arc (data in `data/creatures.ts`
+under *Companions*; joins in `HubScene`; `game.joinCompanion`). They are
+permanent — never released, never benched — so captured souls now rest in the
+Soularium/Sanctuary while your *party* is the people who walk with you.
+
+- **Wren** (Bereaved Witness — mage/dark) joins at the Everwake, the first time
+  you arrive. Keeps the Book of Names; "no one leaves this book."
+- **Sena Vale** (Defier — hero/water) joins on your return from **the Reliquary**,
+  the ice gone from her hands: "I kept one soul frozen and called it love. I
+  would like to learn the other kind."
+- **Kade** (the Avoider — assassin/fire) joins after **the Unremembered**, where
+  the death he'd been outrunning finally said his name back. The old cocky rival,
+  now standing still.
+
+The three carry the three relationships to death (Remember / Preserve / Avoid),
+so the party itself argues the dramatic question — and when the midpoint hardens
+each philosophy, it is your own companions turning. Battle now fields all four
+(`ACTIVE_PARTY = 4`). Covered by `tools/smoke/companions.mjs`.
+
 ## 12. Still ahead (tracked, not yet built)
 
 - Act-III: characters borrow from their opponents (§11.5) and a finale
   temptation (§11.6) that exposes what the player valued.
-- Companion arcs for Sena and Wren beyond their single scenes.
+- Deeper companion arcs — banter between reaches, and Sena/Wren/Kade
+  paying off their turns from the midpoint.
 
 > **Closing test (framework closing principle):** every change above was made
 > against one question — *what does this reveal about living that could only be

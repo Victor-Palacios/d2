@@ -31,6 +31,12 @@ export interface CreatureInstance {
   guarding: boolean;
   /** Gentle soul: the battle's Commune action can pacify it (from `Species.communable`). */
   communable?: boolean;
+  /**
+   * A named story companion (Wren / Sena / Kade), not a bonded soul. Permanent
+   * party member: cannot be released or benched to the Sanctuary. Set by
+   * `game.joinCompanion`.
+   */
+  companion?: boolean;
 }
 
 let uidCounter = 0;
