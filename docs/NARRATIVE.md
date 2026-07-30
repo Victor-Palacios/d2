@@ -406,14 +406,37 @@ after the midpoint they gather at Halden's empty chair and point you at the one
 soul still on the road — the one you came looking for. Covered by
 `tools/smoke/companions.mjs`.
 
+## 11c. The Last Lantern — the finale (built)
+
+The fifth reach, and the payoff the whole game points at (`data/lastLantern.ts`,
+id `lantern`). It is **gated on the midpoint** (`requires: 'actTwo'`) — it does
+not even appear on the world map until Halden dies, so it reads as the thing you
+could only reach once you understood the cost. Deepest dark, recommended Lv15.
+
+- **Floors 1–2** are the descent, and carry the companions' **Act-III beats**,
+  each borrowing from the opponent they used to be (§11.5): Wren learns to *close*
+  a name on purpose; Sena *warms* a held flame instead of freezing it, and lets
+  it cross; Kade reaches the dark he always ran from and, for once, stands still.
+- **Floor 3 is the finale (§11.6)** — not a fight but a **choice**. The soul you
+  have searched for since the prologue is here, and the game's dramatic question
+  is finally personal: **keep** them (hold the flame forever, unchanging — the
+  Sena ending) or **let them cross** (open your hands — Halden's last lesson).
+  Handled by `DungeonScene.runFinale`; sets `ending:keep`/`ending:cross`,
+  `gameComplete`, and the reach clear, then a closing card and home to the
+  Everwake. Covered by `tools/smoke/finale.mjs`.
+
+The search thread the banter kept deliberately unpaid now pays off here, and the
+choice is authored by the player, not the game (framework §10.5, §17.3 — neither
+answer is "correct"; both are love, both cost).
+
 ## 12. Still ahead (tracked, not yet built)
 
-- **Act III + the finale** (§11.5–11.6): the lost soul the search has been
-  pointing at since the prologue, and a temptation that exposes what the player
-  valued. This is the one dangling thread by design — every companion beat now
-  aims the player at it.
+- **Act III wardens borrowing from opponents** is written into the finale
+  descent as companion beats; a fuller Act-III could give each *former warden*
+  (Sena, the Unnamed, Liora) an on-screen return.
 - Optional extra texture — companion banter *inside* the crawl (not just the
-  hub), and reactive lines to specific wardens.
+  hub), reactive lines to specific wardens, and a proper epilogue after the
+  ending (currently it returns to the Everwake with `gameComplete` set).
 
 > **Closing test (framework closing principle):** every change above was made
 > against one question — *what does this reveal about living that could only be

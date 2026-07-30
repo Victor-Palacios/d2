@@ -142,14 +142,16 @@ export class WorldMapScene extends GameScene {
         const partyLv = partyLevel();
         const recColor = partyLv >= rec ? '#7bdc8a' : partyLv >= rec - 2 ? '#ffd166' : '#ff6b6b';
         // Name the reach whose clearing unlocks this one, for the locked hint.
+        // The finale is gated on a story flag, not a reach clear, so hint that.
         const gate = REACH_ORDER.map(reach).find((x) => x.onClear.flag === d.requires);
+        const gateNote = d.requires === 'actTwo' ? 'Locked · it opens only after your darkest hour' : null;
         return {
           value: id,
           title: d.name,
           tag,
           tagColor: locked ? '#8a90a6' : d.color,
           disabled: locked,
-          disabledNote: locked ? (gate ? `Locked · clear ${gate.name} first` : 'Locked') : undefined,
+          disabledNote: locked ? (gateNote ?? (gate ? `Locked · clear ${gate.name} first` : 'Locked')) : undefined,
           body:
             `<span style="color:${recColor}">◆ Recommended Lv ${rec}</span>` +
             `<span class="dim"> · your party ~Lv ${partyLv}</span><br><br>` +

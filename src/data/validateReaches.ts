@@ -82,10 +82,11 @@ export function validateFloor(floor: DungeonFloor): string[] {
     if (!chestKeys.has(`${c.x},${c.z}`)) errs.push(`C tile at ${c.x},${c.z} has no chest entry`);
   }
 
-  // non-boss floors need a way down
-  const isBoss = Object.values(floor.events).some((e) => e.kind === 'boss');
+  // non-terminal floors need a way down. Boss and finale floors are terminal —
+  // the boss spawns an exit on defeat, and the finale routes home directly.
+  const isTerminal = Object.values(floor.events).some((e) => e.kind === 'boss' || e.kind === 'finale');
   const hasPortal = rows.some((r) => r.includes('>') || r.includes('<'));
-  if (!isBoss && !hasPortal) errs.push('non-boss floor has no descent/exit portal');
+  if (!isTerminal && !hasPortal) errs.push('non-terminal floor has no descent/exit portal');
 
   // solid decor turns its walkable tile into an obstacle — the flood-fill must
   // treat it as a wall so a prop dropped into a corridor is caught as a soft-lock

@@ -19,7 +19,10 @@ export interface EnemySpec {
 export type FloorEvent =
   | { kind: 'dialogue'; script: DialogueScript; once?: boolean }
   | { kind: 'battle'; enemies: EnemySpec[]; intro?: DialogueScript; outro?: DialogueScript }
-  | { kind: 'boss'; enemies: EnemySpec[]; intro?: DialogueScript; outro?: DialogueScript };
+  | { kind: 'boss'; enemies: EnemySpec[]; intro?: DialogueScript; outro?: DialogueScript }
+  // The finale (The Last Lantern): not a fight but a choice — keep the soul you
+  // came for, or let it cross. Handled by `DungeonScene.runFinale`.
+  | { kind: 'finale'; intro?: DialogueScript };
 
 export interface EncounterEntry {
   weight: number;

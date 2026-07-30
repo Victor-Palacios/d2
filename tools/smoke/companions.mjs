@@ -40,6 +40,8 @@ const advanceUntilJoined = async (id, tries = 90) => {
 };
 
 await page.goto(process.env.URL ?? 'http://localhost:4173/', { waitUntil: 'networkidle' });
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const g = window.hd2dGame, p = g.hd2d.params; p.supersample = 0.4; p.dofEnabled = false; p.bloomEnabled = false; g.hd2d.applyParams(); });
 

@@ -79,6 +79,7 @@ const expect = {
   crystal: ['crystal', 'metal', 'crystal'],
   jungle: ['jungle', 'jungle', 'jungle'],
   haunted: ['crypt', 'cave', 'crypt'],
+  lantern: ['cave', 'crypt', 'cave'],
 };
 for (const [id, exp] of Object.entries(expect)) {
   check(`${id} terrain = ${exp.join('/')}`, JSON.stringify(terrains[id]) === JSON.stringify(exp));
