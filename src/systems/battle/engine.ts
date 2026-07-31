@@ -576,8 +576,8 @@ export class Battle {
       // effectiveness are deliberately NOT narrated — the player reads them off
       // the FX and the fighter cards (impact burst, screen shake, the reaction
       // pip and BROKEN badge), not a line of text.
-      if (critHit) result.log.push('A remembered life strikes true — critical!');
-      if (breakdown.attackerTileBonus) result.log.push(`The ${actor.tile} plate amplifies it!`);
+      if (critHit) result.log.push('A remembered life strikes true');
+      if (breakdown.attackerTileBonus) result.log.push(`The ${actor.tile} plate amplifies your power!`);
       if (breakdown.guarded) result.log.push(`${t.creature.name} guards against it.`);
       if (fainted) result.log.push(`${t.creature.name} is knocked out!`);
 
