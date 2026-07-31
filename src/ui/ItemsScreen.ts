@@ -62,7 +62,7 @@ export async function openItems(parent: HTMLElement): Promise<void> {
     }
     const usable = it.effect
       ? '<span class="ok">Usable now.</span>'
-      : "<span class=\"dim\">Can't be used from here yet.</span>";
+      : '<span class="dim">Can\'t be used from here yet.</span>';
     desc.innerHTML =
       `<strong>${esc(it.name)}</strong> <span class="dim">x${game.itemCount(it.id)}</span>` +
       `<br><span class="dim">${esc(it.desc)}</span><br>${usable}`;

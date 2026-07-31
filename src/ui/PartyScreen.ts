@@ -60,7 +60,7 @@ export function openPartyArrange(parent: HTMLElement): Promise<void> {
     /** Is a Rear-row slot covered by a living ally in the Vanguard cell ahead? */
     const covered = (slot: number): boolean => {
       const c = game.formation[slot];
-      if (!c || c.row !== 1) return false;
+      if (c?.row !== 1) return false;
       const n = fielded();
       for (let i = 0; i < n; i++) {
         if (i === slot) continue;
@@ -87,7 +87,12 @@ export function openPartyArrange(parent: HTMLElement): Promise<void> {
           return;
         }
         const c = game.souls()[slot];
-        const cov = cell.row === 1 ? (covered(slot) ? ' · <span class="ok">Covered</span>' : ' · <span class="danger">Exposed</span>') : '';
+        const cov =
+          cell.row === 1
+            ? covered(slot)
+              ? ' · <span class="ok">Covered</span>'
+              : ' · <span class="danger">Exposed</span>'
+            : '';
         desc.innerHTML =
           `<strong>${esc(c.name)}</strong> <span class="dim">Lv${c.level} · ${ATTRIBUTES[c.attribute].name} · ${ELEMENTS[c.element].name}</span>` +
           `<br><span class="dim">HP</span> ${c.maxHp} &nbsp; <span class="dim">MP</span> ${c.maxMp}` +
@@ -167,7 +172,11 @@ export function openPartyArrange(parent: HTMLElement): Promise<void> {
       showDetail();
     };
 
-    const close = () => { unsub(); remove(root); resolve(); };
+    const close = () => {
+      unsub();
+      remove(root);
+      resolve();
+    };
 
     // --- navigation ---
     const move = (a: 'up' | 'down' | 'left' | 'right') => {
@@ -195,12 +204,18 @@ export function openPartyArrange(parent: HTMLElement): Promise<void> {
       if (!grabbed) {
         if (cursor.zone === 'grid') {
           const slot = game.slotAtCell({ row: cursor.row, col: cursor.col });
-          if (slot < 0) { audio.sfx('cancel'); return; }
+          if (slot < 0) {
+            audio.sfx('cancel');
+            return;
+          }
           grabbed = { zone: 'grid', slot };
           audio.sfx('confirm');
         } else {
           const p = fielded() + cursor.i;
-          if (p >= game.souls().length) { audio.sfx('cancel'); return; }
+          if (p >= game.souls().length) {
+            audio.sfx('cancel');
+            return;
+          }
           grabbed = { zone: 'bench', p };
           audio.sfx('confirm');
         }
@@ -221,7 +236,9 @@ export function openPartyArrange(parent: HTMLElement): Promise<void> {
             cursor = { zone: 'bench', i: p - fielded() };
             grabbed = null;
             audio.sfx('confirm');
-          } else { audio.sfx('cancel'); }
+          } else {
+            audio.sfx('cancel');
+          }
         }
       } else {
         const p = grabbed.p;
@@ -249,12 +266,21 @@ export function openPartyArrange(parent: HTMLElement): Promise<void> {
 
     const unsub = input.onAction((a) => {
       if (a === 'up' || a === 'down' || a === 'left' || a === 'right') {
-        if (move(a)) { audio.sfx('blip'); render(); }
+        if (move(a)) {
+          audio.sfx('blip');
+          render();
+        }
       } else if (a === 'confirm') {
         confirm();
       } else if (a === 'cancel' || a === 'menu' || a === 'start') {
-        if (grabbed) { grabbed = null; audio.sfx('cancel'); render(); }
-        else { audio.sfx('cancel'); close(); }
+        if (grabbed) {
+          grabbed = null;
+          audio.sfx('cancel');
+          render();
+        } else {
+          audio.sfx('cancel');
+          close();
+        }
       }
     });
 

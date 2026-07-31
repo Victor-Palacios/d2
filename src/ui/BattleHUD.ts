@@ -24,12 +24,7 @@ interface FighterCard {
 }
 
 /** What the action menu can resolve to — a real action, "go auto"/"repeat", "boost", or "flee". */
-export type MenuChoice =
-  | BattleAction
-  | { type: 'auto' }
-  | { type: 'repeat' }
-  | { type: 'boost' }
-  | { type: 'flee' };
+export type MenuChoice = BattleAction | { type: 'auto' } | { type: 'repeat' } | { type: 'boost' } | { type: 'flee' };
 
 /** How many announcements stay stacked at once, and how long each one dwells (ms). */
 const LOG_MAX = 4;
