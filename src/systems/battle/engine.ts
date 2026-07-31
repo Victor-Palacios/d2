@@ -572,22 +572,19 @@ export class Battle {
         breakdown,
       });
 
+      // Combo effects (elemental reactions, break-chains) and class
+      // effectiveness are deliberately NOT narrated — the player reads them off
+      // the FX and the fighter cards (impact burst, screen shake, the reaction
+      // pip and BROKEN badge), not a line of text.
       if (critHit) result.log.push('A remembered life strikes true — critical!');
-      if (reactName) result.log.push(`${reactName}! The clashing ${mark}/${tech.element} energies detonate!`);
       if (breakdown.attackerTileBonus) result.log.push(`The ${actor.tile} plate amplifies it!`);
-      if (breakdown.effectiveness === 'super') result.log.push('Class advantage — it hits hard!');
-      else if (breakdown.effectiveness === 'weak') result.log.push('Class disadvantage — it is resisted.');
-      if (chainN >= 2) result.log.push(`${chainN}-chain — the Break bites deeper!`);
-      else if (t.staggered) result.log.push(`${t.creature.name} is broken — it takes extra damage!`);
       if (breakdown.guarded) result.log.push(`${t.creature.name} guards against it.`);
       if (fainted) result.log.push(`${t.creature.name} is knocked out!`);
 
       // A long enough chain banks the attacking side a Boost — coordinating your
-      // turns onto a broken foe pays you back with another action.
-      if (chainN === CHAIN_BOOST_AT) {
-        this.gainBoost(actor.side);
-        result.log.push('The chain holds — a Boost charge is banked!');
-      }
+      // turns onto a broken foe pays you back with another action. The filling
+      // Boost gauge is the only tell; it is not narrated.
+      if (chainN === CHAIN_BOOST_AT) this.gainBoost(actor.side);
 
       // Elemental mark bookkeeping: a reaction consumes the mark (you must
       // re-establish it); otherwise this hit leaves its own element behind.
@@ -607,10 +604,8 @@ export class Battle {
         if (breakdown.attackerTileBonus) gain += STAGGER_PLATE;
         if (reacts) gain += REACTION_STAGGER;
         t.stagger = Math.min(STAGGER_MAX, t.stagger + gain);
-        if (t.stagger >= STAGGER_MAX) {
-          t.staggered = true;
-          result.log.push(`${t.creature.name} is BROKEN!`);
-        }
+        // Break onset shows on the card (BROKEN badge + full stagger meter); no line.
+        if (t.stagger >= STAGGER_MAX) t.staggered = true;
       }
     }
 

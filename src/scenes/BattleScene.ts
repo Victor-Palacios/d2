@@ -388,7 +388,8 @@ export class BattleScene extends GameScene {
     // the new systems arrive slowly across the three areas rather than at once.
     await this.maybeTutorial();
 
-    this.hud.setBanner(this.params.isBoss ? 'Warden Battle' : 'Battle');
+    // No "Battle" title — it says nothing. A boss still names the threat.
+    this.hud.setBanner(this.params.isBoss ? 'Warden' : '');
     this.hud.setLog(
       this.params.isBoss
         ? 'The warden blocks the hallway. There is no way past it.'
@@ -798,16 +799,16 @@ export class BattleScene extends GameScene {
           size: fx.size,
         });
         const s = this.screenPos(worldTop);
+        // Combo / effectiveness are inferred from the FX, not labelled: a
+        // reaction or super-effective hit reads through a fatter impact burst,
+        // more shake and a brighter number — no "Steam!" / "N-chain" text.
         const superEffective = hit.crit || hit.breakdown?.effectiveness === 'super';
-        const big = superEffective || react;
+        const chained = !!hit.chain && hit.chain >= 2;
+        const big = superEffective || react || chained;
         this.impactFlash(worldTop, big ? 0xfff0c0 : fx.color, fx.flash * (big ? 1.5 : 1));
         this.hud.float(s.x, s.y, String(hit.damage), big ? '#ffd166' : '#ff9a8a');
         this.ctx.hd2d.addShake(react ? fx.shake * 1.6 : superEffective ? fx.shake * 1.3 : fx.shake);
-        if (react) {
-          audio.sfx('crit');
-          this.hud.float(s.x, s.y - 30, hit.reaction!, cssColor);
-        } else if (superEffective) audio.sfx('crit');
-        if (hit.chain && hit.chain >= 2) this.hud.float(s.x, s.y - 52, `${hit.chain}-chain`, '#ffd166');
+        if (react || superEffective) audio.sfx('crit');
       }
 
       if (hit.fainted) {

@@ -223,6 +223,8 @@ export class BattleHUD {
 
   setBanner(text: string) {
     this.banner.textContent = text;
+    // An empty banner hides entirely rather than showing a blank pill.
+    this.banner.style.display = text ? '' : 'none';
   }
 
   /**
