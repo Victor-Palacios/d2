@@ -49,7 +49,12 @@ const report = await page.evaluate(() => {
   // auras. Pump the scene's own update() with a fixed 60 Hz dt to exercise the
   // exact emission path deterministically, independent of render frame rate.
   for (let f = 0; f < 180; f++) scene.update(1 / 60, 10 + f / 60);
+  // How many fighters actually took the field. The party only deploys
+  // `game.fieldCap` souls (one per human keeper — just the starter at the game's
+  // very start), so the count is field-cap-dependent, not a fixed 3v3.
+  const fielded = scene.battle.side('party').length + scene.battle.side('enemy').length;
   return {
+    fielded,
     auraCount: auras.size,
     glowLights: [...auras.values()].filter((a) => a.light).length,
     aliveParticles: countAlive(),
@@ -60,9 +65,13 @@ await page.screenshot({ path: `${OUT}/95-auras.png` });
 
 console.log('report:', JSON.stringify(report));
 const pass =
-  report.auraCount === 6 &&        // 3 party + 3 enemies, all first-dungeon species
+  // Every fielded species here (starters + Quiet Crossing echoes + Warden) has a
+  // signature aura, so each fielded fighter must get exactly one — whatever the
+  // field cap fields.
+  report.auraCount === report.fielded &&
+  report.auraCount >= 4 &&         // at least the three enemies + one party soul
   report.glowLights === 1 &&       // only the Warden (regalion) carries a glow
-  report.aliveParticles > 30;      // six auras (+ two torches) actively emitting
+  report.aliveParticles > 20;      // the auras (+ two torches) actively emitting
 console.log('VERDICT:', pass ? 'PASS' : 'FAIL');
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();
