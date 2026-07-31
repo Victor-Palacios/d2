@@ -396,6 +396,15 @@ export class DungeonScene extends GameScene {
   // --- tile interactions ---------------------------------------------------
 
   private async onTileEntered(tile: Tile) {
+    // Reaching the way home is honored even if this very step emptied the
+    // lantern: arriving at the exit supersedes running out of light, so a player
+    // who rolls onto the exit on their last step escapes as intended (the story
+    // continues) instead of being towed back to repeat the dungeon.
+    if (tile.kind === 'exit') {
+      await this.leaveDungeon();
+      return;
+    }
+
     if (game.light <= 0) {
       await this.outOfLight();
       return;
@@ -472,10 +481,8 @@ export class DungeonScene extends GameScene {
       return;
     }
 
-    if (tile.kind === 'exit') {
-      await this.leaveDungeon();
-      return;
-    }
+    // 'exit' is handled above, before the out-of-light tow, so reaching the way
+    // home always counts.
 
     if (tile.kind === 'event') {
       await this.runEvent(tile);
@@ -506,6 +513,16 @@ export class DungeonScene extends GameScene {
     if (game.usedEvents.has(id)) return;
 
     if (ev.kind === 'dialogue') {
+      // A `once` announcement (a tutorial / one-time story beat) must never play
+      // again once seen — not even on a later visit. `usedEvents` can't carry
+      // that: it is wiped by `resetCrawl` every time you leave a dungeon, so it
+      // only suppresses a repeat within a single run. Gate `once` events on a
+      // persistent flag (flags survive `resetCrawl` and are saved) instead.
+      if (ev.once) {
+        const seen = `evseen:${id}`;
+        if (game.has(seen)) return;
+        game.set(seen);
+      }
       game.usedEvents.add(id);
       this.busy = true;
       await this.dialogue.play(ev.script);
