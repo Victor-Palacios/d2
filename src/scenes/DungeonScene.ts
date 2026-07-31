@@ -172,9 +172,9 @@ export class DungeonScene extends GameScene {
         b.object.position.copy(world);
         this.scene.add(b.object);
         this.props.set(key, b);
-      } else if (t.kind === 'fuel') {
+      } else if (t.kind === 'light') {
         if (game.takenPickups.has(`${this.floor.id}:${key}`)) return;
-        const b = new Billboard(PROPS.fuelCan, 'prop:fuelCan', { height: 0.7, emissive: 0.25 });
+        const b = new Billboard(PROPS.lightShard, 'prop:lightShard', { height: 0.7, emissive: 0.6 });
         b.bob = 0.06;
         b.object.position.copy(world);
         this.scene.add(b.object);
@@ -410,7 +410,7 @@ export class DungeonScene extends GameScene {
       return;
     }
 
-    if (tile.kind === 'fuel') {
+    if (tile.kind === 'light') {
       const id = `${this.floor.id}:${key}`;
       if (!game.takenPickups.has(id)) {
         game.takenPickups.add(id);
@@ -582,7 +582,7 @@ export class DungeonScene extends GameScene {
     );
     game.resetCrawl();
     game.crawl.initialized = false;
-    await this.ctx.go('hub', { arrival: 'towed' });
+    await this.ctx.go('hub', { arrival: 'guttered' });
   }
 
   // --- frame ---------------------------------------------------------------

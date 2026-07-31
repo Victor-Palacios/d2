@@ -14,7 +14,7 @@ import type { AttributeId } from '../../data/elements';
  * - **Suspend save** — written on demand *inside* a dungeon so you can stop
  *   mid-crawl, and **deleted the moment it is loaded**. It is a bookmark, not a
  *   checkpoint: you cannot reload it to retry a fight that went badly, which
- *   keeps the run-out-of-EP tow penalty meaningful.
+ *   keeps the guttered-lantern return penalty meaningful.
  *
  * `GameState` is plain data by design, so this is a straight field copy. The
  * only wrinkles are the four `Set`s (stored as arrays) and a `version` guard so

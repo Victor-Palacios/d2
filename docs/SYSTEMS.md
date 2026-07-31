@@ -1,6 +1,6 @@
 # Battle systems — how the numbers actually work
 
-A worked explainer of the combat model: attributes, elements, damage, guard, EP
+A worked explainer of the combat model: attributes, elements, damage, guard, LP
 and rewards, with real numbers pulled from real creatures. It exists so you can
 tune the game without reverse-engineering the formula first.
 
@@ -15,7 +15,7 @@ tune the game without reverse-engineering the formula first.
 | Creature base stats and growth | `src/data/creatures.ts` |
 | Levelled stats (`base + growth·(level-1)`) | `src/systems/party/creature.ts` |
 | Battle rewards, post-fight recovery | `src/scenes/BattleScene.ts` |
-| EP drain, refuel, tow | `src/scenes/DungeonScene.ts`, `src/data/quietCrossing.ts` |
+| LP drain, refill, guttered return | `src/scenes/DungeonScene.ts`, `src/data/quietCrossing.ts` |
 
 Every constant named below is a balance knob. Change it and the game changes —
 nothing here is hard-coded twice.
@@ -314,20 +314,21 @@ evolve is lossless.
 
 ---
 
-## 8. EP (vehicle fuel) — the crawl's real cost
+## 8. LP (lantern-light) — the crawl's real cost
 
-While crawling, EP is the resource that makes the dungeon a place you can lose:
+While crawling, LP (Light Power — the lantern's charge) is the resource that
+makes the dungeon a place you can lose:
 
 | Thing | Value | Where |
 |---|---|---|
-| Starting / max EP | **120** | `QUIET_CROSSING.startingFuel` |
-| Drain per step | **1** | `FUEL_PER_STEP`, `DungeonScene` |
-| Fuel canister pickup | **+40** | `DungeonScene` (crawl `$` tiles) |
-| Shop Fuel Canister item | **+40 EP** | `data/items.ts` |
-| Hit 0 EP | **towed back to The Everwake** | `DungeonScene` |
+| Starting / max LP | **120** | `QUIET_CROSSING.startingLight` |
+| Drain per step | **1** | `LIGHT_PER_STEP`, `DungeonScene` |
+| Light shard pickup | **+40** | `DungeonScene` (crawl `$` tiles) |
+| Shop Light Shard item | **+40 LP** | `data/items.ts` |
+| Hit 0 LP | **lantern gutters, returned to The Everwake** | `DungeonScene` |
 
-EP is why suspend-saves are consumed on load (see `HANDOFF.md` / README): if you
-could reload a suspend save, running out of EP would cost nothing. Autosave, by
+LP is why suspend-saves are consumed on load (see `HANDOFF.md` / README): if you
+could reload a suspend save, running out of light would cost nothing. Autosave, by
 contrast, only ever happens in town / on the reach map — safe ground — so it
 never rescues you from a bad crawl.
 
@@ -393,7 +394,7 @@ every foe and the fight is won.
 | Make Guard stronger | `GUARD_REDUCTION` (lower = tankier) / `GUARD_MP_RESTORE` |
 | Reduce fight randomness | `VARIANCE` in `formula.ts`, and the `0.88..1.12` band in `engine.ts` |
 | Change how rich the player gets | the `11` / `40` per-level reward in `BattleScene.ts` |
-| Make the crawl more punishing | `FUEL_PER_STEP` up, or `startingFuel` down |
+| Make the crawl more punishing | `LIGHT_PER_STEP` up, or `startingLight` down |
 | Tune elemental reactions | `REACTION_MULT` / `REACTION_STAGGER` / `REACTION_TTL_ROUNDS` in `engine.ts` |
 | Tune break-chains | `CHAIN_STEP` / `CHAIN_DAMAGE_MAX` / `CHAIN_BOOST_AT` in `engine.ts` |
 | Tune Commune length | `COMMUNE_GAIN` / `COMMUNE_VARIANCE` in `engine.ts`; `communable` in `creatures.ts` |

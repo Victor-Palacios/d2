@@ -36,9 +36,7 @@ export interface Technique {
   mpCost: number;
   power: number;
   element: ElementId;
-  /** Legacy flag, equivalent to `shape: 'all'`. */
-  aoe?: boolean;
-  /** Area shape; defaults to `single` (or `all` when `aoe` is set). */
+  /** Area shape; defaults to `single`. */
   shape?: TechniqueShape;
   /**
    * Melee (a close-in physical blow) vs ranged/Ether (the default). Melee gets
@@ -51,9 +49,9 @@ export interface Technique {
   desc: string;
 }
 
-/** Resolves a technique's effective shape, honouring the legacy `aoe` flag. */
+/** Resolves a technique's effective shape (defaults to a single target). */
 export function techShape(t: Technique): TechniqueShape {
-  return t.shape ?? (t.aoe ? 'all' : 'single');
+  return t.shape ?? 'single';
 }
 
 /** Resolves a technique's damage channel (heals always ride Magick). */
@@ -93,7 +91,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 14,
     power: 34,
     element: 'fire',
-    aoe: true,
+    shape: 'all',
     desc: 'Scatters embers across every foe.',
   },
   emberWave: {
@@ -192,7 +190,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 16,
     power: 36,
     element: 'dark',
-    aoe: true,
+    shape: 'all',
     desc: 'A widening spiral of darkness.',
   },
   gustWing: {
@@ -233,7 +231,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 16,
     power: 37,
     element: 'water',
-    aoe: true,
+    shape: 'all',
     desc: 'Refracted light shreds the whole formation.',
   },
   quakeCore: {
@@ -276,7 +274,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 17,
     power: 38,
     element: 'dark',
-    aoe: true,
+    shape: 'all',
     desc: 'A mourning wail that rolls over every foe.',
   },
 
@@ -289,7 +287,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 18,
     power: 40,
     element: 'fire',
-    aoe: true,
+    shape: 'all',
     desc: 'A roar that scorches the whole arena.',
   },
   sunClaw: {
@@ -413,7 +411,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 22,
     power: 42,
     element: 'fire',
-    aoe: true,
+    shape: 'all',
     desc: 'Detonates its own heat-core across the whole formation.',
   },
   maelstrom: {
@@ -424,7 +422,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 22,
     power: 42,
     element: 'water',
-    aoe: true,
+    shape: 'all',
     desc: 'A drowning spiral that pulls in every foe.',
   },
   voidNova: {
@@ -435,7 +433,7 @@ export const TECHNIQUES: Record<string, Technique> = {
     mpCost: 22,
     power: 42,
     element: 'dark',
-    aoe: true,
+    shape: 'all',
     desc: 'A silent expanding null that unwrites everything it touches.',
   },
   wildgrowth: {

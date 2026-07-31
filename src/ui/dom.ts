@@ -25,7 +25,7 @@ export function esc(s: string): string {
 }
 
 /** `<i>` fill element for a bar; returns a setter for 0..1. */
-export function bar(parent: HTMLElement, kind: 'hp' | 'mp' | 'ep'): (pct: number) => void {
+export function bar(parent: HTMLElement, kind: 'hp' | 'mp'): (pct: number) => void {
   const wrap = el('div', `bar ${kind}`);
   const fill = el('i');
   wrap.appendChild(fill);
@@ -42,11 +42,7 @@ export function bar(parent: HTMLElement, kind: 'hp' | 'mp' | 'ep'): (pct: number
  * The label sits beside the bar rather than above it so a fighter card reads in
  * two lines instead of five.
  */
-export function meter(
-  parent: HTMLElement,
-  kind: 'hp' | 'mp' | 'ep',
-  label: string,
-): (cur: number, max: number) => void {
+export function meter(parent: HTMLElement, kind: 'hp' | 'mp', label: string): (cur: number, max: number) => void {
   const row = el('div', `meter ${kind}`);
   row.appendChild(el('span', 'meter-label', label));
   const wrap = el('div', `bar ${kind}`);

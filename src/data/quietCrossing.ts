@@ -96,7 +96,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '11,2': { credits: 180, item: 'repairChip', note: 'Someone abandoned a supply crate up here.' },
+      '11,2': { credits: 180, item: 'mendingBalm', note: 'Someone abandoned a supply crate up here.' },
     },
     encounterRate: 0,
     encounters: [],

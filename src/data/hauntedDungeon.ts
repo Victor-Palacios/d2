@@ -92,7 +92,7 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '10,2': { credits: 260, item: 'repairChip', note: 'A traveller who did not leave. Their pack remains.' },
+      '10,2': { credits: 260, item: 'mendingBalm', note: 'A traveller who did not leave. Their pack remains.' },
     },
     encounterRate: 0.07,
     encounters: [

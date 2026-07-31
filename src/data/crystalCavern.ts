@@ -91,7 +91,7 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '15,2': { credits: 220, item: 'repairChip', note: 'A prospector left a crate wedged in the ice.' },
+      '15,2': { credits: 220, item: 'mendingBalm', note: 'A prospector left a crate wedged in the ice.' },
     },
     encounterRate: 0.06,
     encounters: [
