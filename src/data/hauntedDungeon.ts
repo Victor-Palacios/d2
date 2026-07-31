@@ -77,17 +77,17 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'wispling', level: 10 },
-          { species: 'gravemaw', level: 10 },
+          { species: 'wispling', level: 7 },
+          { species: 'gravemaw', level: 7 },
         ],
         intro: narrate('Something cold passes through you. It leaves a shape behind.'),
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'gravemaw', level: 11 },
-          { species: 'wispling', level: 10 },
-          { species: 'cryptguard', level: 10 },
+          { species: 'gravemaw', level: 7 },
+          { species: 'wispling', level: 7 },
+          { species: 'cryptguard', level: 7 },
         ],
       },
     },
@@ -96,17 +96,17 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.07,
     encounters: [
-      { weight: 1, enemies: [{ species: 'lastlight', level: 11 }] }, // rare: a soul about to move on
-      { weight: 3, enemies: [{ species: 'wispling', level: 10 }] },
-      { weight: 2, enemies: [{ species: 'gravemaw', level: 11 }] },
+      { weight: 1, enemies: [{ species: 'lastlight', level: 7 }] }, // rare: a soul about to move on
+      { weight: 3, enemies: [{ species: 'wispling', level: 7 }] },
+      { weight: 2, enemies: [{ species: 'gravemaw', level: 7 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'wispling', level: 10 },
-          { species: 'gravemaw', level: 10 },
+          { species: 'wispling', level: 7 },
+          { species: 'gravemaw', level: 7 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'cryptguard', level: 11 }] },
+      { weight: 1, enemies: [{ species: 'cryptguard', level: 7 }] },
     ],
   },
 
@@ -139,16 +139,16 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'cryptguard', level: 12 },
-          { species: 'wispling', level: 11 },
+          { species: 'cryptguard', level: 7 },
+          { species: 'wispling', level: 7 },
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'gravemaw', level: 12 },
-          { species: 'cryptguard', level: 12 },
-          { species: 'wispling', level: 11 },
+          { species: 'gravemaw', level: 7 },
+          { species: 'cryptguard', level: 7 },
+          { species: 'wispling', level: 7 },
         ],
         intro: narrate('The nave breathes out. The dark at the far end is thicker than dark should be.'),
       },
@@ -158,21 +158,21 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.08,
     encounters: [
-      { weight: 1, enemies: [{ species: 'lastlight', level: 11 }] }, // rare: a soul about to move on
-      { weight: 3, enemies: [{ species: 'gravemaw', level: 12 }] },
-      { weight: 3, enemies: [{ species: 'wispling', level: 11 }] },
+      { weight: 1, enemies: [{ species: 'lastlight', level: 7 }] }, // rare: a soul about to move on
+      { weight: 3, enemies: [{ species: 'gravemaw', level: 7 }] },
+      { weight: 3, enemies: [{ species: 'wispling', level: 7 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'cryptguard', level: 12 },
-          { species: 'wispling', level: 11 },
+          { species: 'cryptguard', level: 7 },
+          { species: 'wispling', level: 7 },
         ],
       },
       {
         weight: 1,
         enemies: [
-          { species: 'cryptguard', level: 13 },
-          { species: 'gravemaw', level: 12 },
+          { species: 'cryptguard', level: 7 },
+          { species: 'gravemaw', level: 7 },
         ],
       },
     ],
@@ -205,7 +205,7 @@ const FLOORS: DungeonFloor[] = [
     events: {
       '1': {
         kind: 'boss',
-        enemies: [{ species: 'revenance', level: 14 }],
+        enemies: [{ species: 'revenance', level: 7 }],
         intro: [
           ...narrate(
             'The fog gathers into a shape that used to be a person. It has forgotten which one — no one has said its name in so long that even it cannot remember.',
@@ -227,12 +227,12 @@ const FLOORS: DungeonFloor[] = [
     chests: {},
     encounterRate: 0.04,
     encounters: [
-      { weight: 2, enemies: [{ species: 'wispling', level: 12 }] },
+      { weight: 2, enemies: [{ species: 'wispling', level: 7 }] },
       {
         weight: 1,
         enemies: [
-          { species: 'cryptguard', level: 13 },
-          { species: 'gravemaw', level: 12 },
+          { species: 'cryptguard', level: 7 },
+          { species: 'gravemaw', level: 7 },
         ],
       },
     ],
@@ -245,7 +245,7 @@ export const HAUNTED_DUNGEON: Reach = {
   blurb:
     "A dimming reach where the nearly-forgotten run their last errands, thinner each time. Say a soul's name and you save it from the second, final death.",
   color: '#b48cff',
-  recommendedLevel: 10,
+  recommendedLevel: 7,
   floors: FLOORS,
   startingLight: 150,
   music: 'haunted',

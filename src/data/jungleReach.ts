@@ -79,8 +79,8 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'frondle', level: 6 },
-          { species: 'boggle', level: 6 },
+          { species: 'frondle', level: 5 },
+          { species: 'boggle', level: 5 },
         ],
         intro: narrate(
           'The green closes over the path behind you. Something shifts in the leaves — and turns to face you.',
@@ -89,8 +89,8 @@ const FLOORS: DungeonFloor[] = [
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'thorncat', level: 7 },
-          { species: 'chitter', level: 6 },
+          { species: 'thorncat', level: 5 },
+          { species: 'chitter', level: 5 },
         ],
       },
     },
@@ -99,16 +99,16 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'chitter', level: 6 }] },
-      { weight: 3, enemies: [{ species: 'frondle', level: 6 }] },
+      { weight: 3, enemies: [{ species: 'chitter', level: 5 }] },
+      { weight: 3, enemies: [{ species: 'frondle', level: 5 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'boggle', level: 6 },
-          { species: 'chitter', level: 6 },
+          { species: 'boggle', level: 5 },
+          { species: 'chitter', level: 5 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'thorncat', level: 7 }] },
+      { weight: 1, enemies: [{ species: 'thorncat', level: 5 }] },
     ],
   },
 
@@ -142,16 +142,16 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'thorncat', level: 8 },
-          { species: 'frondle', level: 7 },
+          { species: 'thorncat', level: 5 },
+          { species: 'frondle', level: 5 },
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'boggle', level: 8 },
-          { species: 'thorncat', level: 8 },
-          { species: 'frondle', level: 7 },
+          { species: 'boggle', level: 5 },
+          { species: 'thorncat', level: 5 },
+          { species: 'frondle', level: 5 },
         ],
         intro: narrate('The hollow breathes out a wet green warmth. Whatever keeps this place is close now.'),
       },
@@ -161,20 +161,20 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.08,
     encounters: [
-      { weight: 3, enemies: [{ species: 'thorncat', level: 8 }] },
-      { weight: 3, enemies: [{ species: 'frondle', level: 7 }] },
+      { weight: 3, enemies: [{ species: 'thorncat', level: 5 }] },
+      { weight: 3, enemies: [{ species: 'frondle', level: 5 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'boggle', level: 8 },
-          { species: 'frondle', level: 7 },
+          { species: 'boggle', level: 5 },
+          { species: 'frondle', level: 5 },
         ],
       },
       {
         weight: 1,
         enemies: [
-          { species: 'thorncat', level: 8 },
-          { species: 'chitter', level: 8 },
+          { species: 'thorncat', level: 5 },
+          { species: 'chitter', level: 5 },
         ],
       },
     ],
@@ -209,7 +209,7 @@ const FLOORS: DungeonFloor[] = [
     events: {
       '1': {
         kind: 'boss',
-        enemies: [{ species: 'verdanox', level: 9 }],
+        enemies: [{ species: 'verdanox', level: 5 }],
         intro: [
           ...narrate(
             'At the heart of the wood, a woman sits half-grown into a great mossed trunk, roots where her legs were. She is smiling, and she has been for a very long time.',
@@ -231,12 +231,12 @@ const FLOORS: DungeonFloor[] = [
     chests: {},
     encounterRate: 0.04,
     encounters: [
-      { weight: 2, enemies: [{ species: 'frondle', level: 8 }] },
+      { weight: 2, enemies: [{ species: 'frondle', level: 5 }] },
       {
         weight: 1,
         enemies: [
-          { species: 'thorncat', level: 9 },
-          { species: 'boggle', level: 8 },
+          { species: 'thorncat', level: 5 },
+          { species: 'boggle', level: 5 },
         ],
       },
     ],
@@ -249,7 +249,7 @@ export const JUNGLE_REACH: Reach = {
   blurb:
     'A green reach that never gives anything back — souls who stopped to rest, and were quietly rooted where they sat. Something at its heart keeps them company.',
   color: '#5fd66a',
-  recommendedLevel: 7,
+  recommendedLevel: 5,
   floors: FLOORS,
   startingLight: 135,
   music: 'jungle',
