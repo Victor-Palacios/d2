@@ -30,6 +30,10 @@ interface Note {
   dur: number;
   type?: OscillatorType;
   gain?: number;
+  /** Optional target frequency — the tone glides freq → f1 over `dur`. */
+  f1?: number;
+  /** Glide shape when `f1` is set (default exponential). */
+  glide?: 'lin' | 'exp';
 }
 
 const SFX: Record<SfxName, Note[]> = {
@@ -43,7 +47,15 @@ const SFX: Record<SfxName, Note[]> = {
     { freq: 260, time: 0.05, dur: 0.09, type: 'square', gain: 0.12 },
   ],
   step: [{ freq: 150, time: 0, dur: 0.05, type: 'triangle', gain: 0.09 }],
-  bump: [{ freq: 90, time: 0, dur: 0.1, type: 'sawtooth', gain: 0.12 }],
+  // A dull wall-thump, not a buzz: a low sine body that drops in pitch as it
+  // hits (energy dumping into the wall), a triangle sub for weight, and a very
+  // short soft transient for the surface knock. Sine/triangle only — a sawtooth
+  // here reads as electric.
+  bump: [
+    { freq: 200, f1: 58, time: 0, dur: 0.12, type: 'sine', gain: 0.26, glide: 'exp' },
+    { freq: 120, f1: 46, time: 0, dur: 0.15, type: 'triangle', gain: 0.14, glide: 'exp' },
+    { freq: 330, f1: 150, time: 0, dur: 0.035, type: 'triangle', gain: 0.08, glide: 'exp' },
+  ],
   chest: [
     { freq: 700, time: 0, dur: 0.07, type: 'square', gain: 0.12 },
     { freq: 880, time: 0.07, dur: 0.07, type: 'square', gain: 0.12 },
@@ -260,6 +272,10 @@ class AudioEngine {
     const g = this.ctx.createGain();
     osc.type = note.type ?? 'square';
     osc.frequency.setValueAtTime(note.freq, when);
+    if (note.f1 !== undefined && note.f1 !== note.freq) {
+      if ((note.glide ?? 'exp') === 'exp') osc.frequency.exponentialRampToValueAtTime(Math.max(1, note.f1), when + note.dur);
+      else osc.frequency.linearRampToValueAtTime(note.f1, when + note.dur);
+    }
     const peak = note.gain ?? 0.12;
     g.gain.setValueAtTime(0.0001, when);
     g.gain.exponentialRampToValueAtTime(peak, when + 0.008);
