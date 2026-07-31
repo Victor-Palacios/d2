@@ -19,6 +19,7 @@ import { DungeonHUD } from '../ui/DungeonHUD';
 import { DialogueBox } from '../ui/DialogueBox';
 import { toast } from '../ui/Toast';
 import { Menu } from '../ui/Menu';
+import type { MenuItem } from '../ui/Menu';
 import { openSoulMenu } from '../ui/SoulMenu';
 import { el, remove } from '../ui/dom';
 import { saveSuspend } from '../systems/party/saveGame';
@@ -260,19 +261,25 @@ export class DungeonScene extends GameScene {
     const host = el('div', 'panel');
     host.id = 'pause-menu';
     host.appendChild(el('h2', undefined, 'Paused'));
-    const menu = new Menu(
-      host,
-      [
-        { value: 'resume', label: 'Resume crawl' },
-        { value: 'suspend', label: 'Suspend & quit', note: 'temp' },
-      ],
-      { cancellable: true },
-    );
+    const embers = game.itemCount('towBeacon');
+    const options: MenuItem[] = [{ value: 'resume', label: 'Resume crawl' }];
+    if (embers > 0) {
+      // The Homing Ember bails you out of a crawl straight to the safety of
+      // The Everwake — one is spent per use. Only offered when you hold one.
+      options.push({ value: 'ember', label: `Use ${ITEMS.towBeacon.name}`, note: `x${embers}` });
+    }
+    options.push({ value: 'suspend', label: 'Suspend & quit', note: 'temp' });
+    const menu = new Menu(host, options, { cancellable: true });
     this.ctx.ui.appendChild(host);
 
     const choice = await menu.open();
     menu.destroy();
     host.remove();
+
+    if (choice === 'ember') {
+      await this.useHomingEmber();
+      return;
+    }
 
     if (choice === 'suspend') {
       this.leaving = true;
@@ -673,6 +680,27 @@ export class DungeonScene extends GameScene {
       fullRestore(game.party);
       await this.ctx.go('hub');
     }
+  }
+
+  /**
+   * The Homing Ember (an escape item): flare it mid-crawl to fold straight back
+   * to the safety of The Everwake. Spends one Ember and drops the reach — you do
+   * NOT clear it, so re-entering starts the crawl fresh — but your haul (obols,
+   * items, captured souls) is kept. Unlike a guttered lantern there's no penalty
+   * beyond the Ember itself.
+   */
+  private async useHomingEmber() {
+    if (this.leaving) return;
+    this.leaving = true;
+    game.takeItem('towBeacon');
+    audio.sfx('portal');
+    this.ctx.hd2d.addShake(0.2);
+    toast(this.ctx.ui, '<span class="accent">The Homing Ember flares — the dark folds you home.</span>', 2400);
+    await sleep(900);
+    // resetCrawl refills light and rewinds to the first floor without touching
+    // your haul, so the reach is simply un-entered rather than cleared.
+    game.resetCrawl();
+    await this.ctx.go('hub');
   }
 
   private async outOfLight() {

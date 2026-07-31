@@ -63,7 +63,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       '#......#........#',
       '#......#...$....#',
       '#......#....#...#',
-      '#......#.....>..#',
+      '#..C...#.....>..#',
       '#......#........#',
       '#################',
     ],
@@ -97,6 +97,10 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
     },
     chests: {
       '11,2': { obols: 180, item: 'repairChip', note: 'Someone abandoned a supply crate up here.' },
+      '3,10': {
+        item: 'towBeacon',
+        note: "A keeper's kit, left by the door: a Homing Ember to burn if the dark ever turns you back.",
+      },
     },
     encounterRate: 0,
     encounters: [],
@@ -122,7 +126,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       '#.......2.......#',
       '#..W.F.N.M.D....#',
       '#...............#',
-      '#......>.....$..#',
+      '#.C....>.....$..#',
       '#...............#',
       '#################',
     ],
@@ -154,6 +158,10 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
     },
     chests: {
       '12,2': { obols: 240, note: 'A cracked cache, still holding obols.' },
+      '2,10': {
+        item: 'towBeacon',
+        note: 'A second Homing Ember, cold in its cradle. Two is a habit worth keeping down here.',
+      },
     },
     encounterRate: 0.06,
     encounters: [
