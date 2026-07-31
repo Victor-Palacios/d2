@@ -15,13 +15,13 @@ cookbook so a new voice reads as *that* creature and not a beep.
 |---|---|
 | The `CryLayer` format + the `CRIES` registry (one entry per species) | `src/engine/Audio.ts` |
 | The synth (`voiceLayer`) and the public `cry()` / `hasCry()` | `src/engine/Audio.ts` |
-| Battle hooks (opening roll-call + per-attack call) | `src/scenes/BattleScene.ts` |
+| Battle hooks (opening cry + per-attack call) | `src/scenes/BattleScene.ts` |
 | The smoke test | `tools/smoke/cries.mjs` |
 
 A cry is keyed by **species id** (the `id` in `src/data/creatures.ts`). A
 species with no `CRIES` entry simply stays silent — `cry()` is a no-op for it,
 so callers fire it unconditionally and `hasCry()` gates anything that should
-only happen for a monster that *has* a voice (e.g. the roll-call).
+only happen for a monster that *has* a voice (e.g. the opening cry).
 
 ## The data format
 
@@ -55,11 +55,11 @@ faint high sine for shimmer; stagger `time` so syllables land in sequence.
 
 Both live in `src/scenes/BattleScene.ts`:
 
-1. **Opening roll-call** — `cryEnemies()` is called once the fight's banner is
-   up. Each *distinct* enemy species that has a voice cries in turn, staggered
-   ~260 ms so a mixed pack reads as several creatures rather than one blur. The
-   music is **ducked** (`audio.duck()`) under the roll-call so the voices read
-   clearly, then swells back as the fight begins.
+1. **Opening cry** — `cryRandomEnemy()` fires as the **first round begins**
+   (not during the pre-battle banner). A single, randomly chosen foe that has a
+   voice cries once — just one creature sound to open the fight, not a roll-call
+   of every species. The music is **ducked** (`audio.duck()`) under it so the
+   cry reads clearly, then swells back.
 2. **On attack** — in `animateTurn()`, the acting monster calls out as it
    *charges*: the cry **leads the lunge**, a beat (~0.16 s) before the impact
    sfx lands. It fires only on an **offensive** move

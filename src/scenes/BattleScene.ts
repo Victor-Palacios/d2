@@ -392,14 +392,16 @@ export class BattleScene extends GameScene {
         ? 'The warden blocks the hallway. There is no way past it.'
         : 'An echo turns to face you. Keep your lantern lit.',
     );
-    // The foes announce themselves — each species with a voice cries in turn.
-    this.cryEnemies();
     await sleep(900);
 
     while (this.battle.outcome === 'ongoing' && !this.finished && !this.fled) {
       this.battle.beginRound();
       // No per-round "Round N" banner — the title set above stays put. A field
       // pulse is the only thing worth announcing, and it goes to the log.
+      // As the first round opens, a single foe snarls — one random enemy voice,
+      // so the fight *begins* with a creature sound rather than a pre-battle
+      // roll-call announcing every species before combat starts.
+      if (this.battle.round === 1) this.cryRandomEnemy();
       if (this.battle.fieldPulse !== 'calm') {
         this.hud.setLog(PULSE_TEXT[this.battle.fieldPulse]);
         await sleep(700);
@@ -675,22 +677,17 @@ export class BattleScene extends GameScene {
   }
 
   /**
-   * The opening roll-call: each distinct enemy species with a voice cries once,
-   * staggered so a mixed pack reads as several creatures rather than one blur.
+   * One foe snarls as combat starts: a single, randomly chosen enemy that has a
+   * voice cries once. Deliberately not a roll-call of every species — just one
+   * creature sound to open the fight. No-op if none of the foes has a cry.
    */
-  private cryEnemies() {
-    const seen = new Set<string>();
-    let i = 0;
-    for (const b of this.battle.side('enemy')) {
-      const id = b.creature.speciesId;
-      if (seen.has(id) || !audio.hasCry(id)) continue;
-      seen.add(id);
-      window.setTimeout(() => audio.cry(id), i * 260);
-      i++;
-    }
-    // Dip the music under the roll-call so each foe's voice reads clearly, then
-    // let it swell back as the fight begins.
-    if (i > 0) audio.duck(i * 0.26 + 0.7);
+  private cryRandomEnemy() {
+    const voiced = this.battle.side('enemy').filter((b) => audio.hasCry(b.creature.speciesId));
+    if (!voiced.length) return;
+    const pick = voiced[Math.floor(Math.random() * voiced.length)];
+    // Dip the music briefly so the cry reads clearly over the battle theme.
+    audio.duck(1);
+    audio.cry(pick.creature.speciesId);
   }
 
   private async animateTurn(actor: Battler, result: TurnResult) {
