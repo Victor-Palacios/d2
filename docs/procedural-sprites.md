@@ -42,18 +42,20 @@ The world gets visual variety by giving **each reach its own sprite style**, and
 | Reach 3 · The Overgrowth | gouache canopy — warm sun, green shadows, dappled sunflecks, mossy outline | `paint.mjs` → `overgrowth.mjs` |
 | Reach 4 · Haunted Dungeon | spectral ink — monochrome ash, one emissive accent, hollow eyes, dissolve-to-mist | `paint.mjs` → `haunted.mjs` |
 | Reach 5 · The Last Lantern | reliquary glass — warm **internal** core glow, stained-glass leaded panels, bloom halo, *held* (no dissolve) | `paint.mjs` → `last-lantern.mjs` |
-| **Humans (all NPCs + hero)** | cel-shaded "storybook" people | `humans.mjs` |
+| **Humans (all NPCs + hero)** | 16-bit JRPG protagonist | `humans.mjs` |
 
 All five reaches now have a distinct look, so a single glance says where you are.
 
-**Human style** (`humans.mjs`): taller, properly-proportioned characters (~30×48,
-vs the old 14×18 blobs), clean lineart, and **warm-cool cel shading** — a warm
-key light from screen-left (the lantern motif) with a cool shadow to the right,
-in flat bands (no dithering). Each character is an individual: a muted wardrobe
-with **one saturated accent** colour, a distinct hairstyle (short / long / spiky
-/ cap / hood), and an expression (neutral / smile / stern). Deliberately unlike
-the creatures — people should not read as monsters. Parametric `human(opts)`
-builds the whole cast; `integrate-humans.mjs` writes them into `art.ts`.
+**Human style** (`humans.mjs`): a **16-bit JRPG protagonist** look (owner's pick
+from a five-way variant test), full colour with a clean near-black outline,
+three-band cel shading (warm key from screen-left), and heroic proportions
+(~46×66). Each character is an individual via `skin`/`hair`/`coat`/`accent`
+(a gold scarf + placket) / `pants`, a hairstyle (short / long / spiky / cap /
+hood), and an expression (neutral / smile / stern); the **hero** alone raises a
+lit **lantern**, the game's motif, so the protagonist reads at a glance.
+Deliberately unlike the creatures — people should not read as monsters.
+Parametric `human(opts)` builds the whole cast; `integrate-humans.mjs`
+regenerates the `HUMANS` block in `art.ts`.
 
 ## Creature rendering styles
 
@@ -279,3 +281,11 @@ reversible transform). Bosses (Regalion, etc.) stay standalone, not evo targets.
   by `LANTERN_FAC`); `lastLantern.ts` encounters were repointed off the borrowed
   gloomote/dropletta/shardling/revenance/glaciark onto the new roster. Verified
   in-engine.
+- **2026-07-31 — humans restyled to 16-bit JRPG (owner's pick).** The owner
+  reviewed five hero variants (Game Boy / 16-bit JRPG / HD-2D painterly /
+  storybook gouache / flat vector) and chose the **16-bit JRPG** look for the
+  whole cast. Rewrote `human(opts)` in that style — full colour, near-black
+  outline, three-band cel shading, ~46×66, gold scarf, per-character hairstyle +
+  expression, and a raised lantern for the hero — and regenerated all nine
+  `HUMANS` entries via `integrate-humans.mjs`. Verified in-engine (dungeon hero +
+  hub NPCs).
