@@ -23,9 +23,11 @@ tools/sprites/
   crystal-cavern.mjs reach-2 roster, painterly style (CAVERN registry)
   overgrowth.mjs     reach-3 roster, gouache-canopy style (OVERGROWTH registry)
   haunted.mjs        reach-4 roster, spectral-ink style (HAUNTED registry)
+  last-lantern.mjs   reach-5 roster, reliquary-glass style (LANTERN registry + species data)
   build.mjs          CLI: render previews to out/ and emit pasteable { palette, rows }
   integrate.mjs      CLI: replace CREATURES[<artKey>] blocks in src/assets/art.ts
   integrate-reaches.mjs CLI: insert Overgrowth keys (+ repoint species) & replace Haunted keys
+  integrate-lantern.mjs CLI: insert Last Lantern art keys + generate its 12 species
 ```
 
 ## Styles: one per area + one for people
@@ -39,9 +41,10 @@ The world gets visual variety by giving **each reach its own sprite style**, and
 | Reach 2 · The Crystal Cavern | painterly, dithered, volumetric | `paint.mjs` → `crystal-cavern.mjs` |
 | Reach 3 · The Overgrowth | gouache canopy — warm sun, green shadows, dappled sunflecks, mossy outline | `paint.mjs` → `overgrowth.mjs` |
 | Reach 4 · Haunted Dungeon | spectral ink — monochrome ash, one emissive accent, hollow eyes, dissolve-to-mist | `paint.mjs` → `haunted.mjs` |
+| Reach 5 · The Last Lantern | reliquary glass — warm **internal** core glow, stained-glass leaded panels, bloom halo, *held* (no dissolve) | `paint.mjs` → `last-lantern.mjs` |
 | **Humans (all NPCs + hero)** | cel-shaded "storybook" people | `humans.mjs` |
 
-All four reaches now have a distinct look, so a single glance says where you are.
+All five reaches now have a distinct look, so a single glance says where you are.
 
 **Human style** (`humans.mjs`): taller, properly-proportioned characters (~30×48,
 vs the old 14×18 blobs), clean lineart, and **warm-cool cel shading** — a warm
@@ -78,6 +81,16 @@ per-reach style treatments on top, so each reach reads differently:
     creature that rims the silhouette (`rimGlow`), burns in the hollow eyes
     (`glowEyes`), and marks the light it carries. `mist()` dithers the lower
     body away into the dark so wraiths trail off. Cold, translucent, floating.
+  - **The Last Lantern** (`last-lantern.mjs`) — *reliquary glass*: these are
+    **held** souls, so they are lit from **within**. Bodies shade under a *centre*
+    light (`form(..., light:[0,0,1])`) with a dark→hot ramp, so the edges go dark
+    and the core burns; a `core()` white-gold heart is the source. The shell is
+    stained glass — jewel-toned panels (amber/rose/violet/teal) divided by dark
+    `lead()` lines — wrapped in a warm `bloom()` halo of light-motes. Nothing
+    dissolves: these souls are contained, the deliberate inverse of the Haunted
+    reach's cold rim-and-mist. Each builder is **stage-parametric** (1→base,
+    2/3→evolved): held longer, a soul burns bigger and brighter and gains panels,
+    a crown, or wings — so a line's evolutions come from one function.
 
 Mixing styles across reaches is intentional: it gives the world visual variety
 as the player descends. (The Overgrowth species were repointed off the shared
@@ -254,3 +267,15 @@ reversible transform). Bosses (Regalion, etc.) stay standalone, not evo targets.
   `integrate-reaches.mjs` does the insert-and-repoint + in-place replace in one
   pass (it quotes palette keys, since dense sprites reach non-identifier keys).
   Verified in-engine with forced battles in both reaches.
+- **2026-07-31 — The Last Lantern (reach 5, the finale) gets a bespoke roster.**
+  The finale reach shipped borrowing earlier monsters; gave it its own fifth
+  style (`last-lantern.mjs`, *reliquary glass* — see the styles section) and a
+  bespoke roster of **5 held-soul lines, 12 species**: Emberkeep → Lanternwake →
+  Everember (mage/fire), Ashmoth → Cindershroud (assassin/dark), Wardling →
+  Reliquary → Lanternlord (hero/fire, boss line), Grievewisp → Mournlight
+  (mage/dark), Keptsoul → Heldshade (hero/dark). All class-pure; evolutions on
+  the current debug schedule (Lv2/3). `integrate-lantern.mjs` inserts the 12 art
+  keys and generates the 12 species from `LANTERN_SPECIES` (evolved stats scale
+  by `LANTERN_FAC`); `lastLantern.ts` encounters were repointed off the borrowed
+  gloomote/dropletta/shardling/revenance/glaciark onto the new roster. Verified
+  in-engine.

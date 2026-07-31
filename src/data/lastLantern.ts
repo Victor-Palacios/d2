@@ -87,8 +87,8 @@ const FLOORS: DungeonFloor[] = [
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'gloomote', level: 14 },
-          { species: 'dropletta', level: 14 },
+          { species: 'emberkeep', level: 14 },
+          { species: 'ashmoth', level: 14 },
         ],
         intro: narrate('Held souls drift out of the dark — kept so long they have forgotten they were ever let go of.'),
       },
@@ -102,15 +102,15 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.05,
     encounters: [
-      { weight: 3, enemies: [{ species: 'gloomote', level: 14 }] },
+      { weight: 3, enemies: [{ species: 'ashmoth', level: 14 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'shardling', level: 14 },
-          { species: 'dropletta', level: 14 },
+          { species: 'emberkeep', level: 14 },
+          { species: 'grievewisp', level: 14 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'revenance', level: 15 }] },
+      { weight: 1, enemies: [{ species: 'everember', level: 15 }] },
     ],
   },
 
@@ -158,8 +158,8 @@ const FLOORS: DungeonFloor[] = [
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'revenance', level: 15 },
-          { species: 'gloomote', level: 15 },
+          { species: 'keptsoul', level: 15 },
+          { species: 'grievewisp', level: 15 },
         ],
       },
       '3': {
@@ -180,15 +180,15 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'revenance', level: 15 }] },
+      { weight: 3, enemies: [{ species: 'keptsoul', level: 15 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'gloomote', level: 15 },
-          { species: 'shardling', level: 15 },
+          { species: 'wardling', level: 15 },
+          { species: 'emberkeep', level: 15 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'glaciark', level: 16 }] },
+      { weight: 1, enemies: [{ species: 'lanternlord', level: 16 }] },
     ],
   },
 
