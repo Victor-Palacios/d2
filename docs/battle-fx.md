@@ -137,7 +137,7 @@ Unlike auras, **nothing here is authored per-technique by hand.** `moveFx(t)`
 reads the fields a technique already carries and composes a `MoveFx` profile:
 
 - **delivery** ← `t.kind === 'heal'` → `mend`; else `t.melee` → `melee`; else a
-  non-`single` `shape`/`aoe` → `nova`; else → `bolt`.
+  non-`single` `shape` → `nova`; else → `bolt`.
 - **colour + motion** ← `ELEMENT_LOOK[t.element]`.
 - **burst size + shake** ← `t.power` (a ~power-46 technique sits at 1.0).
 

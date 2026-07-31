@@ -94,7 +94,7 @@ const FLOORS: DungeonFloor[] = [
       '3': { kind: 'anchored', id: 'hauntedAnchored' },
     },
     chests: {
-      '10,2': { obols: 260, item: 'repairChip', note: 'A traveller who did not leave. Their pack remains.' },
+      '10,2': { obols: 260, item: 'mendingBalm', note: 'A traveller who did not leave. Their pack remains.' },
     },
     encounterRate: 0.07,
     encounters: [

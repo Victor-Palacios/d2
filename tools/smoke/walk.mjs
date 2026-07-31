@@ -24,7 +24,7 @@ const state = () => page.evaluate(() => {
     fps: g.stats.fps,
     tile: s.tileX !== undefined ? `${s.tileX},${s.tileZ}` : null,
     floor: g.game.floorIndex,
-    fuel: g.game.fuel,
+    light: g.game.light,
     obols: g.game.obols,
     flags: [...g.game.flags],
     party: g.game.party.map((c) => `${c.name} ${c.hp}/${c.maxHp} mp${c.mp}`),

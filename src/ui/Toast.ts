@@ -1,6 +1,6 @@
 import { el, remove } from './dom';
 
-/** Transient banner for pickups, EP warnings, floor changes. */
+/** Transient banner for pickups, LP warnings, floor changes. */
 export function toast(parent: HTMLElement, html: string, ms = 1800) {
   const node = el('div', 'panel toast');
   node.innerHTML = html;

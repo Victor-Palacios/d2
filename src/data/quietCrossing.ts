@@ -100,9 +100,9 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       '3': { kind: 'anchored', id: 'crossingAnchored' },
     },
     chests: {
-      '11,2': { obols: 180, item: 'repairChip', note: 'Someone abandoned a supply crate up here.' },
+      '11,2': { obols: 180, item: 'mendingBalm', note: 'Someone abandoned a supply crate up here.' },
       '3,10': {
-        item: 'towBeacon',
+        item: 'homingEmber',
         note: "A keeper's kit, left by the door: a Homing Ember to burn if the dark ever turns you back.",
       },
     },

@@ -91,7 +91,7 @@ const FLOORS: DungeonFloor[] = [
       '3': { kind: 'anchored', id: 'crystalAnchored' },
     },
     chests: {
-      '15,2': { obols: 220, item: 'repairChip', note: 'A prospector left a crate wedged in the ice.' },
+      '15,2': { obols: 220, item: 'mendingBalm', note: 'A prospector left a crate wedged in the ice.' },
     },
     encounterRate: 0.06,
     encounters: [

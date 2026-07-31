@@ -189,9 +189,9 @@ export class DungeonScene extends GameScene {
         b.object.position.copy(world);
         this.scene.add(b.object);
         this.props.set(key, b);
-      } else if (t.kind === 'fuel') {
+      } else if (t.kind === 'light') {
         if (game.takenPickups.has(`${this.floor.id}:${key}`)) return;
-        const b = new Billboard(PROPS.fuelCan, 'prop:fuelCan', { height: 0.7, emissive: 0.25 });
+        const b = new Billboard(PROPS.lightShard, 'prop:lightShard', { height: 0.7, emissive: 0.6 });
         b.bob = 0.06;
         b.object.position.copy(world);
         this.scene.add(b.object);
@@ -399,7 +399,7 @@ export class DungeonScene extends GameScene {
     // Reaching the way home is honored even if this very step emptied the
     // lantern: arriving at the exit supersedes running out of light, so a player
     // who rolls onto the exit on their last step escapes as intended (the story
-    // continues) instead of being towed back to repeat the dungeon.
+    // continues) instead of being sent back to repeat the dungeon.
     if (tile.kind === 'exit') {
       await this.leaveDungeon();
       return;
@@ -442,7 +442,7 @@ export class DungeonScene extends GameScene {
       return;
     }
 
-    if (tile.kind === 'fuel') {
+    if (tile.kind === 'light') {
       const id = `${this.floor.id}:${key}`;
       if (!game.takenPickups.has(id)) {
         game.takenPickups.add(id);
@@ -767,7 +767,7 @@ export class DungeonScene extends GameScene {
     );
     game.resetCrawl();
     game.crawl.initialized = false;
-    await this.ctx.go('hub', { arrival: 'towed' });
+    await this.ctx.go('hub', { arrival: 'guttered' });
   }
 
   // --- frame ---------------------------------------------------------------

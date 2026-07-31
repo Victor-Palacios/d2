@@ -97,7 +97,7 @@ const FLOORS: DungeonFloor[] = [
       '3': { kind: 'anchored', id: 'jungleAnchored' },
     },
     chests: {
-      '13,2': { obols: 260, item: 'repairChip', note: "A ranger's pack, half-swallowed by roots." },
+      '13,2': { obols: 260, item: 'mendingBalm', note: "A ranger's pack, half-swallowed by roots." },
     },
     encounterRate: 0.06,
     encounters: [
