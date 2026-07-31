@@ -8,6 +8,8 @@ import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { DECOR, PROPS, HUMANS } from '../assets/art';
 import { reach } from '../data/reaches';
+import { anchored, anchoredFlag } from '../data/anchored';
+import { equipment } from '../data/equipment';
 import { ITEMS } from '../data/items';
 import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
 import { decorIsSolid } from '../data/dungeon';
@@ -135,6 +137,20 @@ export class DungeonScene extends GameScene {
       // The warden's portal home only opens once it is down.
       this.spawnExitPortal();
       game.set('bossDown');
+    }
+    if (ev?.kind === 'anchored') {
+      // Victory is the only thing that consumes an Anchored — mark it used now
+      // so it will not re-trigger. Its Memento is granted once (guarded by the
+      // per-reach flag), so beating it again later is fine but not farmable.
+      const a = anchored(ev.id);
+      game.usedEvents.add(`${this.floor.id}:${p.eventId}`);
+      await this.dialogue.play(narrate(a.victory));
+      const flag = anchoredFlag(a.reachId);
+      if (!game.has(flag)) {
+        game.set(flag);
+        game.addItem(a.reward);
+        toast(this.ctx.ui, `<span class="accent">${equipment(a.reward).name}</span> — kept from ${a.name}`, 2800);
+      }
     }
     this.busy = false;
   }
@@ -503,6 +519,21 @@ export class DungeonScene extends GameScene {
       return;
     }
 
+    if (ev.kind === 'anchored') {
+      // Deliberately do NOT mark this used: an Anchored survives defeat and
+      // flight, so a lost or fled fight must leave it here to face again. Only a
+      // win consumes it (see afterBattle). runEvent fires on step-arrive, not on
+      // post-battle placement, so standing on the tile after a loss won't
+      // re-trigger it until you step off and back on. The fight is drenched in
+      // the Anchored's element (a great mass under it), passed as the field.
+      const a = anchored(ev.id);
+      this.busy = true;
+      await this.dialogue.play(a.intro);
+      this.busy = false;
+      await this.startBattle(a.enemies, false, tile.eventId, a.element);
+      return;
+    }
+
     game.usedEvents.add(id);
     this.busy = true;
     if (ev.intro) await this.dialogue.play(ev.intro);
@@ -614,7 +645,7 @@ export class DungeonScene extends GameScene {
     return this.grid.at(this.tileX, this.tileZ)?.element;
   }
 
-  private async startBattle(enemies: EnemySpec[], isBoss: boolean, eventId?: string) {
+  private async startBattle(enemies: EnemySpec[], isBoss: boolean, eventId?: string, fieldElement?: ElementId) {
     if (this.leaving) return;
     this.leaving = true;
     this.saveCrawl();
@@ -622,7 +653,10 @@ export class DungeonScene extends GameScene {
     this.ctx.hd2d.addShake(0.25);
     await sleep(520);
 
-    const tileElement = this.currentElement();
+    // An Anchored drenches the whole field in its element (it sits on a great
+    // element mass), so pass that through; otherwise the field is whatever plate
+    // the party is standing on.
+    const tileElement = fieldElement ?? this.currentElement();
     const params: BattleSceneParams = {
       enemies,
       isBoss,

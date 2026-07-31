@@ -175,6 +175,15 @@ supply bay → Mission 2 briefing.
   reach stays locked (greyed on the map) until the one before it is quieted.
   Adding another is a data file registered in `src/data/reaches.ts` — no scene
   code changes.
+- **The Anchored**: every reach but the last hides one optional super-encounter
+  — a soul too heavy with a single feeling (rage, grief, longing, fear) to
+  cross, sunk into a wide **4×4 element mass** and radiating it across the floor
+  (`src/data/anchored.ts`). Tuned well above the reach's level and *meant* to be
+  fled or lost first time: it is **not consumed by defeat or flight**, so you
+  come back leveled and element-matched (the mass buffs your matching souls).
+  Winning frees it, sets `anchored:<reach>`, and grants a one-off Memento
+  stronger than the ordinary kit. Wired generically via the `anchored`
+  `FloorEvent` kind; see docs/NARRATIVE.md §11d.
 - **Distinct terrain per reach**: the crawl mechanics never change (grid,
   walls, floors, portals), but the *look* does. Each floor picks a
   `TerrainStyle` — `stone` (brick/flagstone), `crystal` (faceted shards),

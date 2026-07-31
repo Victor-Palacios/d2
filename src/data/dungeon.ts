@@ -22,7 +22,13 @@ export type FloorEvent =
   | { kind: 'boss'; enemies: EnemySpec[]; intro?: DialogueScript; outro?: DialogueScript }
   // The finale (The Last Lantern): not a fight but a choice — keep the soul you
   // came for, or let it cross. Handled by `DungeonScene.runFinale`.
-  | { kind: 'finale'; intro?: DialogueScript };
+  | { kind: 'finale'; intro?: DialogueScript }
+  // An Anchored: a soul too heavy with one feeling to cross, sunk into a reach
+  // and radiating one element across a great tile mass. A tough, optional
+  // super-encounter that is NOT consumed on defeat or flight — you come back
+  // with a leveled, element-matched team. `id` indexes `src/data/anchored.ts`.
+  // Handled by `DungeonScene.runEvent` / `afterBattle`.
+  | { kind: 'anchored'; id: string };
 
 export interface EncounterEntry {
   weight: number;

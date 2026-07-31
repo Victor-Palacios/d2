@@ -58,7 +58,6 @@ const FLOORS: DungeonFloor[] = [
       { x: 11, z: 3, kind: 'fern', height: 0.8 },
       { x: 6, z: 5, kind: 'jungleFlower', height: 0.7, emissive: 0.3 },
       { x: 9, z: 6, kind: 'bamboo', height: 1.8 },
-      { x: 4, z: 7, kind: 'mossLog', height: 0.6 },
       { x: 10, z: 7, kind: 'vineHang', height: 1.7 },
       { x: 13, z: 9, kind: 'fern', height: 0.8 },
     ],
@@ -68,11 +67,11 @@ const FLOORS: DungeonFloor[] = [
       '#..S....#....C..#',
       '#.....#.....#...#',
       '#..1......N....2#',
-      '#......#....#...#',
-      '#.W.......#....W#',
-      '#....#.....#....#',
-      '#..$.....>.....##',
-      '#...............#',
+      '#NNNN..#....#...#',
+      '#N3NN.....#....W#',
+      '#NNNN#.....#....#',
+      '#NNNN....>.....##',
+      '#.$.............#',
       '#################',
     ],
     events: {
@@ -93,6 +92,9 @@ const FLOORS: DungeonFloor[] = [
           { species: 'chitter', level: 5 },
         ],
       },
+      // The Unyielding — an Anchored knotted into a mass of grasping green. Far
+      // above the Overgrowth's level; come back matched to nature. Re-fightable.
+      '3': { kind: 'anchored', id: 'jungleAnchored' },
     },
     chests: {
       '13,2': { obols: 260, item: 'repairChip', note: "A ranger's pack, half-swallowed by roots." },

@@ -54,10 +54,8 @@ const FLOORS: DungeonFloor[] = [
     decor: [
       { x: 8, z: 3, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
       { x: 8, z: 5, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
-      { x: 2, z: 6, kind: 'crystalCluster', emissive: 0.6 },
       { x: 14, z: 6, kind: 'crystalCluster', emissive: 0.6 },
       { x: 13, z: 7, kind: 'iceShard', height: 0.8, emissive: 0.4 },
-      { x: 3, z: 8, kind: 'iceShard', height: 0.8, emissive: 0.4 },
     ],
     rows: [
       '#################',
@@ -66,10 +64,10 @@ const FLOORS: DungeonFloor[] = [
       '#.....##.##.....#',
       '#....1..........#',
       '#.....##.##.....#',
-      '#...............#',
-      '#......$........#',
-      '#........>......#',
-      '#...............#',
+      '#WWWW...........#',
+      '#W3WW..$........#',
+      '#WWWW....>......#',
+      '#WWWW...........#',
       '#################',
     ],
     events: {
@@ -88,6 +86,9 @@ const FLOORS: DungeonFloor[] = [
           { species: 'geodon', level: 3 },
         ],
       },
+      // The Unweeping — an Anchored on a mass of black ice. Well above the
+      // Reliquary's level; come back matched to water. Not consumed on loss.
+      '3': { kind: 'anchored', id: 'crystalAnchored' },
     },
     chests: {
       '15,2': { obols: 220, item: 'repairChip', note: 'A prospector left a crate wedged in the ice.' },

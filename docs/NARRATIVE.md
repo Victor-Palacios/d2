@@ -433,6 +433,38 @@ The search thread the banter kept deliberately unpaid now pays off here, and the
 choice is authored by the player, not the game (framework §10.5, §17.3 — neither
 answer is "correct"; both are love, both cost).
 
+## 11d. The Anchored — optional super-encounters (built)
+
+Most souls cross. A few are too heavy with a **single feeling** to lift — and
+instead of passing, they sink into a reach and take root, radiating that one
+feeling across a great mass of element tiles until the ground itself changes.
+These are the **Anchored** (`data/anchored.ts`): one per reach except the last,
+each a tough optional fight (Octopath-style) you are *meant to lose or flee* on a
+first visit and come back for, leveled and element-matched.
+
+Each maps a feeling → element → reach, so they thread the same "every philosophy
+of grief" spine as the reaches themselves:
+
+- **The Unquenched** — *rage that would not be put out* — **fire**, The Quiet
+  Crossing. (Reward: Ember Vigil.)
+- **The Unweeping** — *grief that froze before it could fall* — **water**, The
+  Reliquary. (Reward: Still Tears.)
+- **The Unyielding** — *longing so deep it took root* — **nature**, The
+  Overgrowth. (Reward: Long Root.)
+- **The Unwitnessed** — *fear of being forgotten, hidden until it was* —
+  **dark**, The Unremembered. (Reward: Seen At Last.)
+
+**How it plays.** Each sits on a prominent **4×4 element mass**, so the battle
+field is drenched in its element — which buffs *your* matching-element souls
+(the ×1.2 plate), making an element-matched team the way through. The roster is
+tuned well above the reach's level, so an unprepared party can't out-damage it.
+Crucially the encounter is **not consumed by defeat or flight** — only victory
+marks it, grants its Memento once (guarded by an `anchored:<reach>` flag), and
+lets the soul finally cross. Halden names the mechanic in the hub after the
+Crossing; each Anchored's own intro (a companion who knows that feeling) does the
+rest. Wired generically in `DungeonScene.runEvent`/`afterBattle` via the
+`anchored` `FloorEvent` kind; covered by `tools/smoke/anchored.mjs`.
+
 ## 12. Still ahead (tracked, not yet built)
 
 - **Act III wardens borrowing from opponents** is written into the finale

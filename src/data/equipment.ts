@@ -87,6 +87,42 @@ export const EQUIPMENT: Record<string, Equipment> = {
     def: 5,
     desc: 'A dog-eared detective pulp, its last chapter unread. The comfort of an unfinished story. +5 DEF.',
   },
+  // --- Anchored rewards ---------------------------------------------------
+  // One Memento per Anchored, kept from the feeling it finally let go of. Each
+  // is stronger than the ordinary mementos — the Anchored are optional, tough,
+  // and meant to be worth the return trip (see src/data/anchored.ts).
+  emberVigil: {
+    id: 'emberVigil',
+    name: 'Ember Vigil',
+    slot: 'memento',
+    off: 8,
+    spd: 3,
+    desc: "A coal from the Unquenched that will not cool. Its bearer strikes with the last of another soul's anger. +8 OFF, +3 SPD.",
+  },
+  stillTears: {
+    id: 'stillTears',
+    name: 'Still Tears',
+    slot: 'memento',
+    res: 8,
+    mag: 4,
+    desc: "A bead of the Unweeping's ice, thawed at last into a single drop. The grief it held now shields whoever carries it. +8 RES, +4 MAG.",
+  },
+  longRoot: {
+    id: 'longRoot',
+    name: 'Long Root',
+    slot: 'memento',
+    def: 8,
+    off: 3,
+    desc: 'A tendril of the Unyielding, still trying to hold on. Turned outward, its refusal to let go becomes a refusal to fall. +8 DEF, +3 OFF.',
+  },
+  seenAtLast: {
+    id: 'seenAtLast',
+    name: 'Seen At Last',
+    slot: 'memento',
+    mag: 8,
+    spd: 3,
+    desc: 'A sliver of the Unwitnessed, quieted by being looked at. It lends its bearer the certainty of not being alone. +8 MAG, +3 SPD.',
+  },
 };
 
 export function equipment(id: string): Equipment {

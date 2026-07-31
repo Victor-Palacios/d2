@@ -59,10 +59,10 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       '#......#........#',
       '#......#........#',
       '#......#..#.....#',
-      '#......12.......#',
-      '#......#........#',
-      '#......#...$....#',
-      '#......#....#...#',
+      '#.FFFF.12.......#',
+      '#.FFFF.#........#',
+      '#.F3FF.#...$....#',
+      '#.FFFF.#....#...#',
       '#..C...#.....>..#',
       '#......#........#',
       '#################',
@@ -94,6 +94,10 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
         ),
         outro: say(MENTOR, 'Quieted, not slain. Attack costs nothing; Techniques cost MP but reach far deeper.'),
       },
+      // The Unquenched — an Anchored, off in a dead-end pocket of coals. Far too
+      // strong for a first-crossing party; a reason to come back leveled and
+      // matched to fire. Not consumed on defeat/flight (see DungeonScene).
+      '3': { kind: 'anchored', id: 'crossingAnchored' },
     },
     chests: {
       '11,2': { obols: 180, item: 'repairChip', note: 'Someone abandoned a supply crate up here.' },
