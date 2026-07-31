@@ -211,8 +211,20 @@ export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | 'crystal' | 'ha
 type Wave = 'strings' | 'flute' | 'cello';
 
 type Inst =
-  | 'pad' | 'pluck' | 'bass' | 'sub' | 'bell' | 'kick' | 'tom' | 'hat' | 'noise'
-  | 'strings' | 'flute' | 'cello' | 'abass' | 'harp';
+  | 'pad'
+  | 'pluck'
+  | 'bass'
+  | 'sub'
+  | 'bell'
+  | 'kick'
+  | 'tom'
+  | 'hat'
+  | 'noise'
+  | 'strings'
+  | 'flute'
+  | 'cello'
+  | 'abass'
+  | 'harp';
 
 interface Voice {
   inst: Inst;
@@ -274,9 +286,27 @@ function harpBar(t: number[]): (number | null)[] {
 // The Everwake (intro town): an 8-bar theme — string bed, cello counter-line,
 // harp arpeggios and a flute melody. F major, i–vi–IV–V-ish.
 function everwakeVoices(): Voice[] {
-  const Sv = [[0, 4, 7], [-3, 0, 4], [0, 5, 9], [-1, 2, 7], [-3, 0, 4], [0, 5, 9], [2, 5, 9], [-1, 2, 7]];
+  const Sv = [
+    [0, 4, 7],
+    [-3, 0, 4],
+    [0, 5, 9],
+    [-1, 2, 7],
+    [-3, 0, 4],
+    [0, 5, 9],
+    [2, 5, 9],
+    [-1, 2, 7],
+  ];
   const Bv = [-12, -3, -7, -5, -3, -7, -10, -5];
-  const Hv = [[0, 4, 7, 12], [-3, 0, 4, 9], [0, 5, 9, 12], [-1, 2, 7, 11], [-3, 0, 4, 9], [0, 5, 9, 12], [2, 5, 9, 14], [-1, 2, 7, 11]];
+  const Hv = [
+    [0, 4, 7, 12],
+    [-3, 0, 4, 9],
+    [0, 5, 9, 12],
+    [-1, 2, 7, 11],
+    [-3, 0, 4, 9],
+    [0, 5, 9, 12],
+    [2, 5, 9, 14],
+    [-1, 2, 7, 11],
+  ];
   const strings: (number[] | null)[] = new Array(128).fill(null);
   const bass: (number | null)[] = new Array(128).fill(null);
   const harp: (number | null)[] = new Array(128).fill(null);
@@ -288,10 +318,37 @@ function everwakeVoices(): Voice[] {
     for (let i = 0; i < 16; i++) if (hb[i] != null) harp[b * 16 + i] = hb[i];
   }
   const flute = pmap(128, {
-    0: 19, 4: 21, 8: 19, 12: 16, 16: 17, 20: 16, 24: 14, 28: 16,
-    32: 17, 38: 19, 40: 21, 44: 19, 48: 16, 52: 14, 56: 14, 60: 12,
-    64: 21, 68: 23, 72: 21, 76: 19, 80: 17, 84: 19, 88: 21, 92: 24,
-    96: 23, 100: 21, 104: 19, 108: 17, 112: 16, 116: 14, 120: 12,
+    0: 19,
+    4: 21,
+    8: 19,
+    12: 16,
+    16: 17,
+    20: 16,
+    24: 14,
+    28: 16,
+    32: 17,
+    38: 19,
+    40: 21,
+    44: 19,
+    48: 16,
+    52: 14,
+    56: 14,
+    60: 12,
+    64: 21,
+    68: 23,
+    72: 21,
+    76: 19,
+    80: 17,
+    84: 19,
+    88: 21,
+    92: 24,
+    96: 23,
+    100: 21,
+    104: 19,
+    108: 17,
+    112: 16,
+    116: 14,
+    120: 12,
   });
   const counter = pmap(128, { 16: 0, 24: 2, 48: 4, 56: 2, 80: 5, 88: 7, 96: 5, 104: 4, 120: 0 });
   return [
@@ -306,17 +363,32 @@ function everwakeVoices(): Voice[] {
 // Crystal Cavern: bright, airy, major — glassy bells and high harp shimmer over
 // an open pad. No beat. E major.
 function crystalVoices(): Voice[] {
-  const Hv = [[7, 12, 16, 19], [5, 9, 12, 17], [4, 9, 12, 16], [6, 11, 14, 18]];
+  const Hv = [
+    [7, 12, 16, 19],
+    [5, 9, 12, 17],
+    [4, 9, 12, 16],
+    [6, 11, 14, 18],
+  ];
   const harp: (number | null)[] = new Array(64).fill(null);
   for (let b = 0; b < 4; b++) {
     const hb = harpBar(Hv[b]);
     for (let i = 0; i < 16; i++) if (hb[i] != null) harp[b * 16 + i] = hb[i];
   }
   return [
-    { inst: 'pad', gain: 0.05, dur: 16, seq: pmap(64, { 0: [0, 4, 7], 16: [0, 5, 9], 32: [-3, 0, 4], 48: [-5, -1, 2] }) },
+    {
+      inst: 'pad',
+      gain: 0.05,
+      dur: 16,
+      seq: pmap(64, { 0: [0, 4, 7], 16: [0, 5, 9], 32: [-3, 0, 4], 48: [-5, -1, 2] }),
+    },
     { inst: 'sub', gain: 0.09, dur: 16, seq: pmap(64, { 0: -12, 16: -7, 32: -3, 48: -5 }) },
     { inst: 'harp', gain: 0.085, seq: harp },
-    { inst: 'bell', gain: 0.09, dur: 10, seq: pmap(64, { 0: 19, 8: 21, 16: 24, 24: 21, 32: 19, 40: 16, 48: 14, 56: 16 }) },
+    {
+      inst: 'bell',
+      gain: 0.09,
+      dur: 10,
+      seq: pmap(64, { 0: 19, 8: 21, 16: 24, 24: 21, 32: 19, 40: 16, 48: 14, 56: 16 }),
+    },
   ];
 }
 
@@ -333,8 +405,18 @@ function overgrowthVoices(): Voice[] {
   return [
     { inst: 'pluck', gain: 0.09, dur: 2, bright: false, seq: prep(pluck16, 4) },
     { inst: 'abass', gain: 0.11, dur: 6, seq: bass },
-    { inst: 'pad', gain: 0.045, dur: 16, seq: pmap(64, { 0: [0, 3, 7], 16: [0, 3, 7], 32: [-4, 0, 3], 48: [-2, 2, 5] }) },
-    { inst: 'flute', gain: 0.1, dur: 4, seq: pmap(64, { 0: 12, 8: 15, 16: 19, 24: 15, 32: 17, 40: 19, 48: 22, 56: 19 }) },
+    {
+      inst: 'pad',
+      gain: 0.045,
+      dur: 16,
+      seq: pmap(64, { 0: [0, 3, 7], 16: [0, 3, 7], 32: [-4, 0, 3], 48: [-2, 2, 5] }),
+    },
+    {
+      inst: 'flute',
+      gain: 0.1,
+      dur: 4,
+      seq: pmap(64, { 0: 12, 8: 15, 16: 19, 24: 15, 32: 17, 40: 19, 48: 22, 56: 19 }),
+    },
     { inst: 'hat', gain: 0.03, open: false, seq: prep(phits(16, [4, 12]), 4) },
   ];
 }
@@ -344,7 +426,10 @@ const TRACKS: Record<Exclude<MusicTrack, null>, TrackDef> = {
   hub: { rich: true, bpm: 78, root: 174.6, voices: everwakeVoices() },
   // The Quiet Crossing (first dungeon) — "Underhush": dark ambient, near-beatless.
   dungeon: {
-    rich: true, bpm: 60, root: 130.8, voices: [
+    rich: true,
+    bpm: 60,
+    root: 130.8,
+    voices: [
       { inst: 'sub', gain: 0.15, dur: 8, seq: pmap(64, { 0: -24, 16: -24, 32: -24, 48: -24 }) },
       { inst: 'pad', gain: 0.05, dur: 64, seq: pmap(64, { 0: [-12, -5] }) },
       { inst: 'noise', gain: 0.06, dur: 24, seq: pmap(64, { 0: 1, 32: 1 }) },
@@ -355,12 +440,20 @@ const TRACKS: Record<Exclude<MusicTrack, null>, TrackDef> = {
   crystal: { rich: true, bpm: 76, root: 164.8, voices: crystalVoices() },
   // Haunted Dungeon — "Bone Rhythm": ritual percussion + a menacing Phrygian bass.
   haunted: {
-    rich: true, bpm: 96, root: 130.8, voices: [
+    rich: true,
+    bpm: 96,
+    root: 130.8,
+    voices: [
       { inst: 'kick', gain: 0.13, seq: prep(phits(16, [0, 6, 10]), 2) },
       { inst: 'tom', gain: 0.11, seq: prep(pmap(16, { 8: 0, 14: -2 }), 2) },
       { inst: 'tom', gain: 0.1, seq: prep(pmap(16, { 3: 7, 11: 5 }), 2) },
       { inst: 'hat', gain: 0.05, open: false, seq: prep(phits(16, [2, 5, 7, 10, 13, 15]), 2) },
-      { inst: 'bass', gain: 0.14, dur: 2, seq: prep([-12, null, null, -12, null, -11, null, -12, null, null, -4, null, -12, null, -11, null], 2) },
+      {
+        inst: 'bass',
+        gain: 0.14,
+        dur: 2,
+        seq: prep([-12, null, null, -12, null, -11, null, -12, null, null, -4, null, -12, null, -11, null], 2),
+      },
       { inst: 'pluck', gain: 0.07, dur: 4, bright: false, seq: pmap(32, { 24: 0, 26: 1, 28: -2, 30: 0 }) },
     ],
   },
@@ -623,7 +716,11 @@ class AudioEngine {
       g.gain.cancelScheduledValues(this.ctx.currentTime);
       g.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.06);
       window.setTimeout(() => {
-        try { g.disconnect(); } catch { /* already released */ }
+        try {
+          g.disconnect();
+        } catch {
+          /* already released */
+        }
       }, 700);
       this.trackGain = null;
     }
@@ -697,14 +794,15 @@ class AudioEngine {
   }
 
   private freqOf(n: number): number {
-    return this.curRoot * Math.pow(2, n / 12);
+    return this.curRoot * 2 ** (n / 12);
   }
 
   private fire(v: Voice, note: number | number[], when: number) {
     const tg = this.trackGain;
     if (!tg || !this.ins) return;
     const d = (v.dur ?? 1) * this.curStepDur;
-    const acoustic = v.inst === 'strings' || v.inst === 'flute' || v.inst === 'cello' || v.inst === 'abass' || v.inst === 'harp';
+    const acoustic =
+      v.inst === 'strings' || v.inst === 'flute' || v.inst === 'cello' || v.inst === 'abass' || v.inst === 'harp';
     let w = when;
     let g = v.gain;
     if (acoustic) {
@@ -713,20 +811,54 @@ class AudioEngine {
     }
     const notes = Array.isArray(note) ? note : [note];
     switch (v.inst) {
-      case 'pad': this.vPad(tg, notes.map((n) => this.freqOf(n)), w, d, v.gain); break;
-      case 'strings': for (const n of notes) this.voice(tg, this.freqOf(n), w, d, g, this.ins.strings); break;
-      case 'flute': this.voice(tg, this.freqOf(notes[0]), w, d, g, this.ins.flute); break;
-      case 'cello': this.voice(tg, this.freqOf(notes[0]), w, d, g, this.ins.cello); break;
-      case 'abass': this.voice(tg, this.freqOf(notes[0]), w, d, g, this.ins.abass); break;
-      case 'harp': for (const n of notes) this.playHarp(tg, this.freqOf(n), w, g); break;
-      case 'pluck': this.vPluck(tg, this.freqOf(notes[0]), w, d, v.gain, v.bright ?? false); break;
-      case 'bass': this.vBass(tg, this.freqOf(notes[0]), w, d, v.gain); break;
-      case 'sub': this.vSub(tg, this.freqOf(notes[0]), w, d, v.gain); break;
-      case 'bell': this.vBell(tg, this.freqOf(notes[0]), w, d, v.gain); break;
-      case 'kick': this.vKick(tg, w, v.gain); break;
-      case 'tom': this.vTom(tg, this.freqOf(notes[0]), w, v.gain); break;
-      case 'hat': this.vHat(tg, w, v.gain, v.open ?? false); break;
-      case 'noise': this.vNoise(tg, w, d, v.gain); break;
+      case 'pad':
+        this.vPad(
+          tg,
+          notes.map((n) => this.freqOf(n)),
+          w,
+          d,
+          v.gain,
+        );
+        break;
+      case 'strings':
+        for (const n of notes) this.voice(tg, this.freqOf(n), w, d, g, this.ins.strings);
+        break;
+      case 'flute':
+        this.voice(tg, this.freqOf(notes[0]), w, d, g, this.ins.flute);
+        break;
+      case 'cello':
+        this.voice(tg, this.freqOf(notes[0]), w, d, g, this.ins.cello);
+        break;
+      case 'abass':
+        this.voice(tg, this.freqOf(notes[0]), w, d, g, this.ins.abass);
+        break;
+      case 'harp':
+        for (const n of notes) this.playHarp(tg, this.freqOf(n), w, g);
+        break;
+      case 'pluck':
+        this.vPluck(tg, this.freqOf(notes[0]), w, d, v.gain, v.bright ?? false);
+        break;
+      case 'bass':
+        this.vBass(tg, this.freqOf(notes[0]), w, d, v.gain);
+        break;
+      case 'sub':
+        this.vSub(tg, this.freqOf(notes[0]), w, d, v.gain);
+        break;
+      case 'bell':
+        this.vBell(tg, this.freqOf(notes[0]), w, d, v.gain);
+        break;
+      case 'kick':
+        this.vKick(tg, w, v.gain);
+        break;
+      case 'tom':
+        this.vTom(tg, this.freqOf(notes[0]), w, v.gain);
+        break;
+      case 'hat':
+        this.vHat(tg, w, v.gain, v.open ?? false);
+        break;
+      case 'noise':
+        this.vNoise(tg, w, d, v.gain);
+        break;
     }
   }
 
@@ -747,7 +879,7 @@ class AudioEngine {
     const stringAmps: number[] = [];
     for (let n = 1; n <= 16; n++) stringAmps.push((1 / n) * Math.exp(-0.1 * n)); // warm ensemble
     const celloAmps: number[] = [];
-    for (let n = 1; n <= 12; n++) celloAmps.push((1 / Math.pow(n, 0.75)) * Math.exp(-0.09 * n));
+    for (let n = 1; n <= 12; n++) celloAmps.push((1 / n ** 0.75) * Math.exp(-0.09 * n));
     this.waves.strings = this.periodic(stringAmps);
     this.waves.flute = this.periodic([1, 0.22, 0.09, 0.04, 0.02]); // near-pure + breath added live
     this.waves.cello = this.periodic(celloAmps);
@@ -786,7 +918,7 @@ class AudioEngine {
     const ib = ctx.createBuffer(2, ilen, ctx.sampleRate);
     for (let c = 0; c < 2; c++) {
       const d = ib.getChannelData(c);
-      for (let i = 0; i < ilen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / ilen, 3.2);
+      for (let i = 0; i < ilen; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / ilen) ** 3.2;
     }
 
     // bus: [trackGain] -> dry + (convolver -> wet) -> compressor -> musicGain
@@ -809,9 +941,36 @@ class AudioEngine {
     this.convolver = conv;
 
     this.ins = {
-      strings: { wave: this.waves.strings, voices: 3, detune: 9, atk: 0.16, rel: 0.5, cutoff: 2600, vib: [5, 7], pan: 0 },
-      flute: { wave: this.waves.flute, voices: 1, atk: 0.06, rel: 0.18, cutoff: 3800, vib: [5.5, 12], breath: true, pan: 0.22 },
-      cello: { wave: this.waves.cello, voices: 2, detune: 5, atk: 0.09, rel: 0.32, cutoff: 1800, vib: [4.5, 8], pan: -0.28 },
+      strings: {
+        wave: this.waves.strings,
+        voices: 3,
+        detune: 9,
+        atk: 0.16,
+        rel: 0.5,
+        cutoff: 2600,
+        vib: [5, 7],
+        pan: 0,
+      },
+      flute: {
+        wave: this.waves.flute,
+        voices: 1,
+        atk: 0.06,
+        rel: 0.18,
+        cutoff: 3800,
+        vib: [5.5, 12],
+        breath: true,
+        pan: 0.22,
+      },
+      cello: {
+        wave: this.waves.cello,
+        voices: 2,
+        detune: 5,
+        atk: 0.09,
+        rel: 0.32,
+        cutoff: 1800,
+        vib: [4.5, 8],
+        pan: -0.28,
+      },
       abass: { wave: this.waves.cello, voices: 1, atk: 0.03, rel: 0.22, cutoff: 780, pan: 0 },
     };
     this.richReady = true;
@@ -1013,7 +1172,12 @@ class AudioEngine {
 
   private vBell(dest: AudioNode, fr: number, when: number, dur: number, gain: number) {
     const ctx = this.ctx!;
-    const parts: [number, number][] = [[1, 1], [2.01, 0.5], [3.02, 0.28], [4.3, 0.14]];
+    const parts: [number, number][] = [
+      [1, 1],
+      [2.01, 0.5],
+      [3.02, 0.28],
+      [4.3, 0.14],
+    ];
     for (const [mult, amp] of parts) {
       const o = ctx.createOscillator();
       o.type = 'sine';
