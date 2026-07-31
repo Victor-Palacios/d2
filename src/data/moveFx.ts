@@ -46,6 +46,8 @@ export interface MoveFx {
   cast: { count: number; speed: number; spread: number; life: number };
   /** Camera shake on impact. */
   shake: number;
+  /** World-space radius of the bright additive flash sprite at the impact point. */
+  flash: number;
 }
 
 /** Per-element motion + colour: the "feel" of each element's motes. */
@@ -57,12 +59,13 @@ interface ElementLook {
 }
 const ELEMENT_LOOK: Record<ElementId, ElementLook> = {
   // Fire leaps up and lingers; water splashes and falls hard; nature drifts;
-  // machine throws snappy short sparks; dark hangs as slow heavy smoke.
-  fire: { color: ELEMENTS.fire.light, gravity: -2.4, size: 0.17, upBias: 1.1 },
-  water: { color: ELEMENTS.water.light, gravity: -6, size: 0.15, upBias: 0.5 },
-  nature: { color: ELEMENTS.nature.light, gravity: -1.4, size: 0.15, upBias: 0.7 },
-  machine: { color: ELEMENTS.machine.light, gravity: -6.5, size: 0.12, upBias: 0.6 },
-  dark: { color: ELEMENTS.dark.light, gravity: -0.6, size: 0.2, upBias: 0.35 },
+  // machine throws snappy short sparks; dark hangs as slow heavy smoke. Sizes
+  // are deliberately chunky so the bursts read against the painterly arena.
+  fire: { color: ELEMENTS.fire.light, gravity: -2.4, size: 0.26, upBias: 1.1 },
+  water: { color: ELEMENTS.water.light, gravity: -6, size: 0.23, upBias: 0.5 },
+  nature: { color: ELEMENTS.nature.light, gravity: -1.4, size: 0.24, upBias: 0.7 },
+  machine: { color: ELEMENTS.machine.light, gravity: -6.5, size: 0.2, upBias: 0.6 },
+  dark: { color: ELEMENTS.dark.light, gravity: -0.6, size: 0.3, upBias: 0.35 },
 };
 
 /** Per-delivery burst shape, before the element tint and power scaling. */
@@ -71,31 +74,37 @@ interface DeliveryBase {
   cast: { count: number; speed: number; spread: number; life: number };
   boltSpeed: number;
   shake: number;
+  /** Base radius of the impact flash sprite (scaled by power). */
+  flash: number;
 }
 const DELIVERY: Record<MoveDelivery, DeliveryBase> = {
   melee: {
-    impact: { count: 20, speed: 3, spread: 1.3, life: 0.5 },
-    cast: { count: 8, speed: 1.2, spread: 0.5, life: 0.35 },
+    impact: { count: 34, speed: 3.4, spread: 1.4, life: 0.7 },
+    cast: { count: 14, speed: 1.4, spread: 0.6, life: 0.4 },
     boltSpeed: 0,
-    shake: 0.16,
+    shake: 0.3,
+    flash: 1.9,
   },
   bolt: {
-    impact: { count: 22, speed: 2.6, spread: 0.9, life: 0.55 },
-    cast: { count: 12, speed: 1, spread: 0.4, life: 0.4 },
-    boltSpeed: 16,
-    shake: 0.13,
+    impact: { count: 38, speed: 3, spread: 1, life: 0.7 },
+    cast: { count: 16, speed: 1.1, spread: 0.45, life: 0.45 },
+    boltSpeed: 15,
+    shake: 0.26,
+    flash: 1.9,
   },
   nova: {
-    impact: { count: 26, speed: 3.6, spread: 1.9, life: 0.6 },
-    cast: { count: 16, speed: 1.4, spread: 0.6, life: 0.45 },
+    impact: { count: 52, speed: 4, spread: 2.4, life: 0.85 },
+    cast: { count: 22, speed: 1.6, spread: 0.7, life: 0.5 },
     boltSpeed: 0,
-    shake: 0.22,
+    shake: 0.46,
+    flash: 3,
   },
   mend: {
-    impact: { count: 16, speed: 1.4, spread: 0.8, life: 0.85 },
-    cast: { count: 8, speed: 0.8, spread: 0.4, life: 0.5 },
+    impact: { count: 28, speed: 1.6, spread: 0.9, life: 1 },
+    cast: { count: 12, speed: 0.9, spread: 0.45, life: 0.55 },
     boltSpeed: 0,
     shake: 0,
+    flash: 1.5,
   },
 };
 
@@ -117,9 +126,10 @@ const MOVE_FX_OVERRIDES: Record<string, MoveFxOverride> = {
   sunClaw: { punch: 1.4 },
   // The Warden's arena-wide roar: a huge fiery nova.
   regalRoar: { punch: 1.45 },
-  // A plain Strike reads as a scrappy machine jab, a touch smaller than a real
-  // technique so free actions feel free.
-  strike: { punch: 0.8 },
+  // The free basic Attack is the move players use most, so it must read clearly
+  // rather than fade — its low power would otherwise shrink it. Bump it back up
+  // to a full, punchy jab.
+  strike: { punch: 1.5 },
 };
 
 function deliveryOf(t: Technique): MoveDelivery {
@@ -163,5 +173,6 @@ export function moveFx(t: Technique): MoveFx {
     },
     cast: { ...base.cast },
     shake: base.shake * punch,
+    flash: base.flash * clamp(punch, 0.85, 1.4),
   };
 }

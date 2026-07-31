@@ -5,7 +5,7 @@ import { ParticleField, Torch, Aura } from '../engine/fx';
 import { battleAura } from '../data/battleFx';
 import { audio } from '../engine/Audio';
 import { input } from '../engine/Input';
-import { elementGlowTexture, elementTileTexture, floorTexture, wallTexture } from '../engine/pixel';
+import { elementGlowTexture, elementTileTexture, floorTexture, radialTexture, wallTexture } from '../engine/pixel';
 import { speciesArt, species } from '../data/creatures';
 import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
@@ -94,6 +94,8 @@ export class BattleScene extends GameScene {
   private sprites = new Map<string, Billboard>();
   /** Per-fighter signature aura (only for species with a `BattleAura`). */
   private auras = new Map<string, Aura>();
+  /** Shared white radial map, tinted per-flash — the bright pop at an impact. */
+  private flashTex = radialTexture('flash', '#ffffff', 64);
   private homePos = new Map<string, THREE.Vector3>();
   private highlight: THREE.PointLight | null = null;
   private finished = false;
@@ -720,12 +722,25 @@ export class BattleScene extends GameScene {
       audio.cry(actor.creature.speciesId);
     }
 
-    // Delivery motion. A melee blow lunges in; a ranged bolt stays put and
-    // fires a projectile; area/heal moves gather in place.
+    // Delivery motion. A melee blow lunges in — trailing a streak of its element
+    // so the charge itself reads; a ranged bolt stays put and fires a projectile;
+    // area/heal moves gather in place.
     if (fx && bb && home && fx.delivery === 'melee') {
       const dir = actor.side === 'party' ? -1 : 1;
-      await this.tween(0.16, (t) => {
-        bb.object.position.z = home.z + dir * 1.1 * t;
+      const trail = new THREE.Vector3();
+      await this.tween(0.18, (t) => {
+        bb.object.position.z = home.z + dir * 1.4 * t;
+        trail.set(bb.object.position.x, bb.object.position.y + casterHeight * 0.5, bb.object.position.z);
+        this.particles.emit(trail, {
+          count: 3,
+          speed: 0.7,
+          spread: 0.35,
+          life: 0.32,
+          gravity: fx.gravity * 0.3,
+          upBias: 0.3,
+          size: fx.size,
+          color: fx.color,
+        });
       });
     }
 
@@ -766,6 +781,7 @@ export class BattleScene extends GameScene {
           upBias: fx.upBias,
           size: fx.size,
         });
+        this.impactFlash(worldTop, fx.color, fx.flash);
         const s = this.screenPos(worldTop);
         this.hud.float(s.x, s.y, `+${hit.heal}`, cssColor);
       } else {
@@ -784,6 +800,7 @@ export class BattleScene extends GameScene {
         const s = this.screenPos(worldTop);
         const superEffective = hit.crit || hit.breakdown?.effectiveness === 'super';
         const big = superEffective || react;
+        this.impactFlash(worldTop, big ? 0xfff0c0 : fx.color, fx.flash * (big ? 1.5 : 1));
         this.hud.float(s.x, s.y, String(hit.damage), big ? '#ffd166' : '#ff9a8a');
         this.ctx.hd2d.addShake(react ? fx.shake * 1.6 : superEffective ? fx.shake * 1.3 : fx.shake);
         if (react) {
@@ -806,7 +823,7 @@ export class BattleScene extends GameScene {
     if (fx && bb && home && fx.delivery === 'melee') {
       await this.tween(0.14, (t) => {
         const dir = actor.side === 'party' ? -1 : 1;
-        bb.object.position.z = home.z + dir * 1.1 * (1 - t);
+        bb.object.position.z = home.z + dir * 1.4 * (1 - t);
       });
       bb.object.position.copy(home);
     }
@@ -833,6 +850,34 @@ export class BattleScene extends GameScene {
     await sleep(260);
   }
 
+  /**
+   * A bright additive flash sprite at an impact point: pops from small to full
+   * and fades in ~0.3s. This is the beat that reads instantly even against the
+   * busy painterly arena — the particle burst is the texture, this is the punch.
+   */
+  private impactFlash(pos: THREE.Vector3, color: number, radius: number) {
+    const mat = new THREE.SpriteMaterial({
+      map: this.flashTex,
+      color: new THREE.Color(color),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      depthTest: false,
+    });
+    const sprite = new THREE.Sprite(mat);
+    sprite.position.copy(pos);
+    sprite.renderOrder = 6;
+    this.scene.add(sprite);
+    void this.tween(0.3, (t) => {
+      const s = radius * (0.35 + t * 0.9);
+      sprite.scale.set(s, s, 1);
+      mat.opacity = (1 - t) ** 1.4;
+    }).then(() => {
+      this.scene.remove(sprite);
+      mat.dispose();
+    });
+  }
+
   /** A puff of the move's element gathering on the caster, just before it lands. */
   private castTelegraph(top: THREE.Vector3, fx: MoveFx) {
     this.particles.emit(top, {
@@ -854,21 +899,24 @@ export class BattleScene extends GameScene {
    */
   private async flyBolt(from: THREE.Vector3, to: THREE.Vector3, fx: MoveFx) {
     const dist = from.distanceTo(to);
-    const dur = Math.min(0.45, Math.max(0.16, dist / fx.boltSpeed));
+    const dur = Math.min(0.5, Math.max(0.2, dist / fx.boltSpeed));
     const p = new THREE.Vector3();
     await this.tween(dur, (t) => {
       p.lerpVectors(from, to, t);
+      // A dense, chunky trail so the projectile itself reads as it crosses.
       this.particles.emit(p, {
-        count: 2,
-        speed: 0.7,
-        spread: 0.22,
-        life: 0.28,
+        count: 5,
+        speed: 0.9,
+        spread: 0.3,
+        life: 0.34,
         gravity: fx.gravity * 0.3,
         upBias: 0.2,
-        size: fx.size,
+        size: fx.size * 1.3,
         color: fx.color,
       });
     });
+    // A small flash rides the projectile head to the target as it lands.
+    this.impactFlash(to, fx.color, fx.flash * 0.7);
   }
 
   private tween(seconds: number, fn: (t: number) => void): Promise<void> {

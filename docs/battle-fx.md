@@ -152,12 +152,23 @@ give them — the same optional-override shape as the auras.
 `animateTurn` (in `BattleScene`) calls `moveFx(technique)` once per action, then:
 
 1. **`castTelegraph`** emits the wind-up puff on the caster.
-2. **Delivery motion:** `melee` lunges the caster in (and back out after);
-   `bolt` calls **`flyBolt`**, tweening a trailing projectile caster → target;
+2. **Delivery motion:** `melee` lunges the caster in (trailing a streak of its
+   element so the charge itself reads) and back out after; `bolt` calls
+   **`flyBolt`**, tweening a chunky trailing projectile caster → target;
    `nova` / `mend` gather in place.
-3. **Impact:** the existing per-hit loop emits the shaped burst (`fx.impact`,
-   `fx.color`, `fx.gravity`, …), with reactions/crits scaling it up, plus the
-   damage float, sfx and camera shake as before.
+3. **Impact:** the per-hit loop emits the shaped burst (`fx.impact`, `fx.color`,
+   `fx.gravity`, …) **and fires `impactFlash`** — a bright additive flash sprite
+   that pops from small to full and fades in ~0.3s, tinted by element (near-white
+   and larger on a crit/reaction). The flash is the beat that reads instantly
+   against the busy painterly arena; the particles are its texture. Reactions and
+   crits scale both up, alongside the damage float, sfx and camera shake.
+
+The whole layer is tuned **loud on purpose** — chunky particle sizes, ~30–50
+motes per hit, a full-strength basic Attack (its low power is overridden back up
+so the move players use most still reads), and a real screen-flash — because the
+painterly background washes out anything subtle. `impactFlash` reuses a single
+cached white radial texture (`radialTexture('flash', …)`), tinted per-flash via
+the sprite's material, so it adds no asset.
 
 ### Extending it
 
