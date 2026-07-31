@@ -692,7 +692,7 @@ export class HubScene extends GameScene {
         if (!game.hasLeave) {
           return say(
             'Halden',
-            'Ground rules. Attack is free, Techniques cost MP, Guard halves the hit and gives MP back.',
+            'Ground rules. Attack is free, Invocations cost MP, Guard halves the hit and gives MP back.',
             'Assassin beats Mage. Mage beats Hero. Hero beats Assassin. Element plates buff whoever matches them.',
             'Every step in the reach spends 1 LP. Light shards are worth the detour.',
           );

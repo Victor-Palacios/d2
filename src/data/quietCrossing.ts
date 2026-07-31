@@ -92,7 +92,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
           MENTOR,
           'An echo, and a small one. Open with Attack. You are not hurting it — you are getting its attention.',
         ),
-        outro: say(MENTOR, 'Quieted, not slain. Attack costs nothing; Techniques cost MP but reach far deeper.'),
+        outro: say(MENTOR, 'Quieted, not slain. Attack costs nothing; Invocations cost MP but reach far deeper.'),
       },
       // The Unquenched — an Anchored, off in a dead-end pocket of coals. Far too
       // strong for a first-crossing party; a reason to come back leveled and

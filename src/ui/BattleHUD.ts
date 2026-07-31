@@ -308,7 +308,7 @@ export class BattleHUD {
     const c = actor.creature;
 
     for (;;) {
-      // Only the loadout (≤5 active moves) is fieldable; Technique is greyed out
+      // Only the loadout (≤5 active moves) is fieldable; Invoke is greyed out
       // unless the creature can afford at least one of them.
       const moves = activeMoves(c);
       const canTechnique = moves.some((id) => c.mp >= technique(id).mpCost);
@@ -322,7 +322,7 @@ export class BattleHUD {
       const items: MenuItem[] = [
         { value: 'auto', label: 'Auto', note: 'L1' },
         { value: 'attack', label: 'Attack' },
-        { value: 'technique', label: 'Technique', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
+        { value: 'technique', label: 'Invoke', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
         { value: 'move', label: 'Move', disabled: !canMove, note: canMove ? undefined : 'no room' },
         { value: 'swap', label: 'Swap', disabled: !canSwap, note: canSwap ? undefined : '—' },
         { value: 'guard', label: 'Guard' },
