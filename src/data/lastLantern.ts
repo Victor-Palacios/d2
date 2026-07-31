@@ -87,8 +87,8 @@ const FLOORS: DungeonFloor[] = [
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'emberkeep', level: 14 },
-          { species: 'ashmoth', level: 14 },
+          { species: 'emberkeep', level: 9 },
+          { species: 'ashmoth', level: 9 },
         ],
         intro: narrate('Held souls drift out of the dark — kept so long they have forgotten they were ever let go of.'),
       },
@@ -102,15 +102,15 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.05,
     encounters: [
-      { weight: 3, enemies: [{ species: 'ashmoth', level: 14 }] },
+      { weight: 3, enemies: [{ species: 'ashmoth', level: 9 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'emberkeep', level: 14 },
-          { species: 'grievewisp', level: 14 },
+          { species: 'emberkeep', level: 9 },
+          { species: 'grievewisp', level: 9 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'everember', level: 15 }] },
+      { weight: 1, enemies: [{ species: 'everember', level: 9 }] },
     ],
   },
 
@@ -158,8 +158,8 @@ const FLOORS: DungeonFloor[] = [
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'keptsoul', level: 15 },
-          { species: 'grievewisp', level: 15 },
+          { species: 'keptsoul', level: 9 },
+          { species: 'grievewisp', level: 9 },
         ],
       },
       '3': {
@@ -180,15 +180,15 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'keptsoul', level: 15 }] },
+      { weight: 3, enemies: [{ species: 'keptsoul', level: 9 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'wardling', level: 15 },
-          { species: 'emberkeep', level: 15 },
+          { species: 'wardling', level: 9 },
+          { species: 'emberkeep', level: 9 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'lanternlord', level: 16 }] },
+      { weight: 1, enemies: [{ species: 'lanternlord', level: 9 }] },
     ],
   },
 
@@ -230,7 +230,7 @@ export const LAST_LANTERN: Reach = {
   blurb:
     'The deepest dark, past every reach — where the souls no keeper could release are still held, and where the one you have looked for is waiting. It opens only once you understand what it costs.',
   color: '#ffd27a',
-  recommendedLevel: 15,
+  recommendedLevel: 9,
   floors: FLOORS,
   startingLight: 200,
   music: 'haunted',

@@ -76,17 +76,16 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'shardling', level: 5 },
-          { species: 'prismoth', level: 5 },
+          { species: 'shardling', level: 3 },
+          { species: 'prismoth', level: 3 },
         ],
         intro: narrate('Light scatters off a shelf of living crystal — and it turns toward you.'),
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'shardling', level: 6 },
-          { species: 'geodon', level: 6 },
-          { species: 'prismoth', level: 5 },
+          { species: 'shardling', level: 3 },
+          { species: 'geodon', level: 3 },
         ],
       },
     },
@@ -95,16 +94,16 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'shardling', level: 5 }] },
-      { weight: 2, enemies: [{ species: 'prismoth', level: 6 }] },
+      { weight: 3, enemies: [{ species: 'shardling', level: 3 }] },
+      { weight: 2, enemies: [{ species: 'prismoth', level: 3 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'shardling', level: 5 },
-          { species: 'prismoth', level: 5 },
+          { species: 'shardling', level: 3 },
+          { species: 'prismoth', level: 3 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'geodon', level: 7 }] },
+      { weight: 1, enemies: [{ species: 'geodon', level: 3 }] },
     ],
   },
 
@@ -137,16 +136,15 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'geodon', level: 7 },
-          { species: 'shardling', level: 7 },
+          { species: 'geodon', level: 3 },
+          { species: 'shardling', level: 3 },
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'prismoth', level: 8 },
-          { species: 'prismoth', level: 7 },
-          { species: 'geodon', level: 7 },
+          { species: 'prismoth', level: 3 },
+          { species: 'geodon', level: 3 },
         ],
         intro: narrate('The vault hums. Something big is keeping the cold in here.'),
       },
@@ -156,20 +154,20 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.07,
     encounters: [
-      { weight: 3, enemies: [{ species: 'shardling', level: 7 }] },
-      { weight: 3, enemies: [{ species: 'geodon', level: 7 }] },
+      { weight: 3, enemies: [{ species: 'shardling', level: 3 }] },
+      { weight: 3, enemies: [{ species: 'geodon', level: 3 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'prismoth', level: 8 },
-          { species: 'shardling', level: 7 },
+          { species: 'prismoth', level: 3 },
+          { species: 'shardling', level: 3 },
         ],
       },
       {
         weight: 1,
         enemies: [
-          { species: 'geodon', level: 8 },
-          { species: 'prismoth', level: 8 },
+          { species: 'geodon', level: 3 },
+          { species: 'prismoth', level: 3 },
         ],
       },
     ],
@@ -203,7 +201,7 @@ const FLOORS: DungeonFloor[] = [
     events: {
       '1': {
         kind: 'boss',
-        enemies: [{ species: 'glaciark', level: 9 }],
+        enemies: [{ species: 'glaciark', level: 3 }],
         intro: [
           ...narrate(
             "At the vault's heart, a woman kneels over a pane of ice. Inside it, a girl is laughing — frozen mid-laugh, forever.",
@@ -224,12 +222,12 @@ const FLOORS: DungeonFloor[] = [
     chests: {},
     encounterRate: 0.03,
     encounters: [
-      { weight: 2, enemies: [{ species: 'shardling', level: 8 }] },
+      { weight: 2, enemies: [{ species: 'shardling', level: 3 }] },
       {
         weight: 1,
         enemies: [
-          { species: 'prismoth', level: 8 },
-          { species: 'geodon', level: 8 },
+          { species: 'prismoth', level: 3 },
+          { species: 'geodon', level: 3 },
         ],
       },
     ],
@@ -242,7 +240,7 @@ export const CRYSTAL_CAVERN: Reach = {
   blurb:
     'A hall of kept light, where souls are frozen in glass so they can never fade — and never rest. Someone here refuses to let go.',
   color: '#6fe0ff',
-  recommendedLevel: 5,
+  recommendedLevel: 3,
   floors: FLOORS,
   startingLight: 130,
   music: 'crystal',
