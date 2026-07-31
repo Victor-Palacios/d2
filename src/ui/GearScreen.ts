@@ -74,15 +74,22 @@ export async function openGear(parent: HTMLElement): Promise<void> {
       slotMenu.destroy();
       if (!slot) return;
 
-      const owned = Object.keys(EQUIPMENT).filter(
-        (id) => equipment(id).slot === slot && game.itemCount(id) > 0,
-      );
+      const owned = Object.keys(EQUIPMENT).filter((id) => equipment(id).slot === slot && game.itemCount(id) > 0);
       const opts: MenuItem[] = [];
       if (c.equip?.[slot]) opts.push({ value: 'remove', label: 'Remove', note: equipment(c.equip[slot]!).name });
       for (const id of owned) {
         const e = equipment(id);
-        const bonus = e.off ? `+${e.off} OFF` : e.def ? `+${e.def} DEF` : e.spd ? `+${e.spd} SPD`
-          : e.mag ? `+${e.mag} MAG` : e.res ? `+${e.res} RES` : e.effect ?? '';
+        const bonus = e.off
+          ? `+${e.off} OFF`
+          : e.def
+            ? `+${e.def} DEF`
+            : e.spd
+              ? `+${e.spd} SPD`
+              : e.mag
+                ? `+${e.mag} MAG`
+                : e.res
+                  ? `+${e.res} RES`
+                  : (e.effect ?? '');
         opts.push({ value: id, label: e.name, note: `${bonus} ×${game.itemCount(id)}` });
       }
       if (!opts.length) opts.push({ value: 'none', label: 'no gear for this slot', disabled: true });
@@ -94,7 +101,11 @@ export async function openGear(parent: HTMLElement): Promise<void> {
 
       const cur = c.equip?.[slot];
       if (pick === 'remove') {
-        if (cur) { game.addItem(cur); delete c.equip[slot]; audio.sfx('confirm'); }
+        if (cur) {
+          game.addItem(cur);
+          delete c.equip[slot];
+          audio.sfx('confirm');
+        }
       } else {
         if (game.takeItem(pick)) {
           if (cur) game.addItem(cur); // the old fitting returns to the bag
@@ -115,7 +126,10 @@ export async function openGear(parent: HTMLElement): Promise<void> {
     }));
     const menu = new Menu(menuHost, members, {
       cancellable: true,
-      onHighlight: (v) => { const c = game.party.find((x) => x.uid === v); if (c) showMember(c); },
+      onHighlight: (v) => {
+        const c = game.party.find((x) => x.uid === v);
+        if (c) showMember(c);
+      },
     });
     const choice = await menu.open();
     menu.destroy();

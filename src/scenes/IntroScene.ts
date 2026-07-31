@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 import { GameScene, sleep } from '../engine/SceneManager';
-import type { SceneContext } from '../engine/SceneManager';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Torch } from '../engine/fx';
 import { floorTexture, wallTexture } from '../engine/pixel';
-import { HUMANS, VEHICLE } from '../assets/art';
+import { HUMANS } from '../assets/art';
 import { audio } from '../engine/Audio';
 import { input } from '../engine/Input';
 import { game } from '../systems/party/gameState';
@@ -27,6 +26,32 @@ const PARTNER_CHOICES = ['emberling', 'glidefang', 'nightnip'];
 const PARTNER_LEVEL = 1;
 
 /**
+ * A spectral wisp drifting through the title diorama — a "lost soul" the game
+ * is named for: a faint, half-transparent, glowing creature that circles the
+ * keeper's hall and carries a coloured light through the fog.
+ */
+interface SoulWisp {
+  bb: Billboard;
+  light: THREE.PointLight;
+  /** Centre of the wisp's slow orbit. */
+  cx: number;
+  cz: number;
+  radius: number;
+  speed: number;
+  phase: number;
+  /** Hover height (also where its light sits). */
+  y: number;
+}
+
+/** Species used as drifting soul-wisps, each with a mournful glow colour. */
+const WISP_SOULS: { id: string; color: number; y: number }[] = [
+  { id: 'gloomote', color: 0xc77dff, y: 1.5 },
+  { id: 'nightnip', color: 0x6fb7ff, y: 1.05 },
+  { id: 'dropletta', color: 0x4ad6ff, y: 2.0 },
+  { id: 'sprigling', color: 0x8b7bff, y: 1.35 },
+];
+
+/**
  * Title + name entry (plan §2.1, M4).
  *
  * The title sits over a live HD-2D diorama rather than a flat image, so the
@@ -36,15 +61,13 @@ export class IntroScene extends GameScene {
   private scene = new THREE.Scene();
   private billboards: Billboard[] = [];
   private torches: Torch[] = [];
+  private wisps: SoulWisp[] = [];
+  private moteAccum = 0;
   private particles!: ParticleField;
   private screen: HTMLElement | null = null;
   private nameEntry: NameEntry | null = null;
   private dialogue!: DialogueBox;
   private unsub: (() => void) | null = null;
-
-  constructor(ctx: SceneContext) {
-    super(ctx);
-  }
 
   async enter() {
     this.buildDiorama();
@@ -92,11 +115,6 @@ export class IntroScene extends GameScene {
       this.scene.add(m);
     }
 
-    const vehicle = new Billboard(VEHICLE.down, 'veh:down', { height: 1.6 });
-    vehicle.object.position.set(0.9, 0, 0.5);
-    this.scene.add(vehicle.object);
-    this.billboards.push(vehicle);
-
     const mentor = new Billboard(HUMANS.mentor, 'human:mentor', { height: 1.7 });
     mentor.object.position.set(-1.9, 0, -0.4);
     this.scene.add(mentor.object);
@@ -108,30 +126,105 @@ export class IntroScene extends GameScene {
       this.scene.add(torch.object);
       this.torches.push(torch);
     }
+
+    // The lost souls themselves: spectral wisps that drift through the hall,
+    // half-transparent and glowing, each trailing a coloured light through the
+    // fog. This is what the title is about, so it should be the thing moving.
+    WISP_SOULS.forEach((w, i) => {
+      const bb = new Billboard(speciesArt(w.id), `wisp:${w.id}`, {
+        height: 1.0,
+        emissive: 0.85,
+        castShadow: false,
+        hover: w.y,
+      });
+      bb.setOpacity(0.5);
+      bb.bob = 0.09;
+      bb.bobSpeed = 1.3;
+      bb.setScale(0.85);
+      this.scene.add(bb.object);
+
+      const light = new THREE.PointLight(w.color, 2.4, 5, 2);
+      this.scene.add(light);
+
+      this.wisps.push({
+        bb,
+        light,
+        cx: 0,
+        cz: -2.4,
+        radius: 2.4 + i * 0.65,
+        speed: 0.1 + i * 0.035,
+        phase: (i / WISP_SOULS.length) * Math.PI * 2,
+        y: w.y,
+      });
+    });
   }
 
   private showTitle() {
     this.screen = el('div', 'screen transparent');
     const stack = el('div');
-    stack.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:14px;';
+    stack.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:16px;';
     stack.append(
-      el('h1', 'title-main', 'THE EVERWAKE'),
-      el('p', 'title-sub', 'a first-hour HD-2D vertical slice'),
-      el(
-        'div',
-        'hint dim',
-        'All names, sprites and audio are original placeholders. Click once to enable sound.',
-      ),
+      el('h1', 'title-main title-game', 'LOST SOULS'),
+      el('p', 'title-sub', 'A keeper and the souls that lingered'),
     );
     this.screen.appendChild(stack);
+    this.screen.appendChild(
+      el(
+        'div',
+        'hint dim title-note',
+        'All names, sprites and audio are original placeholders. Press any button to begin.',
+      ),
+    );
     this.ctx.ui.appendChild(this.screen);
 
-    // Any input unlocks audio; the menu itself drives the rest.
-    this.unsub = input.onAction(() => audio.unlock());
-    this.screen.addEventListener('click', () => audio.unlock());
     audio.music('hub');
+    void this.titleFlow(stack);
+  }
 
-    void this.titleMenu(stack);
+  /**
+   * Digimon-World-2-style title: the game name fills the screen and waits for
+   * any button; only then does the Continue / New Game menu appear. Kept
+   * detached because it awaits player input — a scene's `enter()` must never
+   * block on the player (see HANDOFF §6).
+   */
+  private async titleFlow(stack: HTMLElement) {
+    if (this.disposed) return;
+    const prompt = el('div', 'title-press', 'PRESS ANY BUTTON');
+    stack.appendChild(prompt);
+
+    await this.waitForAnyButton();
+    if (this.disposed) return;
+    audio.unlock();
+    audio.sfx('confirm');
+    remove(prompt);
+
+    await this.titleMenu(stack);
+  }
+
+  /**
+   * Resolves on the first mapped action (key or pad) or a click on the title.
+   * The listener iterates a copy inside `input.fire`, and the menu opened next
+   * subscribes afterwards, so the revealing press is never also consumed as a
+   * menu selection (HANDOFF §6, invariant 3).
+   */
+  private waitForAnyButton(): Promise<void> {
+    return new Promise((resolve) => {
+      const finish = () => {
+        this.unsub?.();
+        this.unsub = null;
+        this.screen?.removeEventListener('click', onClick);
+        resolve();
+      };
+      const onClick = () => {
+        audio.unlock();
+        finish();
+      };
+      this.unsub = input.onAction(() => {
+        audio.unlock();
+        finish();
+      });
+      this.screen?.addEventListener('click', onClick);
+    });
   }
 
   private async titleMenu(stack: HTMLElement) {
@@ -241,18 +334,55 @@ export class IntroScene extends GameScene {
     game.addItem('quickLocket');
 
     await this.dialogue.play([
-      ...say('Halden', `${s.name}. It chose you as much as you chose it. Keep it well — a bonded soul does not fade while it rides with you.`),
+      ...say(
+        'Halden',
+        `${s.name}. It chose you as much as you chose it. Keep it well — a bonded soul does not fade while it rides with you.`,
+      ),
       ...narrate(`${s.name} settles into your lantern.`),
-      ...say('Halden', 'Take these, too. A blade, a shroud, a locket — what the dead leave behind. Fit them to your souls from the menu. Small comforts, but the dark is long.'),
+      ...say(
+        'Halden',
+        'Take these, too. A blade, a shroud, a locket — what the dead leave behind. Fit them to your souls from the menu. Small comforts, but the dark is long.',
+      ),
     ]);
   }
 
   override update(dt: number, time: number) {
     for (const b of this.billboards) b.update(dt, this.ctx.hd2d.camera, time);
     for (const t of this.torches) t.update(dt, this.ctx.hd2d.camera, time);
+
+    // Wisps drift in slow, flattened orbits and carry their glow with them.
+    for (const w of this.wisps) {
+      const a = w.phase + time * w.speed;
+      w.bb.object.position.set(w.cx + Math.cos(a) * w.radius, 0, w.cz + Math.sin(a) * w.radius * 0.5);
+      w.bb.update(dt, this.ctx.hd2d.camera, time);
+      w.light.position.set(w.bb.object.position.x, w.y, w.bb.object.position.z);
+      w.light.intensity = 2.1 + Math.sin(time * 1.8 + w.phase) * 0.7;
+    }
+
+    // A steady, slow rise of cool soul-motes from the floor sells the haunt.
+    this.moteAccum += dt;
+    while (this.moteAccum > 0.08) {
+      this.moteAccum -= 0.08;
+      this.particles.emit(new THREE.Vector3((Math.random() - 0.5) * 9, 0.05, -2 + (Math.random() - 0.5) * 6), {
+        count: 1,
+        speed: 0.32,
+        spread: 0.5,
+        life: 3.4,
+        gravity: 0.1,
+        upBias: 0.55,
+        size: 0.09,
+        color: 0x9fb7ff,
+      });
+    }
     this.particles.update(dt);
-    // Slow push-in keeps the title screen alive.
-    this.ctx.hd2d.cameraTarget.set(Math.sin(time * 0.14) * 0.6, 0, 0);
+
+    // Slow, breathing camera drift — sway, rise and push in/out — so the title
+    // feels alive and cinematic rather than a static screenshot.
+    this.ctx.hd2d.cameraTarget.set(
+      Math.sin(time * 0.11) * 1.1,
+      0.12 + Math.sin(time * 0.07) * 0.14,
+      Math.sin(time * 0.05) * 0.7,
+    );
   }
 
   async exit() {
@@ -261,6 +391,7 @@ export class IntroScene extends GameScene {
     remove(this.screen);
     this.dialogue.destroy();
     for (const b of this.billboards) b.dispose();
+    for (const w of this.wisps) w.bb.dispose();
     this.particles.dispose();
     this.scene.clear();
   }

@@ -14,13 +14,91 @@ This is how we make creature sprites **now**. The repo is asset-free (plan
 
 ```
 tools/sprites/
-  compose.mjs      char-grid drawing kit (ellipse, rect, smooth, outlineSil, toArt)
-  render.mjs       dependency-free PNG encoder + comparison-strip compositor
-  creatures.mjs    shared recipe helpers + demo builders + a CREATURES registry
-  quiet-crossing.mjs the first-dungeon roster, keyed by art key (CROSSING registry)
-  build.mjs        CLI: render previews to out/ and emit pasteable { palette, rows }
-  integrate.mjs    CLI: replace CREATURES[<artKey>] blocks in src/assets/art.ts
+  compose.mjs        char-grid drawing kit (ellipse, rect, smooth, outlineSil, toArt)
+  paint.mjs          hex-canvas VOLUMETRIC renderer (form-shading, dithered ramps)
+  render.mjs         dependency-free PNG encoder + comparison-strip compositor
+  personality.mjs    face+posture families (applyFace, POSTURE, lean)
+  creatures.mjs      shared recipe helpers + demo builders + a CREATURES registry
+  quiet-crossing.mjs reach-1 roster, flat house style (CROSSING registry)
+  crystal-cavern.mjs reach-2 roster, painterly style (CAVERN registry)
+  overgrowth.mjs     reach-3 roster, gouache-canopy style (OVERGROWTH registry)
+  haunted.mjs        reach-4 roster, spectral-ink style (HAUNTED registry)
+  last-lantern.mjs   reach-5 roster, reliquary-glass style (LANTERN registry + species data)
+  build.mjs          CLI: render previews to out/ and emit pasteable { palette, rows }
+  integrate.mjs      CLI: replace CREATURES[<artKey>] blocks in src/assets/art.ts
+  integrate-reaches.mjs CLI: insert Overgrowth keys (+ repoint species) & replace Haunted keys
+  integrate-lantern.mjs CLI: insert Last Lantern art keys + generate its 12 species
 ```
+
+## Styles: one per area + one for people
+
+The world gets visual variety by giving **each reach its own sprite style**, and
+**humans a style of their own** — so where you are is legible at a glance.
+
+| Group | Style | Engine |
+|---|---|---|
+| Reach 1 · The Quiet Crossing | flat, bold, graphic house style | `compose.mjs` |
+| Reach 2 · The Crystal Cavern | painterly, dithered, volumetric | `paint.mjs` → `crystal-cavern.mjs` |
+| Reach 3 · The Overgrowth | gouache canopy — warm sun, green shadows, dappled sunflecks, mossy outline | `paint.mjs` → `overgrowth.mjs` |
+| Reach 4 · Haunted Dungeon | spectral ink — monochrome ash, one emissive accent, hollow eyes, dissolve-to-mist | `paint.mjs` → `haunted.mjs` |
+| Reach 5 · The Last Lantern | reliquary glass — warm **internal** core glow, stained-glass leaded panels, bloom halo, *held* (no dissolve) | `paint.mjs` → `last-lantern.mjs` |
+| **Humans (all NPCs + hero)** | 16-bit JRPG protagonist | `humans.mjs` |
+
+All five reaches now have a distinct look, so a single glance says where you are.
+
+**Human style** (`humans.mjs`): a **16-bit JRPG protagonist** look (owner's pick
+from a five-way variant test), full colour with a clean near-black outline,
+three-band cel shading (warm key from screen-left), and heroic proportions
+(~46×66). Each character is an individual via `skin`/`hair`/`coat`/`accent`
+(a gold scarf + placket) / `pants`, a hairstyle (short / long / spiky / cap /
+hood), and an expression (neutral / smile / stern); the **hero** alone raises a
+lit **lantern**, the game's motif, so the protagonist reads at a glance.
+Deliberately unlike the creatures — people should not read as monsters.
+Parametric `human(opts)` builds the whole cast; `integrate-humans.mjs`
+regenerates the `HUMANS` block in `art.ts`.
+
+## Creature rendering styles
+
+Two **engines** build creature sprites; the volumetric one carries **three**
+per-reach style treatments on top, so each reach reads differently:
+
+- **`compose.mjs` — flat house style.** Single-char palette keys, ellipse
+  shapes, 2–3 flat tonal bands, hard single-colour outline. Crisp, graphic,
+  cohesive; cheap. Used for **The Quiet Crossing** (`quiet-crossing.mjs`).
+- **`paint.mjs` — painterly / volumetric.** Works in raw hex on a canvas, then
+  assigns palette keys at the end (`toPixelArt`, auto-quantizing under the key
+  ceiling). Each part is shaded as an implied **sphere** — a fake normal
+  `z = √(1 − r²)`, a Lambert term, a dark→light `ramp()`, and **ordered
+  dithering** between steps so the gradient reads smooth at low res. Adds rim
+  light, specular, and a **coloured** (not black) outline. The three reaches
+  that use it each apply a distinct treatment:
+  - **Crystal Cavern** (`crystal-cavern.mjs`): cool glassy gems/ice/stone, high
+    rim light, glossy specular. Faceted and hard.
+  - **Overgrowth** (`overgrowth.mjs`) — *gouache canopy*: a warm sun keys from
+    high-left, shadows are baked **green** (never black), then `dapple()`
+    scatters deterministic **sun-flecks** over the body, `sunrim()` catches the
+    top-left edge, and a soft **mossy** outline wraps it. Warm, organic, leafy.
+  - **Haunted Dungeon** (`haunted.mjs`) — *spectral ink*: near-monochrome cold
+    **ash** ramps at very low ambient, plus exactly **one emissive accent** per
+    creature that rims the silhouette (`rimGlow`), burns in the hollow eyes
+    (`glowEyes`), and marks the light it carries. `mist()` dithers the lower
+    body away into the dark so wraiths trail off. Cold, translucent, floating.
+  - **The Last Lantern** (`last-lantern.mjs`) — *reliquary glass*: these are
+    **held** souls, so they are lit from **within**. Bodies shade under a *centre*
+    light (`form(..., light:[0,0,1])`) with a dark→hot ramp, so the edges go dark
+    and the core burns; a `core()` white-gold heart is the source. The shell is
+    stained glass — jewel-toned panels (amber/rose/violet/teal) divided by dark
+    `lead()` lines — wrapped in a warm `bloom()` halo of light-motes. Nothing
+    dissolves: these souls are contained, the deliberate inverse of the Haunted
+    reach's cold rim-and-mist. Each builder is **stage-parametric** (1→base,
+    2/3→evolved): held longer, a soul burns bigger and brighter and gains panels,
+    a crown, or wings — so a line's evolutions come from one function.
+
+Mixing styles across reaches is intentional: it gives the world visual variety
+as the player descends. (The Overgrowth species were repointed off the shared
+Quiet-Crossing art keys onto new `og*` keys so the jungle stops borrowing the
+tutorial's sprites; the Haunted keys are unique to their roster and were
+repainted in place, so a species' evolution keeps the look.)
 
 Everything is plain Node (`.mjs`), zero dependencies (Node's built-in `zlib`
 does the PNG). `out/` is git-ignored — previews and `.art.txt` are never
@@ -109,6 +187,18 @@ To **add a brand-new creature**:
 > antennas) must be drawn ≥2px thick or they vanish. See `bug`/`scrap` in
 > `quiet-crossing.mjs` for the 2×2-stamp helper.
 
+## Evolution lines
+
+`tools/sprites/evolutions.mjs` builds the Quiet Crossing evolution stages. Each
+base grows into a **linear 3–4 stage line** whose every stage is its OWN sprite
+that **holds the base's palette + silhouette** (a grown-up version — bigger,
+more of the signature feature, a fiercer face, a crown/aura at the top), in the
+flat house style. `EVO` maps new art key → builder; `LINES` maps base → ordered
+`[stageId, Name, evolveLevel]`. Integrate with `integrate-evolutions.mjs` (art)
+and the data is authored in `src/data/creatures.ts` (`evolutions` chains; the
+`evolve.ts` system + Transcendence screen drive the actual level-gated,
+reversible transform). Bosses (Regalion, etc.) stay standalone, not evo targets.
+
 ## Changelog (for reproducibility)
 
 - **2026-07-28 — pipeline established + first fixes.** Seeded with three 64px
@@ -138,3 +228,64 @@ To **add a brand-new creature**:
   split two teardrops, `slime` (Dropletta) → a round BALL and `wisp` (Gloomote)
   → a wide-headed SHADE with trailing tendrils. Each honors the original
   silhouette. Re-integrated and re-verified in-engine.
+- **2026-07-28 — personality families.** Added the face+posture system
+  (`personality.mjs`, [monster-personalities.md](monster-personalities.md)) and
+  a `faced()` finisher. Migrated five Quiet Crossing builders to their assigned
+  family (`lizard`→fierce, `bat`→clever, `bug`→nervous, `scrap`/`wisp`→uncanny);
+  the three Friendly creatures keep `glossyEyes` and `lion` keeps its bespoke
+  fierce face. Integrated into `art.ts` and shipped.
+- **2026-07-28 — painterly engine + Crystal Cavern (reach 2).** Added
+  `paint.mjs` (volumetric hex-canvas renderer: `form()` sphere-shading with
+  dithered `ramp()`s, `spec`, coloured `outline`, auto-quantizing `toPixelArt`)
+  and `crystal-cavern.mjs` (`CAVERN`). Redesigned the four Crystal Cavern
+  creatures in this richer style to add world variety vs the flat reach-1 look:
+  `crystalSlime` (glassy gem slime), `prismMoth` (iridescent rainbow wings),
+  `geodeGolem` (matte stone + glowing amethyst core), `crystalWarden`
+  (faceted ice boss). `integrate.mjs` now merges `CROSSING` + `CAVERN`.
+  Integrated and verified in-engine.
+- **2026-07-28 — Quiet Crossing evolution lines.** Gave all 8 first-dungeon
+  creatures linear 3–4 stage evolution lines, each stage a NEW own-art sprite
+  holding the base's style (`evolutions.mjs`, `integrate-evolutions.mjs`, 20 new
+  species in `creatures.ts`). Replaced the earlier borrowed-art / boss-linked
+  branches per the "hold predecessor's style" direction; bosses stay standalone.
+- **2026-07-28 — human style (third style) + all NPCs redesigned.** Added
+  `humans.mjs` (parametric cel-shaded "storybook" people, warm-cool lantern
+  light) and `integrate-humans.mjs`. Replaced the legacy 14×18 shared-silhouette
+  `human()` generator and redrew all nine characters (hero, mentor, chief,
+  rival, vendor, soulkeeper, three leaders), each an individual. Establishes the
+  "distinct style per area + humans" plan in the table above.
+- **2026-07-30 — reaches 3 & 4 get their own styles (all remaining dungeons).**
+  Added two per-reach treatments on the volumetric engine and redrew both
+  rosters:
+  - **The Overgrowth** (`overgrowth.mjs`, *gouache canopy*): `bogfrog` (Boggle),
+    `leafbeetle` (Chitter), `fernguard` (Frondle), `junglecat` (Thorncat),
+    `verdanox` (Verdanox boss). New `og*` art keys; the five jungle species were
+    repointed off the shared Quiet-Crossing `slime`/`bug`/`plant`/`wolf`/`lion`
+    keys so the jungle no longer looks like the tutorial.
+  - **The Haunted Dungeon** (`haunted.mjs`, *spectral ink*): `cursedArmor`
+    (Cryptguard), `graveCrawler` (Gravemaw), `wraithWisp` (Wispling), `revenant`
+    (Revenance), `lastlight` (Lastlight boss) — repainted in place, so each
+    species' evolution keeps the look.
+  `integrate-reaches.mjs` does the insert-and-repoint + in-place replace in one
+  pass (it quotes palette keys, since dense sprites reach non-identifier keys).
+  Verified in-engine with forced battles in both reaches.
+- **2026-07-31 — The Last Lantern (reach 5, the finale) gets a bespoke roster.**
+  The finale reach shipped borrowing earlier monsters; gave it its own fifth
+  style (`last-lantern.mjs`, *reliquary glass* — see the styles section) and a
+  bespoke roster of **5 held-soul lines, 12 species**: Emberkeep → Lanternwake →
+  Everember (mage/fire), Ashmoth → Cindershroud (assassin/dark), Wardling →
+  Reliquary → Lanternlord (hero/fire, boss line), Grievewisp → Mournlight
+  (mage/dark), Keptsoul → Heldshade (hero/dark). All class-pure; evolutions on
+  the current debug schedule (Lv2/3). `integrate-lantern.mjs` inserts the 12 art
+  keys and generates the 12 species from `LANTERN_SPECIES` (evolved stats scale
+  by `LANTERN_FAC`); `lastLantern.ts` encounters were repointed off the borrowed
+  gloomote/dropletta/shardling/revenance/glaciark onto the new roster. Verified
+  in-engine.
+- **2026-07-31 — humans restyled to 16-bit JRPG (owner's pick).** The owner
+  reviewed five hero variants (Game Boy / 16-bit JRPG / HD-2D painterly /
+  storybook gouache / flat vector) and chose the **16-bit JRPG** look for the
+  whole cast. Rewrote `human(opts)` in that style — full colour, near-black
+  outline, three-band cel shading, ~46×66, gold scarf, per-character hairstyle +
+  expression, and a raised lantern for the hero — and regenerated all nine
+  `HUMANS` entries via `integrate-humans.mjs`. Verified in-engine (dungeon hero +
+  hub NPCs).

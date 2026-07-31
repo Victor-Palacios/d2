@@ -43,7 +43,10 @@ export class GridMenu {
         `<span class="grid-icon">${it.icon}</span>` +
         `<span class="grid-text"><b>${esc(it.label)}</b>${it.sublabel ? `<i>${esc(it.sublabel)}</i>` : ''}</span>`;
       card.addEventListener('mouseenter', () => this.moveTo(i));
-      card.addEventListener('click', () => { this.moveTo(i); this.choose(); });
+      card.addEventListener('click', () => {
+        this.moveTo(i);
+        this.choose();
+      });
       grid.appendChild(card);
       return card;
     });
@@ -51,12 +54,18 @@ export class GridMenu {
     this.root.appendChild(el('div', 'hint', 'ARROWS choose · Z/ENTER open · X / Start close'));
     this.parent.appendChild(this.root);
 
-    if (this.items[this.index]?.disabled) this.index = Math.max(0, this.items.findIndex((i) => !i.disabled));
+    if (this.items[this.index]?.disabled)
+      this.index = Math.max(
+        0,
+        this.items.findIndex((i) => !i.disabled),
+      );
     this.refresh();
   }
 
   private refresh() {
-    this.nodes.forEach((n, i) => n.classList.toggle('sel', i === this.index));
+    this.nodes.forEach((n, i) => {
+      n.classList.toggle('sel', i === this.index);
+    });
   }
 
   private moveTo(i: number) {
@@ -81,7 +90,10 @@ export class GridMenu {
       const dir = dr + dc >= 0 ? 1 : -1;
       for (let k = 1; k < n; k++) {
         const j = ni + dir * k;
-        if (j >= 0 && j < n && !this.items[j].disabled) { ni = j; break; }
+        if (j >= 0 && j < n && !this.items[j].disabled) {
+          ni = j;
+          break;
+        }
       }
     }
     this.moveTo(ni);
@@ -113,7 +125,10 @@ export class GridMenu {
         else if (a === 'down') this.move(1, 0);
         else if (a === 'confirm') this.choose();
         // Start / R1 toggles the menu shut again, matching how it opened.
-        else if (a === 'cancel' || a === 'menu' || a === 'start') { audio.sfx('cancel'); this.finish(null); }
+        else if (a === 'cancel' || a === 'menu' || a === 'start') {
+          audio.sfx('cancel');
+          this.finish(null);
+        }
       });
     });
   }

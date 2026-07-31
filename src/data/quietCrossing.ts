@@ -74,23 +74,29 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
         script: [
           ...say(
             MENTOR,
-            'Radio check. You are carrying a keeper\'s lantern across the Quiet Crossing — the threshold every soul passes on its way to rest.',
-            'Arrow keys or WASD move you one tile at a time. Every step spends a little of your light — watch the meter.',
-            'Let it gutter out and the tow line brings you home with the dark unattended.',
+            "Radio check. You are carrying a keeper's lantern across the Quiet Crossing — the threshold every soul passes on its way to rest.",
+            'Arrow keys or WASD move you one tile at a time. Every step spends a little of your light — watch your lantern.',
+            'Let it gutter out and you are spirited away, the dark left unattended.',
           ),
           ...say(MENTOR, 'The soul you bonded with rides in your lantern. It answers for you; you decide how.'),
-          ...say(MENTOR, 'What you meet here are echoes — souls still running their last errand. Meet one, and it logs to your Soularium: your book of names, so it is not forgotten twice.'),
+          ...say(
+            MENTOR,
+            'What you meet here are echoes — souls still running their last errand. Meet one, and it logs to your Soularium: your book of names, so it is not forgotten twice.',
+          ),
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [{ species: 'mitebug', level: 1 }],
-        intro: say(MENTOR, 'An echo, and a small one. Open with Attack. You are not hurting it — you are getting its attention.'),
+        intro: say(
+          MENTOR,
+          'An echo, and a small one. Open with Attack. You are not hurting it — you are getting its attention.',
+        ),
         outro: say(MENTOR, 'Quieted, not slain. Attack costs nothing; Techniques cost MP but reach far deeper.'),
       },
     },
     chests: {
-      '11,2': { credits: 180, item: 'repairChip', note: 'Someone abandoned a supply crate up here.' },
+      '11,2': { obols: 180, item: 'repairChip', note: 'Someone abandoned a supply crate up here.' },
     },
     encounterRate: 0,
     encounters: [],
@@ -136,12 +142,18 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       '2': {
         kind: 'battle',
         enemies: [{ species: 'sprigling', level: 1 }],
-        intro: say(MENTOR, 'Company at the gate. Guard when a creature is about to drop — it soaks the hit and recovers MP.'),
-        outro: say(MENTOR, 'Good. The plates and the descent portal are just ahead. The Vigil keeps the floor below — the boundary you will have to satisfy.'),
+        intro: say(
+          MENTOR,
+          'Company at the gate. Guard when a creature is about to drop — it soaks the hit and recovers MP.',
+        ),
+        outro: say(
+          MENTOR,
+          'Good. The plates and the descent portal are just ahead. The Vigil keeps the floor below — the boundary you will have to satisfy.',
+        ),
       },
     },
     chests: {
-      '12,2': { credits: 240, note: 'A cracked cache, still holding credits.' },
+      '12,2': { obols: 240, note: 'A cracked cache, still holding obols.' },
     },
     encounterRate: 0.06,
     encounters: [
@@ -180,21 +192,32 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
         kind: 'dialogue',
         once: true,
         script: [
-          ...say(MENTOR, 'Stop. The Vigil stands the far end of this hall. It keeps the boundary — it decides who is fit to carry a light past the Crossing.'),
+          ...say(
+            MENTOR,
+            'Stop. The Vigil stands the far end of this hall. It keeps the boundary — it decides who is fit to carry a light past the Crossing.',
+          ),
           ...narrate('Something heavy shifts at the far end of the hallway.'),
-          ...say(MENTOR, 'It stands like a Hero — armoured, certain. A Mage reaches past armour; lead with one if you have bonded one.'),
+          ...say(
+            MENTOR,
+            'It stands like a Hero — armoured, certain. A Mage reaches past armour; lead with one if you have bonded one.',
+          ),
         ],
       },
       '1': {
         kind: 'boss',
         enemies: [{ species: 'regalion', level: 2 }],
         intro: [
-          ...narrate('The Vigil rises out of the dark and fills the hallway — a keeper older than the Crossing itself.'),
-          ...say('the Vigil', 'A new lantern, still warm. Show me you can hold it steady before I let you carry it where the dark is deeper.'),
+          ...narrate(
+            'The Vigil rises out of the dark and fills the hallway — a keeper older than the Crossing itself.',
+          ),
+          ...say(
+            'the Vigil',
+            'A new lantern, still warm. Show me you can hold it steady before I let you carry it where the dark is deeper.',
+          ),
         ],
         outro: [
           ...say('the Vigil', 'Steady enough. Go on, keeper. What waits past me will not ask so gently.'),
-          ...say(MENTOR, 'The Vigil stands aside. Take the way it opened — you have your keeper\'s leave now.'),
+          ...say(MENTOR, "The Vigil stands aside. Take the way it opened — you have your keeper's leave now."),
         ],
       },
     },
@@ -211,11 +234,12 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
 export const QUIET_CROSSING: Reach = {
   id: 'crossing',
   name: 'The Quiet Crossing',
-  blurb: 'The threshold every soul passes on its way to rest. Quiet, mostly — which is why new keepers learn to carry a lantern here.',
+  blurb:
+    'The threshold every soul passes on its way to rest. Quiet, mostly — which is why new keepers learn to carry a lantern here.',
   color: '#ffa64d',
   recommendedLevel: 1,
   floors: QUIET_CROSSING_FLOORS,
-  startingFuel: 120,
+  startingLight: 120,
   music: 'dungeon',
-  onClear: { flag: 'crossingCleared', licenseCeremony: true },
+  onClear: { flag: 'crossingCleared', leaveCeremony: true },
 };

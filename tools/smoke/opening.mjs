@@ -27,6 +27,9 @@ const winBattle = async (ms = 90000) => { const t0 = Date.now(); let sawBattle =
   return sawBattle && (await scene()) === 'dungeon'; };
 
 await page.goto(process.env.URL ?? 'http://localhost:4195/', { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const g = window.hd2dGame; const p = g.hd2d.params;
   p.supersample = 0.35; p.dofEnabled = false; p.tiltEnabled = false; p.bloomEnabled = false;

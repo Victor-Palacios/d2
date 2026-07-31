@@ -15,21 +15,54 @@ Guidance for AI agents (and humans) working in this repo. Read
   runs `tsc --noEmit` first, so a type error fails the deploy rather than
   shipping a broken bundle. Build before you push.
 
+## Naming — IMPORTANT
+
+The crawlable areas are **reaches**, never "domains", and the tutorial area is
+**The Quiet Crossing**, never "boot" / "Boot Domain". These words were renamed
+out of the whole project on purpose — do not reintroduce them in code,
+identifiers, comments, docs, dialogue, or commit messages.
+
+- Areas: type `Reach`, registry `REACHES` / `REACH_ORDER` in
+  `src/data/reaches.ts`; ids are `crossing` / `crystal` / `jungle` / `haunted`;
+  clear flags are `crossingCleared` etc.
+- The only legitimate substring in the tree is the `boots` sprite-colour field in
+  `src/assets/art.ts` — that one is fine.
+- A guard enforces this: run **`npm run check:naming`** before you push (it is
+  also a CI job, `.github/workflows/naming-guard.yml`, that fails on any push
+  reintroducing the banned words). This file is the one place the words may
+  appear, so the guard skips it.
+
 ## Build & test
 
 ```bash
 npm install
-npm run dev        # local dev server
-npm run build      # tsc --noEmit + vite build  (run before every push)
+npm run dev          # local dev server
+npm run typecheck    # tsc --noEmit
+npm run test         # vitest — unit tests for the headless game logic
+npm run lint         # biome — lint + format check (no writes)
+npm run format       # biome — apply formatting
+npm run check:naming # the "reach" naming guard (see above)
+npm run build        # tsc --noEmit + vite build  (run before every push)
 ```
 
-Smoke tests drive the built game in a real browser (see
-[tools/smoke/README.md](tools/smoke/README.md)). Typechecking proves little
-here — behaviour bugs only show up when the game actually runs:
+**Before every push, keep `main` green:** `npm run typecheck && npm run lint &&
+npm run test && npm run check:naming && npm run build`. CI
+(`.github/workflows/ci.yml`) runs the same gate on every push and PR; the deploy
+and naming-guard workflows run alongside it.
+
+Unit tests (`vitest`) cover the pure logic — the battle model, damage maths and
+progression in `src/systems/`. They stay fast and hermetic because the battle
+engine takes an **injected `rng`** (see `Battle`/`computeDamage`), so fights are
+fully reproducible. **Never call `Math.random()` directly inside `src/systems/`
+— thread `rng` through** so the logic stays deterministic and testable.
+
+Smoke tests drive the *built* game in a real browser (see
+[tools/smoke/README.md](tools/smoke/README.md)) and catch what unit tests and
+typechecking cannot — behaviour bugs only show up when the game actually runs:
 
 ```bash
+npm install                               # playwright is a pinned devDependency
 npm run build && npm run preview          # serves on :4173
-npm i -D playwright                        # ad hoc, not a project dependency
 URL=http://localhost:4173/ node tools/smoke/save.mjs
 ```
 

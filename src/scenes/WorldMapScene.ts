@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { GameScene } from '../engine/SceneManager';
-import type { SceneContext } from '../engine/SceneManager';
 import { ParticleField } from '../engine/fx';
 import { floorTexture } from '../engine/pixel';
 import { audio } from '../engine/Audio';
@@ -33,10 +32,6 @@ export class WorldMapScene extends GameScene {
   private particles!: ParticleField;
   private nodes: Node3D[] = [];
   private select: CardSelect | null = null;
-
-  constructor(ctx: SceneContext) {
-    super(ctx);
-  }
 
   async enter() {
     this.buildMap();
@@ -125,7 +120,7 @@ export class WorldMapScene extends GameScene {
         title: 'The Everwake',
         tag: 'Safe zone',
         tagColor: '#6fd3ff',
-        body: 'Licence office, supply bay, and everyone who wants something from you. Go back inside.',
+        body: 'The supply bay, the keepers’ hall, and everyone who wants something from you. Go back inside.',
       },
       ...REACH_ORDER.map((id): Card => {
         const d = reach(id);
@@ -147,22 +142,20 @@ export class WorldMapScene extends GameScene {
         const partyLv = partyLevel();
         const recColor = partyLv >= rec ? '#7bdc8a' : partyLv >= rec - 2 ? '#ffd166' : '#ff6b6b';
         // Name the reach whose clearing unlocks this one, for the locked hint.
+        // The finale is gated on a story flag, not a reach clear, so hint that.
         const gate = REACH_ORDER.map(reach).find((x) => x.onClear.flag === d.requires);
+        const gateNote = d.requires === 'actTwo' ? 'Locked · it opens only after your darkest hour' : null;
         return {
           value: id,
           title: d.name,
           tag,
           tagColor: locked ? '#8a90a6' : d.color,
           disabled: locked,
-          disabledNote: locked
-            ? gate
-              ? `Locked · clear ${gate.name} first`
-              : 'Locked'
-            : undefined,
+          disabledNote: locked ? (gateNote ?? (gate ? `Locked · clear ${gate.name} first` : 'Locked')) : undefined,
           body:
             `<span style="color:${recColor}">◆ Recommended Lv ${rec}</span>` +
             `<span class="dim"> · your party ~Lv ${partyLv}</span><br><br>` +
-            `${d.blurb}<br><br><span class="dim">${d.floors.length} floors · EP ${d.startingFuel}</span>`,
+            `${d.blurb}<br><br><span class="dim">${d.floors.length} floors · LP ${d.startingLight}</span>`,
         };
       }),
     ];
@@ -178,7 +171,7 @@ export class WorldMapScene extends GameScene {
     if (choice && choice !== 'city') {
       game.activeReachId = choice;
       const d = reach(choice);
-      game.maxFuel = d.startingFuel;
+      game.maxLight = d.startingLight;
       game.resetCrawl();
       await this.ctx.go('dungeon');
     } else {

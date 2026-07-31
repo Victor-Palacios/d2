@@ -21,6 +21,9 @@ const pickPartner = async () => {
 };
 
 await page.goto((process.env.URL ?? 'http://localhost:5199/'), { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const g = window.hd2dGame; const p = g.hd2d.params;
   p.supersample = 0.35; p.dofEnabled = false; p.tiltEnabled = false; p.bloomEnabled = false;
@@ -63,7 +66,7 @@ console.log('hub probe     :', JSON.stringify(probe));
 const s = await info();
 console.log('scene         :', s.scene);
 console.log('autosave kind :', s.auto?.kind, '| label:', s.auto?.label, '| scene:', s.auto?.scene);
-console.log('name/credits  :', s.auto?.state?.playerName, s.auto?.state?.credits);
+console.log('name/obols  :', s.auto?.state?.playerName, s.auto?.state?.obols);
 console.log('party saved   :', s.auto?.state?.party?.map((c) => `${c.name} ${c.attribute}`).join(', '));
 console.log('flags         :', s.auto?.state?.flags?.join(','));
 console.log('VERDICT       :', s.auto ? 'PASS — hub autosave written' : 'FAIL — no autosave after arrival');

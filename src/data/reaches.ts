@@ -3,6 +3,7 @@ import { QUIET_CROSSING } from './quietCrossing';
 import { CRYSTAL_CAVERN } from './crystalCavern';
 import { JUNGLE_REACH } from './jungleReach';
 import { HAUNTED_DUNGEON } from './hauntedDungeon';
+import { LAST_LANTERN } from './lastLantern';
 
 /**
  * The reach registry. Adding a dungeon = author its data file, export a
@@ -14,10 +15,11 @@ export const REACHES: Record<string, Reach> = {
   crystal: CRYSTAL_CAVERN,
   jungle: JUNGLE_REACH,
   haunted: HAUNTED_DUNGEON,
+  lantern: LAST_LANTERN,
 };
 
 /** Order the reaches appear on the world map (after The Everwake). */
-export const REACH_ORDER = ['crossing', 'crystal', 'jungle', 'haunted'];
+export const REACH_ORDER = ['crossing', 'crystal', 'jungle', 'haunted', 'lantern'];
 
 export function reach(id: string): Reach {
   const d = REACHES[id];

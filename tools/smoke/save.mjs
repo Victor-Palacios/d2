@@ -25,7 +25,7 @@ const st = () => page.evaluate(() => {
   return {
     scene: g.manager.current,
     tile: s.tileX !== undefined ? `${s.tileX},${s.tileZ}` : null,
-    floor: g.game.floorIndex, fuel: g.game.fuel, credits: g.game.credits,
+    floor: g.game.floorIndex, fuel: g.game.fuel, obols: g.game.obols,
     name: g.game.playerName,
     busy: s.busy ?? null,
     dlg: (() => { const d = document.querySelector('#dialogue'); return !!d && d.style.display !== 'none'; })(),
@@ -71,6 +71,9 @@ const pickPartner = async () => {
 };
 
 await page.goto((process.env.URL ?? 'http://localhost:5199/'), { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await cheap();
 await page.waitForTimeout(1000);
@@ -115,6 +118,9 @@ await page.screenshot({ path: `${OUT}/81-title-continue.png` });
 
 console.log('=== SESSION 2: reload the page (simulates coming back later) ===');
 await page.reload({ waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await cheap();
 await page.waitForTimeout(800);
@@ -133,6 +139,9 @@ console.log('  suspend consumed on load :', (await st()).saves.suspend === false
 
 console.log('=== SESSION 3: reload again — suspend must be gone, autosave remains ===');
 await page.reload({ waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await cheap();
 await page.waitForTimeout(800);

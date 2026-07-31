@@ -14,6 +14,9 @@ page.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
 page.on('pageerror', (e) => errs.push(String(e)));
 
 await page.goto(URL, { waitUntil: 'domcontentloaded' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForFunction(() => !!(window.hd2dGame && window.hd2dGame.creature && window.hd2dGame.evolve));
 
 const r = await page.evaluate(() => {
@@ -37,41 +40,56 @@ const r = await page.evaluate(() => {
   out.bruiserOffBeatsMag = bruiser.off > bruiser.mag;
   out.statsPresent = [mage, bruiser].every((c) => typeof c.mag === 'number' && typeof c.res === 'number');
 
-  // --- Evolution: not before the level, branching at the level ----------
-  const young = makeCreature('emberling', 9);
+  // --- Evolution: not before the (debug) level, eligible at it ----------
+  // Debug schedule: base→2nd at Lv2, →3rd at Lv3, →4th at Lv4.
+  const young = makeCreature('emberling', 1);
   out.tooYoung = evolve.evolutionOptions(young).length === 0 && !evolve.canEvolve(young);
 
-  const ready = makeCreature('emberling', 12);
+  const ready = makeCreature('emberling', 2);
   const opts = evolve.evolutionOptions(ready).map((o) => o.to);
-  out.branchesAt10 = evolve.canEvolve(ready) && opts.includes('regalion') && opts.includes('cinderfang');
+  out.eligibleAtLevel = evolve.canEvolve(ready) && opts.includes('emberforge');
 
-  // Ambiguous evolve (two branches) must refuse without a chosen branch.
-  const beforeId = ready.speciesId;
-  out.refusesAmbiguous = evolve.evolve(ready) === null && ready.speciesId === beforeId;
-
-  // Take a branch: species/attribute/moves change, level/uid/xp preserved.
+  // Take the sole branch: species/moves change, class/uid/level preserved.
   const uid = ready.uid; const lvl = ready.level;
-  const res = evolve.evolve(ready, 'cinderfang');
-  out.evolved = !!res && ready.speciesId === 'cinderfang' &&
-    ready.attribute === 'assassin' && ready.uid === uid && ready.level === lvl &&
-    ready.techniques.includes('emberRend');
+  const res = evolve.evolve(ready); // no toId — takes the single eligible branch
+  out.evolved = !!res && ready.speciesId === 'emberforge' &&
+    ready.attribute === 'hero' && ready.uid === uid && ready.level === lvl &&
+    ready.techniques.includes('emberFang');
   out.gained = res ? res.gainedMoves : [];
 
-  // --- De-evolution is exact and reversible -----------------------------
+  // --- De-evolution keeps everything (known pool is monotonic) ----------
+  const evolvedKnown = ready.techniques.slice();
   const canBack = evolve.canDevolve(ready) && evolve.devolveTargetId(ready) === 'emberling';
   const back = evolve.devolve(ready);
   const fresh = makeCreature('emberling', lvl);
   out.devolved = canBack && !!back && ready.speciesId === 'emberling' &&
     ready.attribute === 'hero' && ready.off === fresh.off && ready.mag === fresh.mag &&
-    JSON.stringify(ready.techniques) === JSON.stringify(fresh.techniques);
+    evolvedKnown.every((m) => ready.techniques.includes(m)); // nothing forgotten
 
-  // --- Multi-stage line: scrapmite → cogling → cogknight ----------------
-  const scrap = makeCreature('scrapmite', 12);
-  const s1 = evolve.evolve(scrap); // sole branch → cogling at L8
-  const s2 = evolve.canEvolve(scrap) ? evolve.evolve(scrap) : null; // cogling → cogknight at L10
-  out.multiStage = !!s1 && scrap.speciesId === 'cogknight' &&
-    evolve.devolveTargetId(scrap) === 'cogling';
-  void s2;
+  // --- Multi-stage line: emberling → emberforge → ashwarden → pyrelord ---
+  const line = makeCreature('emberling', 4);
+  const s1 = evolve.evolve(line); // → emberforge (Lv2)
+  const s2 = evolve.evolve(line); // → ashwarden  (Lv3)
+  const s3 = evolve.evolve(line); // → pyrelord   (Lv4)
+  out.multiStage = !!s1 && !!s2 && !!s3 && line.speciesId === 'pyrelord' &&
+    !evolve.canEvolve(line) && evolve.devolveTargetId(line) === 'ashwarden';
+
+  // --- Class purity: no authored evolution crosses attribute ------------
+  const cross = [];
+  for (const [id, sp] of Object.entries(window.hd2dGame.roster.SPECIES)) {
+    for (const opt of sp.evolutions ?? []) {
+      if (!evolve.isSameClass(id, opt.to)) cross.push(`${id} → ${opt.to}`);
+    }
+  }
+  out.classPure = cross.length === 0;
+  out.crossClass = cross;
+
+  // --- Loadout: known pool may exceed the fieldable cap -----------------
+  const { activeMoves, MAX_ACTIVE_MOVES } = creature;
+  const loaded = makeCreature('emberling', 20);
+  out.loadoutCapped = loaded.loadout.length <= MAX_ACTIVE_MOVES &&
+    activeMoves(loaded).length <= MAX_ACTIVE_MOVES &&
+    loaded.loadout.every((m) => loaded.techniques.includes(m));
 
   // Terminal forms offer nothing.
   const geodon = makeCreature('geodon', 20);
@@ -138,20 +156,22 @@ line('mage MAG > OFF', r.mageMagBeatsOff);
 line('bruiser OFF > MAG', r.bruiserOffBeatsMag);
 line('mag/res present on instances', r.statsPresent);
 line('cannot evolve before level', r.tooYoung);
-line('branches unlock at level 10', r.branchesAt10);
-line('refuses ambiguous evolve', r.refusesAmbiguous);
-line('evolves along chosen branch', r.evolved);
-line('de-evolution restores exactly', r.devolved);
-line('multi-stage line resolves', r.multiStage);
+line('eligible at the debug gate (Lv2)', r.eligibleAtLevel);
+line('evolves along sole branch', r.evolved);
+line('de-evolution keeps every move', r.devolved);
+line('multi-stage line resolves (→pyrelord)', r.multiStage);
 line('terminal form has no path', r.terminal);
+line('all evolutions are class-pure', r.classPure);
+line('loadout capped at MAX_ACTIVE_MOVES', r.loadoutCapped);
 line('damage channel splits phys/magic', r.channelSplit);
 line('heal blends RES(0.7)+MAG(0.3)', r.healUsesBoth);
 console.log(`roster sweep: ${r.rosterCount} species` + (r.rosterProblems.length ? '\n  ' + r.rosterProblems.join('\n  ') : ''));
 line('every species + evolution resolves', r.rosterClean);
 
 const ok = r.learnsetGrows && r.mageMagBeatsOff && r.bruiserOffBeatsMag && r.statsPresent &&
-  r.tooYoung && r.branchesAt10 && r.refusesAmbiguous && r.evolved && r.devolved &&
-  r.multiStage && r.terminal && r.channelSplit && r.healUsesBoth && r.rosterClean;
+  r.tooYoung && r.eligibleAtLevel && r.evolved && r.devolved &&
+  r.multiStage && r.terminal && r.classPure && r.loadoutCapped &&
+  r.channelSplit && r.healUsesBoth && r.rosterClean;
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 console.log(ok && !errs.length ? '\nPASS' : '\nFAIL');

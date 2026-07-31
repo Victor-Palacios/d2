@@ -1,5 +1,5 @@
 import type { CreatureInstance } from '../party/creature';
-import { isDown, isUp, effSpd, hasEquipEffect } from '../party/creature';
+import { isDown, isUp, effSpd, hasEquipEffect, activeMoves } from '../party/creature';
 import type { ElementId } from '../../data/elements';
 import type { Technique } from '../../data/techniques';
 import { technique, techShape } from '../../data/techniques';
@@ -259,15 +259,41 @@ export class Battle {
     // means a repositioned creature leaves its plate behind (and can move onto
     // another). The incoming per-slot tiles map to their starting cells.
     this.plates = { party: new Array(6).fill(undefined), enemy: new Array(6).fill(undefined) };
-    partyCells.forEach((cell, i) => { if (cfg.partyTiles?.[i]) this.plates.party[cellIndex(cell)] = cfg.partyTiles[i]; });
-    enemyCells.forEach((cell, i) => { if (cfg.enemyTiles?.[i]) this.plates.enemy[cellIndex(cell)] = cfg.enemyTiles[i]; });
+    partyCells.forEach((cell, i) => {
+      if (cfg.partyTiles?.[i]) this.plates.party[cellIndex(cell)] = cfg.partyTiles[i];
+    });
+    enemyCells.forEach((cell, i) => {
+      if (cfg.enemyTiles?.[i]) this.plates.enemy[cellIndex(cell)] = cfg.enemyTiles[i];
+    });
 
-    cfg.party.forEach((c, i) =>
-      this.battlers.push({ creature: c, side: 'party', slot: i, cell: partyCells[i], tile: this.plateAt('party', partyCells[i]), stagger: 0, staggered: false, chain: 0, commune: 0, pacified: false }),
-    );
-    cfg.enemies.forEach((c, i) =>
-      this.battlers.push({ creature: c, side: 'enemy', slot: i, cell: enemyCells[i], tile: this.plateAt('enemy', enemyCells[i]), stagger: 0, staggered: false, chain: 0, commune: 0, pacified: false }),
-    );
+    cfg.party.forEach((c, i) => {
+      this.battlers.push({
+        creature: c,
+        side: 'party',
+        slot: i,
+        cell: partyCells[i],
+        tile: this.plateAt('party', partyCells[i]),
+        stagger: 0,
+        staggered: false,
+        chain: 0,
+        commune: 0,
+        pacified: false,
+      });
+    });
+    cfg.enemies.forEach((c, i) => {
+      this.battlers.push({
+        creature: c,
+        side: 'enemy',
+        slot: i,
+        cell: enemyCells[i],
+        tile: this.plateAt('enemy', enemyCells[i]),
+        stagger: 0,
+        staggered: false,
+        chain: 0,
+        commune: 0,
+        pacified: false,
+      });
+    });
   }
 
   /** Element plate under a cell on `side`'s grid, if any. */
@@ -300,9 +326,7 @@ export class Battle {
    */
   isCovered(b: Battler): boolean {
     if (b.cell.row !== 1) return false;
-    return this.side(b.side).some(
-      (a) => a !== b && this.inPlay(a) && a.cell.row === 0 && a.cell.col === b.cell.col,
-    );
+    return this.side(b.side).some((a) => a !== b && this.inPlay(a) && a.cell.row === 0 && a.cell.col === b.cell.col);
   }
 
   /** Living, gentle foes on `side` that the Commune action can reach. */
@@ -537,7 +561,16 @@ export class Battle {
 
       t.creature.hp = Math.max(0, t.creature.hp - dealt);
       const fainted = isDown(t.creature);
-      result.hits.push({ targetUid: t.creature.uid, damage: dealt, heal: 0, fainted, crit: critHit, reaction: reactName, chain: chainN || undefined, breakdown });
+      result.hits.push({
+        targetUid: t.creature.uid,
+        damage: dealt,
+        heal: 0,
+        fainted,
+        crit: critHit,
+        reaction: reactName,
+        chain: chainN || undefined,
+        breakdown,
+      });
 
       if (critHit) result.log.push('A remembered life strikes true — critical!');
       if (reactName) result.log.push(`${reactName}! The clashing ${mark}/${tech.element} energies detonate!`);
@@ -560,7 +593,10 @@ export class Battle {
       // re-establish it); otherwise this hit leaves its own element behind.
       if (!fainted) {
         if (reacts) t.reactionTag = undefined;
-        else { t.reactionTag = tech.element; t.reactionRound = this.round; }
+        else {
+          t.reactionTag = tech.element;
+          t.reactionRound = this.round;
+        }
       }
 
       // Stagger accrual (living, not-yet-broken targets): faster on class
@@ -671,9 +707,8 @@ export class Battle {
     const target = this.softmaxPick(scored);
 
     // Heal itself / an ally when badly hurt and the technique is available.
-    const healTech = c.techniques
-      .map((id) => technique(id))
-      .find((t) => t.kind === 'heal' && c.mp >= t.mpCost);
+    const moves = activeMoves(c);
+    const healTech = moves.map((id) => technique(id)).find((t) => t.kind === 'heal' && c.mp >= t.mpCost);
     if (healTech) {
       const hurt = this.living(actor.side)
         .filter((b) => b.creature.hp / b.creature.maxHp < 0.4)
@@ -683,9 +718,7 @@ export class Battle {
       }
     }
 
-    const usable = c.techniques
-      .map((id) => technique(id))
-      .filter((t) => t.kind === 'damage' && c.mp >= t.mpCost);
+    const usable = moves.map((id) => technique(id)).filter((t) => t.kind === 'damage' && c.mp >= t.mpCost);
 
     if (usable.length && this.rng() < 0.72) {
       // Prefer a multi-target shape when it would actually catch two or more.
@@ -706,7 +739,7 @@ export class Battle {
     // A basic Attack is melee: it can only reach the Vanguard (and exposed Rear),
     // so retarget to a legal foe if the scored pick is behind cover.
     const meleeFoes = this.meleeTargets(oppSide);
-    const meleeTarget = meleeFoes.includes(target) ? target : meleeFoes[0] ?? target;
+    const meleeTarget = meleeFoes.includes(target) ? target : (meleeFoes[0] ?? target);
     return { type: 'attack', targetUid: meleeTarget.creature.uid };
   }
 }

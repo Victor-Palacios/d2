@@ -19,7 +19,10 @@ export interface EnemySpec {
 export type FloorEvent =
   | { kind: 'dialogue'; script: DialogueScript; once?: boolean }
   | { kind: 'battle'; enemies: EnemySpec[]; intro?: DialogueScript; outro?: DialogueScript }
-  | { kind: 'boss'; enemies: EnemySpec[]; intro?: DialogueScript; outro?: DialogueScript };
+  | { kind: 'boss'; enemies: EnemySpec[]; intro?: DialogueScript; outro?: DialogueScript }
+  // The finale (The Last Lantern): not a fight but a choice — keep the soul you
+  // came for, or let it cross. Handled by `DungeonScene.runFinale`.
+  | { kind: 'finale'; intro?: DialogueScript };
 
 export interface EncounterEntry {
   weight: number;
@@ -27,10 +30,16 @@ export interface EncounterEntry {
 }
 
 /**
- * A purely-decorative billboard placed on the floor at grid coords (x, z).
- * Decor never collides — it dresses a reach's terrain (crystals, gravestones,
- * roots, machine pylons…) without touching movement. `kind` indexes the `DECOR`
- * art table in `src/assets/art.ts`.
+ * A decorative billboard placed on the floor at grid coords (x, z). Decor
+ * dresses a reach's terrain (crystals, gravestones, roots, machine pylons…) and
+ * — unless flagged otherwise — is a solid obstacle: the party cannot step onto a
+ * tile occupied by solid decor. `kind` indexes the `DECOR` art table in
+ * `src/assets/art.ts`.
+ *
+ * Solidity is per-kind by default (see `PASSABLE_DECOR_KINDS`): chunky physical
+ * props (rocks, crystals, pillars, trees…) block, while flat ground detail and
+ * overhead dressing (glowing floor mushrooms, flowers, hanging vines) do not.
+ * `solid` overrides that default for a single instance.
  */
 export interface DecorSpec {
   x: number;
@@ -40,6 +49,25 @@ export interface DecorSpec {
   height?: number;
   /** Self-illumination for glowing decor (crystals, braziers). Default 0.1. */
   emissive?: number;
+  /**
+   * Whether the party collides with this prop. Defaults to the kind's entry in
+   * `PASSABLE_DECOR_KINDS` (most props block; flat/overhead detail does not).
+   * Set explicitly to force one instance solid or passable.
+   */
+  solid?: boolean;
+}
+
+/**
+ * Decor kinds that do NOT block movement by default — flat ground detail you
+ * walk over (glowing floor mushrooms, flowers) or overhead dressing you walk
+ * under (hanging vines). Every other kind is solid unless a `DecorSpec` opts
+ * out with `solid: false`.
+ */
+export const PASSABLE_DECOR_KINDS = new Set<string>(['mushroomGlow', 'jungleFlower', 'vineHang']);
+
+/** Whether a decor instance blocks the party's movement. */
+export function decorIsSolid(d: DecorSpec): boolean {
+  return d.solid ?? !PASSABLE_DECOR_KINDS.has(d.kind);
 }
 
 export interface DungeonFloor {
@@ -48,13 +76,13 @@ export interface DungeonFloor {
   rows: string[];
   theme: TileTheme;
   events: Record<string, FloorEvent>;
-  chests: Record<string, { credits?: number; item?: string; note: string }>;
+  chests: Record<string, { obols?: number; item?: string; note: string }>;
   /** Chance per step of a random encounter (0 disables). */
   encounterRate: number;
   encounters: EncounterEntry[];
   /** Fog density multiplier, so deeper floors feel heavier. */
   fog?: number;
-  /** Non-colliding decorative billboards dressing this floor's terrain. */
+  /** Decorative billboards dressing this floor's terrain (solid by default). */
   decor?: DecorSpec[];
 }
 
@@ -63,11 +91,11 @@ export interface ReachClear {
   /** Flag set on the run when the reach is cleared. */
   flag: string;
   /**
-   * The Quiet Crossing only: return through the licence + Guard-Team ceremony
+   * The Quiet Crossing only: return through the Vigil's-leave ceremony
    * (`HubScene` arrival 'reachCleared'). Other reaches just restore the party
    * and drop you back in the city.
    */
-  licenseCeremony?: boolean;
+  leaveCeremony?: boolean;
 }
 
 export interface Reach {
@@ -79,7 +107,7 @@ export interface Reach {
   /** Party level the stage is tuned for — shown on the world-map card. */
   recommendedLevel: number;
   floors: DungeonFloor[];
-  startingFuel: number;
+  startingLight: number;
   /** Ambience track while crawling this reach (boss fights still use 'boss'). */
   music: MusicTrack;
   onClear: ReachClear;

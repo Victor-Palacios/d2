@@ -4,6 +4,7 @@ import type { MenuItem } from './Menu';
 import type { Battle, BattleAction, Battler } from '../systems/battle/engine';
 import { BOOST_MAX, isMeleeTechnique } from '../systems/battle/engine';
 import type { CreatureInstance } from '../systems/party/creature';
+import { activeMoves } from '../systems/party/creature';
 import { technique, techShape } from '../data/techniques';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
 import { classIcon } from './icons';
@@ -24,6 +25,10 @@ interface FighterCard {
 
 /** What the action menu can resolve to — a real action, "go auto", "boost", or "flee". */
 export type MenuChoice = BattleAction | { type: 'auto' } | { type: 'boost' } | { type: 'flee' };
+
+/** How many announcements stay stacked at once, and how long each one dwells (ms). */
+const LOG_MAX = 4;
+const LOG_DWELL = 2600;
 
 /** Human label for a formation cell, e.g. "Vanguard · Left". */
 function cellLabel(row: number, col: number): string {
@@ -49,7 +54,10 @@ export class BattleHUD {
 
     this.banner = el('div', 'panel');
     this.banner.id = 'battle-banner';
-    this.log = el('div', 'panel');
+    // A stack of transient announcements, newest at the bottom. Each line fades
+    // in, dwells long enough to read, then fades out — so nothing lingers on
+    // screen forever and a burst of messages can be read one above the other.
+    this.log = el('div');
     this.log.id = 'battle-log';
     this.enemyWrap = el('div');
     this.enemyWrap.id = 'enemy-hud';
@@ -69,7 +77,15 @@ export class BattleHUD {
     this.boostChip = el('div', 'panel');
     this.boostChip.id = 'boost-chip';
 
-    this.root.append(this.banner, this.log, this.enemyWrap, this.partyWrap, this.menuHost, this.autoChip, this.boostChip);
+    this.root.append(
+      this.banner,
+      this.log,
+      this.enemyWrap,
+      this.partyWrap,
+      this.menuHost,
+      this.autoChip,
+      this.boostChip,
+    );
     this.parent.appendChild(this.root);
   }
 
@@ -209,8 +225,24 @@ export class BattleHUD {
     this.banner.textContent = text;
   }
 
+  /**
+   * Push a battle announcement onto the stack. It appears beneath the previous
+   * ones, dwells for `LOG_DWELL`, then fades out and removes itself. The stack
+   * is capped at `LOG_MAX` so a rapid sequence stays readable without piling up.
+   */
   setLog(text: string) {
-    this.log.innerHTML = esc(text);
+    const line = el('div', 'panel log-line');
+    line.innerHTML = esc(text);
+    this.log.appendChild(line);
+    while (this.log.childElementCount > LOG_MAX && this.log.firstElementChild) {
+      remove(this.log.firstElementChild as HTMLElement);
+    }
+    requestAnimationFrame(() => line.classList.add('show'));
+    setTimeout(() => {
+      line.classList.remove('show');
+      line.classList.add('gone');
+      setTimeout(() => remove(line), 450);
+    }, LOG_DWELL);
   }
 
   /**
@@ -267,8 +299,10 @@ export class BattleHUD {
     const c = actor.creature;
 
     for (;;) {
-      // Technique is greyed out unless the creature can afford at least one.
-      const canTechnique = c.techniques.some((id) => c.mp >= technique(id).mpCost);
+      // Only the loadout (≤5 active moves) is fieldable; Technique is greyed out
+      // unless the creature can afford at least one of them.
+      const moves = activeMoves(c);
+      const canTechnique = moves.some((id) => c.mp >= technique(id).mpCost);
       const canMove = battle.emptyCells(actor.side).length > 0;
       const canSwap = reserves.length > 0;
       const canCommune = battle.communeTargets('enemy').length > 0;
@@ -276,7 +310,12 @@ export class BattleHUD {
       const items: MenuItem[] = [
         { value: 'attack', label: 'Attack' },
         { value: 'technique', label: 'Technique', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
-        { value: 'boost', label: 'Boost', disabled: charges < 1, note: charges > 0 ? `act again · ▲${charges}` : 'empty' },
+        {
+          value: 'boost',
+          label: 'Boost',
+          disabled: charges < 1,
+          note: charges > 0 ? `act again · ▲${charges}` : 'empty',
+        },
         { value: 'move', label: 'Move', disabled: !canMove, note: canMove ? undefined : 'no room' },
         { value: 'swap', label: 'Swap', disabled: !canSwap, note: canSwap ? undefined : '—' },
         { value: 'guard', label: 'Guard' },
@@ -332,7 +371,7 @@ export class BattleHUD {
       }
 
       if (root === 'technique') {
-        const items: MenuItem[] = c.techniques.map((id) => {
+        const items: MenuItem[] = moves.map((id) => {
           const t = technique(id);
           const shape = techShape(t);
           // Note reads: "6 MP · melee" / "10 MP · row" — so reach and shape are
@@ -352,11 +391,16 @@ export class BattleHUD {
         if (!techId) continue;
         const t = technique(techId);
         // 'all' needs no aim; row/column/single all aim at an anchor foe.
-        if (techShape(t) === 'all') return { type: 'technique', techniqueId: techId, targetUid: battle.living('enemy')[0].creature.uid };
+        if (techShape(t) === 'all')
+          return { type: 'technique', techniqueId: techId, targetUid: battle.living('enemy')[0].creature.uid };
         // Melee Techniques respect cover (front line only); ranged/Ether reach any
         // living foe. Heals aim at the party.
         const candidates =
-          t.kind === 'heal' ? battle.living('party') : isMeleeTechnique(t) ? battle.meleeTargets('enemy') : battle.living('enemy');
+          t.kind === 'heal'
+            ? battle.living('party')
+            : isMeleeTechnique(t)
+              ? battle.meleeTargets('enemy')
+              : battle.living('enemy');
         const uid = await this.pickTarget(actor, candidates, onTargetHover);
         if (!uid) continue;
         return { type: 'technique', techniqueId: techId, targetUid: uid };
@@ -376,7 +420,10 @@ export class BattleHUD {
       note: `${b.creature.hp}/${b.creature.maxHp}`,
     }));
     // Default to the actor when it is a valid target (self-heal), otherwise the first.
-    const startIndex = Math.max(0, candidates.findIndex((b) => b.creature.uid === actor.creature.uid));
+    const startIndex = Math.max(
+      0,
+      candidates.findIndex((b) => b.creature.uid === actor.creature.uid),
+    );
     this.menuHost.style.display = '';
     this.menu?.destroy();
     this.menu = new Menu(this.menuHost, items, {

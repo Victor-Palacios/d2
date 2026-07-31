@@ -57,8 +57,8 @@ export async function openSoulStore(parent: HTMLElement): Promise<void> {
 
   const refreshWallet = () => {
     wallet.innerHTML =
-      `<span class="dim">Credits</span> <span class="accent">${game.credits}</span>` +
-      ` &nbsp; <span class="dim">Party</span> ${game.party.length}/${game.partyCap}` +
+      `<span class="dim">Obols</span> <span class="accent">${game.obols}</span>` +
+      ` &nbsp; <span class="dim">Souls</span> ${game.soulsInParty()}/${game.partyCap}` +
       ` &nbsp; <span class="dim">Sanctuary</span> ${game.sanctuary.length}`;
   };
 
@@ -71,7 +71,7 @@ export async function openSoulStore(parent: HTMLElement): Promise<void> {
         value: `summon:${id}`,
         label: `Summon ${SPECIES[id].name}`,
         note: `${price}c`,
-        disabled: game.credits < price,
+        disabled: game.obols < price,
       };
     });
     if (!list.length) {
@@ -85,7 +85,7 @@ export async function openSoulStore(parent: HTMLElement): Promise<void> {
             value: 'slot',
             label: `Party slot +1  (${game.partyCap}→${game.partyCap + 1})`,
             note: `${cost}c`,
-            disabled: game.credits < cost,
+            disabled: game.obols < cost,
           },
     );
     return list;
@@ -133,11 +133,11 @@ export async function openSoulStore(parent: HTMLElement): Promise<void> {
 
     if (choice === 'slot') {
       const cost = nextSlotCost();
-      if (cost === null || game.credits < cost) {
+      if (cost === null || game.obols < cost) {
         audio.sfx('cancel');
         continue;
       }
-      game.credits -= cost;
+      game.obols -= cost;
       game.gainPartySlot();
       audio.sfx('chest');
       toast(parent, `<span class="accent">Party capacity ${game.partyCap}</span>`, 1600);
@@ -148,12 +148,12 @@ export async function openSoulStore(parent: HTMLElement): Promise<void> {
     if (choice.startsWith('summon:')) {
       const id = choice.slice('summon:'.length);
       const price = soulPrice(id);
-      if (game.credits < price) {
+      if (game.obols < price) {
         audio.sfx('cancel');
-        toast(parent, '<span class="danger">Not enough credits.</span>', 1400);
+        toast(parent, '<span class="danger">Not enough obols.</span>', 1400);
         continue;
       }
-      game.credits -= price;
+      game.obols -= price;
       const c = makeCreature(id, SUMMON_LEVEL);
       const toParty = game.addMonster(c);
       audio.sfx('chest');

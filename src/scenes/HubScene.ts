@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { GameScene, sleep } from '../engine/SceneManager';
-import type { SceneContext } from '../engine/SceneManager';
 import { TileGrid } from '../engine/TileGrid';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Portal, Torch } from '../engine/fx';
@@ -10,7 +9,7 @@ import { HUMANS } from '../assets/art';
 import { TEAMS, team } from '../data/teams';
 import { game } from '../systems/party/gameState';
 import { saveAuto } from '../systems/party/saveGame';
-import { fullRestore } from '../systems/party/creature';
+import { fullRestore, makeCreature } from '../systems/party/creature';
 import { DialogueBox } from '../ui/DialogueBox';
 import { Menu } from '../ui/Menu';
 import { openShop } from '../ui/ShopScreen';
@@ -59,8 +58,8 @@ export interface HubSceneParams {
  * The Everwake, simplified (plan §2.2, M4/M5).
  *
  * One room, walk-around movement, bump-to-talk NPCs and a portal to the world
- * map. This is also where the post-boss progression beats fire: licence, own
- * vehicle, Guard Team choice, rival intro and the Mission 2 briefing.
+ * map. This is also where the post-boss progression beats fire: the Vigil's leave,
+ * Guard Team choice, rival intro and the Mission 2 briefing.
  */
 export class HubScene extends GameScene {
   private scene = new THREE.Scene();
@@ -85,10 +84,6 @@ export class HubScene extends GameScene {
   private busy = false;
   private leaving = false;
   private unsubInput: (() => void) | null = null;
-
-  constructor(ctx: SceneContext) {
-    super(ctx);
-  }
 
   async enter(params?: unknown) {
     const p = (params ?? {}) as HubSceneParams;
@@ -144,7 +139,6 @@ export class HubScene extends GameScene {
       { id: 'chief', art: 'chief', char: '1' },
       { id: 'mentor', art: 'mentor', char: '2' },
       { id: 'vendor', art: 'vendor', char: '3' },
-      { id: 'rival', art: 'rival', char: '4' },
       { id: 'soulstore', art: 'soulkeeper', char: '5' },
     ];
 
@@ -152,8 +146,8 @@ export class HubScene extends GameScene {
       if (t.kind !== 'event') return;
       const entry = roster.find((r) => r.char === t.eventId);
       if (!entry) return;
-      // The rival only shows up once you are licensed.
-      if (entry.id === 'rival' && !game.has('crossingCleared')) return;
+      // Halden is at his radio until the midpoint takes him.
+      if (entry.id === 'mentor' && game.has('haldenGone')) return;
       const b = new Billboard(HUMANS[entry.art], `human:${entry.art}`, { height: 1.6 });
       b.bob = 0.025;
       b.object.position.copy(this.grid.worldPos(t.x, t.z));
@@ -190,11 +184,18 @@ export class HubScene extends GameScene {
     if (kind === 'first') {
       await this.dialogue.play([
         ...say(
-          'Chief Marrow',
-          `${game.playerName}. Halden vouched for you, so here is the short version.`,
-          'Carry a lantern into the Quiet Crossing, tend what lingers there, and come back with your light still lit. Then you keep in full.',
+          'Halden',
+          `This is the Everwake, ${game.playerName} — the last lit room before the dark. Souls gather here who cannot yet cross, and keepers tend them until they can.`,
+          'You will not tend them alone. No keeper should — the dark is long, and grief is heavy to carry by yourself.',
         ),
-        ...say('Halden', `${game.party[0]?.name ?? 'Your bonded soul'} rides with you — and keep whatever else you meet in your Soularium, so it is not forgotten twice.`),
+      ]);
+      await this.wrenJoin();
+      if (this.disposed) return;
+      await this.dialogue.play([
+        ...say(
+          'Halden',
+          'Start at the Quiet Crossing, the pair of you. Tend what lingers, keep your light lit, and keep whatever you meet in your Soularium so it is not forgotten twice.',
+        ),
         ...narrate('The south portal leads out to the reaches.'),
       ]);
     } else if (kind === 'towed') {
@@ -208,9 +209,26 @@ export class HubScene extends GameScene {
       game.resetCrawl();
       fullRestore(game.party);
     } else if (kind === 'reachCleared') {
-      await this.licenseCeremony();
+      await this.leaveCeremony();
     } else if (kind === 'teamChosen') {
       await this.rivalAndBriefing();
+    }
+
+    // Did a scripted beat play this arrival? Quiet returns get party banter.
+    let beat = kind === 'first' || kind === 'towed' || kind === 'reachCleared' || kind === 'teamChosen';
+
+    // Companions join at story beats — on the next return to the Everwake after
+    // the reach that earns them. Each fires once (guarded by its flag). Placed
+    // before the midpoint so the party is whole when Halden dies.
+    if (game.has('crystalCleared') && !game.has('senaJoined')) {
+      await this.senaJoin();
+      beat = true;
+      if (this.disposed) return;
+    }
+    if (game.has('hauntedCleared') && !game.has('kadeJoined')) {
+      await this.kadeJoin();
+      beat = true;
+      if (this.disposed) return;
     }
 
     // The Overgrowth's own aftermath: clearing it unroots the souls Liora Fen
@@ -218,6 +236,7 @@ export class HubScene extends GameScene {
     // (fires once), independent of the main-line midpoint below.
     if (game.has('jungleCleared') && !game.has('jungleWakeDone')) {
       await this.jungleAftermath();
+      beat = true;
       if (this.disposed) return;
     }
 
@@ -230,6 +249,14 @@ export class HubScene extends GameScene {
       !game.has('midpointDone')
     ) {
       await this.midpoint();
+      beat = true;
+    }
+
+    // A quiet return between reaches: one line of party banter, state-aware and
+    // once each, so the companions develop between the big beats.
+    if (!beat && game.has('prologueDone')) {
+      await this.partyBanter();
+      if (this.disposed) return;
     }
 
     this.busy = false;
@@ -243,7 +270,7 @@ export class HubScene extends GameScene {
     }
   }
 
-  private async licenseCeremony() {
+  private async leaveCeremony() {
     fullRestore(game.party);
     await this.dialogue.play([
       ...narrate('The Quiet Crossing settles behind you. Your lantern is low, but it is lit.'),
@@ -252,17 +279,154 @@ export class HubScene extends GameScene {
         'The Vigil let you pass on your first crossing. That is either talent or mercy, and I will take either.',
         `You keep in full now, ${game.playerName}.`,
       ),
-      ...say('Halden', 'The lantern is yours to carry, and your bonded soul has earned its place in it. Tend the reaches gently. Most of what you meet only wants to be remembered — or let go.'),
+      ...say(
+        'Halden',
+        'The lantern is yours to carry, and your bonded soul has earned its place in it. Tend the reaches gently. Most of what you meet only wants to be remembered — or let go.',
+      ),
     ]);
-    game.hasLicense = true;
-    game.hasOwnVehicle = true;
-    game.set('licensed');
-    toast(this.ctx.ui, '<span class="accent">Licence acquired · Own vehicle acquired</span>', 2600);
+    game.hasLeave = true;
+    game.set('givenLeave');
+    toast(this.ctx.ui, '<span class="accent">Keeper\'s lantern acquired</span>', 2600);
     await sleep(1200);
+    await this.dialogue.play([
+      ...say(
+        'Wren',
+        'Two reaches lie open past the Crossing — the Reliquary, all kept light, and the Overgrowth, all patient green. I have a name waiting in each.',
+      ),
+      ...say(
+        'Halden',
+        'Go where the grief is loudest. That is always where you are needed — and, if you are honest with yourself, where you are looking.',
+      ),
+    ]);
+  }
 
-    // The rival is already standing in the room (build() shows them once the
-    // the Quiet Crossing is cleared), so go straight into the next story beat.
-    await this.rivalAndBriefing();
+  // --- companions: the three keepers who join the journey ------------------
+
+  /** Wren, the Bereaved Witness, joins at the Everwake (opening). */
+  private async wrenJoin() {
+    game.set('wrenJoined');
+    game.joinCompanion(makeCreature('wren', 2));
+    await this.dialogue.play([
+      ...narrate('A woman looks up from a great ledger, every page filled with names in a small, patient hand.'),
+      ...say(
+        'Wren',
+        `So you are the new keeper. Good. I am Wren — I keep the Book of Names, so the ones who cross are not forgotten a second time.`,
+        'You are looking for someone. Everyone who comes here is. I will help you look — and write down everyone we meet on the way. No one leaves this book.',
+      ),
+      ...narrate('Wren closes the ledger, takes up a lantern of her own, and falls in beside you.'),
+      ...say(
+        'Wren',
+        'A lone keeper can steady only one soul in a fight. With two of us holding lanterns, two souls can answer the call. Find more keepers, and more will stand with you.',
+      ),
+    ]);
+    toast(this.ctx.ui, '<span class="accent">Wren joins you — you can now field 2 souls</span>', 3000);
+  }
+
+  /** Sena Vale, the Defier, joins after the Reliquary — nothing left to guard. */
+  private async senaJoin() {
+    game.set('senaJoined');
+    game.joinCompanion(makeCreature('senaVale', 6));
+    await this.dialogue.play([
+      ...narrate(
+        'Sena Vale is waiting at the wake-fire when you come back from the Reliquary. The frost has gone out of her hands.',
+      ),
+      ...say(
+        'Sena Vale',
+        'I have nothing left to guard. You took that from me — or gave it back. I cannot yet tell which.',
+        'I kept one soul frozen for years and called it love. I would like to learn the other kind of love before I run out of people to try it on.',
+      ),
+      ...say('Sena Vale', 'Let me carry a lantern beside yours until I do.'),
+    ]);
+    toast(this.ctx.ui, '<span class="accent">Sena Vale joins you — you can now field 3 souls</span>', 3000);
+  }
+
+  /** Kade, the rival who was always a reach ahead, joins after the Unremembered. */
+  private async kadeJoin() {
+    game.set('kadeJoined');
+    game.joinCompanion(makeCreature('kade', 10));
+    await this.dialogue.play([
+      ...narrate(
+        'Kade is sitting on the Everwake steps — for once not a reach ahead of you. He does not look up straight away.',
+      ),
+      ...say(
+        'Kade',
+        'I always ran the next reach first. Fastest keeper they had. You know why? So I never had to stand still long enough to feel any of it.',
+        'The Unremembered caught me standing still. There is a name in there I have been outrunning for years, and it finally said mine back.',
+      ),
+      ...say('Kade', 'I am done running it. Slow me down — I will keep pace with you instead.'),
+    ]);
+    toast(this.ctx.ui, '<span class="accent">Kade joins you — you can now field 4 souls</span>', 3000);
+  }
+
+  /**
+   * Between-reach party banter. On a quiet return to the Everwake, plays the
+   * first eligible unseen exchange, then flags it so it never repeats. The beats
+   * track the throughline — the search, the two stances meeting, the three
+   * together, and the party after Act II — so the companions develop in the
+   * downtime, not only at the big scenes.
+   */
+  private async partyBanter() {
+    const has = (f: string) => game.has(f);
+    const beats: { id: string; when: boolean; lines: DialogueScript }[] = [
+      {
+        id: 'search',
+        when: has('wrenJoined') && has('crossingCleared') && !has('senaJoined'),
+        lines: [
+          ...say(
+            'Wren',
+            `So — the one you are looking for. Do you have a name for me to write, ${game.playerName}? A face?`,
+          ),
+          ...narrate('You find you cannot say it. Not yet.'),
+          ...say(
+            'Wren',
+            'That is all right. Some names take the whole road to say out loud. I will leave the line blank until you can.',
+          ),
+        ],
+      },
+      {
+        id: 'twoStances',
+        when: has('senaJoined') && !has('kadeJoined'),
+        lines: [
+          ...say(
+            'Sena Vale',
+            'You write them all down, Wren — every soul. Does it not exhaust you, holding that many?',
+          ),
+          ...say(
+            'Wren',
+            'Less than freezing one and standing guard over it forever. I only have to remember them. You had to refuse the whole world.',
+          ),
+          ...say('Sena Vale', '...Fair. Teach me the lighter way, then. I am tired of being cold.'),
+        ],
+      },
+      {
+        id: 'threeTogether',
+        when: has('kadeJoined') && !has('midpointDone'),
+        lines: [
+          ...narrate('The three of them are quiet by the wake-fire. It is Kade who breaks it.'),
+          ...say('Kade', 'We are all here for the same reason, are we not. Somebody we could not keep.'),
+          ...say('Wren', 'That is the whole of the Everwake, Kade. That is everyone who ever picked up a lantern.'),
+        ],
+      },
+      {
+        id: 'afterMidpoint',
+        when: has('actTwo'),
+        lines: [
+          ...narrate(
+            "Halden's chair sits empty. The party gathers around it anyway — the way you gather around a fire that has gone out but is still warm.",
+          ),
+          ...say('Sena Vale', 'He would tell us to let him go.'),
+          ...say('Kade', 'He would. And we will. Just — not tonight.'),
+          ...say(
+            'Wren',
+            `Tonight we say his name. And when you are ready, ${game.playerName}: the road still has one soul left on it. The one you came here looking for.`,
+          ),
+        ],
+      },
+    ];
+    const next = beats.find((b) => b.when && !game.has(`banter:${b.id}`));
+    if (!next) return;
+    game.set(`banter:${next.id}`);
+    await this.dialogue.play(next.lines);
   }
 
   /**
@@ -277,16 +441,33 @@ export class HubScene extends GameScene {
     game.set('haldenGone');
 
     await this.dialogue.play([
-      ...narrate('You come back to the Everwake with all three reaches quiet behind you. The lanterns are lit. Halden is not at his radio.'),
-      ...narrate('You find him in the back, his detective serial still murmuring a chapter from the end. He is not an echo. He is a person, and he is dying the ordinary way.'),
-      ...say('Halden', `Ah. ${game.playerName}. I hoped it would be you who found me. Sit down. You do not have to fix your face.`),
+      ...narrate(
+        'You come back to the Everwake with all three reaches quiet behind you. The lanterns are lit. Halden is not at his radio.',
+      ),
+      ...narrate(
+        'You find him in the back, his detective serial still murmuring a chapter from the end. He is not an echo. He is a person, and he is dying the ordinary way.',
+      ),
+      ...say(
+        'Halden',
+        `Ah. ${game.playerName}. I hoped it would be you who found me. Sit down. You do not have to fix your face.`,
+      ),
     ]);
 
     await this.dialogue.play([
-      ...narrate('Without deciding to, you raise the lantern — the gesture that kept every soul in the reaches. Keep him. Hold him. Do not let him fade.'),
-      ...narrate('Nothing happens. The lantern will not take him. He is not a lingering thing to be drawn in; he is a whole life, and a whole life cannot be kept that way.'),
-      ...say('Halden', 'No. Put it down. You cannot syphon a person — only the echo one leaves. I taught you to keep souls. I never taught you this, because I could not do it myself.'),
-      ...say('Halden', 'Keeping was never the same as loving. Some things you honour by holding on. The ones that matter most, you honour by letting go. That is the question the lantern was always asking you.'),
+      ...narrate(
+        'Without deciding to, you raise the lantern — the gesture that kept every soul in the reaches. Keep him. Hold him. Do not let him fade.',
+      ),
+      ...narrate(
+        'Nothing happens. The lantern will not take him. He is not a lingering thing to be drawn in; he is a whole life, and a whole life cannot be kept that way.',
+      ),
+      ...say(
+        'Halden',
+        'No. Put it down. You cannot syphon a person — only the echo one leaves. I taught you to keep souls. I never taught you this, because I could not do it myself.',
+      ),
+      ...say(
+        'Halden',
+        'Keeping was never the same as loving. Some things you honour by holding on. The ones that matter most, you honour by letting go. That is the question the lantern was always asking you.',
+      ),
       ...narrate('His hand goes still. The serial plays on to no one.'),
     ]);
 
@@ -294,28 +475,47 @@ export class HubScene extends GameScene {
     if (choice === 'name') {
       game.set('mourn:name');
       await this.dialogue.play([
-        ...narrate('You write his name where it will be read, so the second death cannot have him. He will be remembered — held, a little, against his own advice.'),
+        ...narrate(
+          'You write his name where it will be read, so the second death cannot have him. He will be remembered — held, a little, against his own advice.',
+        ),
       ]);
     } else if (choice === 'work') {
       game.set('mourn:work');
       game.addItem('haldensSerial');
       await this.dialogue.play([
-        ...narrate('You take his chair, his radio, the serial with its last chapter unread. The duty is yours now. You carry the unfinished story with you.'),
+        ...narrate(
+          'You take his chair, his radio, the serial with its last chapter unread. The duty is yours now. You carry the unfinished story with you.',
+        ),
       ]);
-      toast(this.ctx.ui, "<span class=\"accent\">Got Halden's Serial</span> — a Memento", 2600);
+      toast(this.ctx.ui, '<span class="accent">Got Halden\'s Serial</span> — a Memento', 2600);
     } else {
       game.set('mourn:letgo');
       await this.dialogue.play([
-        ...narrate('You keep nothing. You let the story stay unfinished, the chair stay empty, the name go unwritten. It is the hardest thing he taught you, and the last.'),
+        ...narrate(
+          'You keep nothing. You let the story stay unfinished, the chair stay empty, the name go unwritten. It is the hardest thing he taught you, and the last.',
+        ),
       ]);
     }
 
     await sleep(700);
     await this.dialogue.play([
-      ...narrate('Word travels the reaches. Grief does not soften the others. It sharpens them.'),
-      ...say('Sena Vale', 'So you have felt it now. That is why I froze Lire — so I would never have to. Bring me a soul you love and I will do the same for you. You need never lose another.'),
-      ...say('Wren', 'I have added Halden to the Book. I add everyone. If every name is written down, then no one is truly gone — they are not gone — tell me they are not gone.'),
-      ...narrate('And you: you have been keeping souls since the first lantern. You wonder, now, whether it was ever tending them — or only refusing, again and again, to let a single one go.'),
+      ...narrate('Grief does not soften the three who walk with you. It sharpens them, each along their own edge.'),
+      ...say(
+        'Sena Vale',
+        'So you have felt it now. That is why I froze Lire — so I would never have to. Bring me a soul you love and I will do the same for you. You need never lose another.',
+      ),
+      ...say(
+        'Wren',
+        'I have added Halden to the Book. I add everyone. If every name is written down, then no one is truly gone — they are not gone — tell me they are not gone.',
+      ),
+      ...say(
+        'Kade',
+        'I stopped running. For you, for him — and he died anyway.',
+        'Give me one reason I should not go back to never standing still long enough for it to catch me.',
+      ),
+      ...narrate(
+        'And you: you have been keeping souls since the first lantern. You wonder, now, whether it was ever tending them — or only refusing, again and again, to let a single one go.',
+      ),
     ]);
     game.set('actTwo');
     toast(this.ctx.ui, '<span class="accent">Act II — every philosophy hardens</span>', 3000);
@@ -352,31 +552,50 @@ export class HubScene extends GameScene {
     game.set('jungleWakeDone');
 
     await this.dialogue.play([
-      ...narrate('The Overgrowth lets go behind you — root by root, soul by soul, the way you unwound it. By the time you reach the Everwake, one of the freed has followed the light home.'),
-      ...narrate('Liora Fen stands unsteady by the wake-fire, learning legs that were roots for longer than she can count. The souls she kept have already crossed. She waited, to watch each one go.'),
-      ...say('Liora Fen', 'They are gone. All of them. I thought that would feel like losing.', 'It feels like a window opening in a room I had forgotten was shut.'),
-      ...say('Liora Fen', `I told the ones I caught that I was giving them rest. ${game.playerName}, I was keeping myself company. I could not sit in that green alone, so I made sure I never had to.`),
+      ...narrate(
+        'The Overgrowth lets go behind you — root by root, soul by soul, the way you unwound it. By the time you reach the Everwake, one of the freed has followed the light home.',
+      ),
+      ...narrate(
+        'Liora Fen stands unsteady by the wake-fire, learning legs that were roots for longer than she can count. The souls she kept have already crossed. She waited, to watch each one go.',
+      ),
+      ...say(
+        'Liora Fen',
+        'They are gone. All of them. I thought that would feel like losing.',
+        'It feels like a window opening in a room I had forgotten was shut.',
+      ),
+      ...say(
+        'Liora Fen',
+        `I told the ones I caught that I was giving them rest. ${game.playerName}, I was keeping myself company. I could not sit in that green alone, so I made sure I never had to.`,
+      ),
     ]);
 
     const kind = await this.chooseLiora();
     if (kind === 'lonely') {
       game.set('mourn:liora:kind');
       await this.dialogue.play(
-        say('Liora Fen', 'Lonely. Yes. You could have called it something worse and been just as right. Thank you for the gentler true thing.'),
+        say(
+          'Liora Fen',
+          'Lonely. Yes. You could have called it something worse and been just as right. Thank you for the gentler true thing.',
+        ),
       );
     } else {
       game.set('mourn:liora:true');
       await this.dialogue.play(
-        say('Liora Fen', 'Cruel. Yes — I stole years and called it kindness so I could keep stealing them. You did not look away from that. Good. Neither will I.'),
+        say(
+          'Liora Fen',
+          'Cruel. Yes — I stole years and called it kindness so I could keep stealing them. You did not look away from that. Good. Neither will I.',
+        ),
       );
     }
 
     game.addItem('lioraStep');
     await this.dialogue.play([
       ...say('Liora Fen', 'Here. The first step of a walk I stopped taking. I have no more use for standing still.'),
-      ...narrate('She presses a worn charm into your hand — and then she is walking, at last, toward the dark that is only dark until you reach it.'),
+      ...narrate(
+        'She presses a worn charm into your hand — and then she is walking, at last, toward the dark that is only dark until you reach it.',
+      ),
     ]);
-    toast(this.ctx.ui, "<span class=\"accent\">Got Liora's Step</span> — a Memento", 2600);
+    toast(this.ctx.ui, '<span class="accent">Got Liora\'s Step</span> — a Memento', 2600);
   }
 
   /** Liora's small farewell choice: name the truth of what her keeping was. */
@@ -404,7 +623,7 @@ export class HubScene extends GameScene {
         ...say(
           'Kade',
           `So you are the one who dropped the Vigil on your first crossing. Kade. Second year.`,
-          'Enjoy the licence. The next reach does not hand them out.',
+          'Enjoy your leave to keep. The next reach does not grant it so gently.',
         ),
         ...say('Kade', 'Try to keep up, rookie.'),
       ]);
@@ -415,7 +634,7 @@ export class HubScene extends GameScene {
       await this.dialogue.play([
         ...say(
           leader.leaderName,
-          `Briefing, ${game.playerName}. Sector two — the the Cache reach — has been dropping packets for a week.`,
+          `Briefing, ${game.playerName}. The Cache reach has been letting souls slip through uncrossed for a week now.`,
           'Refit at the supply bay, then take the map when you are ready. That is your mission.',
         ),
       ]);
@@ -441,7 +660,7 @@ export class HubScene extends GameScene {
     await this.dialogue.play(this.scriptFor(npc));
     this.busy = false;
 
-    if (npc.id === 'vendor' && game.hasLicense) {
+    if (npc.id === 'vendor' && game.hasLeave) {
       this.busy = true;
       await openShop(this.ctx.ui);
       this.busy = false;
@@ -455,40 +674,42 @@ export class HubScene extends GameScene {
   }
 
   private scriptFor(npc: Npc): DialogueScript {
-    const leader = game.teamId ? team(game.teamId) : null;
     switch (npc.id) {
       case 'chief':
-        if (!game.hasLicense) {
+        if (!game.hasLeave) {
           return say(
             'Chief Marrow',
             'The Quiet Crossing. Three floors, one warden. Take the south portal when you are ready.',
-            'And Halden will not stop asking, so: bring his creatures back.',
+            'Keep your light lit and bring it home. That is the whole of the job — and the hard part.',
           );
         }
         return say(
           'Chief Marrow',
-          `Licensed and teamed. You are ${leader ? leader.name : 'Guard'} now, ${game.playerName}.`,
-          'Sector two is your problem. Mine is the paperwork you just made.',
+          `A keeper with the Vigil's leave, whose lantern stayed lit. Rarer than you would think, ${game.playerName}.`,
+          'The reaches past the Crossing are yours to tend now.',
         );
       case 'mentor':
-        if (!game.hasLicense) {
+        if (!game.hasLeave) {
           return say(
             'Halden',
             'Ground rules. Attack is free, Techniques cost MP, Guard halves the hit and gives MP back.',
             'Assassin beats Mage. Mage beats Hero. Hero beats Assassin. Element plates buff whoever matches them.',
-            'Every step in the reach costs 1 EP. Fuel canisters are worth the detour.',
+            'Every step in the reach spends 1 LP. Light shards are worth the detour.',
           );
         }
         return say(
           'Halden',
-          'My three are back in their bay and only slightly on fire, so I will call that a success.',
-          'Your starter is yours to raise now. Merging creatures comes later — not today.',
+          'You have the measure of it now — meet what lingers, and decide, each time, whether to keep it or let it go.',
+          'Your bonded souls are yours to raise. Merging them comes later — not today.',
         );
       case 'vendor':
-        if (!game.hasLicense) {
-          return say('Quartermaster Ilsa', 'Supply bay is for licensed drivers. Come back with a licence and credits.');
+        if (!game.hasLeave) {
+          return say(
+            'Quartermaster Ilsa',
+            'The supply bay is for keepers the Vigil has passed. Come back when you have its leave — and bring obols.',
+          );
         }
-        return say('Quartermaster Ilsa', 'Licensed, then. Take a look — the bay is open.');
+        return say('Quartermaster Ilsa', 'Given leave, then. Take a look — the bay is open.');
       case 'soulstore':
         return say(
           'Soul Broker Vex',
@@ -559,7 +780,7 @@ export class HubScene extends GameScene {
     if (this.moving) {
       this.moveT += dt / 0.17;
       const t = Math.min(1, this.moveT);
-      this.player.object.position.lerpVectors(this.moveFrom, this.moveTo, 1 - Math.pow(1 - t, 2.2));
+      this.player.object.position.lerpVectors(this.moveFrom, this.moveTo, 1 - (1 - t) ** 2.2);
       if (t >= 1) {
         this.moving = false;
         void this.onArrive();

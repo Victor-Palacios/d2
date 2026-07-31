@@ -47,6 +47,12 @@ in [`docs/`](docs/):
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** — the path from this first-hour slice
   toward a full monster-collecting dungeon-crawler's first five hours, including
   the element-count trim.
+- **[docs/adding-a-reach.md](docs/adding-a-reach.md)** — a systematic guide to
+  building a new area: terrain skins, decor, layout validation, roster and
+  world-map wiring.
+- **[docs/battle-fx.md](docs/battle-fx.md)** — battle FX in two layers:
+  per-monster signature auras and per-move (per-technique) effects — the data
+  models, the runtime, and how to extend them.
 
 ## Run it locally
 
@@ -132,14 +138,16 @@ only thing still keyboard-only is the `` ` `` debug panel.
 
 Title → name entry → **pick your partner** → The Everwake hub → world map → **The Quiet Crossing**
 (3 floors: crawl, chests, element plates, draining EP, scripted fights,
-random encounters, and the warden boss) → licence + own vehicle → rival intro →
+random encounters, and the warden boss) → the Vigil's leave → rival intro →
 supply bay → Mission 2 briefing.
 
 - **Crawl**: tile-by-tile movement with wall collision, camera follow, treasure
   chests, five kinds of emissive element floor plates, an EP meter that drains
   one point per step (hit zero and you get towed home), descent portals, and a
   boss floor whose accent walls telegraph what is coming.
-- **Battle**: turn-based 3v3. Turn order by Speed with a random tiebreak band.
+- **Battle**: turn-based on a 2×3 grid. You field one soul per human keeper
+  (`game.fieldCap` — two at the Quiet Crossing, up to four; companions walk with
+  you but never fight). Turn order by Speed with a random tiebreak band.
   Attack / Technique / Guard / **Auto**, MP costs, AoE and heal techniques,
   class triangle (Assassin > Mage > Hero > Assassin, ×1.25 / ×0.8), element-plate
   buffs (×1.2), damage variance, faint / victory / defeat, and an enemy AI that
@@ -147,15 +155,18 @@ supply bay → Mission 2 briefing.
   wears a **signature aura** — a continuous element-tinted mote trail (the
   Warden burns with a warm glow) that swells when it takes its turn, so a fight
   reads as distinct creatures rather than interchangeable sprites. Auras are
-  data (`src/data/battleFx.ts`); the first dungeon's roster is wired up.
+  data (`src/data/battleFx.ts`); the first dungeon's roster is wired up. Every
+  **move** also has its own shaped effect — a melee slash, a flying bolt, an area
+  nova or a mending bloom — derived from the technique's element, delivery and
+  power (`src/data/moveFx.ts`), so attacks read differently from one another.
 - **Auto-battle**: pick **Auto** and the party keeps swinging with the free
   basic Attack, targeting the weakest living foe, until you press **Esc**. It
   deliberately never spends MP, uses techniques or touches items, so leaving it
   on cannot burn anything you were saving for the boss.
 - **Progression**: choose one of three partner monsters right after New Game
   (Emberling / Glidefang / Nightnip — one per class), then build a team by
-  **capturing** more (see below), earning a licence and your own vehicle after
-  the warden falls.
+  **capturing** more (see below), earning the Vigil's leave to keep past the
+  Crossing after the warden falls.
 - **More reaches**: the world map unlocks in story order — beyond **The Quiet
   Crossing** come **The Reliquary** (Water, warden Sena Vale), then **The
   Unremembered** (Dark/Nature, warden the Unnamed), with **The Overgrowth**
@@ -303,6 +314,7 @@ Everything is behind a data layer, so swapping art is a data edit:
 |---|---|
 | A creature's sprite | the pixel map in `src/assets/art.ts` (`CREATURES`) |
 | A monster's battle aura (signature FX) | `src/data/battleFx.ts` (`BATTLE_AURAS`) |
+| A move's battle effect (per-technique FX) | `src/data/moveFx.ts` (`ELEMENT_LOOK` / `MOVE_FX_OVERRIDES`) |
 | A creature's stats, class, element, techniques | `src/data/creatures.ts` |
 | Techniques / damage numbers | `src/data/techniques.ts`, `src/systems/battle/formula.ts` |
 | NPCs and the vehicle | `HUMANS` / `VEHICLE` in `src/assets/art.ts` |
@@ -313,7 +325,8 @@ Everything is behind a data layer, so swapping art is a data edit:
 | Tile / wall textures | the generators in `src/engine/pixel.ts` (one per `TerrainStyle`) |
 | A reach's terrain look | `terrain` / `wallHeight` / `fogColor` on each floor's `TileTheme` |
 | Decorative props (crystals, gravestones, roots…) | `DECOR` in `src/assets/art.ts` + a floor's `decor: []` list |
-| Sound effects and music | `src/engine/Audio.ts` |
+| Sound effects, music and ambience | `src/engine/Audio.ts` — see [docs/audio.md](docs/audio.md) |
+| A monster's battle cry (its voice) | `CRIES` in `src/engine/Audio.ts` — see [docs/monster-cries.md](docs/monster-cries.md) |
 
 To use image files instead of procedural pixel maps, replace `spriteTexture()`
 in `src/engine/pixel.ts` with a `TextureLoader` call and keep the `crisp()`

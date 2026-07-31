@@ -1,17 +1,17 @@
-import { bar, el, esc, meter, remove } from './dom';
+import { el, esc, meter, remove } from './dom';
 import type { CreatureInstance } from '../systems/party/creature';
 import { game } from '../systems/party/gameState';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
 import { classIcon } from './icons';
 
-/** Crawl HUD: floor, fuel/EP meter, credits and the lent party's condition. */
+/** Crawl HUD: floor, obols, the lent party — and the LP lantern (top-right). */
 export class DungeonHUD {
   private root: HTMLElement;
   private floorEl: HTMLElement;
-  private epLabel: HTMLElement;
-  private setEp: (p: number) => void;
+  private lantern: HTMLElement;
+  private lpLabel: HTMLElement;
   private partyEl: HTMLElement;
-  private creditsEl: HTMLElement;
+  private obolsEl: HTMLElement;
   private memberBars = new Map<
     string,
     { hp: (cur: number, max: number) => void; mp: (cur: number, max: number) => void; label: HTMLElement }
@@ -24,23 +24,29 @@ export class DungeonHUD {
     this.floorEl = el('h2', undefined, 'The Quiet Crossing');
     this.root.appendChild(this.floorEl);
 
-    const epRow = el('div', 'row');
-    epRow.appendChild(el('span', undefined, 'EP'));
-    this.epLabel = el('span', 'accent', '0');
-    epRow.appendChild(this.epLabel);
-    this.root.appendChild(epRow);
-    this.setEp = bar(this.root, 'ep');
-
-    const credRow = el('div', 'row');
-    credRow.appendChild(el('span', 'dim', 'Credits'));
-    this.creditsEl = el('span', undefined, '0');
-    credRow.appendChild(this.creditsEl);
-    this.root.appendChild(credRow);
+    const obolRow = el('div', 'row');
+    obolRow.appendChild(el('span', 'dim', 'Obols'));
+    this.obolsEl = el('span', undefined, '0');
+    obolRow.appendChild(this.obolsEl);
+    this.root.appendChild(obolRow);
 
     this.partyEl = el('div', 'party');
     this.root.appendChild(this.partyEl);
 
     this.parent.appendChild(this.root);
+
+    // The lantern — the LP meter, top-right of the screen. A living flame dances
+    // in the glass; it grows with Light Power and gutters as LP runs low.
+    this.lantern = el('div');
+    this.lantern.id = 'lantern';
+    const hook = el('div', 'ln-hook');
+    const cap = el('div', 'ln-cap');
+    const glass = el('div', 'ln-glass');
+    glass.appendChild(el('div', 'ln-flame'));
+    const base = el('div', 'ln-base');
+    this.lpLabel = el('div', 'ln-lp');
+    this.lantern.append(hook, cap, glass, base, this.lpLabel);
+    this.parent.appendChild(this.lantern);
   }
 
   setFloor(name: string) {
@@ -72,21 +78,23 @@ export class DungeonHUD {
   }
 
   update(party: CreatureInstance[]) {
-    this.epLabel.textContent = `${Math.ceil(game.fuel)} / ${game.maxFuel}`;
-    this.setEp(game.fuel / game.maxFuel);
-    this.creditsEl.textContent = String(game.credits);
+    const frac = game.maxLight > 0 ? game.light / game.maxLight : 0;
+    this.lantern.style.setProperty('--fill', String(Math.max(0, Math.min(1, frac))));
+    this.lantern.classList.toggle('low', frac <= 0.25);
+    this.lpLabel.innerHTML = `LP <span>${Math.ceil(game.light)}/${game.maxLight}</span>`;
+    this.obolsEl.textContent = String(game.obols);
     for (const c of party) {
       const b = this.memberBars.get(c.uid);
       if (!b) continue;
       b.hp(c.hp, c.maxHp);
       b.mp(c.mp, c.maxMp);
       const icon = classIcon(c.attribute);
-      b.label.innerHTML =
-        c.hp > 0 ? `${icon}${esc(c.name)}` : `${icon}<span class="danger">${esc(c.name)}</span>`;
+      b.label.innerHTML = c.hp > 0 ? `${icon}${esc(c.name)}` : `${icon}<span class="danger">${esc(c.name)}</span>`;
     }
   }
 
   destroy() {
     remove(this.root);
+    remove(this.lantern);
   }
 }

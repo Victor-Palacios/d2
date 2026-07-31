@@ -1,0 +1,22 @@
+name: Naming guard
+
+# Fails if the banned area words reappear anywhere in the tree. The game's areas
+# are "reaches" and the tutorial area is "The Quiet Crossing" — see CLAUDE.md
+# §Naming. Runs on every push and PR (all branches) so a stray word surfaces
+# before it merges. Independent of the Pages deploy.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  naming-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check naming
+        run: node tools/check-naming.mjs

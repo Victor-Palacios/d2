@@ -30,6 +30,10 @@ interface Note {
   dur: number;
   type?: OscillatorType;
   gain?: number;
+  /** Optional target frequency — the tone glides freq → f1 over `dur`. */
+  f1?: number;
+  /** Glide shape when `f1` is set (default exponential). */
+  glide?: 'lin' | 'exp';
 }
 
 const SFX: Record<SfxName, Note[]> = {
@@ -43,7 +47,15 @@ const SFX: Record<SfxName, Note[]> = {
     { freq: 260, time: 0.05, dur: 0.09, type: 'square', gain: 0.12 },
   ],
   step: [{ freq: 150, time: 0, dur: 0.05, type: 'triangle', gain: 0.09 }],
-  bump: [{ freq: 90, time: 0, dur: 0.1, type: 'sawtooth', gain: 0.12 }],
+  // A dull wall-thump, not a buzz: a low sine body that drops in pitch as it
+  // hits (energy dumping into the wall), a triangle sub for weight, and a very
+  // short soft transient for the surface knock. Sine/triangle only — a sawtooth
+  // here reads as electric.
+  bump: [
+    { freq: 200, f1: 58, time: 0, dur: 0.12, type: 'sine', gain: 0.26, glide: 'exp' },
+    { freq: 120, f1: 46, time: 0, dur: 0.15, type: 'triangle', gain: 0.14, glide: 'exp' },
+    { freq: 330, f1: 150, time: 0, dur: 0.035, type: 'triangle', gain: 0.08, glide: 'exp' },
+  ],
   chest: [
     { freq: 700, time: 0, dur: 0.07, type: 'square', gain: 0.12 },
     { freq: 880, time: 0.07, dur: 0.07, type: 'square', gain: 0.12 },
@@ -205,6 +217,15 @@ const TRACKS: Record<
   jungle: { root: 130.8, bpm: 92, bass: [0, 0, 7, 5], arp: [12, 15, 17, 19, 22, 19, 17, 15], birds: true },
 };
 
+/** Resting music level. Kept in one place so `duck()` can restore it exactly. */
+const MUSIC_LEVEL = 0.34;
+/**
+ * Monster cries are the one sound meant to grab the ear (a Pokémon-style call),
+ * so they are lifted above the rest of the mix. Without this a cry renders at
+ * roughly the same peak as the impact sfx it plays under and is masked by it.
+ */
+const CRY_BOOST = 2;
+
 class AudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -223,14 +244,15 @@ class AudioEngine {
       if (this.ctx.state === 'suspended') void this.ctx.resume();
       return;
     }
-    const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const Ctor =
+      window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return;
     this.ctx = new Ctor();
     this.master = this.ctx.createGain();
     this.master.gain.value = this.muted ? 0 : this.volume;
     this.master.connect(this.ctx.destination);
     this.musicGain = this.ctx.createGain();
-    this.musicGain.gain.value = 0.34;
+    this.musicGain.gain.value = MUSIC_LEVEL;
     this.musicGain.connect(this.master);
     this.sfxGain = this.ctx.createGain();
     this.sfxGain.gain.value = 1;
@@ -250,6 +272,11 @@ class AudioEngine {
     const g = this.ctx.createGain();
     osc.type = note.type ?? 'square';
     osc.frequency.setValueAtTime(note.freq, when);
+    if (note.f1 !== undefined && note.f1 !== note.freq) {
+      if ((note.glide ?? 'exp') === 'exp')
+        osc.frequency.exponentialRampToValueAtTime(Math.max(1, note.f1), when + note.dur);
+      else osc.frequency.linearRampToValueAtTime(note.f1, when + note.dur);
+    }
     const peak = note.gain ?? 0.12;
     g.gain.setValueAtTime(0.0001, when);
     g.gain.exponentialRampToValueAtTime(peak, when + 0.008);
@@ -324,7 +351,7 @@ class AudioEngine {
       lfo.start(when);
       lfo.stop(when + l.dur + 0.02);
     }
-    const peak = l.gain ?? 0.12;
+    const peak = (l.gain ?? 0.12) * CRY_BOOST;
     g.gain.setValueAtTime(0.0001, when);
     g.gain.exponentialRampToValueAtTime(peak, when + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, when + l.dur);
@@ -368,7 +395,7 @@ class AudioEngine {
     const seq = mode === 'evolve' ? climb : [...climb].reverse();
     const beat = 0.16;
     seq.forEach((semi, i) => {
-      const freq = root * Math.pow(2, semi / 12);
+      const freq = root * 2 ** (semi / 12);
       const when = t0 + i * beat;
       this.tone({ freq, time: 0, dur: 0.34, type: 'sine', gain: 0.09 }, this.sfxGain!, when);
       this.tone({ freq: freq * 1.5, time: 0, dur: 0.3, type: 'triangle', gain: 0.045 }, this.sfxGain!, when + 0.02);
@@ -377,9 +404,26 @@ class AudioEngine {
     const climax = t0 + seq.length * beat + 0.04;
     const chord = mode === 'evolve' ? [12, 16, 19, 24] : [0, 7, 12];
     for (const semi of chord) {
-      this.tone({ freq: root * Math.pow(2, semi / 12), time: 0, dur: 0.7, type: 'sine', gain: 0.08 }, this.sfxGain, climax);
+      this.tone({ freq: root * 2 ** (semi / 12), time: 0, dur: 0.7, type: 'sine', gain: 0.08 }, this.sfxGain, climax);
     }
     return seq.length * beat + 0.04;
+  }
+
+  /**
+   * Briefly dip the music so a foreground moment — the opening roll-call of
+   * monster cries — is heard clean, then bring it back. Like a Pokémon battle
+   * that quiets under the cry. No-op before audio is unlocked.
+   */
+  duck(secs = 1.4, depth = 0.35) {
+    if (!this.ctx || !this.musicGain) return;
+    const g = this.musicGain.gain;
+    const t = this.ctx.currentTime;
+    const low = MUSIC_LEVEL * depth;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(MUSIC_LEVEL, t);
+    g.linearRampToValueAtTime(low, t + 0.06);
+    g.setValueAtTime(low, t + secs * 0.65);
+    g.linearRampToValueAtTime(MUSIC_LEVEL, t + secs);
   }
 
   music(track: MusicTrack) {
@@ -399,14 +443,14 @@ class AudioEngine {
       const bass = t.bass[Math.floor(s / 4) % t.bass.length];
       if (s % 4 === 0) {
         this.tone(
-          { freq: t.root * Math.pow(2, bass / 12) * 0.5, time: 0, dur: stepMs / 700, type: 'triangle', gain: 0.16 },
+          { freq: t.root * 2 ** (bass / 12) * 0.5, time: 0, dur: stepMs / 700, type: 'triangle', gain: 0.16 },
           this.musicGain,
           now,
         );
       }
       const arp = t.arp[s % t.arp.length];
       this.tone(
-        { freq: t.root * Math.pow(2, (arp + bass) / 12), time: 0, dur: stepMs / 1100, type: 'square', gain: 0.05 },
+        { freq: t.root * 2 ** ((arp + bass) / 12), time: 0, dur: stepMs / 1100, type: 'square', gain: 0.05 },
         this.musicGain,
         now,
       );

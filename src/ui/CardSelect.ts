@@ -77,7 +77,9 @@ export class CardSelect {
   }
 
   private refresh() {
-    this.nodes.forEach((n, i) => n.classList.toggle('sel', i === this.index));
+    this.nodes.forEach((n, i) => {
+      n.classList.toggle('sel', i === this.index);
+    });
   }
 
   private moveTo(i: number, sound = true) {

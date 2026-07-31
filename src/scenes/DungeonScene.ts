@@ -1,15 +1,16 @@
 import * as THREE from 'three';
 import { GameScene, sleep } from '../engine/SceneManager';
-import type { SceneContext } from '../engine/SceneManager';
 import { TILE, TileGrid } from '../engine/TileGrid';
 import type { Tile } from '../engine/TileGrid';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Portal, Torch } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
-import { DECOR, PROPS, VEHICLE } from '../assets/art';
+import { DECOR, PROPS, HUMANS } from '../assets/art';
 import { reach } from '../data/reaches';
+import { ITEMS } from '../data/items';
 import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
+import { decorIsSolid } from '../data/dungeon';
 import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
 import { game } from '../systems/party/gameState';
@@ -19,15 +20,15 @@ import { DialogueBox } from '../ui/DialogueBox';
 import { toast } from '../ui/Toast';
 import { Menu } from '../ui/Menu';
 import { openSoulMenu } from '../ui/SoulMenu';
-import { el } from '../ui/dom';
+import { el, remove } from '../ui/dom';
 import { saveSuspend } from '../systems/party/saveGame';
-import { say } from '../systems/dialogue/script';
+import { narrate, say } from '../systems/dialogue/script';
 import type { BattleSceneParams } from './BattleScene';
 
 type Facing = 'up' | 'down' | 'left' | 'right';
 
 const STEP_TIME = 0.19;
-const FUEL_PER_STEP = 1;
+const LIGHT_PER_STEP = 1;
 
 export interface DungeonSceneParams {
   /** Set when returning from a battle so the crawl resumes in place. */
@@ -41,8 +42,8 @@ export interface DungeonSceneParams {
  * The dungeon crawl (plan §2.4, M1/M3). Used by every reach, starting with the
  * Quiet Crossing.
  *
- * Tile-by-tile movement in the dig-vehicle with wall collision, chests,
- * element floor plates, a draining EP meter, descent portals and both scripted
+ * Tile-by-tile movement on foot with wall collision, chests, element floor
+ * plates, draining lantern-light (LP), descent portals and both scripted
  * and random encounters — all staged in the shared HD-2D rig.
  */
 export class DungeonScene extends GameScene {
@@ -76,10 +77,6 @@ export class DungeonScene extends GameScene {
   private leaving = false;
   private legend!: HTMLElement;
   private unsubInput: (() => void) | null = null;
-
-  constructor(ctx: SceneContext) {
-    super(ctx);
-  }
 
   // -------------------------------------------------------------------------
 
@@ -151,10 +148,10 @@ export class DungeonScene extends GameScene {
     this.particles = new ParticleField(500);
     this.scene.add(this.particles.points);
 
-    // Player vehicle.
-    this.player = new Billboard(VEHICLE.down, 'veh:down', { height: 1.5 });
-    this.player.bob = 0.02;
-    this.player.bobSpeed = 5;
+    // The player, lantern in hand, on foot.
+    this.player = new Billboard(HUMANS.hero, 'player', { height: 1.7 });
+    this.player.bob = 0.03;
+    this.player.bobSpeed = 3;
     this.scene.add(this.player.object);
 
     // Props, portals and torches.
@@ -163,10 +160,14 @@ export class DungeonScene extends GameScene {
       const world = this.grid.worldPos(t.x, t.z);
       if (t.kind === 'chest') {
         const opened = game.openedChests.has(`${this.floor.id}:${key}`);
-        const b = new Billboard(opened ? PROPS.chestOpen : PROPS.chestClosed, opened ? 'prop:chestOpen' : 'prop:chestClosed', {
-          height: 0.85,
-          emissive: opened ? 0.5 : 0.06,
-        });
+        const b = new Billboard(
+          opened ? PROPS.chestOpen : PROPS.chestClosed,
+          opened ? 'prop:chestOpen' : 'prop:chestClosed',
+          {
+            height: 0.85,
+            emissive: opened ? 0.5 : 0.06,
+          },
+        );
         b.bob = 0;
         b.object.position.copy(world);
         this.scene.add(b.object);
@@ -207,9 +208,11 @@ export class DungeonScene extends GameScene {
   }
 
   /**
-   * Scatters the floor's decorative billboards. Decor is non-colliding by
-   * design — it lives outside the grid, so the player drives straight through
-   * it; it only exists to give each reach's terrain its own silhouette.
+   * Scatters the floor's decorative billboards. Solid decor (rocks, crystals,
+   * pillars, trees…) blocks its tile so the party can't walk through it; flat
+   * ground detail and overhead dressing stay passable (see `decorIsSolid`). Each
+   * reach's terrain gets its own silhouette without changing floor-to-floor
+   * movement.
    */
   private placeDecor() {
     for (const d of this.floor.decor ?? []) {
@@ -223,6 +226,7 @@ export class DungeonScene extends GameScene {
       b.object.position.copy(this.grid.worldPos(d.x, d.z));
       this.scene.add(b.object);
       this.decor.push(b);
+      if (decorIsSolid(d)) this.grid.blockTile(d.x, d.z);
     }
   }
 
@@ -256,10 +260,14 @@ export class DungeonScene extends GameScene {
     const host = el('div', 'panel');
     host.id = 'pause-menu';
     host.appendChild(el('h2', undefined, 'Paused'));
-    const menu = new Menu(host, [
-      { value: 'resume', label: 'Resume crawl' },
-      { value: 'suspend', label: 'Suspend & quit', note: 'temp' },
-    ], { cancellable: true });
+    const menu = new Menu(
+      host,
+      [
+        { value: 'resume', label: 'Resume crawl' },
+        { value: 'suspend', label: 'Suspend & quit', note: 'temp' },
+      ],
+      { cancellable: true },
+    );
     this.ctx.ui.appendChild(host);
 
     const choice = await menu.open();
@@ -292,8 +300,7 @@ export class DungeonScene extends GameScene {
     this.dialogue = new DialogueBox(this.ctx.ui);
     this.legend = document.createElement('div');
     this.legend.id = 'legend';
-    this.legend.innerHTML =
-      'MOVE arrows/WASD · ESC pause &amp; suspend · E/R1 Soularium · ` debug · M mute';
+    this.legend.innerHTML = 'MOVE arrows/WASD · ESC pause &amp; suspend · E/R1 Soularium · ` debug · M mute';
     this.ctx.ui.appendChild(this.legend);
 
     this.unsubInput = input.onAction((a) => {
@@ -318,10 +325,9 @@ export class DungeonScene extends GameScene {
   }
 
   private updateFacingArt() {
-    if (this.facing === 'down') this.player.setArt(VEHICLE.down, 'veh:down');
-    else if (this.facing === 'up') this.player.setArt(VEHICLE.up, 'veh:up');
-    else if (this.facing === 'left') this.player.setArt(VEHICLE.side, 'veh:side');
-    else this.player.setArt(VEHICLE.side, 'veh:sideR', true);
+    // Single-pose hero: mirror when walking left, upright otherwise.
+    const mirrored = this.facing === 'left';
+    this.player.setArt(HUMANS.hero, mirrored ? 'playerL' : 'player', mirrored);
   }
 
   private saveCrawl() {
@@ -340,7 +346,7 @@ export class DungeonScene extends GameScene {
       this.facing = dir;
       this.updateFacingArt();
     }
-    if (!this.grid.walkable(nx, nz)) {
+    if (!this.grid.passable(nx, nz)) {
       audio.sfx('bump');
       return;
     }
@@ -352,7 +358,7 @@ export class DungeonScene extends GameScene {
     this.moveT = 0;
     audio.sfx('step');
 
-    game.fuel = Math.max(0, game.fuel - FUEL_PER_STEP);
+    game.light = Math.max(0, game.light - LIGHT_PER_STEP);
     this.hud.update(game.party);
   }
 
@@ -367,8 +373,8 @@ export class DungeonScene extends GameScene {
   // --- tile interactions ---------------------------------------------------
 
   private async onTileEntered(tile: Tile) {
-    if (game.fuel <= 0) {
-      await this.outOfFuel();
+    if (game.light <= 0) {
+      await this.outOfLight();
       return;
     }
 
@@ -390,13 +396,13 @@ export class DungeonScene extends GameScene {
           life: 0.9,
         });
         const bits: string[] = [];
-        if (loot?.credits) {
-          game.credits += loot.credits;
-          bits.push(`<span class="accent">+${loot.credits} credits</span>`);
+        if (loot?.obols) {
+          game.obols += loot.obols;
+          bits.push(`<span class="accent">+${loot.obols} obols</span>`);
         }
         if (loot?.item) {
           game.addItem(loot.item);
-          bits.push('<span class="ok">+1 Repair Chip</span>');
+          bits.push(`<span class="ok">+1 ${ITEMS[loot.item]?.name ?? 'keepsake'}</span>`);
         }
         toast(this.ctx.ui, bits.join(' &nbsp; ') || 'Empty.', 2200);
         this.hud.update(game.party);
@@ -414,9 +420,9 @@ export class DungeonScene extends GameScene {
           b.dispose();
           this.props.delete(key);
         }
-        game.fuel = Math.min(game.maxFuel, game.fuel + 40);
+        game.light = Math.min(game.maxLight, game.light + 40);
         audio.sfx('pickup');
-        toast(this.ctx.ui, '<span class="ok">+40 EP</span>', 1600);
+        toast(this.ctx.ui, '<span class="ok">+40 LP</span>', 1600);
         this.hud.update(game.party);
       }
       return;
@@ -484,11 +490,117 @@ export class DungeonScene extends GameScene {
       return;
     }
 
+    if (ev.kind === 'finale') {
+      game.usedEvents.add(id);
+      await this.runFinale(ev);
+      return;
+    }
+
     game.usedEvents.add(id);
     this.busy = true;
     if (ev.intro) await this.dialogue.play(ev.intro);
     this.busy = false;
     await this.startBattle(ev.enemies, ev.kind === 'boss', tile.eventId);
+  }
+
+  /**
+   * The finale (The Last Lantern): the soul you have searched for since the
+   * prologue, and the game's dramatic question made personal — keep it, or let
+   * it cross. Not a fight; a choice, then the ending. Routes home to the
+   * Everwake, the story complete. See docs/NARRATIVE.md §11c.
+   */
+  private async runFinale(ev: Extract<FloorEvent, { kind: 'finale' }>) {
+    this.busy = true;
+    if (ev.intro) await this.dialogue.play(ev.intro);
+    await this.dialogue.play([
+      ...narrate(
+        'A single lantern stands at the heart of the dark, lit by no hand but the one that left it here. Inside it, a small flame — the one you have walked a whole road to find.',
+      ),
+      ...narrate(
+        'You know this light. You have always known it. It is the soul you lost — the reason you ever took up a lantern at all.',
+      ),
+      ...say('Wren', `Whatever you choose, ${game.playerName}, I will write it down true.`),
+      ...say('Sena Vale', 'You have seen what keeping costs now. And what letting go costs. Neither one is free.'),
+      ...say('Kade', 'We are here. Whichever way, you do not do this alone.'),
+    ]);
+
+    const choice = await this.finaleChoice();
+    if (choice === 'keep') {
+      game.set('ending:keep');
+      await this.dialogue.play([
+        ...narrate(
+          'You close your hands around the lantern and will it to hold. The flame steadies. It will never gutter now — and it will never cross.',
+        ),
+        ...narrate(
+          'You have them back. You will have them forever, exactly as they are — and they will never change again, because the changing was the living.',
+        ),
+        ...say(
+          'Sena Vale',
+          'I know this love. I will sit in it with you, for as long as you need. It is warmer with two.',
+        ),
+        ...narrate(
+          'You carry the lantern up out of the dark. You are not unfinished any longer — you are kept, the way you kept them. The Everwake has one more light that will never go out.',
+        ),
+      ]);
+    } else {
+      game.set('ending:cross');
+      await this.dialogue.play([
+        ...narrate(
+          'You open the lantern. It is the hardest thing your hands have ever done — the exact opposite of every gesture that carried you here.',
+        ),
+        ...narrate(
+          'The flame lifts, unhurried, the way Halden lifted. For one whole breath it is brighter than everything. Then it is gone — not lost. Home.',
+        ),
+        ...say(
+          'Wren',
+          'I am writing the name now. Not to hold them — so that the letting go was a thing that someone witnessed.',
+        ),
+        ...narrate(
+          'The dark is only dark again. You climb toward the light with empty hands and, for the first time since you took up the lantern, a finished heart.',
+        ),
+      ]);
+    }
+
+    game.set('gameComplete');
+    game.set(reach(game.activeReachId).onClear.flag);
+    this.busy = false;
+    await this.endBanner(choice);
+    fullRestore(game.party);
+    await this.ctx.go('hub');
+  }
+
+  /** The finale temptation: keep the soul, or let it cross. */
+  private async finaleChoice(): Promise<'keep' | 'cross'> {
+    const host = el('div', 'panel');
+    host.style.cssText =
+      'position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);min-width:360px;text-align:left;';
+    host.appendChild(el('h2', undefined, 'The lantern is open in your hands.'));
+    this.ctx.ui.appendChild(host);
+    const menu = new Menu(host, [
+      { value: 'keep', label: 'Hold them in your lantern', note: 'keep them — forever, unchanging' },
+      { value: 'cross', label: 'Open your hands', note: 'let them cross — and be finished' },
+    ]);
+    const v = await menu.open();
+    menu.destroy();
+    remove(host);
+    return (v ?? 'cross') as 'keep' | 'cross';
+  }
+
+  /** A closing "The End" card after the choice. */
+  private async endBanner(choice: 'keep' | 'cross') {
+    const host = el('div', 'panel');
+    host.style.cssText =
+      'position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);text-align:center;max-width:560px;';
+    host.innerHTML =
+      '<h1 class="title-main">The End</h1>' +
+      `<p class="dim">${
+        choice === 'keep'
+          ? 'You kept them. The light never goes out — and never rests.'
+          : 'You let them cross. Your hands are empty, and your heart is finished.'
+      }<br><br>Thank you for keeping the Everwake.</p>`;
+    this.ctx.ui.appendChild(host);
+    await sleep(4200);
+    remove(host);
   }
 
   private currentElement(): ElementId | undefined {
@@ -553,8 +665,8 @@ export class DungeonScene extends GameScene {
     audio.sfx('portal');
     const dom = reach(game.activeReachId);
     game.set(dom.onClear.flag);
-    if (dom.onClear.licenseCeremony) {
-      // The Quiet Crossing only: the licence + Guard-Team ceremony.
+    if (dom.onClear.leaveCeremony) {
+      // The Quiet Crossing only: the Vigil's-leave ceremony.
       await this.ctx.go('hub', { arrival: 'reachCleared' });
     } else {
       // Any other reach: you're back in the safe city, patched up.
@@ -563,15 +675,15 @@ export class DungeonScene extends GameScene {
     }
   }
 
-  private async outOfFuel() {
+  private async outOfLight() {
     if (this.leaving) return;
     this.leaving = true;
     this.busy = true;
     await this.dialogue.play(
       say(
         'Halden',
-        'Your EP hit zero. Sit tight — I am pulling the beetle back on the tow line.',
-        'Nothing lost but time. Refuel and go again.',
+        'Your lantern guttered out. Sit tight — I am walking you back by the last of mine.',
+        'Nothing lost but time. Gather more light and go again.',
       ),
     );
     game.resetCrawl();
@@ -628,7 +740,7 @@ export class DungeonScene extends GameScene {
       this.moveT += dt / STEP_TIME;
       const t = Math.min(1, this.moveT);
       // Ease-out so each tile step has a little weight.
-      const e = 1 - Math.pow(1 - t, 2.2);
+      const e = 1 - (1 - t) ** 2.2;
       this.player.object.position.lerpVectors(this.moveFrom, this.moveTo, e);
       if (t >= 1) this.finishStep();
     } else if (!this.busy && !this.dialogue.visible && this.buffered) {

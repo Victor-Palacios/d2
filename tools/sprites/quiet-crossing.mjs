@@ -1,8 +1,18 @@
 // The first-dungeon (The Quiet Crossing) roster, redesigned procedurally.
 // Keyed by the art key each Species uses in src/assets/art.ts, so integrating
 // is a direct replace of CREATURES[<key>]. Recipe: docs/procedural-sprites.md.
-import { grid, ellipse, rect, dot, set } from './compose.mjs';
+import { grid, ellipse, rect, dot, set, smooth, outlineSil, toArt } from './compose.mjs';
 import { glossyEyes, shadeInto, contactShadow, finish } from './creatures.mjs';
+import { applyFace } from './personality.mjs';
+
+// Clean the silhouette, stamp the creature's personality face, then outline.
+// `cfg` positions the face: { cx, eyeY, dx, rx, ry, mouthY, pal }.
+function faced(g, P, personality, cfg) {
+  smooth(g);
+  applyFace(personality, g, cfg);
+  outlineSil(g, 'k');
+  return toArt(g, P);
+}
 
 // --- lizard — Emberling (fire / hero starter) ------------------------------
 // A chunky ember-GOLEM (per the original sprite): visor face, glowing chest
@@ -28,14 +38,13 @@ export function lizard() {
   shadeInto(g, cx, 52, 15, 8, 'r', ['o']); shadeInto(g, cx - 15, 48, 4, 5, 'r', ['o']); shadeInto(g, cx + 15, 48, 4, 5, 'r', ['o']);
   // glowing molten cracks on the torso
   for (const [a, b] of [[cx - 7, 37], [cx - 6, 39], [cx + 8, 38], [cx + 7, 40], [cx - 9, 52], [cx + 9, 53]]) set(g, a, b, 'y');
-  // dark visor band with big glowing eyes
+  // dark visor band (eyes/brows come from the fierce family)
   rect(g, cx - 11, 19, cx + 11, 26, 'u');
-  glossyEyes(g, cx, 6, 22, 3.4, 3.9, 0);
   set(g, cx - 6, 19, 'g'); set(g, cx + 6, 19, 'g');   // visor glow ticks
   // glowing chest core (a molten heart, framed)
   ellipse(g, cx, 45, 6, 6.5, 'u'); ellipse(g, cx, 45, 4.4, 5, 'r');
   ellipse(g, cx, 45, 2.8, 3.4, 'f'); ellipse(g, cx, 45, 1.3, 1.8, 'w'); set(g, cx, 42, 's');
-  return finish(g, P);
+  return faced(g, P, 'fierce', { cx, eyeY: 22, dx: 6, rx: 3.4, ry: 3.9, mouthY: null, pal: { skin: 'o' } });
 }
 
 // --- wing — Glidefang (water / mage, hovering) -----------------------------
@@ -84,12 +93,8 @@ export function bat() {
   // ears (left slightly taller)
   ellipse(g, cx - 8, 11, 3.6, 7, 'v'); ellipse(g, cx + 8, 13, 3.6, 6, 'v');
   ellipse(g, cx - 8, 12, 1.6, 3.6, 'e'); ellipse(g, cx + 8, 14, 1.6, 3, 'e');
-  glossyEyes(g, cx + 1, 7, 30, 4, 4.8, 1);
-  dot(g, cx + 1, cx - 9, 35, 'c'); dot(g, cx + 1, cx - 9, 36, 'c');
-  set(g, cx, 37, 'p'); set(g, cx + 1, 38, 'p'); set(g, cx + 2, 37, 'p');
-  set(g, cx - 1, 39, 'f'); set(g, cx + 3, 39, 'f'); // tiny fangs
   ellipse(g, cx - 12, 22, 1, 1.4, 'g'); ellipse(g, cx + 13, 20, 1, 1.4, 'g'); // floating motes
-  return finish(g, P);
+  return faced(g, P, 'clever', { cx: cx + 1, eyeY: 30, dx: 7, rx: 4, ry: 4.8, mouthY: 38, pal: { skin: 'v' } });
 }
 
 // --- bug — Mitebug (nature / assassin) -------------------------------------
@@ -112,10 +117,7 @@ export function bug() {
   ellipse(g, cx - 7, 28, 3, 4, 'y'); ellipse(g, cx + 7, 28, 3, 4, 'y');
   // just a hint of feet (no spidery legs)
   ellipse(g, cx - 7, 44, 3, 2.4, 'r'); ellipse(g, cx + 7, 44, 3, 2.4, 'r');
-  glossyEyes(g, cx, 6.5, 28, 3.4, 4, 1);
-  dot(g, cx, cx - 9, 33, 'c'); dot(g, cx, cx - 9, 34, 'c');
-  set(g, cx - 1, 35, 'p'); set(g, cx, 36, 'p'); set(g, cx + 1, 35, 'p');
-  return finish(g, P);
+  return faced(g, P, 'nervous', { cx, eyeY: 28, dx: 6.5, rx: 3.4, ry: 4, mouthY: 35, pal: { skin: 'o' } });
 }
 
 // --- plant — Sprigling (nature / hero) -------------------------------------
@@ -157,17 +159,14 @@ export function scrap() {
   rect(g, cx - 6, 38, cx + 6, 39, 'D');                      // panel seam
   // head (rounded) + dark screen face
   ellipse(g, cx, 20, 11, 10, 'b'); shadeInto(g, cx - 3, 15, 6, 5, 'h', ['b']);
-  ellipse(g, cx, 21, 7.5, 6, 'n');
-  ellipse(g, cx - 3, 20, 1.8, 2.2, 'g'); ellipse(g, cx + 3, 20, 1.8, 2.2, 'g'); // glowing eyes
-  set(g, cx - 3, 19, 's'); set(g, cx + 3, 19, 's');
-  for (let x = cx - 2; x <= cx + 2; x++) set(g, x, 24, 'g');  // smile readout
+  ellipse(g, cx, 21, 7.5, 6, 'n');                            // dark screen (face comes from uncanny)
   // antenna (bent, 2x2 so it stays connected), arms (one raised), tread base
   const blk = (x, y, k) => { set(g, x, y, k); set(g, x + 1, y, k); set(g, x, y + 1, k); set(g, x + 1, y + 1, k); };
   for (let i = 0; i <= 5; i++) blk(cx + 4 + i, 12 - i, 'D');
   ellipse(g, cx + 11, 5, 2, 2, 'g'); set(g, cx + 11, 4, 's');
   ellipse(g, cx - 15, 36, 3, 4.5, 'b'); ellipse(g, cx + 15, 42, 3, 4, 'b');
   ellipse(g, cx, 55, 11, 3, 'D'); dot(g, cx, cx - 6, 55, 'h');
-  return finish(g, P);
+  return faced(g, P, 'uncanny', { cx, eyeY: 20, dx: 4, rx: 2.6, ry: 2.8, mouthY: 24, pal: { white: 'g', mouth: 'g' } });
 }
 
 // --- wisp — Gloomote (dark / mage, hovering) -------------------------------
@@ -191,11 +190,8 @@ export function wisp() {
   ellipse(g, cx, 24, 3, 3.5, 'g'); // glow core
   // little arm nubs on the wide head
   ellipse(g, cx - 13, 24, 2.2, 3, 'v'); ellipse(g, cx + 13, 24, 2.2, 3, 'v');
-  glossyEyes(g, cx, 6.5, 21, 3.8, 4.4, 1);
-  dot(g, cx, cx - 9, 25, 'c'); dot(g, cx, cx - 9, 26, 'c');
-  set(g, cx - 1, 27, 'p'); set(g, cx, 28, 'p'); set(g, cx + 1, 27, 'p');
   ellipse(g, cx - 15, 14, 1, 1.3, 'g'); ellipse(g, cx + 15, 18, 1, 1.3, 'g');
-  return finish(g, P);
+  return faced(g, P, 'uncanny', { cx, eyeY: 21, dx: 6.5, rx: 3.8, ry: 4.4, mouthY: 27, pal: { white: 'g', mouth: 'u' } });
 }
 
 // --- slime — Dropletta (water / mage) --------------------------------------

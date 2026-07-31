@@ -8,7 +8,9 @@ import { chromium } from 'playwright';
 //     reach wears its expected terrain skins.
 //  2. Build: enters every floor via the debug API (no combat) and confirms the
 //     grid + terrain + decor actually build in three.js — grid size matches the
-//     data, every decor spec was placed, and no decor landed on a wall.
+//     data, every decor spec was placed, no decor landed on a wall, and every
+//     solid prop blocks its tile (grid.passable === false) while passable decor
+//     stays walkable — i.e. the party collides with rocks/crystals, not flowers.
 //
 // See tools/smoke/README.md. Post stack stripped so the loop runs at ~26 fps.
 
@@ -49,6 +51,9 @@ const pickPartner = async () => {
 };
 
 await page.goto(process.env.URL ?? 'http://localhost:4173/', { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1200);
 await page.evaluate(() => {
   const g = window.hd2dGame, p = g.hd2d.params;
@@ -74,6 +79,7 @@ const expect = {
   crystal: ['crystal', 'metal', 'crystal'],
   jungle: ['jungle', 'jungle', 'jungle'],
   haunted: ['crypt', 'cave', 'crypt'],
+  lantern: ['cave', 'crypt', 'cave'],
 };
 for (const [id, exp] of Object.entries(expect)) {
   check(`${id} terrain = ${exp.join('/')}`, JSON.stringify(terrains[id]) === JSON.stringify(exp));
@@ -106,19 +112,32 @@ for (const [dom, idx] of floorList) {
     const floor = g.reaches[g.game.activeReachId].floors[g.game.floorIndex];
     const specs = floor.decor ?? [];
     const onWall = specs.filter((d) => !s.grid.walkable(d.x, d.z)).map((d) => `${d.kind}@${d.x},${d.z}`);
+    // Solid decor must block its tile (grid.passable === false); passable decor
+    // must stay walkable. This is what stops the party clipping through rocks.
+    const badSolid = specs
+      .filter((d) => g.decorIsSolid(d) && s.grid.passable(d.x, d.z))
+      .map((d) => `${d.kind}@${d.x},${d.z}`);
+    const badPassable = specs
+      .filter((d) => !g.decorIsSolid(d) && !s.grid.passable(d.x, d.z))
+      .map((d) => `${d.kind}@${d.x},${d.z}`);
     return {
       id: floor.id,
       terrain: floor.theme.terrain ?? 'stone',
       gridMatches: s.grid.width === floor.rows[0].length && s.grid.depth === floor.rows.length,
       decorPlaced: s.decor.length,
       decorSpecs: specs.length,
+      solidCount: specs.filter((d) => g.decorIsSolid(d)).length,
       onWall,
+      badSolid,
+      badPassable,
     };
   });
   console.log(`\n=== ${info.id} (${info.terrain}) ===`);
   check('grid built at the data\'s size', info.gridMatches);
   check('all decor billboards placed', info.decorPlaced === info.decorSpecs, `${info.decorPlaced}/${info.decorSpecs}`);
   check('no decor on a wall/void tile', info.onWall.length === 0, info.onWall.join(', '));
+  check(`solid decor blocks its tile (${info.solidCount} solid)`, info.badSolid.length === 0, info.badSolid.join(', '));
+  check('passable decor stays walkable', info.badPassable.length === 0, info.badPassable.join(', '));
   await page.screenshot({ path: new URL(`./shots/terrain-${info.id}.png`, import.meta.url).pathname });
 }
 

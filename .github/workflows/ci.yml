@@ -1,0 +1,48 @@
+name: CI
+
+# The quality gate: typecheck, lint, unit tests and a production build on every
+# push and pull request. The deploy workflow publishes to Pages only after its
+# own build succeeds; this runs the same checks on branches and PRs too, so a
+# regression is caught before it can reach `main`.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same ref supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint & format check
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+# Note: the Playwright smoke tests (tools/smoke) are intentionally not run here.
+# CI has no GPU, so the HD-2D post stack falls back to a software rasterizer at
+# ~0.3 fps (see HANDOFF.md §7). They are pinned as a devDependency and run
+# locally / on demand against a real GPU instead.

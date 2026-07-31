@@ -37,12 +37,16 @@ const readCards = () => page.evaluate(() =>
 const setFlag = (f) => page.evaluate((flag) => window.hd2dGame.game.set(flag), f);
 const goWorldmap = async () => { await page.evaluate(async () => { await window.hd2dGame.manager.go('worldmap'); }); await wait('worldmap'); await page.waitForTimeout(500); };
 const backToHub = async () => {
-  await page.locator('.card', { hasText: 'The Everwake' }).click();
+  // Exact-title click: locked-card hints can contain other card names as substrings.
+  await page.locator('.card').filter({ has: page.locator('h3', { hasText: /^The Everwake$/ }) }).click();
   await wait('hub'); await page.waitForTimeout(300);
   for (let i = 0; i < 10; i++) { if (await dlg()) await page.keyboard.press('Enter'); await page.waitForTimeout(120); }
 };
 
 await page.goto(process.env.URL ?? 'http://localhost:4173/', { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const g = window.hd2dGame, p = g.hd2d.params; p.supersample = 0.4; p.dofEnabled = false; p.bloomEnabled = false; g.hd2d.applyParams(); });
 

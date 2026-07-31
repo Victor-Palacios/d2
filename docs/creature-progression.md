@@ -7,9 +7,15 @@ companion; the runtime maths and worked examples live in
 [`docs/SYSTEMS.md`](SYSTEMS.md) §2, §3 and §7 (code is the source of truth).
 
 > Design provenance: the evolution model is a deliberate **Pokémon × Digimon
-> hybrid** — level-triggered and identity-preserving like Pokémon, branching and
-> reversible like Digimon, without Digimon's "any starter reaches any top form"
-> criticism. See the header comment in `systems/party/evolve.ts`.
+> hybrid** — level-triggered and identity-preserving like Pokémon, branching,
+> **class-pure**, and reversible like Digimon Cyber Sleuth (the player chooses
+> when to evolve or de-evolve), without Digimon's "any starter reaches any top
+> form" criticism. See the header comment in `systems/party/evolve.ts`.
+
+> **⚠ Debug evolution levels.** Evolution gates are currently set to a temporary
+> debug schedule so any line can be walked quickly: **base → 2nd form at Lv2,
+> 3rd form at Lv3, 4th form at Lv4**. These are placeholders — re-tune per line
+> before shipping. The gate is just the `level` field on each `EvolutionOption`.
 
 ---
 
@@ -22,12 +28,13 @@ companion; the runtime maths and worked examples live in
 | Role growth curves | `src/data/creatures.ts` — `HERO_/MAGE_/ASSASSIN_GROWTH` |
 | Move data + physical/magical `category` | `src/data/techniques.ts` |
 | Damage channel + heal blend | `src/systems/battle/formula.ts` |
-| Instance stats, level-up, move-learning | `src/systems/party/creature.ts` |
-| Evolve / de-evolve (headless) | `src/systems/party/evolve.ts` |
+| Instance stats, level-up, move-learning, **known pool + loadout** | `src/systems/party/creature.ts` (`syncMoves`, `activeMoves`, `MAX_ACTIVE_MOVES`) |
+| Evolve / de-evolve + **class-purity** (headless) | `src/systems/party/evolve.ts` (`isSameClass`) |
 | Evolution UI | `src/ui/TranscendScreen.ts` (R1 → menu → Transcend) |
 | Evolution fanfare (cinematic) | `src/ui/TranscendCinematic.ts` + `audio.transcend()` |
-| Save migration for new stats | `src/systems/party/saveGame.ts` |
-| Tests | `tools/smoke/transcend.mjs` |
+| **Move-loadout UI** (toggle the ≤5 active) | `src/ui/MovesScreen.ts` (R1 → menu → Moves) |
+| Save migration for new stats/loadout | `src/systems/party/saveGame.ts` |
+| Tests | `src/systems/party/evolve.test.ts` (class purity, debug levels, loadout) · `tools/smoke/transcend.mjs` · `tools/smoke/transcend-fx.mjs` |
 
 ---
 
@@ -62,8 +69,10 @@ Each species has `learnset: { level, tech }[]`, authored in learn order.
 
 - A creature made at level L knows every entry with `level ≤ L`
   (`movesKnownAt`), computed in `makeCreature`.
-- On level-up, `grantXp` teaches anything newly crossed
-  (`movesLearnedBetween`).
+- On level-up, `grantXp` calls `syncMoves`, which folds newly-crossed entries
+  into the creature's **known pool** (`techniques`).
+- The known pool is **monotonic** — it only ever grows. Evolving folds in the
+  new form's moves; de-evolving keeps everything (a soul never forgets).
 - The free **Strike** is always available and is **not** in any learnset.
 
 Convention: role/element-shaped, early filler moves, a single-target capstone
@@ -88,11 +97,16 @@ evolutions?: { to: string; level: number; branch?: string }[]
 ```
 
 - **Level-triggered:** a branch is eligible once `creature.level >= level`.
-  Default is 10; some lines differ (Gloomote/Bulwarq/Shardling 12, the
-  Scrapmite → Cogling → Cogknight chain's first step 8) and many forms are
-  terminal (no `evolutions`).
-- **Branching:** list more than one option (e.g. Emberling → Regalion *or*
-  Cinderfang). Keep branches thematically bound to the base so identity holds.
+  Currently a temporary debug schedule (Lv2/3/4 per stage — see the banner
+  above); many forms are terminal (no `evolutions`).
+- **Branching:** list more than one option. Keep branches thematically bound to
+  the base so identity holds.
+- **Class-pure:** every branch must stay in the source's `attribute` — a Mage
+  only ever becomes another Mage, a Hero a Hero, an Assassin an Assassin.
+  `evolutionOptions` filters cross-class branches out (via `isSameClass`) so a
+  stray data entry can never be *offered*, and `evolve.test.ts` fails the build
+  if one is ever *authored*. This is the house rule that keeps lines clean while
+  still letting a monster become a different monster within its tree.
 - **De-evolution** is derived — `evolve.ts` builds a reverse map from every
   forward branch, so a form always knows its one source. No per-creature or
   per-save data is needed.
@@ -103,10 +117,12 @@ evolutions?: { to: string; level: number; branch?: string }[]
 - `evolve(c, toId?)` — take a branch (refuses if ambiguous without `toId`).
 - `devolveTargetId(c)` / `canDevolve(c)` / `devolve(c)` — step back one form.
 
-The transform keeps level/XP/equipment and the current HP/MP **fraction**, then
-recomputes stats and moveset from the new species — so evolve → devolve → evolve
-is lossless. Evolution is **out-of-battle and explicit** (never fired from
-`grantXp`), which is why it stays reversible and never surprises the player.
+The transform keeps level/XP/equipment and the current HP/MP **fraction**,
+recomputes stats from the new species, and folds the new form's moves into the
+known pool (never removing any) — so evolve → devolve → evolve is lossless and
+only ever grows the pool. Evolution is **out-of-battle and explicit** (never
+fired from `grantXp`), which is why it stays reversible and never surprises the
+player.
 
 ### To add an evolution line
 
@@ -135,6 +151,28 @@ everything from `speciesArt`, the element colour and the `EvolveResult`. Timings
 (gather / strobe / bloom / settle) are the constants at the top of the module;
 `audio.transcend(mode)` in `engine/Audio.ts` is the sound. Covered headlessly by
 `tools/smoke/transcend-fx.mjs`.
+
+---
+
+## 3½. Battle loadout — the ≤5 active moves
+
+A creature *knows* every move in its pool (`techniques`) but may *field* only
+`MAX_ACTIVE_MOVES` (**5**) at once. The active subset is `creature.loadout` — an
+ordered list, a subset of `techniques`, that drives the in-battle **Technique**
+menu (`ui/BattleHUD.ts`) and the enemy AI (`systems/battle/engine.ts`). Both
+read moves through `activeMoves(c)`, so the cap is honoured everywhere; **Basic
+Attack is always available and lives outside the loadout.**
+
+- **Player control:** the **Moves** screen (`ui/MovesScreen.ts`, R1 → menu →
+  Moves) toggles each known move on/off. Enabling a 6th is blocked until one is
+  disabled. Zero active is allowed (you still have Basic Attack). The choice is
+  **permanent** — it lives on the instance and is saved.
+- **Auto-fill:** `syncMoves` fills *free* slots with *freshly-learned* moves
+  only, so a new move is battle-ready by default but a move you deliberately
+  benched is never silently re-enabled.
+- **Persistence:** `loadout` is a plain field on `CreatureInstance`, so it rides
+  the normal save. `saveGame.ts` back-fills it from the known pool for pre-v9
+  saves (`SAVE_VERSION` 9, `MIN_SAVE_VERSION` still 8).
 
 ---
 

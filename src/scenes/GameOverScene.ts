@@ -1,5 +1,4 @@
 import { GameScene } from '../engine/SceneManager';
-import type { SceneContext } from '../engine/SceneManager';
 import { audio } from '../engine/Audio';
 import { game } from '../systems/party/gameState';
 import { fullRestore } from '../systems/party/creature';
@@ -14,10 +13,6 @@ export class GameOverScene extends GameScene {
   private screen: HTMLElement | null = null;
   private menu: Menu | null = null;
 
-  constructor(ctx: SceneContext) {
-    super(ctx);
-  }
-
   async enter() {
     // NB: `enter()` must not block on player input. `SceneManager.go()` awaits
     // it, and the manager stays busy (refusing further transitions) until it
@@ -30,12 +25,8 @@ export class GameOverScene extends GameScene {
     audio.music(null);
     this.screen = el('div', 'screen');
     this.screen.append(
-      el('h1', 'title-main danger', 'BEETLE DOWN'),
-      el(
-        'p',
-        'title-sub',
-        'The tow line pulled what was left of you back to The Everwake.',
-      ),
+      el('h1', 'title-main danger', 'THE LIGHT GOES OUT'),
+      el('p', 'title-sub', 'Halden carried what was left of you back to The Everwake by lantern-light.'),
     );
     const host = el('div', 'panel');
     this.screen.appendChild(host);

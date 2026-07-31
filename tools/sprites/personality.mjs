@@ -29,7 +29,7 @@ function friendly(g, cx, ey, dx, rx, ry, my, k) {
   eye(g, cx - dx, ey, rx, ry, k);
   eye(g, cx + dx, ey, rx, ry, k);
   dot(g, cx, cx - dx - 3, ey + ry + 1, k.blush); dot(g, cx, cx - dx - 3, ey + ry + 2, k.blush);
-  set(g, cx - 1, my, k.mouth); set(g, cx, my + 1, k.mouth); set(g, cx + 1, my, k.mouth); // gentle upward curve
+  if (my != null) { set(g, cx - 1, my, k.mouth); set(g, cx, my + 1, k.mouth); set(g, cx + 1, my, k.mouth); } // gentle upward curve
 }
 
 function fierce(g, cx, ey, dx, rx, ry, my, k) {
@@ -43,8 +43,10 @@ function fierce(g, cx, ey, dx, rx, ry, my, k) {
     for (let i = 0; i <= rx * 1.6; i++) { const bx = Math.round(x - dir * i * 0.7), byv = Math.round(ey - ry - 1.5 + i * 0.32); set(g, bx, byv, k.ink); set(g, bx, byv + 1, k.ink); }
   }
   // bared teeth: dark mouth band with white fangs
-  for (let x = cx - 4; x <= cx + 4; x++) set(g, x, my, k.ink);
-  for (const tx of [cx - 3, cx, cx + 3]) { set(g, tx, my, k.white); set(g, tx, my + 1, k.white); }
+  if (my != null) {
+    for (let x = cx - 4; x <= cx + 4; x++) set(g, x, my, k.ink);
+    for (const tx of [cx - 3, cx, cx + 3]) { set(g, tx, my, k.white); set(g, tx, my + 1, k.white); }
+  }
 }
 
 function nervous(g, cx, ey, dx, rx, ry, my, k) {
@@ -52,7 +54,7 @@ function nervous(g, cx, ey, dx, rx, ry, my, k) {
   eye(g, cx - dx, ey - 0.5, rx, ry, k, { pupilScale: 0.36, pupilDX: rx * 0.3, pupilDY: -ry * 0.2, glints: 1 });
   eye(g, cx + dx, ey + 0.5, rx * 0.92, ry * 1.05, k, { pupilScale: 0.44, pupilDX: -rx * 0.28, pupilDY: ry * 0.25, glints: 1 });
   for (const dir of [-1, 1]) for (let i = 0; i <= rx * 1.2; i++) set(g, Math.round(cx + dir * (dx - rx * 0.6 + i * 0.6)), Math.round(ey - ry - 2 - Math.sin(i / (rx)) * 1.5), k.ink); // raised arcs
-  set(g, cx - 1, my, k.mouth); set(g, cx, my + 1, k.mouth); set(g, cx + 1, my, k.mouth); set(g, cx + 2, my + 1, k.mouth); // wobble
+  if (my != null) { set(g, cx - 1, my, k.mouth); set(g, cx, my + 1, k.mouth); set(g, cx + 1, my, k.mouth); set(g, cx + 2, my + 1, k.mouth); } // wobble
   ellipse(g, cx - dx - rx, ey - ry, 1, 1.6, k.spark); // sweat bead
 }
 
@@ -71,7 +73,7 @@ function clever(g, cx, ey, dx, rx, ry, my, k) {
     i++;
   }
   // offset smirk (rises to one side)
-  set(g, cx - 2, my + 1, k.mouth); set(g, cx - 1, my + 1, k.mouth); set(g, cx, my, k.mouth); set(g, cx + 1, my - 1, k.mouth);
+  if (my != null) { set(g, cx - 2, my + 1, k.mouth); set(g, cx - 1, my + 1, k.mouth); set(g, cx, my, k.mouth); set(g, cx + 1, my - 1, k.mouth); }
 }
 
 function uncanny(g, cx, ey, dx, rx, ry, my, k) {
@@ -79,9 +81,11 @@ function uncanny(g, cx, ey, dx, rx, ry, my, k) {
   eye(g, cx - dx, ey - 1, rx, ry, k, { blank: true });
   eye(g, cx + dx, ey + 2, rx * 0.9, ry * 0.9, k, { blank: true });
   eye(g, cx + Math.round(dx * 0.2), ey - ry - 3, rx * 0.7, ry * 0.7, k, { blank: true }); // third eye, offset
-  const mx = cx + Math.round(dx * 0.9), myy = my + 3;      // mouth pulled off-centre & low
-  for (let x = mx - 2; x <= mx + 2; x++) set(g, x, myy, k.mouth);
-  set(g, mx - 2, myy - 1, k.mouth); set(g, mx + 2, myy + 1, k.mouth);
+  if (my != null) {                                        // mouth pulled off-centre & low
+    const mx = cx + Math.round(dx * 0.9), myy = my + 3;
+    for (let x = mx - 2; x <= mx + 2; x++) set(g, x, myy, k.mouth);
+    set(g, mx - 2, myy - 1, k.mouth); set(g, mx + 2, myy + 1, k.mouth);
+  }
 }
 
 const FN = { friendly, fierce, nervous, clever, uncanny };
@@ -90,7 +94,9 @@ const FN = { friendly, fierce, nervous, clever, uncanny };
 export function applyFace(personality, g, o) {
   const k = { ...ROLES, ...(o.pal || {}) };
   const rx = o.rx ?? 4, ry = o.ry ?? 4.8;
-  (FN[personality] || friendly)(g, o.cx, o.eyeY, o.dx ?? 8, rx, ry, o.mouthY ?? (o.eyeY + ry + 4), k);
+  // mouthY === null → the family skips its mouth (e.g. a golem or a shade).
+  const my = o.mouthY === null ? null : (o.mouthY ?? (o.eyeY + ry + 4));
+  (FN[personality] || friendly)(g, o.cx, o.eyeY, o.dx ?? 8, rx, ry, my, k);
 }
 
 // --- posture ---------------------------------------------------------------

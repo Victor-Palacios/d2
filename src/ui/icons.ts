@@ -8,8 +8,7 @@ import { ATTRIBUTES } from '../data/elements';
  */
 const CLASS_PATHS: Record<AttributeId, string> = {
   hero: 'M8 1 L14 3.2 V8 C14 11.7 11.4 14.2 8 15.4 C4.6 14.2 2 11.7 2 8 V3.2 Z',
-  assassin:
-    'M8 1 L9.6 9 L6.4 9 Z M3.4 9 L12.6 9 L12.6 10.6 L3.4 10.6 Z M7.2 10.6 L8.8 10.6 L8.8 15.2 L7.2 15.2 Z',
+  assassin: 'M8 1 L9.6 9 L6.4 9 Z M3.4 9 L12.6 9 L12.6 10.6 L3.4 10.6 Z M7.2 10.6 L8.8 10.6 L8.8 15.2 L7.2 15.2 Z',
   mage: 'M8 0.8 L9.5 6.5 L15.2 8 L9.5 9.5 L8 15.2 L6.5 9.5 L0.8 8 L6.5 6.5 Z',
 };
 
@@ -43,6 +42,9 @@ const MENU_ICONS: Record<string, string> = {
   arrange: '<path d="M12 2 L7 8 H17 Z"/><path d="M12 22 L7 16 H17 Z"/>',
   // Transcend — a soul ascending (stacked rising chevrons).
   transcend: '<path d="M6 13 L12 7 L18 13"/><path d="M6 18 L12 12 L18 18"/>',
+  // Moves — a list of techniques with a toggle switch on the last row.
+  moves:
+    '<path d="M5 7 H15"/><path d="M5 12 H15"/><path d="M5 17 H11"/><rect x="14" y="15" width="6" height="4" rx="2"/><circle cx="18" cy="17" r="1.2" fill="currentColor"/>',
 };
 
 /** Inline SVG glyph for a grid-menu entry, tinted with `color`. */

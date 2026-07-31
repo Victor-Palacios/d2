@@ -21,6 +21,7 @@ import { technique } from './data/techniques';
 import * as roster from './data/creatures';
 import { REACHES } from './data/reaches';
 import { validateReaches } from './data/validateReaches';
+import { decorIsSolid } from './data/dungeon';
 
 const canvas = document.getElementById('gl') as HTMLCanvasElement;
 const ui = document.getElementById('ui') as HTMLElement;
@@ -79,13 +80,14 @@ const stats = { frames: 0, fps: 0 };
   audio,
   reaches: REACHES,
   validateReaches,
+  decorIsSolid,
 };
 
 // Fail loud in dev if a floor's data drifts out of consistency (dead chest key,
 // walled-off portal, orphaned event, floating decor). Silent in a clean build.
 if (import.meta.env?.DEV) {
   const problems = validateReaches();
-  if (problems.length) console.error('[validateReaches]\n' + problems.join('\n'));
+  if (problems.length) console.error(`[validateReaches]\n${problems.join('\n')}`);
 }
 
 void manager.go('intro');

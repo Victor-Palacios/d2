@@ -24,10 +24,11 @@ position-aware, non-deterministic targeting.
 
 Each side has a **2×3 grid** (`Cell {row, col}`): row 0 is the **Vanguard**
 (front), row 1 the **Rear** (back); columns 0–2 map left→right and share the
-arena's element plates. Three creatures deploy; the rest are reserves. The
-default formation fills the Vanguard left→centre→right, so three units still
-stand across the front exactly as before the grid existed — the back row is
-something you deploy into deliberately.
+arena's element plates. As many souls deploy as you have human keepers
+(`game.fieldCap` — two at the Quiet Crossing, up to four; see NARRATIVE §11b);
+the rest are reserves. Companions never take the field. The default formation
+fills the Vanguard left→centre→right, so your souls stand across the front — the
+back row is something you deploy into deliberately.
 
 | Rule | Effect |
 |---|---|

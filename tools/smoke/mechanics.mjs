@@ -25,6 +25,9 @@ const waitScene = async (n, ms = 40000) => { const t0 = Date.now(); while (Date.
 const press = async (k, n = 1, gap = 300) => { for (let i = 0; i < n; i++) { await page.keyboard.press(k); await page.waitForTimeout(gap); } };
 
 await page.goto(process.env.URL ?? 'http://localhost:4173/', { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const g = window.hd2dGame; const p = g.hd2d.params;
   p.supersample = 0.35; p.dofEnabled = false; p.tiltEnabled = false; p.bloomEnabled = false;
@@ -38,7 +41,10 @@ for (let i = 0; i < 40; i++) { if (await page.locator('.card', { hasText: 'Ember
 await page.locator('.card', { hasText: 'Emberling' }).click();
 await clearDlg(); await waitScene('hub'); await page.waitForTimeout(600); await clearDlg();
 await page.evaluate(() => { const g = window.hd2dGame;
-  ['sprigling', 'cogling'].forEach((id) => g.game.addMonster(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'x' + id, speciesId: id, name: id })))); });
+  ['sprigling', 'cogling'].forEach((id) => g.game.addMonster(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'x' + id, speciesId: id, name: id }))));
+  // Field cap = one soul per human keeper. Wren joined at the hub (2 humans);
+  // recruit one more so all three test souls deploy at once.
+  g.game.joinCompanion(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'ksena', speciesId: 'senaVale', name: 'Sena Vale', companion: true }))); });
 
 // Launch a fight directly from the hub via the scene manager — robust against
 // world-map / floor UI changes, and enough to exercise the engine. The reach is

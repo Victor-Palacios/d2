@@ -246,11 +246,11 @@ just the pure model.
 On victory (`BattleScene.finishVictory`):
 
 ```
-reward = Σ over defeated enemies of  enemy.level × (isBoss ? 40 : 11)   credits
+reward = Σ over defeated enemies of  enemy.level × (isBoss ? 40 : 11)   obols
 ```
 
-- Three level-8 trash mobs → 3 × 8 × 11 = **264 credits**.
-- A level-16 boss → 16 × 40 = **640 credits**.
+- Three level-8 trash mobs → 3 × 8 × 11 = **264 obols**.
+- A level-16 boss → 16 × 40 = **640 obols**.
 
 Then a small breather so you are not sent into the next step empty:
 
@@ -261,7 +261,7 @@ Then a small breather so you are not sent into the next step empty:
 from every defeated enemy, scaled by the level gap (`xpFromEnemy`), and
 `grantXp` applies level-ups off the species `growth` curve (`statsAt`), healing
 the HP/MP delta. Under-levelled monsters gain more, so the party self-levels
-toward each domain's recommended level. Any learnset move whose level a monster
+toward each reach's recommended level. Any learnset move whose level a monster
 crosses on the way up is taught then and there (see §7).
 
 ---

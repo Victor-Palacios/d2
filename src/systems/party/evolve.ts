@@ -1,6 +1,6 @@
 import type { CreatureInstance } from './creature';
-import { statsAt } from './creature';
-import { SPECIES, species, movesKnownAt } from '../../data/creatures';
+import { statsAt, syncMoves } from './creature';
+import { SPECIES, species } from '../../data/creatures';
 import type { EvolutionOption } from '../../data/creatures';
 
 /**
@@ -12,10 +12,16 @@ import type { EvolutionOption } from '../../data/creatures';
  * - **Branching** (Digimon): a species may offer more than one form. Branches are
  *   authored to stay thematically bound to the base, so a line keeps its identity
  *   — the fix for Digimon's "any starter can become any top form" criticism.
+ * - **Class-pure** (our house rule): every branch stays in the source's
+ *   attribute — a Mage only ever becomes another Mage, a Hero a Hero, an
+ *   Assassin an Assassin. `evolutionOptions` filters to same-attribute branches
+ *   so a stray cross-class entry in the data can never be offered, and a unit
+ *   test (`evolve.test.ts`) fails the build if one is authored.
  * - **Reversible** (Digimon): every evolution can be undone — a soul can always
  *   return to the shape it was, the part of Digimon players love. De-evolution is
  *   derived from the forward tree (below), so it is always exact and needs no
- *   extra data on the creature or in the save.
+ *   extra data on the creature or in the save. Learned moves are *kept* on the
+ *   way back down (the known pool only grows), so returning never costs a move.
  *
  * Evolution is **out-of-battle and explicit**: reaching the level makes a creature
  * *eligible*, the player chooses when (and which branch) to take. Nothing here is
@@ -50,11 +56,21 @@ const DEVOLVE_MAP: Record<string, string> = (() => {
   return map;
 })();
 
-/** Branches a creature is currently eligible to take (level-gated). */
+/**
+ * True if evolving `fromId` into `toId` keeps the class (attribute). The house
+ * rule: lines are class-pure. A missing target fails closed.
+ */
+export function isSameClass(fromId: string, toId: string): boolean {
+  const from = SPECIES[fromId];
+  const to = SPECIES[toId];
+  return !!from && !!to && from.attribute === to.attribute;
+}
+
+/** Branches a creature is currently eligible to take (level-gated, class-pure). */
 export function evolutionOptions(c: CreatureInstance): EvolutionOption[] {
   const s = SPECIES[c.speciesId];
   if (!s?.evolutions) return [];
-  return s.evolutions.filter((o) => c.level >= o.level);
+  return s.evolutions.filter((o) => c.level >= o.level && isSameClass(c.speciesId, o.to));
 }
 
 /** Every branch the species defines, eligible or not (for a "not yet" preview). */
@@ -83,7 +99,6 @@ function applyForm(c: CreatureInstance, toId: string): EvolveResult {
   const hpFrac = c.maxHp > 0 ? c.hp / c.maxHp : 1;
   const mpFrac = c.maxMp > 0 ? c.mp / c.maxMp : 1;
 
-  const before = new Set(c.techniques);
   const st = statsAt(to, c.level);
 
   // Carry a nickname; retitle only if the creature still wore its species name.
@@ -101,10 +116,12 @@ function applyForm(c: CreatureInstance, toId: string): EvolveResult {
   c.spd = st.spd;
   c.mag = st.mag;
   c.res = st.res;
-  c.techniques = movesKnownAt(to, c.level);
+  // Fold the new form's moves into the known pool (never removing any) and
+  // auto-fill free loadout slots. De-evolving keeps everything learned, so
+  // evolve→devolve→evolve is lossless and only ever grows the known pool.
+  const gainedMoves = syncMoves(c);
   c.guarding = false;
 
-  const gainedMoves = c.techniques.filter((t) => !before.has(t));
   return { fromId: from.id, toId: to.id, name: c.name, gainedMoves };
 }
 

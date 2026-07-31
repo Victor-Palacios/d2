@@ -130,9 +130,38 @@ To keep the roster varied *predictably* rather than randomly:
 5. **Face and posture must agree** — pull both from the same family; a friendly
    face on a forward-leaning crouch reads as a mistake, not a character.
 
+## Systematic workflow (for future sessions)
+
+To add or redesign a creature, in order:
+
+1. **Pick the family** from fiction + role, honouring the variety rule above.
+2. **Author the body** in `quiet-crossing.mjs` (or a new roster module) shaped by
+   `POSTURE[family]` — lean, silhouette size, symmetry.
+3. **Finish through the family:** `return faced(g, P, family, { cx, eyeY, dx,
+   rx, ry, mouthY, pal })`. `faced()` runs `smooth()` → `applyFace(family)` →
+   `outlineSil()` → `toArt()`. Pass `mouthY: null` to suppress the mouth (a
+   golem, a shade), and use `pal` to map face roles onto the creature's palette
+   (`white`, `pupil`, `spark`, `ink`, `mouth`, `blush`, `skin`).
+4. **Preview:** `node tools/sprites/build.mjs <key>` → eyeball `out/<key>.png`.
+5. **Integrate + ship:** `node tools/sprites/integrate.mjs <key>` → `npm run
+   build` → commit + push to `main` (deploys to Pages). Capture in-engine to
+   confirm the lit read.
+
 ## Migration status
 
-`personality.mjs` and this mapping are in place. The live Quiet Crossing sprites
-still carry their original hand-placed faces (mostly Friendly); they are being
-migrated to `applyFace` per the table above so the roster gains its intended
-range. New creatures should use `applyFace` from the start.
+`personality.mjs`, this mapping, and the `faced()` helper are in place. In
+`quiet-crossing.mjs` the builders now realise faces as:
+
+- **Via `applyFace`** — `lizard` (fierce), `bat` (clever), `bug` (nervous),
+  `scrap` (uncanny), `wisp` (uncanny). These are the five whose family changed
+  the read.
+- **Friendly, via `glossyEyes`** — `wing`, `plant`, `slime`. `glossyEyes` *is*
+  the Friendly family (big round eyes, round pupils, blush, upward mouth), so
+  these already match; route them through `applyFace('friendly')` when
+  convenient.
+- **Bespoke Fierce** — `lion` (the boss) keeps its hand-tuned amber-eyed,
+  heavy-browed face, which already embodies Fierce.
+
+> **Live.** The five `applyFace` creatures above have been integrated into
+> `src/assets/art.ts` and shipped. Re-run `node tools/sprites/integrate.mjs`
+> (then `npm run build`) after any builder change to update the game.

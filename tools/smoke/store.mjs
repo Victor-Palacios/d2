@@ -15,7 +15,7 @@ page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes('404'
 
 const g = () => page.evaluate(() => {
   const s = window.hd2dGame.game;
-  return { credits: s.credits, cap: s.partyCap, party: s.party.length, sanctuary: s.sanctuary.length };
+  return { obols: s.obols, cap: s.partyCap, party: s.party.length, sanctuary: s.sanctuary.length };
 });
 const has = (sel) => page.evaluate((x) => !!document.querySelector(x), sel);
 const dlg = () => page.evaluate(() => { const d = document.querySelector('#dialogue'); return !!d && d.style.display !== 'none'; });
@@ -31,6 +31,9 @@ const pickPartner = async () => {
 };
 
 await page.goto(process.env.URL ?? 'http://localhost:4193/', { waitUntil: 'networkidle' });
+// Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.waitForTimeout(1500);
 await page.evaluate(() => { const gg = window.hd2dGame; const p = gg.hd2d.params;
   p.supersample = 0.35; p.dofEnabled = false; p.tiltEnabled = false; p.bloomEnabled = false;
@@ -42,11 +45,11 @@ await page.locator('.keyboard button', { hasText: /^OK$/ }).click(); await page.
  await pickPartner();
 await clearDlg(); await waitScene('hub'); await page.waitForTimeout(700); await clearDlg();
 
-// Seed: log a species and give credits so the store has wares.
+// Seed: log a species and give obols so the store has wares.
 await page.evaluate(() => {
   const s = window.hd2dGame.game;
   s.soularium.shardling = { syphon: 100, captured: true, seen: true };
-  s.credits = 5000;
+  s.obols = 5000;
 });
 const before = await g();
 console.log('before store :', JSON.stringify(before));
@@ -61,7 +64,7 @@ await page.screenshot({ path: new URL('./shots/soul-store.png', import.meta.url)
 // First item is "Summon Shardling" -> buy it.
 await page.keyboard.press('Enter'); await page.waitForTimeout(600);
 const afterSummon = await g();
-console.log('after summon :', JSON.stringify(afterSummon), '| party+1 =', afterSummon.party === before.party + 1, '| paid =', afterSummon.credits < before.credits);
+console.log('after summon :', JSON.stringify(afterSummon), '| party+1 =', afterSummon.party === before.party + 1, '| paid =', afterSummon.obols < before.obols);
 
 // Move down to "Party slot +1" and buy it.
 await page.keyboard.press('ArrowDown'); await page.waitForTimeout(200);

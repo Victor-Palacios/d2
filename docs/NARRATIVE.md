@@ -108,6 +108,78 @@ different unfinished business, so even the tutorial states the theme:
 - **Glidefang → "the Glidefang"** — a soul at peace, riding the drafts, waiting
   without fear (a small Pilgrim, §5.5). (Mage / water.)
 
+## 4a. Character & voice guide — how each one talks
+
+So future sessions can write new dialogue **in character**. Each entry is:
+identity → goal/hope → **voice** (how they speak) → a canonical line already in
+the game → where they're heading. Lines live in `src/data/*.ts` (reach dialogue)
+and `src/scenes/HubScene.ts` (hub beats).
+
+**House tone (applies to everyone).** PS1-era restraint: plain words, short
+sentences, grief carried *under* understatement rather than announced. No
+melodrama, no exclamation-point emotion. The shared motif vocabulary is
+**light / lantern / keeping / letting go / crossing / echo** — reach for it, but
+sparingly. Gentle present-tense imperatives are common ("Put it down." "Sit
+down.").
+
+- **The Unfinished (the player).** *Goal:* finish the one thing — find the soul
+  they lost; *hope:* to be told they can stop. **Voice: silent.** The
+  protagonist never speaks on-screen; others speak *to* them, and the player
+  authors meaning through choices (the farewell, the Grief commands). **Do not
+  write spoken lines for them.**
+- **Halden** — the Custodian, your mentor; dies at the midpoint. *Goal:* teach
+  you to let go; *hope:* privately, to have been enough. **Voice:** calm, plain,
+  unhurried; short declaratives that settle into quiet aphorism; teaches by
+  reframing, never scolds; warmth held under restraint. Line: *"Keeping was never
+  the same as loving. The ones that matter most, you honour by letting go."*
+  *Heading:* gone after the midpoint — present only as the name/work/absence the
+  player chose to keep.
+- **Sena Vale** — the Defier, warden of The Reliquary. *Goal:* keep her frozen
+  sister Lire from ending; *hope:* that keeping the shape is the same as keeping
+  her. **Voice:** clipped and defensive, protective ferocity that cracks into
+  grief; the crack-line is the quiet one. Line (guarded): *"I froze her so she
+  would never have to end. I will not let you thaw my sister."* Line (cracked):
+  *"She was already gone, wasn't she. I only kept the shape."* *Heading:* hardens
+  in Act II into a coercive offer ("bring me a soul you love and I will freeze
+  it").
+- **Wren** — the Bereaved Witness, keeper of the Soularium/Book of Names.
+  *Goal:* that no name is ever forgotten; *hope, absurd on purpose:* to win a
+  footrace. **Voice:** pleading, list-keeping, reassurance through repetition;
+  makes the living compete with the dead. Line: *"If every name is written down,
+  then no one is truly gone — tell me they are not gone."* *Heading:* Act-III
+  companion arc (is the list love, or a cage?) — tracked, not built.
+- **The Vigil** — boundary keeper, boss of The Quiet Crossing. *Goal:* let only
+  the fit carry a lantern deeper. **Voice:** formal, ceremonial, testing; not
+  cruel; measured warnings. Line: *"A new lantern, still warm. Show me you can
+  hold it steady before I let you carry it where the dark is deeper."*
+- **The Unnamed** — the forgotten soul, boss of The Unremembered. *Goal:* to be
+  given back a name before it finishes forgetting itself. **Voice:** fragmented,
+  imploring, repeating; broken cadence; pathetic relief when named. Line: *"I had
+  a name. Say it… Do not let me finish forgetting."* → on being named: *"Oh. That
+  will do. That will do."*
+- **Liora Fen** — warden of The Overgrowth (optional reach). *Goal:* never sit
+  alone; *hope:* to have been kind. **Voice:** soft and slow, long gentle
+  sentences that arrive at a hard admission and don't flinch once she sees it;
+  imagery of green, stillness, roots, walking. Line: *"I stopped walking here… I
+  let it hold me — and then I let it hold everyone who came after, so I would
+  never sit alone."* *Heading:* released in her aftermath side-beat (§11a); she
+  crosses.
+- **Kade** — a second-year keeper, the Avoider; **joins the party** after the
+  Unremembered (§11b). *Goal:* stay a reach ahead — really, outrun a grief.
+  **Voice:** cocky and clipped while he's running ("Try to keep up, rookie"); when
+  he joins, the edge drops and it goes quiet and honest ("There is a name in
+  there I have been outrunning for years"). Write him fast and flip before the
+  join, steady after.
+- **Chief Marrow** — runs the Everwake. **Voice:** dry, administrative, wry;
+  speaks in duties, paperwork, short verdicts ("That is either talent or mercy,
+  and I will take either").
+- **Quartermaster Ilsa** — the supply bay. **Voice:** terse, transactional;
+  gatekeeps, then opens up once the Vigil has given you leave.
+- **Soul Broker Vex** — the Soul Store. **Voice:** smooth up-seller; everything
+  is available "for a price."
+- **Companion souls** (the Ember / the Nightnip / the Glidefang, §4) — do not
+  speak; they are characterised by blurb and behaviour, not dialogue.
+
 ## 5. The first three reaches (dungeons)
 
 The framework's opening structure (§11.1–11.3): **death at a distance**, then
@@ -201,8 +273,8 @@ Against it, the normal actions are replaced by **Grief**:
 
 Helping it move on grants a huge reward: **20× the usual EXP for its level**, and
 a piece of **Immortality** — a rare resource whose pieces are the lines of a
-public-reach elegy ("Do not stand at my grave and weep," Mary Elizabeth Frye;
-used as verified public-reach text per §12). The pieces are given **in order and
+out-of-copyright elegy ("Do not stand at my grave and weep," Mary Elizabeth Frye;
+used as verified out-of-copyright text per §12). The pieces are given **in order and
 once each**; collecting all of them unlocks a Memento (see §7): **a full life
 remembered** grants 100% criticals for three turns. The mechanic *is* the
 argument: you are rewarded not for holding the soul, but for understanding it
@@ -221,13 +293,13 @@ well enough to release it.
 - **Run (already shipped) → turning away.** You may leave an echo unmet. Some
   souls are not yours to keep or free.
 
-## 8. Public-reach sources drawn on (§12–13)
+## 8. Out-of-copyright sources drawn on (§12–13)
 
 Ideas only, no protected expression; a proper rights ledger (§22) should be
 filled before commercial use.
 
 - **Mary Elizabeth Frye, "Do not stand at my grave and weep"** — the Immortality
-  poem pieces (widely treated as public reach; verify edition).
+  poem pieces (widely treated as out of copyright; verify edition).
 - **The Second Death / Book of Names** — *Spoon River Anthology* (§13.14): a place
   narrated by its dead; contradictory memory.
 - **The Reliquary** — *The Picture of Dorian Gray* (§13.10) + vanitas (§15.4):
@@ -301,11 +373,74 @@ taking, "carried so its bearer never does." Fires once, gated on `jungleCleared`
 → `jungleWakeDone`; it does not touch or trigger the midpoint. Implemented in
 `HubScene.jungleAftermath()`; covered by `tools/smoke/jungle.mjs`.
 
+## 11b. The keepers who join — humans as field slots (built)
+
+The journey is walked by up to **four humans**: the Unfinished plus **three
+companion keepers who join at story beats** (data in `data/creatures.ts` under
+*Companions*; joins in `HubScene`; `game.joinCompanion`). The keepers do **not
+fight** — a human steadies a soul, and each human you walk with lets you field
+**one more soul** in battle. So the Quiet Crossing, with two humans (you + Wren),
+fields two souls; the cap climbs to three after the Reliquary and four after the
+Unremembered (`game.fieldCap` / `game.humanCount`). Companions are permanent —
+never released, never benched — and ride along for free (they don't count
+against `partyCap`, which governs your souls).
+
+- **Wren** (Bereaved Witness — mage/dark) joins at the Everwake, the first time
+  you arrive. Keeps the Book of Names; "no one leaves this book."
+- **Sena Vale** (Defier — hero/water) joins on your return from **the Reliquary**,
+  the ice gone from her hands: "I kept one soul frozen and called it love. I
+  would like to learn the other kind."
+- **Kade** (the Avoider — assassin/fire) joins after **the Unremembered**, where
+  the death he'd been outrunning finally said his name back. The old cocky rival,
+  now standing still.
+
+The three carry the three relationships to death (Remember / Preserve / Avoid),
+so the party itself argues the dramatic question — and when the midpoint hardens
+each philosophy, it is your own companions turning (Kade included). In battle
+they stand with you as keepers, not fighters: each raises the field cap by one,
+so your bonded souls do the fighting (`game.fieldCap`, `BattleScene`).
+
+**Between-reach banter** keeps them alive in the downtime: on a quiet return to
+the Everwake (a visit with no scripted beat), `HubScene.partyBanter` plays the
+first eligible unseen exchange and flags it so it never repeats. The four beats
+track the throughline — Wren asks who you are looking for (the search thread from
+the prologue, deliberately left unpaid until the finale); Preserve and Remember
+argue; the three admit they are all here for "somebody we could not keep"; and
+after the midpoint they gather at Halden's empty chair and point you at the one
+soul still on the road — the one you came looking for. Covered by
+`tools/smoke/companions.mjs`.
+
+## 11c. The Last Lantern — the finale (built)
+
+The fifth reach, and the payoff the whole game points at (`data/lastLantern.ts`,
+id `lantern`). It is **gated on the midpoint** (`requires: 'actTwo'`) — it does
+not even appear on the world map until Halden dies, so it reads as the thing you
+could only reach once you understood the cost. Deepest dark, recommended Lv15.
+
+- **Floors 1–2** are the descent, and carry the companions' **Act-III beats**,
+  each borrowing from the opponent they used to be (§11.5): Wren learns to *close*
+  a name on purpose; Sena *warms* a held flame instead of freezing it, and lets
+  it cross; Kade reaches the dark he always ran from and, for once, stands still.
+- **Floor 3 is the finale (§11.6)** — not a fight but a **choice**. The soul you
+  have searched for since the prologue is here, and the game's dramatic question
+  is finally personal: **keep** them (hold the flame forever, unchanging — the
+  Sena ending) or **let them cross** (open your hands — Halden's last lesson).
+  Handled by `DungeonScene.runFinale`; sets `ending:keep`/`ending:cross`,
+  `gameComplete`, and the reach clear, then a closing card and home to the
+  Everwake. Covered by `tools/smoke/finale.mjs`.
+
+The search thread the banter kept deliberately unpaid now pays off here, and the
+choice is authored by the player, not the game (framework §10.5, §17.3 — neither
+answer is "correct"; both are love, both cost).
+
 ## 12. Still ahead (tracked, not yet built)
 
-- Act-III: characters borrow from their opponents (§11.5) and a finale
-  temptation (§11.6) that exposes what the player valued.
-- Companion arcs for Sena and Wren beyond their single scenes.
+- **Act III wardens borrowing from opponents** is written into the finale
+  descent as companion beats; a fuller Act-III could give each *former warden*
+  (Sena, the Unnamed, Liora) an on-screen return.
+- Optional extra texture — companion banter *inside* the crawl (not just the
+  hub), reactive lines to specific wardens, and a proper epilogue after the
+  ending (currently it returns to the Everwake with `gameComplete` set).
 
 > **Closing test (framework closing principle):** every change above was made
 > against one question — *what does this reveal about living that could only be

@@ -7,17 +7,7 @@ import { ELEMENTS } from '../data/elements';
 /** World size of one dungeon tile. */
 export const TILE = 2;
 
-export type TileKind =
-  | 'void'
-  | 'wall'
-  | 'floor'
-  | 'start'
-  | 'portal'
-  | 'exit'
-  | 'chest'
-  | 'fuel'
-  | 'element'
-  | 'event';
+export type TileKind = 'void' | 'wall' | 'floor' | 'start' | 'portal' | 'exit' | 'chest' | 'fuel' | 'element' | 'event';
 
 export interface Tile {
   x: number;
@@ -87,6 +77,9 @@ export class TileGrid {
   /** Wall tiles flagged as "accent" get the boss-approach material. */
   private accent = new Set<string>();
 
+  /** Walkable tiles blocked by solid decor — impassable, but still floor. */
+  private blocked = new Set<string>();
+
   constructor(rows: string[], theme: TileTheme = DEFAULT_THEME) {
     this.theme = theme;
     this.depth = rows.length;
@@ -132,12 +125,21 @@ export class TileGrid {
     return !!t && t.kind !== 'wall' && t.kind !== 'void';
   }
 
+  /** Marks a walkable tile as blocked by solid decor. */
+  blockTile(x: number, z: number) {
+    this.blocked.add(`${x},${z}`);
+  }
+
+  /**
+   * Whether the party can step onto (x, z): a walkable tile not occupied by
+   * solid decor. Use this for movement; `walkable()` is pure grid geometry.
+   */
+  passable(x: number, z: number): boolean {
+    return this.walkable(x, z) && !this.blocked.has(`${x},${z}`);
+  }
+
   worldPos(x: number, z: number, y = 0): THREE.Vector3 {
-    return new THREE.Vector3(
-      (x - (this.width - 1) / 2) * TILE,
-      y,
-      (z - (this.depth - 1) / 2) * TILE,
-    );
+    return new THREE.Vector3((x - (this.width - 1) / 2) * TILE, y, (z - (this.depth - 1) / 2) * TILE);
   }
 
   forEach(fn: (t: Tile) => void) {
@@ -203,8 +205,14 @@ export class TileGrid {
       group.add(inst);
     };
     // Checkerboard the two floor textures so large rooms don't read as one slab.
-    makeFloorInstances(floors.filter((t) => (t.x + t.z) % 2 === 0), floorMatA);
-    makeFloorInstances(floors.filter((t) => (t.x + t.z) % 2 !== 0), floorMatB);
+    makeFloorInstances(
+      floors.filter((t) => (t.x + t.z) % 2 === 0),
+      floorMatA,
+    );
+    makeFloorInstances(
+      floors.filter((t) => (t.x + t.z) % 2 !== 0),
+      floorMatB,
+    );
 
     // --- walls -------------------------------------------------------------
     const WALL_H = this.theme.wallHeight ?? 2.6;

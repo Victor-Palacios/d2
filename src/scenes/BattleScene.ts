@@ -1,17 +1,18 @@
 import * as THREE from 'three';
 import { GameScene, sleep } from '../engine/SceneManager';
-import type { SceneContext } from '../engine/SceneManager';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Torch, Aura } from '../engine/fx';
 import { battleAura } from '../data/battleFx';
 import { audio } from '../engine/Audio';
 import { input } from '../engine/Input';
-import { elementGlowTexture, elementTileTexture, floorTexture, wallTexture } from '../engine/pixel';
+import { elementGlowTexture, elementTileTexture, floorTexture, radialTexture, wallTexture } from '../engine/pixel';
 import { speciesArt, species } from '../data/creatures';
 import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
 import type { EnemySpec } from '../data/quietCrossing';
 import { technique } from '../data/techniques';
+import { moveFx } from '../data/moveFx';
+import type { MoveFx } from '../data/moveFx';
 import { COMFORT_PHRASES, IMMORTALITY_TOTAL } from '../data/immortality';
 import { Battle } from '../systems/battle/engine';
 import type { BattleAction, Battler, TurnResult } from '../systems/battle/engine';
@@ -25,8 +26,12 @@ import type { DialogueScript } from '../systems/dialogue/script';
 import { say, narrate } from '../systems/dialogue/script';
 import type { DungeonSceneParams } from './DungeonScene';
 
-/** Monsters fielded on screen at once (the rest of the party are reserves). */
-const ACTIVE_PARTY = 3;
+/**
+ * Hard ceiling on how many souls deploy at once (the 2×3 grid holds more, but
+ * the front line is three columns). The live cap is `game.fieldCap` — one soul
+ * per human keeper — and never exceeds this.
+ */
+const MAX_FIELDED = 4;
 
 /** Chance a Run attempt succeeds (bosses cannot be fled). */
 const FLEE_CHANCE = 0.5;
@@ -65,8 +70,7 @@ function cellPos(side: 'party' | 'enemy', cell: { row: number; col: number }): {
   return { x: SLOT_X[cell.col], z: front + (cell.row === 1 ? dir * ROW_GAP : 0) };
 }
 
-/** Field-pulse banner suffix and announcement line (Phase D). */
-const PULSE_LABEL: Record<string, string> = { calm: '', crit: ' · ⚡ Crit Field', surge: ' · ▲ Surge Field' };
+/** Field-pulse announcement line (Phase D). */
 const PULSE_TEXT: Record<string, string> = {
   calm: '',
   crit: 'A Crit Field settles in — attacks bite deeper this round.',
@@ -90,6 +94,8 @@ export class BattleScene extends GameScene {
   private sprites = new Map<string, Billboard>();
   /** Per-fighter signature aura (only for species with a `BattleAura`). */
   private auras = new Map<string, Aura>();
+  /** Shared white radial map, tinted per-flash — the bright pop at an impact. */
+  private flashTex = radialTexture('flash', '#ffffff', 64);
   private homePos = new Map<string, THREE.Vector3>();
   private highlight: THREE.PointLight | null = null;
   private finished = false;
@@ -99,17 +105,15 @@ export class BattleScene extends GameScene {
   private autoBattle = false;
   private unsubInput: (() => void) | null = null;
 
-  constructor(ctx: SceneContext) {
-    super(ctx);
-  }
-
   async enter(params?: unknown) {
     this.params = params as BattleSceneParams;
 
     const enemies = this.makeEnemies(this.params.enemies);
-    // Only the first three living party members deploy — the rest are reserves
-    // (kept in game.party, not fielded). Combat is 3v3 on screen.
-    const active = game.party.filter(isUp).slice(0, ACTIVE_PARTY);
+    // Only souls fight — the human companions (Wren / Sena / Kade) walk with you
+    // but never take the field. Each human keeper instead lets you deploy one
+    // more soul, so the field cap is `game.fieldCap` (you + every companion).
+    const monsters = game.party.filter((c) => isUp(c) && !c.companion);
+    const active = monsters.slice(0, Math.min(game.fieldCap, MAX_FIELDED));
     this.battle = new Battle({
       party: active,
       enemies,
@@ -118,8 +122,8 @@ export class BattleScene extends GameScene {
       isBoss: this.params.isBoss,
       rng: this.params.rng,
     });
-    // Living party members who did not deploy are the swap-in reserves.
-    this.battle.reserves = game.party.filter(isUp).filter((c) => !active.some((a) => a.uid === c.uid));
+    // Living souls who did not deploy are the swap-in reserves (companions never are).
+    this.battle.reserves = monsters.filter((c) => !active.some((a) => a.uid === c.uid));
 
     // Encountering a wild species primes its Soul Syphon (before the HUD builds
     // so the meter already reads its primed value).
@@ -204,8 +208,14 @@ export class BattleScene extends GameScene {
       inst.instanceMatrix.needsUpdate = true;
       this.scene.add(inst);
     };
-    buildInst(positions.filter((p) => ((p.x / 2 + p.z / 2) & 1) === 0), matA);
-    buildInst(positions.filter((p) => ((p.x / 2 + p.z / 2) & 1) !== 0), matB);
+    buildInst(
+      positions.filter((p) => ((p.x / 2 + p.z / 2) & 1) === 0),
+      matA,
+    );
+    buildInst(
+      positions.filter((p) => ((p.x / 2 + p.z / 2) & 1) !== 0),
+      matB,
+    );
 
     // A low perimeter wall gives the arena depth and catches the key light.
     const wallMat = new THREE.MeshStandardMaterial({
@@ -382,15 +392,18 @@ export class BattleScene extends GameScene {
     this.hud.setLog(
       this.params.isBoss
         ? 'The warden blocks the hallway. There is no way past it.'
-        : 'Hostile data detected. Defend the beetle!',
+        : 'An echo turns to face you. Keep your lantern lit.',
     );
-    // The foes announce themselves — each species with a voice cries in turn.
-    this.cryEnemies();
     await sleep(900);
 
     while (this.battle.outcome === 'ongoing' && !this.finished && !this.fled) {
       this.battle.beginRound();
-      this.hud.setBanner(`Round ${this.battle.round}${PULSE_LABEL[this.battle.fieldPulse]}`);
+      // No per-round "Round N" banner — the title set above stays put. A field
+      // pulse is the only thing worth announcing, and it goes to the log.
+      // As the first round opens, a single foe snarls — one random enemy voice,
+      // so the fight *begins* with a creature sound rather than a pre-battle
+      // roll-call announcing every species before combat starts.
+      if (this.battle.round === 1) this.cryRandomEnemy();
       if (this.battle.fieldPulse !== 'calm') {
         this.hud.setLog(PULSE_TEXT[this.battle.fieldPulse]);
         await sleep(700);
@@ -519,7 +532,7 @@ export class BattleScene extends GameScene {
    * exactly once — and at most one per fight, in curriculum order, so the new
    * systems are introduced slowly across the three story areas:
    *
-   * - **The Quiet Crossing (boot):** melee vs ranged reach and cover.
+   * - **The Quiet Crossing:** melee vs ranged reach and cover.
    * - **The Reliquary (crystal):** elemental reactions.
    * - **The Unremembered (haunted):** break-chains, then Commune once a gentle
    *   soul is actually on the field.
@@ -532,31 +545,48 @@ export class BattleScene extends GameScene {
     };
 
     if (reach === 'crossing' && !game.has('tut.melee')) {
-      return teach('tut.melee', say('Halden',
-        'One more thing before the scraps get real. Your basic Attack — and some heavy Techniques — are melee: they only reach the front row.',
-        'A soul in the Rear is covered while an ally holds the front of its column, so melee cannot touch it. Ranged Techniques ignore cover and reach anyone.',
-        'So keep a fragile caster in the Rear, a sturdy body in the Vanguard ahead of it. Use Move to set your line.'));
+      return teach(
+        'tut.melee',
+        say(
+          'Halden',
+          'One more thing before the scraps get real. Your basic Attack — and some heavy Techniques — are melee: they only reach the front row.',
+          'A soul in the Rear is covered while an ally holds the front of its column, so melee cannot touch it. Ranged Techniques ignore cover and reach anyone.',
+          'So keep a fragile caster in the Rear, a sturdy body in the Vanguard ahead of it. Use Move to set your line.',
+        ),
+      );
     }
 
     if (reach === 'crystal' && !game.has('tut.reaction')) {
-      return teach('tut.reaction', say('Halden',
-        'The Reliquary runs hot and cold at once — a good place to learn reactions. Hit a soul with one element and it leaves a mark; you will see a ◈ on its card.',
-        'Strike that mark with a DIFFERENT element before it fades and the two detonate — Steam, Wildfire, Short-Circuit: bonus damage, and it Breaks faster.',
-        'Two casters of different elements can pop a reaction every round. Mix your elements; do not just hammer one.'));
+      return teach(
+        'tut.reaction',
+        say(
+          'Halden',
+          'The Reliquary runs hot and cold at once — a good place to learn reactions. Hit a soul with one element and it leaves a mark; you will see a ◈ on its card.',
+          'Strike that mark with a DIFFERENT element before it fades and the two detonate — Steam, Wildfire, Short-Circuit: bonus damage, and it Breaks faster.',
+          'Two casters of different elements can pop a reaction every round. Mix your elements; do not just hammer one.',
+        ),
+      );
     }
 
     if (reach === 'haunted') {
       if (!game.has('tut.breakChain')) {
-        return teach('tut.breakChain', say('Halden',
-          'These are already half-gone. Break one and it cannot even shield itself — so when a soul is BROKEN, pile on before it recovers.',
-          'Each hit landed on it extends a chain: every link bites harder, and a long enough chain banks you a Boost charge.',
-          'Order your turns onto the broken one, and spend Boost to squeeze in an extra hit and keep the chain alive.'));
+        return teach(
+          'tut.breakChain',
+          say(
+            'Halden',
+            'These are already half-gone. Break one and it cannot even shield itself — so when a soul is BROKEN, pile on before it recovers.',
+            'Each hit landed on it extends a chain: every link bites harder, and a long enough chain banks you a Boost charge.',
+            'Order your turns onto the broken one, and spend Boost to squeeze in an extra hit and keep the chain alive.',
+          ),
+        );
       }
       if (!game.has('tut.commune') && this.battle.communeTargets('enemy').length > 0) {
         return teach('tut.commune', [
-          ...say('Halden',
-            'Wait — that one isn\'t attacking. It\'s just frightened. You don\'t have to put it down.',
-            'Use Commune. Speak to it a few turns, until it understands; it settles and leaves in peace — and you still log its soul if you win the fight.'),
+          ...say(
+            'Halden',
+            "Wait — that one isn't attacking. It's just frightened. You don't have to put it down.",
+            'Use Commune. Speak to it a few turns, until it understands; it settles and leaves in peace — and you still log its soul if you win the fight.',
+          ),
           ...narrate('Some of what waits down here does not need to be beaten. Only heard.'),
         ]);
       }
@@ -570,7 +600,7 @@ export class BattleScene extends GameScene {
    */
   private resolvePacify(uid: string) {
     const t = this.battle.find(uid);
-    if (!t || t.side !== 'enemy') return;
+    if (t?.side !== 'enemy') return;
     game.understandSoul(t.creature.speciesId);
     audio.sfx('blip');
     this.hud.setLog(`${t.creature.name} is at peace — win the fight to log its soul.`);
@@ -585,7 +615,7 @@ export class BattleScene extends GameScene {
     for (const h of result.hits) {
       if (h.damage <= 0) continue;
       const target = this.battle.find(h.targetUid);
-      if (!target || target.side !== 'enemy') continue;
+      if (target?.side !== 'enemy') continue;
       if (game.syphonHit(target.creature.speciesId)) {
         audio.sfx('blip');
         this.hud.setLog(`${target.creature.name}'s soul is full — win the fight to claim it!`);
@@ -603,7 +633,10 @@ export class BattleScene extends GameScene {
     for (const b of this.battle.side('enemy')) {
       if (!game.syphonReady(b.creature.speciesId)) continue;
       const cap = game.captureSpecies(b.creature.speciesId, b.creature.level);
-      claimed.push({ name: cap.creature.name, where: cap.toParty ? 'joined your party' : 'sent to the Soul Sanctuary' });
+      claimed.push({
+        name: cap.creature.name,
+        where: cap.toParty ? 'joined your party' : 'sent to the Soul Sanctuary',
+      });
     }
     return claimed;
   }
@@ -646,19 +679,17 @@ export class BattleScene extends GameScene {
   }
 
   /**
-   * The opening roll-call: each distinct enemy species with a voice cries once,
-   * staggered so a mixed pack reads as several creatures rather than one blur.
+   * One foe snarls as combat starts: a single, randomly chosen enemy that has a
+   * voice cries once. Deliberately not a roll-call of every species — just one
+   * creature sound to open the fight. No-op if none of the foes has a cry.
    */
-  private cryEnemies() {
-    const seen = new Set<string>();
-    let i = 0;
-    for (const b of this.battle.side('enemy')) {
-      const id = b.creature.speciesId;
-      if (seen.has(id) || !audio.hasCry(id)) continue;
-      seen.add(id);
-      window.setTimeout(() => audio.cry(id), i * 220);
-      i++;
-    }
+  private cryRandomEnemy() {
+    const voiced = this.battle.side('enemy').filter((b) => audio.hasCry(b.creature.speciesId));
+    if (!voiced.length) return;
+    const pick = voiced[Math.floor(Math.random() * voiced.length)];
+    // Dip the music briefly so the cry reads clearly over the battle theme.
+    audio.duck(1);
+    audio.cry(pick.creature.speciesId);
   }
 
   private async animateTurn(actor: Battler, result: TurnResult) {
@@ -667,50 +698,114 @@ export class BattleScene extends GameScene {
 
     for (const line of result.log.slice(0, 1)) this.hud.setLog(line);
 
-    if (result.hits.length && bb && home) {
-      // Lunge toward the opposing side, then snap back.
-      const dir = actor.side === 'party' ? -1 : 1;
-      await this.tween(0.16, (t) => {
-        bb.object.position.z = home.z + dir * 1.1 * t;
-      });
+    // The move's own signature FX (melee slash / flying bolt / area nova /
+    // mending bloom), derived from the technique — see data/moveFx.ts. Guard
+    // and other hitless actions get none.
+    const tech = technique(result.techniqueId ?? 'strike');
+    const cssColor = ELEMENTS[tech.element].color;
+    const fx = result.hits.length ? moveFx(tech) : null;
+    const heal = result.hits.some((h) => h.heal > 0);
+
+    // Wind-up: a puff of the move's element gathers on the caster the instant
+    // before it delivers.
+    const casterHeight = species(actor.creature.speciesId).height;
+    if (fx && bb) {
+      const top = bb.object.position.clone();
+      top.y += casterHeight * 0.6;
+      this.castTelegraph(top, fx);
     }
 
-    const heal = result.hits.some((h) => h.heal > 0);
-    // The attacker calls out as it strikes — its own species cry, layered under
-    // the impact sfx. Only on an offensive move (not Guard, not a pure heal).
+    // The attacker calls out as it charges — its own species cry leads the
+    // delivery so it is heard clean, a beat before the impact sfx lands under it
+    // (firing both at once masked the cry). Offensive move only (not Guard/heal).
     if (result.hits.length && !heal && result.actionLabel !== 'Guard') {
       audio.cry(actor.creature.speciesId);
     }
+
+    // Delivery motion. A melee blow lunges in — trailing a streak of its element
+    // so the charge itself reads; a ranged bolt stays put and fires a projectile;
+    // area/heal moves gather in place.
+    if (fx && bb && home && fx.delivery === 'melee') {
+      const dir = actor.side === 'party' ? -1 : 1;
+      const trail = new THREE.Vector3();
+      await this.tween(0.18, (t) => {
+        bb.object.position.z = home.z + dir * 1.4 * t;
+        trail.set(bb.object.position.x, bb.object.position.y + casterHeight * 0.5, bb.object.position.z);
+        this.particles.emit(trail, {
+          count: 3,
+          speed: 0.7,
+          spread: 0.35,
+          life: 0.32,
+          gravity: fx.gravity * 0.3,
+          upBias: 0.3,
+          size: fx.size,
+          color: fx.color,
+        });
+      });
+    }
+
     if (result.actionLabel === 'Guard') audio.sfx('guard');
     else if (heal) audio.sfx('heal');
     else if (result.hits.length) audio.sfx('hit');
 
+    // A ranged bolt streaks from the caster to its target before it detonates.
+    if (fx && bb && fx.delivery === 'bolt') {
+      const primary = result.hits[0];
+      const ptarget = this.battle.find(primary.targetUid);
+      const ptbb = this.sprites.get(primary.targetUid);
+      if (ptarget && ptbb) {
+        const from = bb.object.position.clone();
+        from.y += casterHeight * 0.6;
+        const to = ptbb.object.position.clone();
+        to.y += species(ptarget.creature.speciesId).height * 0.55;
+        await this.flyBolt(from, to, fx);
+      }
+    }
+
     for (const hit of result.hits) {
       const target = this.battle.find(hit.targetUid);
       const tbb = this.sprites.get(hit.targetUid);
-      if (!target || !tbb) continue;
+      if (!target || !tbb || !fx) continue;
 
       const worldTop = tbb.object.position.clone();
       worldTop.y += species(target.creature.speciesId).height * 0.9;
 
       if (hit.heal > 0) {
-        this.particles.emit(worldTop, { count: 14, color: 0x7bdc8a, speed: 1.4, life: 0.8, gravity: 1.2, upBias: 1 });
+        this.particles.emit(worldTop, {
+          count: fx.impact.count,
+          color: fx.color,
+          speed: fx.impact.speed,
+          spread: fx.impact.spread,
+          life: fx.impact.life,
+          gravity: fx.gravity,
+          upBias: fx.upBias,
+          size: fx.size,
+        });
+        this.impactFlash(worldTop, fx.color, fx.flash);
         const s = this.screenPos(worldTop);
-        this.hud.float(s.x, s.y, `+${hit.heal}`, '#7bdc8a');
+        this.hud.float(s.x, s.y, `+${hit.heal}`, cssColor);
       } else {
         tbb.hit(1);
-        const tech = technique(result.techniqueId ?? 'strike');
-        const color = ELEMENTS[tech.element].color;
         const react = !!hit.reaction;
-        this.particles.emit(worldTop, { count: react ? 30 : 18, color, speed: react ? 3.4 : 2.6, life: 0.55, gravity: -3 });
+        this.particles.emit(worldTop, {
+          count: react ? Math.round(fx.impact.count * 1.5) : fx.impact.count,
+          color: fx.color,
+          speed: react ? fx.impact.speed * 1.3 : fx.impact.speed,
+          spread: react ? fx.impact.spread * 1.3 : fx.impact.spread,
+          life: fx.impact.life,
+          gravity: fx.gravity,
+          upBias: fx.upBias,
+          size: fx.size,
+        });
         const s = this.screenPos(worldTop);
         const superEffective = hit.crit || hit.breakdown?.effectiveness === 'super';
         const big = superEffective || react;
+        this.impactFlash(worldTop, big ? 0xfff0c0 : fx.color, fx.flash * (big ? 1.5 : 1));
         this.hud.float(s.x, s.y, String(hit.damage), big ? '#ffd166' : '#ff9a8a');
-        this.ctx.hd2d.addShake(react ? 0.26 : superEffective ? 0.2 : 0.11);
+        this.ctx.hd2d.addShake(react ? fx.shake * 1.6 : superEffective ? fx.shake * 1.3 : fx.shake);
         if (react) {
           audio.sfx('crit');
-          this.hud.float(s.x, s.y - 30, hit.reaction!, color);
+          this.hud.float(s.x, s.y - 30, hit.reaction!, cssColor);
         } else if (superEffective) audio.sfx('crit');
         if (hit.chain && hit.chain >= 2) this.hud.float(s.x, s.y - 52, `${hit.chain}-chain`, '#ffd166');
       }
@@ -724,10 +819,11 @@ export class BattleScene extends GameScene {
       }
     }
 
-    if (result.hits.length && bb && home) {
+    // Only a melee lunge needs undoing — ranged/area casters never left home.
+    if (fx && bb && home && fx.delivery === 'melee') {
       await this.tween(0.14, (t) => {
         const dir = actor.side === 'party' ? -1 : 1;
-        bb.object.position.z = home.z + dir * 1.1 * (1 - t);
+        bb.object.position.z = home.z + dir * 1.4 * (1 - t);
       });
       bb.object.position.copy(home);
     }
@@ -752,6 +848,75 @@ export class BattleScene extends GameScene {
       await sleep(620);
     }
     await sleep(260);
+  }
+
+  /**
+   * A bright additive flash sprite at an impact point: pops from small to full
+   * and fades in ~0.3s. This is the beat that reads instantly even against the
+   * busy painterly arena — the particle burst is the texture, this is the punch.
+   */
+  private impactFlash(pos: THREE.Vector3, color: number, radius: number) {
+    const mat = new THREE.SpriteMaterial({
+      map: this.flashTex,
+      color: new THREE.Color(color),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      depthTest: false,
+    });
+    const sprite = new THREE.Sprite(mat);
+    sprite.position.copy(pos);
+    sprite.renderOrder = 6;
+    this.scene.add(sprite);
+    void this.tween(0.3, (t) => {
+      const s = radius * (0.35 + t * 0.9);
+      sprite.scale.set(s, s, 1);
+      mat.opacity = (1 - t) ** 1.4;
+    }).then(() => {
+      this.scene.remove(sprite);
+      mat.dispose();
+    });
+  }
+
+  /** A puff of the move's element gathering on the caster, just before it lands. */
+  private castTelegraph(top: THREE.Vector3, fx: MoveFx) {
+    this.particles.emit(top, {
+      count: fx.cast.count,
+      speed: fx.cast.speed,
+      spread: fx.cast.spread,
+      life: fx.cast.life,
+      gravity: fx.gravity * 0.4,
+      upBias: fx.upBias * 0.6,
+      size: fx.size,
+      color: fx.color,
+    });
+  }
+
+  /**
+   * A ranged projectile: a knot of element-tinted motes streaks from the caster
+   * to its target, trailing sparks, then hands off to the impact burst. Duration
+   * scales with distance so a far shot doesn't teleport.
+   */
+  private async flyBolt(from: THREE.Vector3, to: THREE.Vector3, fx: MoveFx) {
+    const dist = from.distanceTo(to);
+    const dur = Math.min(0.5, Math.max(0.2, dist / fx.boltSpeed));
+    const p = new THREE.Vector3();
+    await this.tween(dur, (t) => {
+      p.lerpVectors(from, to, t);
+      // A dense, chunky trail so the projectile itself reads as it crosses.
+      this.particles.emit(p, {
+        count: 5,
+        speed: 0.9,
+        spread: 0.3,
+        life: 0.34,
+        gravity: fx.gravity * 0.3,
+        upBias: 0.2,
+        size: fx.size * 1.3,
+        color: fx.color,
+      });
+    });
+    // A small flash rides the projectile head to the target as it lands.
+    this.impactFlash(to, fx.color, fx.flash * 0.7);
   }
 
   private tween(seconds: number, fn: (t: number) => void): Promise<void> {
@@ -779,7 +944,7 @@ export class BattleScene extends GameScene {
     const reward = this.battle
       .side('enemy')
       .reduce((sum, b) => sum + b.creature.level * (this.params.isBoss ? 40 : 11), 0);
-    game.credits += reward;
+    game.obols += reward;
     reviveFainted(game.party, 0.3);
     // A little breathing room between fights.
     for (const c of game.party) {
@@ -802,14 +967,14 @@ export class BattleScene extends GameScene {
       if (nl !== null) levelUps.push(`${c.name} → Lv${nl}`);
     }
 
-    this.hud.setLog(`The data dissolves. +${reward} credits.`);
+    this.hud.setLog(`The echo is quieted. +${reward} obols.`);
     await sleep(1500);
 
     for (const msg of levelUps) {
       audio.sfx('heal');
       this.hud.refresh(this.battle);
+      // One announcement only — the battle log carries it (no extra toast).
       this.hud.setLog(`Level up! ${msg}`);
-      toast(this.ctx.ui, `<span class="accent">Level up!</span> ${msg}`, 2200);
       await sleep(1400);
     }
 
@@ -839,7 +1004,9 @@ export class BattleScene extends GameScene {
     const light = this.battle.side('enemy')[0];
     this.hud.setActive(light.creature.uid);
     this.hud.setBanner('A Trembling Light');
-    this.hud.setLog('A cracked lantern drifts near, a small flame shivering inside. It cannot fight, and will not be made to. It is trying, gently, to leave.');
+    this.hud.setLog(
+      'A cracked lantern drifts near, a small flame shivering inside. It cannot fight, and will not be made to. It is trying, gently, to leave.',
+    );
     await sleep(1900);
 
     let turns = 3;
@@ -858,21 +1025,33 @@ export class BattleScene extends GameScene {
         this.hud.setLog('You say: "Remember who you are."');
         await sleep(1200);
         if (this.battle.rng() < chance) awarded = true;
-        else { this.hud.setLog('The flame gutters, reaching for a name it almost has. Not yet.'); await sleep(1200); turns -= 1; }
+        else {
+          this.hud.setLog('The flame gutters, reaching for a name it almost has. Not yet.');
+          await sleep(1200);
+          turns -= 1;
+        }
       } else if (choice === 'comfort') {
         rememberStreak = 0;
         comforted = true;
         const phrase = COMFORT_PHRASES[Math.floor(this.battle.rng() * COMFORT_PHRASES.length)];
         this.hud.setLog(`You say: "${phrase}"`);
         await sleep(1300);
-        if (this.battle.rng() < 0.10) awarded = true;
-        else { this.hud.setLog('It leans toward the warmth of your voice, a little steadier now.'); await sleep(1200); turns -= 1; }
+        if (this.battle.rng() < 0.1) awarded = true;
+        else {
+          this.hud.setLog('It leans toward the warmth of your voice, a little steadier now.');
+          await sleep(1200);
+          turns -= 1;
+        }
       } else {
         rememberStreak = 0;
         this.hud.setLog('You say: "You are free."');
         await sleep(1300);
         if (comforted) awarded = true;
-        else { left = true; this.hud.setLog('But it was not ready. Startled, the flame slips away — taking nothing you offered.'); await sleep(1800); }
+        else {
+          left = true;
+          this.hud.setLog('But it was not ready. Startled, the flame slips away — taking nothing you offered.');
+          await sleep(1800);
+        }
       }
     }
 
@@ -914,7 +1093,11 @@ export class BattleScene extends GameScene {
     if (piece) {
       audio.sfx('chest');
       this.hud.setLog(`It leaves a line behind: "${piece.line}"`);
-      toast(this.ctx.ui, `<span class="accent">◆ Immortality ${piece.index + 1}/${IMMORTALITY_TOTAL}</span> — "${piece.line}"`, 3200);
+      toast(
+        this.ctx.ui,
+        `<span class="accent">◆ Immortality ${piece.index + 1}/${IMMORTALITY_TOTAL}</span> — "${piece.line}"`,
+        3200,
+      );
       await sleep(2400);
       if (game.immortality >= IMMORTALITY_TOTAL) {
         this.hud.setLog('The elegy is whole. A life remembered entire — the Immortality Memento is yours.');
@@ -955,7 +1138,7 @@ export class BattleScene extends GameScene {
     this.finished = true;
     audio.sfx('defeat');
     this.hud.setBanner('Defeat');
-    this.hud.setLog('The beetle goes dark...');
+    this.hud.setLog('The lantern goes dark...');
     await sleep(1600);
     await this.ctx.go('gameover');
   }
@@ -976,11 +1159,7 @@ export class BattleScene extends GameScene {
     }
     this.particles.update(dt);
     // Slow drift keeps the arena from feeling like a static screenshot.
-    this.ctx.hd2d.cameraTarget.set(
-      Math.sin(time * 0.25) * 0.35,
-      0,
-      CAMERA_BIAS_Z + Math.cos(time * 0.2) * 0.2,
-    );
+    this.ctx.hd2d.cameraTarget.set(Math.sin(time * 0.25) * 0.35, 0, CAMERA_BIAS_Z + Math.cos(time * 0.2) * 0.2);
   }
 
   async exit() {

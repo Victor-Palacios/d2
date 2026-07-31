@@ -41,17 +41,17 @@ export interface CaptureResult {
  */
 export class GameState {
   playerName = 'REN';
-  credits = 320;
+  obols = 320;
   party: CreatureInstance[] = [];
   bag: Record<string, number> = {};
   flags = new Set<string>();
 
-  /** Vehicle fuel while crawling (plan §5.5). */
-  fuel = QUIET_CROSSING.startingFuel;
-  maxFuel = QUIET_CROSSING.startingFuel;
+  /** Light Power (LP) — the lantern's charge while crawling; each step spends 1. */
+  light = QUIET_CROSSING.startingLight;
+  maxLight = QUIET_CROSSING.startingLight;
 
-  hasLicense = false;
-  hasOwnVehicle = false;
+  /** Whether the Vigil has given you leave to keep past the Crossing. */
+  hasLeave = false;
   teamId: string | null = null;
   teamAttribute: AttributeId | null = null;
 
@@ -71,7 +71,7 @@ export class GameState {
   usedEvents = new Set<string>();
   /** Opened chests, keyed `floorId:x,z`. */
   openedChests = new Set<string>();
-  /** Collected fuel cans, keyed `floorId:x,z`. */
+  /** Collected light shards, keyed `floorId:x,z`. */
   takenPickups = new Set<string>();
 
   /** The Soularium — per-species capture progress (the game's "pokedex"). */
@@ -83,10 +83,26 @@ export class GameState {
   /** Pieces of the Immortality set collected (lines of the elegy), 0..12. */
   immortality = 0;
 
+  /**
+   * Humans walking with the keeper: you (always 1) plus every story companion
+   * (Wren / Sena / Kade) who has joined. Companions never fight — instead each
+   * human lets you field one more soul, so this is exactly the battle field cap.
+   * The Quiet Crossing has two humans (you + Wren) → two monsters on the field.
+   */
+  get humanCount(): number {
+    return 1 + [...this.party, ...this.sanctuary].filter((c) => c.companion).length;
+  }
+
+  /** How many monsters you may field at once — one per human keeper. */
+  get fieldCap(): number {
+    return this.humanCount;
+  }
+
   // --- Soularium / capture ------------------------------------------------
 
   /** The entry for a species, creating a blank one on first access. */
   soul(speciesId: string): SoulEntry {
+    // biome-ignore lint/suspicious/noAssignInExpressions: idiomatic lazy-init of the soul entry
     return (this.soularium[speciesId] ??= { syphon: 0, captured: false, seen: false });
   }
 
@@ -143,9 +159,15 @@ export class GameState {
     return { speciesId, creature, toParty };
   }
 
+  /** Souls (non-companion creatures) currently in the active party. */
+  soulsInParty(): number {
+    return this.party.filter((c) => !c.companion).length;
+  }
+
   /** Adds a creature to the party if there's room, else the Sanctuary. */
   addMonster(c: CreatureInstance): boolean {
-    if (this.party.length < this.partyCap) {
+    // `partyCap` counts souls only — companions ride along for free.
+    if (this.soulsInParty() < this.partyCap) {
       this.party.push(c);
       return true;
     }
@@ -153,18 +175,32 @@ export class GameState {
     return false;
   }
 
-  /** Send a party member to the Sanctuary. Refuses to empty the party. */
+  /** Send a party member to the Sanctuary. Refuses to bench a companion or the last fighting monster. */
   partyToSanctuary(uid: string): boolean {
-    if (this.party.length <= 1) return false;
     const i = this.party.findIndex((c) => c.uid === uid);
     if (i < 0) return false;
+    if (this.party[i].companion) return false; // companions are permanent
+    // Keep at least one soul to field — companions do not fight in their place.
+    if (this.party.filter((c) => !c.companion).length <= 1) return false;
     this.sanctuary.push(this.party.splice(i, 1)[0]);
     return true;
   }
 
-  /** Bring a Sanctuary member into the party, if there's a free slot. */
+  /**
+   * A story companion (Wren / Sena / Kade) joins the party for good. Companions
+   * do not fight and do not count against `partyCap` (which governs souls), so
+   * they simply fall in — a captured soul is never crowded out. Idempotent by
+   * speciesId, so re-firing a join beat is harmless.
+   */
+  joinCompanion(c: CreatureInstance): void {
+    if ([...this.party, ...this.sanctuary].some((m) => m.companion && m.speciesId === c.speciesId)) return;
+    c.companion = true;
+    this.party.push(c);
+  }
+
+  /** Bring a Sanctuary member into the party, if there's a free soul slot. */
   sanctuaryToParty(uid: string): boolean {
-    if (this.party.length >= this.partyCap) return false;
+    if (this.soulsInParty() >= this.partyCap) return false;
     const i = this.sanctuary.findIndex((c) => c.uid === uid);
     if (i < 0) return false;
     this.party.push(this.sanctuary.splice(i, 1)[0]);
@@ -173,8 +209,9 @@ export class GameState {
 
   /**
    * Move a party member up (delta -1) or down (delta +1) in the party order.
-   * Order matters: the first three living members are the ones fielded, in
-   * formation order, so this is how the player arranges who fights and where.
+   * Order matters: the first living souls (up to `fieldCap`, one per human) are
+   * the ones fielded, in formation order, so this is how the player arranges who
+   * fights and where. Companions hold their place in the roster but never field.
    */
   reorderParty(uid: string, delta: number): boolean {
     const i = this.party.findIndex((c) => c.uid === uid);
@@ -224,7 +261,7 @@ export class GameState {
   }
 
   resetCrawl() {
-    this.fuel = this.maxFuel;
+    this.light = this.maxLight;
     this.floorIndex = 0;
     this.usedEvents.clear();
     this.openedChests.clear();

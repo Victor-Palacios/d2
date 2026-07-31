@@ -1,5 +1,5 @@
 import type { CreatureInstance } from './creature';
-import { statsAt } from './creature';
+import { statsAt, MAX_ACTIVE_MOVES } from './creature';
 import { SPECIES } from '../../data/creatures';
 import { game, START_PARTY_CAP } from './gameState';
 import type { AttributeId } from '../../data/elements';
@@ -10,7 +10,7 @@ import type { AttributeId } from '../../data/elements';
  * Two kinds, deliberately different in weight:
  *
  * - **Autosave** — written at safe points (arriving in the city, taking the
- *   world map, after the licence/team beats). This is your progress.
+ *   world map, after the leave/team beats). This is your progress.
  * - **Suspend save** — written on demand *inside* a dungeon so you can stop
  *   mid-crawl, and **deleted the moment it is loaded**. It is a bookmark, not a
  *   checkpoint: you cannot reload it to retry a fight that went badly, which
@@ -21,16 +21,20 @@ import type { AttributeId } from '../../data/elements';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 10;
 /**
  * Oldest save this build can still read. Normally we keep this at 1 because
  * changes are additive, but v5/v6 renamed the tutorial reach's id and clear
  * flag, and the persisted `activeReachId` field. An older save carries an id
  * that no longer resolves and would throw, so this is a genuinely breaking
  * change: drop anything older and start fresh. v7 adds the mag/res stats, which
- * `applySave` back-fills from the species curve — so a v6 save still loads.
+ * `applySave` back-fills from the species curve — so a v6 save still loads. v9
+ * adds the per-creature move `loadout`, back-filled from the known pool — so a
+ * v8 save still loads. v10 renames two persisted fields (credits→`obols`,
+ * hasLicense→`hasLeave`) for the mood rework — a rename can't be back-filled,
+ * so anything older is dropped and started fresh.
  */
-export const MIN_SAVE_VERSION = 6;
+export const MIN_SAVE_VERSION = 10;
 
 const AUTO_KEY = 'hd2d.save.auto';
 const SUSPEND_KEY = 'hd2d.save.suspend';
@@ -46,14 +50,13 @@ export interface SaveData {
   label: string;
   state: {
     playerName: string;
-    credits: number;
+    obols: number;
     party: CreatureInstance[];
     bag: Record<string, number>;
     flags: string[];
-    fuel: number;
-    maxFuel: number;
-    hasLicense: boolean;
-    hasOwnVehicle: boolean;
+    light: number;
+    maxLight: number;
+    hasLeave: boolean;
     teamId: string | null;
     teamAttribute: AttributeId | null;
     activeReachId: string;
@@ -87,14 +90,13 @@ export function snapshot(kind: SaveKind, scene: SaveData['scene'], label: string
     label,
     state: {
       playerName: game.playerName,
-      credits: game.credits,
+      obols: game.obols,
       party: JSON.parse(JSON.stringify(game.party)) as CreatureInstance[],
       bag: { ...game.bag },
       flags: [...game.flags],
-      fuel: game.fuel,
-      maxFuel: game.maxFuel,
-      hasLicense: game.hasLicense,
-      hasOwnVehicle: game.hasOwnVehicle,
+      light: game.light,
+      maxLight: game.maxLight,
+      hasLeave: game.hasLeave,
       teamId: game.teamId,
       teamAttribute: game.teamAttribute,
       activeReachId: game.activeReachId,
@@ -178,14 +180,13 @@ export function bestSave(): SaveData | null {
 export function applySave(data: SaveData) {
   const s = data.state;
   game.playerName = s.playerName;
-  game.credits = s.credits;
+  game.obols = s.obols;
   game.party = s.party;
   game.bag = { ...s.bag };
   game.flags = new Set(s.flags);
-  game.fuel = s.fuel;
-  game.maxFuel = s.maxFuel;
-  game.hasLicense = s.hasLicense;
-  game.hasOwnVehicle = s.hasOwnVehicle;
+  game.light = s.light;
+  game.maxLight = s.maxLight;
+  game.hasLeave = s.hasLeave;
   game.teamId = s.teamId;
   game.teamAttribute = s.teamAttribute;
   game.activeReachId = s.activeReachId ?? 'crossing';
@@ -202,6 +203,9 @@ export function applySave(data: SaveData) {
   for (const c of [...game.party, ...game.sanctuary]) {
     if (c.xp === undefined) c.xp = 0;
     if (!c.equip) c.equip = {};
+    // v9: creatures saved before loadouts existed had no `loadout`. Seed it from
+    // the known pool (first ≤5) so the battle menu and toggle screen have data.
+    if (!Array.isArray(c.loadout)) c.loadout = (c.techniques ?? []).slice(0, MAX_ACTIVE_MOVES);
     // Saves from before the magick pass have no mag/res — recompute from the
     // species growth curve at the creature's level (v7).
     if (c.mag === undefined || c.res === undefined) {
@@ -225,7 +229,6 @@ export function applySave(data: SaveData) {
 /** Human-readable age, for the title screen. */
 export function describeSave(data: SaveData): string {
   const mins = Math.floor((Date.now() - data.savedAt) / 60000);
-  const when =
-    mins < 1 ? 'just now' : mins < 60 ? `${mins} min ago` : `${Math.floor(mins / 60)} h ago`;
+  const when = mins < 1 ? 'just now' : mins < 60 ? `${mins} min ago` : `${Math.floor(mins / 60)} h ago`;
   return `${data.label} · ${when}`;
 }

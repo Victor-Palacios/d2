@@ -25,8 +25,8 @@ const pressE = () =>
 
 // --- 1. Mount an evolve cinematic in an isolated container -----------------
 const mounted = await page.evaluate(() => {
-  // Isolate from the title scene: it owns #ui and re-lays-it-out during boot,
-  // which can race a probe. We host the cinematic in our own element instead.
+  // Isolate from the title scene: it owns #ui and re-lays-it-out during
+  // startup, which can race a probe. Host the cinematic in our own element.
   const app = document.getElementById('app');
   if (app) app.style.visibility = 'hidden';
   const host = document.createElement('div');

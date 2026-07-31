@@ -133,8 +133,7 @@ export function playTranscend(parent: HTMLElement, opts: TranscendCinematicOpts)
         opts.gainedMoves.length && evolving
           ? `<div class="tc-moves">Awakens ${opts.gainedMoves.length === 1 ? 'a new art' : 'new arts'}</div>`
           : '';
-      caption.innerHTML =
-        `<span class="tc-line"><b>${esc(opts.displayName)}</b> ${verb} <b style="color:var(--tint)">${esc(toName)}</b>${evolving ? '!' : '.'}</span>${moves}`;
+      caption.innerHTML = `<span class="tc-line"><b>${esc(opts.displayName)}</b> ${verb} <b style="color:var(--tint)">${esc(toName)}</b>${evolving ? '!' : '.'}</span>${moves}`;
       caption.style.opacity = '1';
       if (audio.hasCry(toId)) audio.cry(toId);
       else audio.sfx(evolving ? 'victory' : 'heal');

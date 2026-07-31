@@ -76,29 +76,34 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'shardling', level: 5 },
-          { species: 'prismoth', level: 5 },
+          { species: 'shardling', level: 3 },
+          { species: 'prismoth', level: 3 },
         ],
         intro: narrate('Light scatters off a shelf of living crystal — and it turns toward you.'),
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'shardling', level: 6 },
-          { species: 'geodon', level: 6 },
-          { species: 'prismoth', level: 5 },
+          { species: 'shardling', level: 3 },
+          { species: 'geodon', level: 3 },
         ],
       },
     },
     chests: {
-      '15,2': { credits: 220, item: 'repairChip', note: 'A prospector left a crate wedged in the ice.' },
+      '15,2': { obols: 220, item: 'repairChip', note: 'A prospector left a crate wedged in the ice.' },
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'shardling', level: 5 }] },
-      { weight: 2, enemies: [{ species: 'prismoth', level: 6 }] },
-      { weight: 2, enemies: [{ species: 'shardling', level: 5 }, { species: 'prismoth', level: 5 }] },
-      { weight: 1, enemies: [{ species: 'geodon', level: 7 }] },
+      { weight: 3, enemies: [{ species: 'shardling', level: 3 }] },
+      { weight: 2, enemies: [{ species: 'prismoth', level: 3 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'shardling', level: 3 },
+          { species: 'prismoth', level: 3 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'geodon', level: 3 }] },
     ],
   },
 
@@ -109,7 +114,7 @@ const FLOORS: DungeonFloor[] = [
     fog: 1.2,
     decor: [
       { x: 5, z: 4, kind: 'machinePylon', height: 1.4, emissive: 0.4 },
-      { x: 10, z: 4, kind: 'conduit', height: 1.0, emissive: 0.5 },
+      { x: 8, z: 4, kind: 'conduit', height: 1.0, emissive: 0.5 },
       { x: 14, z: 5, kind: 'conduit', height: 1.0, emissive: 0.5 },
       { x: 12, z: 8, kind: 'machinePylon', height: 1.4, emissive: 0.4 },
       { x: 2, z: 8, kind: 'iceShard', height: 0.8, emissive: 0.4 },
@@ -131,29 +136,40 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'geodon', level: 7 },
-          { species: 'shardling', level: 7 },
+          { species: 'geodon', level: 3 },
+          { species: 'shardling', level: 3 },
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'prismoth', level: 8 },
-          { species: 'prismoth', level: 7 },
-          { species: 'geodon', level: 7 },
+          { species: 'prismoth', level: 3 },
+          { species: 'geodon', level: 3 },
         ],
         intro: narrate('The vault hums. Something big is keeping the cold in here.'),
       },
     },
     chests: {
-      '15,2': { credits: 300, note: 'A frozen cache, credits still legible under the frost.' },
+      '15,2': { obols: 300, note: 'A frozen cache, obols still legible under the frost.' },
     },
     encounterRate: 0.07,
     encounters: [
-      { weight: 3, enemies: [{ species: 'shardling', level: 7 }] },
-      { weight: 3, enemies: [{ species: 'geodon', level: 7 }] },
-      { weight: 2, enemies: [{ species: 'prismoth', level: 8 }, { species: 'shardling', level: 7 }] },
-      { weight: 1, enemies: [{ species: 'geodon', level: 8 }, { species: 'prismoth', level: 8 }] },
+      { weight: 3, enemies: [{ species: 'shardling', level: 3 }] },
+      { weight: 3, enemies: [{ species: 'geodon', level: 3 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'prismoth', level: 3 },
+          { species: 'shardling', level: 3 },
+        ],
+      },
+      {
+        weight: 1,
+        enemies: [
+          { species: 'geodon', level: 3 },
+          { species: 'prismoth', level: 3 },
+        ],
+      },
     ],
   },
 
@@ -185,22 +201,35 @@ const FLOORS: DungeonFloor[] = [
     events: {
       '1': {
         kind: 'boss',
-        enemies: [{ species: 'glaciark', level: 9 }],
+        enemies: [{ species: 'glaciark', level: 3 }],
         intro: [
-          ...narrate('At the vault\'s heart, a woman kneels over a pane of ice. Inside it, a girl is laughing — frozen mid-laugh, forever.'),
-          ...say('Sena Vale', 'Don\'t. If you bring warmth in here, she fades. I froze her so she would never have to end. I will not let you thaw my sister.'),
+          ...narrate(
+            "At the vault's heart, a woman kneels over a pane of ice. Inside it, a girl is laughing — frozen mid-laugh, forever.",
+          ),
+          ...say(
+            'Sena Vale',
+            "Don't. If you bring warmth in here, she fades. I froze her so she would never have to end. I will not let you thaw my sister.",
+          ),
         ],
         outro: [
-          ...say('Sena Vale', 'She was already gone, wasn\'t she. I only kept the shape.'),
-          ...narrate('The ice loosens its grip. Somewhere, at last, a soul is allowed to move on — and a portal home glimmers open behind you.'),
+          ...say('Sena Vale', "She was already gone, wasn't she. I only kept the shape."),
+          ...narrate(
+            'The ice loosens its grip. Somewhere, at last, a soul is allowed to move on — and a portal home glimmers open behind you.',
+          ),
         ],
       },
     },
     chests: {},
     encounterRate: 0.03,
     encounters: [
-      { weight: 2, enemies: [{ species: 'shardling', level: 8 }] },
-      { weight: 1, enemies: [{ species: 'prismoth', level: 8 }, { species: 'geodon', level: 8 }] },
+      { weight: 2, enemies: [{ species: 'shardling', level: 3 }] },
+      {
+        weight: 1,
+        enemies: [
+          { species: 'prismoth', level: 3 },
+          { species: 'geodon', level: 3 },
+        ],
+      },
     ],
   },
 ];
@@ -208,11 +237,12 @@ const FLOORS: DungeonFloor[] = [
 export const CRYSTAL_CAVERN: Reach = {
   id: 'crystal',
   name: 'The Reliquary',
-  blurb: 'A hall of kept light, where souls are frozen in glass so they can never fade — and never rest. Someone here refuses to let go.',
+  blurb:
+    'A hall of kept light, where souls are frozen in glass so they can never fade — and never rest. Someone here refuses to let go.',
   color: '#6fe0ff',
-  recommendedLevel: 5,
+  recommendedLevel: 3,
   floors: FLOORS,
-  startingFuel: 130,
+  startingLight: 130,
   music: 'crystal',
   onClear: { flag: 'crystalCleared' },
   requires: 'crossingCleared',
