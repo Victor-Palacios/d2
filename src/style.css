@@ -1024,41 +1024,67 @@ body {
   box-shadow: 0 0 12px rgba(255, 209, 102, 0.4);
 }
 
-/* The LP lantern — centred crawl meter. Flame rises with Light Power; the whole
-   thing dims and flickers as LP runs low. Driven by the --fill custom property. */
+/* The LP lantern — the crawl meter, on the RIGHT of the screen. A living flame
+   dances in the middle of the glass: it grows with Light Power and gutters low
+   as LP runs out. Driven by the --fill custom property. */
 #lantern {
   position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 44px;
+  top: 14px;
+  right: 18px;
+  left: auto;
+  transform: none;
+  width: 46px;
   display: flex;
   flex-direction: column;
   align-items: center;
   pointer-events: none;
   z-index: 6;
   --fill: 1;
-  filter: drop-shadow(0 0 calc(5px + 16px * var(--fill)) rgba(255, 198, 120, calc(0.2 + 0.55 * var(--fill))));
+  filter: drop-shadow(0 0 calc(6px + 20px * var(--fill)) rgba(255, 176, 92, calc(0.25 + 0.6 * var(--fill))));
   transition: filter 0.3s ease;
 }
-#lantern .ln-hook { width: 10px; height: 6px; border: 2px solid #6d5a94; border-bottom: none; border-radius: 6px 6px 0 0; }
-#lantern .ln-cap { width: 28px; height: 5px; background: #6d5a94; border-radius: 3px 3px 0 0; }
+#lantern .ln-hook { width: 10px; height: 7px; border: 2px solid #7a66a4; border-bottom: none; border-radius: 6px 6px 0 0; }
+#lantern .ln-cap { width: 30px; height: 5px; background: #7a66a4; border-radius: 3px 3px 0 0; }
 #lantern .ln-glass {
-  position: relative; width: 26px; height: 30px;
-  background: linear-gradient(#241a33, #17101f);
-  border: 2px solid #6d5a94; border-left-color: #8a76b4;
-  display: flex; align-items: flex-end; overflow: hidden;
+  position: relative; width: 30px; height: 34px;
+  background: radial-gradient(ellipse at 50% 96%, rgba(255, 150, 60, calc(0.16 + 0.5 * var(--fill))), #201630 62%, #150e20);
+  border: 2px solid #7a66a4; border-left-color: #9a86c4;
+  border-radius: 3px;
+  display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
 }
+/* The flame — a pointed teardrop clipped to a flame silhouette, centred in the
+   glass, always alive (it dances), taller with more LP. */
 #lantern .ln-flame {
-  width: 100%;
-  height: calc(12% + 76% * var(--fill));
-  background: linear-gradient(#fff3c4, #ff9a3c 55%, #e2542a);
-  border-radius: 45% 45% 30% 30%;
-  opacity: calc(0.4 + 0.6 * var(--fill));
-  transition: height 0.35s ease, opacity 0.35s ease;
+  position: relative;
+  width: 16px;
+  height: calc(30% + 58% * var(--fill));
+  margin-bottom: 2px;
+  background: linear-gradient(#fff6d6, #ffcf5a 34%, #ff8a2e 64%, #e0431c 100%);
+  clip-path: polygon(50% 0%, 70% 26%, 84% 54%, 76% 82%, 50% 100%, 24% 82%, 16% 54%, 30% 26%);
+  filter: drop-shadow(0 0 5px rgba(255, 150, 60, 0.95));
+  transform-origin: 50% 100%;
+  animation: flameDance 0.45s ease-in-out infinite alternate;
+  transition: height 0.35s ease;
 }
-#lantern .ln-base { width: 32px; height: 5px; background: #4a3a6b; border-radius: 0 0 4px 4px; }
-#lantern .ln-lp { margin-top: 4px; font-size: 11px; letter-spacing: 1px; color: #c9b0ef; white-space: nowrap; text-shadow: 0 1px 2px #000; }
+/* White-hot inner core, so the middle of the flame reads as the hottest point. */
+#lantern .ln-flame::after {
+  content: ''; position: absolute; left: 50%; bottom: 8%;
+  width: 7px; height: 56%; transform: translateX(-50%);
+  background: linear-gradient(#fffef2, #ffdd7a 70%, rgba(255, 200, 90, 0));
+  clip-path: polygon(50% 0%, 72% 34%, 66% 78%, 50% 100%, 34% 78%, 28% 34%);
+  opacity: 0.95;
+}
+#lantern .ln-base { width: 34px; height: 5px; background: #52406e; border-radius: 0 0 4px 4px; }
+#lantern .ln-lp { margin-top: 4px; font-size: 11px; letter-spacing: 1px; color: #d4bef5; white-space: nowrap; text-shadow: 0 1px 2px #000; }
 #lantern .ln-lp span { color: #ffd98a; }
-#lantern.low .ln-flame { animation: lanternFlicker 0.9s ease-in-out infinite; }
-@keyframes lanternFlicker { 0%, 100% { opacity: 0.28; } 50% { opacity: 0.5; } }
+/* Low LP: the flame gutters — smaller dance, dimmer, uneven. */
+#lantern.low .ln-flame { animation: flameGutter 0.5s ease-in-out infinite; opacity: 0.72; }
+@keyframes flameDance {
+  0%   { transform: scaleX(1) scaleY(1) skewX(-3deg); }
+  50%  { transform: scaleX(0.92) scaleY(1.06) skewX(2deg); }
+  100% { transform: scaleX(1.04) scaleY(0.97) skewX(4deg); }
+}
+@keyframes flameGutter {
+  0%, 100% { transform: scaleX(1) scaleY(0.86) skewX(-6deg); opacity: 0.55; }
+  50%      { transform: scaleX(0.9) scaleY(1) skewX(7deg); opacity: 0.85; }
+}

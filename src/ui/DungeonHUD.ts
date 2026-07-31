@@ -4,7 +4,7 @@ import { game } from '../systems/party/gameState';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
 import { classIcon } from './icons';
 
-/** Crawl HUD: floor, credits, the lent party — and the LP lantern (centre). */
+/** Crawl HUD: floor, credits, the lent party — and the LP lantern (top-right). */
 export class DungeonHUD {
   private root: HTMLElement;
   private floorEl: HTMLElement;
@@ -35,8 +35,8 @@ export class DungeonHUD {
 
     this.parent.appendChild(this.root);
 
-    // The lantern — the LP meter, centred at the top of the screen. Its flame
-    // rises with Light Power and the whole thing dims as LP runs low.
+    // The lantern — the LP meter, top-right of the screen. A living flame dances
+    // in the glass; it grows with Light Power and gutters as LP runs low.
     this.lantern = el('div');
     this.lantern.id = 'lantern';
     const hook = el('div', 'ln-hook');
