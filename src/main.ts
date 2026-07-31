@@ -16,6 +16,7 @@ import * as saves from './systems/party/saveGame';
 import * as evolve from './systems/party/evolve';
 import * as creature from './systems/party/creature';
 import * as formula from './systems/battle/formula';
+import { playTranscend } from './ui/TranscendCinematic';
 import { technique } from './data/techniques';
 import * as roster from './data/creatures';
 import { REACHES } from './data/reaches';
@@ -70,6 +71,7 @@ const stats = { frames: 0, fps: 0 };
   stats,
   saves,
   evolve,
+  playTranscend,
   creature,
   formula,
   tech: technique,

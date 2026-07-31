@@ -352,6 +352,36 @@ class AudioEngine {
     return speciesId in CRIES;
   }
 
+  /**
+   * The transcendence swell — the soul climbing to a new shape (`evolve`) or
+   * settling back to the one it wore (`devolve`). Ethereal glassy sines rather
+   * than the chip-square of the menu SFX, to match the rite's mood; scheduled
+   * ahead of time so it rides the cinematic's flashes and blooms on the reveal.
+   * Returns the swell's length in seconds so a caller can time the reveal to it.
+   */
+  transcend(mode: 'evolve' | 'devolve'): number {
+    if (!this.ctx || !this.sfxGain) return 0;
+    const t0 = this.ctx.currentTime;
+    const root = 330; // E4 — the "held breath" before the reveal.
+    // A pentatonic climb (evolve) or descent (devolve), doubled a fifth up.
+    const climb = [0, 3, 5, 7, 10, 12];
+    const seq = mode === 'evolve' ? climb : [...climb].reverse();
+    const beat = 0.16;
+    seq.forEach((semi, i) => {
+      const freq = root * Math.pow(2, semi / 12);
+      const when = t0 + i * beat;
+      this.tone({ freq, time: 0, dur: 0.34, type: 'sine', gain: 0.09 }, this.sfxGain!, when);
+      this.tone({ freq: freq * 1.5, time: 0, dur: 0.3, type: 'triangle', gain: 0.045 }, this.sfxGain!, when + 0.02);
+    });
+    // The bloom: a shimmering open chord at the climax (the reveal moment).
+    const climax = t0 + seq.length * beat + 0.04;
+    const chord = mode === 'evolve' ? [12, 16, 19, 24] : [0, 7, 12];
+    for (const semi of chord) {
+      this.tone({ freq: root * Math.pow(2, semi / 12), time: 0, dur: 0.7, type: 'sine', gain: 0.08 }, this.sfxGain, climax);
+    }
+    return seq.length * beat + 0.04;
+  }
+
   music(track: MusicTrack) {
     this.track = track;
     if (this.timer !== null) {

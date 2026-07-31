@@ -3,7 +3,6 @@ import { Menu } from './Menu';
 import type { MenuItem } from './Menu';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
 import { species } from '../data/creatures';
-import { technique } from '../data/techniques';
 import { game } from '../systems/party/gameState';
 import {
   evolutionOptions,
@@ -14,9 +13,9 @@ import {
   evolve,
   devolve,
 } from '../systems/party/evolve';
-import type { EvolveResult } from '../systems/party/evolve';
 import { audio } from '../engine/Audio';
 import { toast } from './Toast';
+import { playTranscend } from './TranscendCinematic';
 import type { CreatureInstance } from '../systems/party/creature';
 
 /**
@@ -88,12 +87,17 @@ export async function openTranscend(parent: HTMLElement): Promise<void> {
       paths;
   };
 
-  const announce = (r: EvolveResult, verb: string) => {
-    audio.sfx('confirm');
-    const moves = r.gainedMoves.length
-      ? ` Learns ${r.gainedMoves.map((m) => technique(m).name).join(', ')}.`
-      : '';
-    toast(parent, `<strong>${esc(r.name)}</strong> ${verb} ${esc(species(r.toId).name)}!${moves}`, 2200);
+  /**
+   * Run one transform, then play the transcendence cinematic. The soul's
+   * *display* name (its nickname, or the name of the form it is leaving) is
+   * captured before the change, because `evolve`/`devolve` may retitle it.
+   */
+  const perform = async (c: CreatureInstance, mode: 'evolve' | 'devolve', toId?: string) => {
+    const fromId = c.speciesId;
+    const displayName = c.name === species(fromId).name ? species(fromId).name : c.name;
+    const r = mode === 'evolve' ? evolve(c, toId) : devolve(c);
+    if (!r) return;
+    await playTranscend(parent, { fromId, toId: r.toId, mode, displayName, gainedMoves: r.gainedMoves });
   };
 
   const act = async (c: CreatureInstance) => {
@@ -121,11 +125,9 @@ export async function openTranscend(parent: HTMLElement): Promise<void> {
     if (!pick || pick === 'cancel') return;
 
     if (pick === 'devo') {
-      const r = devolve(c);
-      if (r) announce(r, 'returns to');
+      await perform(c, 'devolve');
     } else if (pick.startsWith('evo:')) {
-      const r = evolve(c, pick.slice(4));
-      if (r) announce(r, 'evolves into');
+      await perform(c, 'evolve', pick.slice(4));
     }
   };
 

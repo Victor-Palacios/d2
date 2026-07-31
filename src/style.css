@@ -954,3 +954,137 @@ body {
   background: color-mix(in srgb, var(--accent) 22%, transparent);
   box-shadow: 0 0 12px rgba(255, 209, 102, 0.4);
 }
+
+/* --- transcendence cinematic (evolution / de-evolution fanfare) -----------
+   A full-screen rite that plays over the Transcend screen: the soul strobes
+   between its old and new silhouettes, blooms white, and resolves into its new
+   shape. `--tint` is set per-play to the new form's element colour.          */
+.transcend-cine {
+  position: absolute;
+  inset: 0;
+  z-index: 140; /* above the Transcend screen and its menus, below toasts */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  opacity: 0;
+  background: radial-gradient(
+    ellipse at 50% 46%,
+    color-mix(in srgb, var(--tint) 14%, rgba(6, 9, 22, 0.94)),
+    rgba(2, 3, 8, 0.97)
+  );
+  pointer-events: auto;
+}
+
+.tc-stage {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  display: grid;
+  place-items: center;
+}
+
+/* Soul aura — a soft element-tinted glow that breathes behind the form. */
+.tc-aura {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(circle, color-mix(in srgb, var(--tint) 62%, transparent), transparent 68%);
+  filter: blur(6px);
+  animation: tc-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes tc-breathe {
+  0%, 100% { transform: scale(0.94); }
+  50% { transform: scale(1.08); }
+}
+
+.tc-sprite {
+  position: absolute;
+  image-rendering: pixelated;
+  transform-origin: center bottom;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--tint) 70%, transparent));
+  will-change: transform, opacity;
+}
+
+/* The strobe silhouette: keep the shape, drop the colour to solid white, and
+   halo it in the element tint so even the flashing form carries the mood. */
+.tc-sprite.sil {
+  filter: brightness(0) invert(1)
+    drop-shadow(0 0 12px color-mix(in srgb, var(--tint) 85%, white));
+}
+
+/* White veil that throbs with the strobe and floods the bloom. */
+.tc-flash {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(circle, #fff, color-mix(in srgb, var(--tint) 40%, white) 55%, transparent 72%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* Radiating burst at the reveal. Fires once when `.go` is added. */
+.tc-burst {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(circle, #fff 0%, color-mix(in srgb, var(--tint) 60%, white) 40%, transparent 70%);
+  pointer-events: none;
+}
+
+.tc-burst.go {
+  animation: tc-burst 0.7s ease-out forwards;
+}
+
+@keyframes tc-burst {
+  0% { opacity: 0.95; transform: scale(0.3); }
+  100% { opacity: 0; transform: scale(9); }
+}
+
+.tc-caption {
+  max-width: 620px;
+  text-align: center;
+  transition: opacity 0.35s ease;
+}
+
+.tc-caption .tc-line {
+  font-size: clamp(16px, 2.6vw, 24px);
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 16px color-mix(in srgb, var(--tint) 55%, transparent), 0 3px 0 rgba(0, 0, 0, 0.6);
+}
+
+.tc-caption .tc-moves {
+  margin-top: 8px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tint);
+  opacity: 0.85;
+}
+
+.tc-skip {
+  position: absolute;
+  bottom: 26px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  opacity: 0.75;
+}
+
+.tc-skip b {
+  color: var(--edge-hi);
+  font-weight: 700;
+}
+
+.tc-skip .tc-key {
+  opacity: 0.6;
+}

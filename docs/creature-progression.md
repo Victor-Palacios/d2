@@ -25,6 +25,7 @@ companion; the runtime maths and worked examples live in
 | Instance stats, level-up, move-learning | `src/systems/party/creature.ts` |
 | Evolve / de-evolve (headless) | `src/systems/party/evolve.ts` |
 | Evolution UI | `src/ui/TranscendScreen.ts` (R1 → menu → Transcend) |
+| Evolution fanfare (cinematic) | `src/ui/TranscendCinematic.ts` + `audio.transcend()` |
 | Save migration for new stats | `src/systems/party/saveGame.ts` |
 | Tests | `tools/smoke/transcend.mjs` |
 
@@ -112,9 +113,28 @@ is lossless. Evolution is **out-of-battle and explicit** (never fired from
 1. Author the evolved-form species in `SPECIES` (full `base`/`growth`/`learnset`,
    an `art` key — reuse an existing sprite for now, see below).
 2. Add an `evolutions` entry on the base form pointing at it.
-3. That's it — de-evolution, the Transcend UI, and the reverse map pick it up
-   automatically. Confirm with `tools/smoke/transcend.mjs` (it sweeps every
-   species and resolves every branch both directions).
+3. That's it — de-evolution, the Transcend UI, the fanfare and the reverse map
+   pick it up automatically. Confirm with `tools/smoke/transcend.mjs` (it sweeps
+   every species and resolves every branch both directions).
+
+### The fanfare (cinematic)
+
+`TranscendScreen` doesn't just apply the change and toast it — after `evolve()`/
+`devolve()` it awaits `playTranscend(...)` (`src/ui/TranscendCinematic.ts`), a
+Pokémon Red/Blue-style evolution sequence re-scored for this game's soul-rite
+mood: the sprite strobes between its old and new **white silhouettes** faster and
+faster, blooms to white, and resolves into the new form in colour, tinted by the
+new form's **element** and voiced by `audio.transcend()` (an ethereal swell) plus
+the new form's `cry`. De-evolution runs the same beats in reverse.
+
+It is **purely cosmetic** — the creature's data is already transformed before it
+plays, so it can never leave a half-applied change — and it is **skippable with
+Start** (keyboard mirror **E**; the on-screen note says so), which jumps to the
+reveal and then dismisses. No new per-species data is needed: it derives
+everything from `speciesArt`, the element colour and the `EvolveResult`. Timings
+(gather / strobe / bloom / settle) are the constants at the top of the module;
+`audio.transcend(mode)` in `engine/Audio.ts` is the sound. Covered headlessly by
+`tools/smoke/transcend-fx.mjs`.
 
 ---
 
@@ -141,6 +161,7 @@ The magick pass coexists with the layered battle systems documented in
 |---|---|
 | `creature` | the `party/creature` module — `makeCreature`, `statsAt`, `grantXp`, … |
 | `evolve` | the `party/evolve` module — `evolve`, `devolve`, `canEvolve`, … |
+| `playTranscend` | the evolution **cinematic** — `playTranscend(host, opts)` |
 | `formula` | `computeDamage`, `computeHeal` |
 | `tech(id)` | technique lookup |
 | `roster` | the `data/creatures` module — `SPECIES`, `movesKnownAt`, … |
