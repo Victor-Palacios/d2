@@ -67,7 +67,6 @@ function cellPos(side: 'party' | 'enemy', cell: { row: number; col: number }): {
 const PULSE_TEXT: Record<string, string> = {
   calm: '',
   crit: 'A Crit Field settles in — attacks bite deeper this round.',
-  surge: 'A Surge Field crackles — every action banks extra Boost this round.',
 };
 
 /**
@@ -437,7 +436,6 @@ export class BattleScene extends GameScene {
         this.pulse(actor);
 
         let result: TurnResult;
-        let extraTurns = 0;
         if (actor.side === 'party') {
           let action: BattleAction | null = null;
           if (this.autoBattle) {
@@ -451,50 +449,35 @@ export class BattleScene extends GameScene {
           } else {
             // Repeat is offered once a prior round's commands exist to replay.
             const canRepeat = this.battle.round > 1 && this.lastActions.size > 0;
-            // Loop so Boost can be spent (act again) before the real action.
-            for (;;) {
-              const choice = await this.hud.chooseAction(
-                this.battle,
-                actor,
-                (uid) => this.hoverTarget(uid),
-                this.battle.reserves.filter(isUp),
-                canRepeat,
-              );
-              if (choice.type === 'boost') {
-                if (this.battle.spendBoost('party')) {
-                  extraTurns++;
-                  audio.sfx('confirm');
-                  this.hud.setLog(`${actor.creature.name} boosts — it will act again!`);
-                  this.hud.refresh(this.battle);
-                }
-                continue;
-              }
-              if (choice.type === 'flee') {
-                // A coin-flip escape; a failed attempt still costs the turn.
-                if (this.battle.rng() < FLEE_CHANCE) {
-                  this.fled = true;
-                } else {
-                  audio.sfx('cancel');
-                  this.hud.setLog(`${actor.creature.name} tried to run — no way out!`);
-                  await sleep(1000);
-                }
-                action = null;
-                break;
-              }
-              if (choice.type === 'auto') {
-                this.setAuto(true);
-                await sleep(200);
-                action = this.autoAction();
-              } else if (choice.type === 'repeat') {
-                this.setRepeat(true);
-                await sleep(200);
-                action = this.repeatAction(actor);
+            const choice = await this.hud.chooseAction(
+              this.battle,
+              actor,
+              (uid) => this.hoverTarget(uid),
+              this.battle.reserves.filter(isUp),
+              canRepeat,
+            );
+            if (choice.type === 'flee') {
+              // A coin-flip escape; a failed attempt still costs the turn.
+              if (this.battle.rng() < FLEE_CHANCE) {
+                this.fled = true;
               } else {
-                action = choice;
-                // Remember this manual command so Repeat can replay it later.
-                this.lastActions.set(actor.creature.uid, choice);
+                audio.sfx('cancel');
+                this.hud.setLog(`${actor.creature.name} tried to run — no way out!`);
+                await sleep(1000);
               }
-              break;
+              action = null;
+            } else if (choice.type === 'auto') {
+              this.setAuto(true);
+              await sleep(200);
+              action = this.autoAction();
+            } else if (choice.type === 'repeat') {
+              this.setRepeat(true);
+              await sleep(200);
+              action = this.repeatAction(actor);
+            } else {
+              action = choice;
+              // Remember this manual command so Repeat can replay it later.
+              this.lastActions.set(actor.creature.uid, choice);
             }
           }
           if (this.fled) break;
@@ -512,15 +495,7 @@ export class BattleScene extends GameScene {
           this.hud.setLog(`${actor.creature.name} is deciding...`);
           await sleep(480);
           result = this.battle.perform(actor, this.battle.chooseEnemyAction(actor));
-          // Boost-spend timing is a tactical, seeded decision in the model now.
-          if (this.battle.shouldSpendBoost(actor) && this.battle.spendBoost('enemy')) {
-            extraTurns++;
-            this.hud.setLog(`${actor.creature.name} boosts!`);
-          }
         }
-
-        // Boost spent this turn grants immediate extra turn(s) to the actor.
-        for (let i = 0; i < extraTurns; i++) this.battle.requeueFront(actor);
 
         await this.animateTurn(actor, result);
         this.hud.refresh(this.battle);
@@ -620,8 +595,8 @@ export class BattleScene extends GameScene {
           say(
             'Halden',
             'These are already half-gone. Break one and it cannot even shield itself — so when a soul is BROKEN, pile on before it recovers.',
-            'Each hit landed on it extends a chain: every link bites harder, and a long enough chain banks you a Boost charge.',
-            'Order your turns onto the broken one, and spend Boost to squeeze in an extra hit and keep the chain alive.',
+            'Each hit landed on it extends a chain: every link bites harder than the last.',
+            'Order your turns onto the broken one — keep the chain alive and it will fall fast.',
           ),
         );
       }

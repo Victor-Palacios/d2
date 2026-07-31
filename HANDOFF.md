@@ -35,7 +35,7 @@ content). Keep it that way.
 |---|---|
 | Full slice | title → name → hub → world map → 3-floor Quiet Crossing → boss → the Vigil's leave → rival → shop → Mission 2 hook |
 | HD-2D rig | shared by crawl and battle; every parameter live-tunable via `` ` `` |
-| 3v3 grid battle | formation/cover, Boost, Break, field pulse, class + element multipliers, softmax AI — **plus the layered systems added this session**: melee-reach, elemental reactions, break-chains, Commune (see §9 and [docs/SYSTEMS.md](docs/SYSTEMS.md) §9) |
+| 3v3 grid battle | formation/cover, Break, field pulse (calm/crit), class + element multipliers, softmax AI — **plus the layered systems added this session**: melee-reach, elemental reactions, break-chains, Commune (see §9 and [docs/SYSTEMS.md](docs/SYSTEMS.md) §9). *(The Boost gauge was later removed — too close to Octopath's BP.)* |
 | Auto-battle | basic Attack only, weakest target, Esc to stop; verified it spends **no MP** over 14 s hands-off |
 | Controller | Gamepad API polled in `Input.poll()`; verified with a synthetic pad |
 | Suspend save | verified across three page reloads, and that loading **consumes** it |
@@ -227,7 +227,7 @@ fights. The mentor voice is `'Halden'`.
   `VANGUARD/REAR_MELEE_DEALT` and can't hit a covered Rear foe. Nothing else needed.
 - **Tune reactions:** `REACTION_MULT` / `REACTION_STAGGER` / `REACTION_TTL_ROUNDS`
   in `engine.ts`; add pair flavour in `REACTION_NAMES` (maths is uniform per pair).
-- **Tune break-chains:** `CHAIN_STEP` / `CHAIN_DAMAGE_MAX` / `CHAIN_BOOST_AT`.
+- **Tune break-chains:** `CHAIN_STEP` / `CHAIN_DAMAGE_MAX`.
 - **Make a species communable:** set `communable: true` in `creatures.ts`. It is
   copied onto the `CreatureInstance` in `makeCreature` (so the headless engine
   never imports the species table). Commune reward flows through the existing

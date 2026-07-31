@@ -4,9 +4,9 @@ import { chromium } from 'playwright';
 // window.hd2dGame (same harness style as grid.mjs). Covers, in order:
 //   1. Data-driven melee (emberFang now takes row modifiers + respects cover)
 //   2. Elemental reactions (a different-element follow-up detonates for bonus)
-//   3. Break-chains (escalating bonus + a banked Boost at the chain threshold)
+//   3. Break-chains (the bonus escalates per link)
 //   4. Commune (a communable foe is pacified and leaves play)
-//   5. Injected RNG is exposed; smarter AI uses Boost timing + the grid.
+//   5. Injected RNG is exposed; smarter AI uses the grid.
 // See tools/smoke/README.md and docs/SYSTEMS.md.
 
 const browser = await chromium.launch({
@@ -108,16 +108,14 @@ const r = await page.evaluate(() => {
   party.forEach(reset);
   const W = party[0]; W.cell = { row: 0, col: 0 };
   W.staggered = true; W.stagger = 100; W.chain = 0;
-  b.boost.enemy = 0;
-  const chainDmg = []; const boostAfter = [];
+  const chainDmg = [];
   for (let i = 0; i < 4; i++) { W.creature.hp = W.creature.maxHp; // keep it alive & broken
     const res = b.perform(enemy, { type: 'technique', techniqueId: 'emberFang', targetUid: W.creature.uid });
     W.staggered = true; // stays broken for the test window
-    chainDmg.push(res.hits[0].damage); boostAfter.push(b.boost.enemy);
+    chainDmg.push(res.hits[0].damage);
   }
   out.chainCounts = [W.chain]; // ends at 4
   out.chainEscalates = chainDmg[3] > chainDmg[0];
-  out.chainBanksBoost = boostAfter[2] > boostAfter[1]; // the 3rd link (CHAIN_BOOST_AT) banks one
 
   // --- 4. Commune ---------------------------------------------------------
   party.forEach(reset);
@@ -138,8 +136,6 @@ const r = await page.evaluate(() => {
 
   // --- 5. RNG exposed + smarter AI ---------------------------------------
   out.rngExposed = typeof b.rng === 'function';
-  out.boostFnExposed = typeof b.shouldSpendBoost === 'function';
-  b.boost.enemy = 0; out.noBoostNoSpend = b.shouldSpendBoost(enemy) === false;
   // AI grid use: a matching plate on an empty enemy cell should sometimes be sought.
   party.forEach(reset); enemy.creature.hp = enemy.creature.maxHp;
   const idx = (c) => c.row * 3 + c.col;
@@ -158,19 +154,16 @@ console.log('reaction fires          :', r.reactionFires);
 console.log('control has no reaction :', r.controlNoReaction);
 console.log('chain reaches 4         :', r.chainCounts[0] === 4);
 console.log('chain escalates damage  :', r.chainEscalates);
-console.log('chain banks a boost     :', r.chainBanksBoost);
 console.log('commune offered         :', r.communeOffered);
 console.log('commune pacifies         :', r.pacified);
 console.log('pacified leaves play    :', r.pacifiedLeavesPlay);
 console.log('pacified skips turns    :', r.pacifiedSkipsTurns);
 console.log('rng exposed             :', r.rngExposed);
-console.log('boost fn exposed        :', r.boostFnExposed);
-console.log('no boost -> no spend    :', r.noBoostNoSpend);
 console.log('ai uses the grid        :', r.aiUsesGrid);
 
 const ok = r.meleeTechRowModifier && r.meleeRespectsCover && r.reactionFires && r.controlNoReaction &&
-  r.chainCounts[0] === 4 && r.chainEscalates && r.chainBanksBoost && r.communeOffered && r.pacified &&
-  r.pacifiedLeavesPlay && r.pacifiedSkipsTurns && r.rngExposed && r.boostFnExposed && r.noBoostNoSpend && r.aiUsesGrid;
+  r.chainCounts[0] === 4 && r.chainEscalates && r.communeOffered && r.pacified &&
+  r.pacifiedLeavesPlay && r.pacifiedSkipsTurns && r.rngExposed && r.aiUsesGrid;
 
 console.log('\nMECHANICS OK :', ok);
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');

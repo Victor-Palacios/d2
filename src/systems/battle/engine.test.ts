@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Battle, cellIndex, defaultFormation, BOOST_MAX } from './engine';
+import { Battle, cellIndex, defaultFormation } from './engine';
 import type { BattleConfig } from './engine';
 import { GUARD_MP_RESTORE } from './formula';
 import { mkCreature, seededRng } from './testkit';
@@ -54,14 +54,14 @@ describe('battle outcome', () => {
 });
 
 describe('beginRound', () => {
-  it('cycles the field pulse calm -> crit -> surge', () => {
+  it('cycles the field pulse calm -> crit', () => {
     const b = makeBattle();
     b.beginRound();
     expect(b.fieldPulse).toBe('calm');
     b.beginRound();
     expect(b.fieldPulse).toBe('crit');
     b.beginRound();
-    expect(b.fieldPulse).toBe('surge');
+    expect(b.fieldPulse).toBe('calm');
   });
 
   it('clears guarding at the start of a round', () => {
@@ -81,22 +81,21 @@ describe('beginRound', () => {
 });
 
 describe('perform — guard', () => {
-  it('sets the guard flag, restores MP and banks Boost', () => {
+  it('sets the guard flag and restores MP', () => {
     const ally = mkCreature({ mp: 10, maxMp: 20 });
     const b = makeBattle({ party: [ally] });
     const actor = b.side('party')[0];
     const res = b.perform(actor, { type: 'guard' });
     expect(ally.guarding).toBe(true);
     expect(ally.mp).toBe(10 + Math.round(20 * GUARD_MP_RESTORE));
-    expect(b.boost.party).toBe(1);
     expect(res.actionLabel).toBe('Guard');
   });
 });
 
 describe('perform — attack', () => {
-  it('damages the target and banks Boost for the free Attack', () => {
+  it('damages the target', () => {
     const b = makeBattle();
-    b.beginRound(); // round 1 => calm pulse, no crit/surge interference
+    b.beginRound(); // round 1 => calm pulse, no crit interference
     const actor = b.side('party')[0];
     const foe = b.side('enemy')[0];
     const before = foe.creature.hp;
@@ -104,7 +103,6 @@ describe('perform — attack', () => {
     expect(res.hits).toHaveLength(1);
     expect(res.hits[0].damage).toBeGreaterThan(0);
     expect(foe.creature.hp).toBe(before - res.hits[0].damage);
-    expect(b.boost.party).toBe(1);
   });
 });
 
@@ -128,16 +126,6 @@ describe('cover — the front/back trade-off', () => {
     front.hp = 0; // the cover falls
     expect(b.isCovered(backBattler)).toBe(false);
     expect(b.meleeTargets('party').map((x) => x.creature.name)).toEqual(['Back']);
-  });
-});
-
-describe('Boost charges', () => {
-  it('caps at BOOST_MAX and spends down to empty', () => {
-    const b = makeBattle();
-    for (let i = 0; i < BOOST_MAX + 2; i++) b.gainBoost('party');
-    expect(b.boost.party).toBe(BOOST_MAX);
-    for (let i = 0; i < BOOST_MAX; i++) expect(b.spendBoost('party')).toBe(true);
-    expect(b.spendBoost('party')).toBe(false); // nothing left
   });
 });
 

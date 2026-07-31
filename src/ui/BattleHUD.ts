@@ -2,7 +2,7 @@ import { el, esc, meter, remove } from './dom';
 import { Menu } from './Menu';
 import type { MenuItem } from './Menu';
 import type { Battle, BattleAction, Battler } from '../systems/battle/engine';
-import { BOOST_MAX, isMeleeTechnique } from '../systems/battle/engine';
+import { isMeleeTechnique } from '../systems/battle/engine';
 import type { CreatureInstance } from '../systems/party/creature';
 import { activeMoves } from '../systems/party/creature';
 import { technique, techShape } from '../data/techniques';
@@ -23,8 +23,8 @@ interface FighterCard {
   markEl: HTMLElement;
 }
 
-/** What the action menu can resolve to — a real action, "go auto"/"repeat", "boost", or "flee". */
-export type MenuChoice = BattleAction | { type: 'auto' } | { type: 'repeat' } | { type: 'boost' } | { type: 'flee' };
+/** What the action menu can resolve to — a real action, "go auto"/"repeat", or "flee". */
+export type MenuChoice = BattleAction | { type: 'auto' } | { type: 'repeat' } | { type: 'flee' };
 
 /** How many announcements stay stacked at once, and how long each one dwells (ms). */
 const LOG_MAX = 4;
@@ -45,7 +45,6 @@ export class BattleHUD {
   private menuHost: HTMLElement;
   private autoChip: HTMLElement;
   private repeatChip: HTMLElement;
-  private boostChip!: HTMLElement;
   private cards = new Map<string, FighterCard>();
   private menu: Menu | null = null;
 
@@ -80,10 +79,6 @@ export class BattleHUD {
     this.repeatChip.innerHTML = '<span class="accent">REPEAT</span> — press ESC to take over';
     this.repeatChip.style.display = 'none';
 
-    // Party Boost gauge — fills on Attack/Guard, spent to act again.
-    this.boostChip = el('div', 'panel');
-    this.boostChip.id = 'boost-chip';
-
     this.root.append(
       this.banner,
       this.log,
@@ -92,7 +87,6 @@ export class BattleHUD {
       this.menuHost,
       this.autoChip,
       this.repeatChip,
-      this.boostChip,
     );
     this.parent.appendChild(this.root);
   }
@@ -223,10 +217,6 @@ export class BattleHUD {
         card.staggerEl.innerHTML = '';
       }
     }
-    const charges = battle.boost.party;
-    const pips = Array.from({ length: BOOST_MAX }, (_, i) => `<i class="${i < charges ? 'on' : ''}">▲</i>`).join('');
-    this.boostChip.innerHTML = `<span class="dim">BOOST</span> ${pips}`;
-    this.boostChip.classList.toggle('ready', charges > 0);
   }
 
   setActive(uid: string | null) {
@@ -321,16 +311,9 @@ export class BattleHUD {
       const canMove = battle.emptyCells(actor.side).length > 0;
       const canSwap = reserves.length > 0;
       const canCommune = battle.communeTargets('enemy').length > 0;
-      const charges = battle.boost.party;
       const items: MenuItem[] = [
         { value: 'attack', label: 'Attack' },
         { value: 'technique', label: 'Technique', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
-        {
-          value: 'boost',
-          label: 'Boost',
-          disabled: charges < 1,
-          note: charges > 0 ? `act again · ▲${charges}` : 'empty',
-        },
         { value: 'move', label: 'Move', disabled: !canMove, note: canMove ? undefined : 'no room' },
         { value: 'swap', label: 'Swap', disabled: !canSwap, note: canSwap ? undefined : '—' },
         { value: 'guard', label: 'Guard' },
@@ -338,15 +321,13 @@ export class BattleHUD {
         { value: 'auto', label: 'Auto', note: 'L1' },
         { value: 'repeat', label: 'Repeat', disabled: !canRepeat, note: canRepeat ? 'last commands' : '—' },
       ];
-      // Commune only appears when a gentle soul is present to hear it.
-      if (canCommune) items.splice(6, 0, { value: 'commune', label: 'Commune', note: 'reach out' });
+      // Commune only appears when a gentle soul is present to hear it (before Run).
+      if (canCommune) items.splice(5, 0, { value: 'commune', label: 'Commune', note: 'reach out' });
       const root = await this.runMenu(items);
 
       if (root === 'auto') return { type: 'auto' };
 
       if (root === 'repeat') return { type: 'repeat' };
-
-      if (root === 'boost') return { type: 'boost' };
 
       if (root === 'run') return { type: 'flee' };
 

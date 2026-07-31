@@ -229,12 +229,8 @@ comes up (`nextTurn()` checks `isUp`).
    time); otherwise it falls back to the free Strike.
 5. **Desperation guard.** Below 25% HP with nothing good to do, it sometimes
    guards.
-6. **Boost timing.** `shouldSpendBoost()` decides whether to cash a banked Boost
-   for an extra turn: it presses an opening (a Broken or <30% HP foe) much more
-   readily, and bosses press harder than trash. This lives in the model, not the
-   scene, so it is tactical *and* testable.
 
-Everything — targeting, shifts, Boost timing, and the flee / Last Light rolls in
+Everything — targeting, shifts, and the flee / Last Light rolls in
 `BattleScene` — is driven by the battle's single injected `rng`. Pass a seeded
 `rng` in `BattleSceneParams` and an **entire played fight** is reproducible, not
 just the pure model.
@@ -362,10 +358,9 @@ element just refreshes the mark. Pair names (Steam Burst, Wildfire, Short-Circui
 
 Every hit landed on a **Broken** target before it recovers extends a chain
 (`Battler.chain`). The Break damage bonus escalates `BREAK_DAMAGE_MULT + CHAIN_STEP·(n−1)`
-up to `CHAIN_DAMAGE_MAX`, and the `CHAIN_BOOST_AT`-th link banks the attacking
-side a Boost charge — so coordinating turns (and spending Boost to fit extra
-hits) onto a broken foe pays itself back. `clearStagger()` resets the chain when
-the Break ends.
+up to `CHAIN_DAMAGE_MAX` — so coordinating your turns onto a broken foe pays
+itself back in escalating damage. `clearStagger()` resets the chain when the
+Break ends.
 
 ### Commune — *The Unremembered*
 
@@ -395,6 +390,6 @@ every foe and the fight is won.
 | Change how rich the player gets | the `11` / `40` per-level reward in `BattleScene.ts` |
 | Make the crawl more punishing | `FUEL_PER_STEP` up, or `startingFuel` down |
 | Tune elemental reactions | `REACTION_MULT` / `REACTION_STAGGER` / `REACTION_TTL_ROUNDS` in `engine.ts` |
-| Tune break-chains | `CHAIN_STEP` / `CHAIN_DAMAGE_MAX` / `CHAIN_BOOST_AT` in `engine.ts` |
+| Tune break-chains | `CHAIN_STEP` / `CHAIN_DAMAGE_MAX` in `engine.ts` |
 | Tune Commune length | `COMMUNE_GAIN` / `COMMUNE_VARIANCE` in `engine.ts`; `communable` in `creatures.ts` |
 | Change which Techniques are melee | the `melee` flag in `techniques.ts` |
