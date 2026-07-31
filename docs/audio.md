@@ -1,120 +1,130 @@
 # Audio: sound effects, music & ambience
 
-Everything you hear is **synthesised in code** with the Web Audio API — a few
-oscillators and a volume envelope per sound. Like the sprites, nothing is
-sampled: the repo stays **asset-free** (plan §0.2), so there are no `.wav`/
-`.mp3`/`.ogg` files and none should be added. All of it lives in one file,
-[`src/engine/Audio.ts`](../src/engine/Audio.ts), exported as a singleton
-`audio`.
+Everything you hear is **synthesised in code** with the Web Audio API. Nothing is
+sampled from a file: the repo stays **asset-free** (plan §0.2), so there are no
+`.wav`/`.mp3`/`.ogg` files and none should be added. All of it lives in one file,
+[`src/engine/Audio.ts`](../src/engine/Audio.ts), exported as the singleton
+`audio` (also on `window.hd2dGame.audio` for the console + smoke tests).
 
-If you ever want *real* audio, the seam is the two public methods `sfx()` and
-`music()`: swap their bodies for a Howler-backed implementation and every call
-site keeps working. That would abandon the asset-free rule, so only do it on the
-owner's say-so.
+There are three subsystems in that file:
 
-## The shape of it
+- **SFX** — short oscillator stacks (`sfx(name)` over the `SFX` table).
+- **Monster cries** — each creature's voice (`cry(id)`); its own guide is
+  [monster-cries.md](monster-cries.md).
+- **Music** — a small **baked sampler** driving multi-voice arrangements. This
+  doc is mostly about that.
 
-```
-sfx(name)   ─┐
-music(track)─┤→  tone(note) / chirp(when)  →  osc → gain → { sfxGain | musicGain } → master → speakers
-             │                                                    (env)         (0.34 / 1.0)   (0.5, mute)
-```
+## SFX & the `tone()` primitive
 
-- **`tone(note, dest, when)`** is the one primitive. It makes an
-  `OscillatorNode` + `GainNode`, sets a waveform (`square`/`triangle`/
-  `sawtooth`/`sine`) and frequency, applies a fast attack + exponential decay,
-  and schedules start/stop. Every musical note and SFX blip goes through it.
-- **`sfx(name)`** plays a fixed list of `Note`s from the `SFX` table (one entry
-  per effect: `blip`, `confirm`, `hit`, `victory`, …). Routed through
-  `sfxGain`.
-- **`music(track)`** starts a `setInterval` clocked to the track's BPM and, each
-  step, schedules a bass note (on downbeats) and an arp note from the track's
-  pattern. Routed through `musicGain` (quieter, `0.34`).
-- **`cry(speciesId)`** plays a monster's own voice — a short stack of
-  pitch-gliding, vibrato'd oscillator layers from the `CRIES` table (via
-  `voiceLayer()`). It's part of `Audio.ts` but is its own subsystem with its own
-  guide: [monster-cries.md](monster-cries.md). This doc covers music/SFX/
-  ambience; go there for creature voices.
-- **`unlock()`** lazily creates the `AudioContext` on first user gesture
-  (browsers block audio until then) and, if a track was already requested,
-  starts it. Call sites already do this on first input — you rarely touch it.
-- **`toggleMute()`** zeroes the master gain.
+`tone(note, dest, when)` makes an `OscillatorNode` + `GainNode`, sets a waveform
+and frequency, applies a fast attack + exponential decay, and schedules
+start/stop. `sfx(name)` plays a fixed list of `Note`s from the `SFX` table
+(`blip`, `confirm`, `hit`, `victory`, …) through `sfxGain`. These are static and
+deterministic — the same name is the same sound every time, which is what you
+want for UI blips and hit stings.
 
-### Why a sound is identical every time
+## Music: two track formats
 
-The `SFX` and `TRACKS` tables are **static data**, and the music loop is
-deterministic (`this.step++` walking fixed arrays). There is no randomness, so
-the same name → the same waveform, forever. That is fine for menu blips and hit
-sounds. It is *not* fine for long-running area ambience, which is why the bird
-layer (below) is randomised on purpose.
+`music(track)` reads `TRACKS[track]`, which is one of two shapes:
 
-## Add a new music track
+- **`RichTrack`** (`rich: true`) — the baked-sampler engine. Used by the hub and
+  every reach.
+- **`LegacyTrack`** — the original one-line loop (a triangle bass on downbeats +
+  a square arp). Still used by `battle` and `boss`.
 
-Three edits, all in `Audio.ts`:
+`music()` dispatches on `'rich' in def`, fades out the previous rich track's
+`trackGain` (a short crossfade, not a cut), and starts the new one.
 
-1. **Add the name to the union** `MusicTrack`.
-2. **Add a pattern to `TRACKS`** — a root frequency, BPM, a `bass` array and an
-   `arp` array. Bass/arp values are **semitone offsets from the root**; the loop
-   turns them into frequencies with equal-temperament math
-   (`root * 2^(semitones/12)`).
+### The baked sampler
+
+"Baked" = instrument timbres are precomputed **in code** at first use
+(`ensureRich()`), never loaded from disk:
+
+- **Wavetables** — `strings`, `flute` and `cello` are `PeriodicWave`s built from
+  harmonic-amplitude formulas. Played live by `voice()` with ensemble detune,
+  a vibrato LFO, an amplitude swell, optional breath noise and a stereo pan.
+- **Harp** — a **Karplus-Strong** plucked string rendered straight into an
+  `AudioBuffer` once, then pitch-shifted per note via `playbackRate`
+  (`playHarp()`). Genuinely string-like, unlike an oscillator "pluck".
+- **Percussion / synth voices** — `pad`, `pluck`, `bass`, `sub`, `bell`, `kick`,
+  `tom`, `hat`, `noise` are built from oscillators/noise + envelopes.
+- **Bus** — every voice runs `trackGain → dry + (convolver → wet) → compressor →
+  musicGain → master`. The convolver is a code-generated hall impulse; the
+  compressor tames dense tracks; `dry.gain` is the make-up level.
+
+### A rich track's data
+
+A `RichTrack` is `{ rich, bpm, root, birds?, voices[] }`. Each `Voice` is an
+instrument plus a **step sequence** on a **16th-note grid**. A `seq` entry is:
+
+- a **number** — a semitone offset from `root` (→ `root * 2^(n/12)`),
+- a **number[]** — a chord (for `pad` / `strings`),
+- **`1`** — a hit, for pitchless percussion (`kick` / `hat` / `noise`),
+- **`null`** — a rest.
+
+Each voice loops **by its own length**, so a 16-step drum runs under a 128-step
+melody. `dur` is the note length in steps. The lookahead `scheduler()` queues
+every step that falls inside a short window; acoustic instruments get their
+timing and dynamics slightly **humanised** so it doesn't sound quantised.
+
+Helpers make patterns readable: `pmap(len, {step: note})` for sparse melodies,
+`phits(len, [steps])` for percussion, `prep(bar, n)` to repeat a bar, `harpBar()`
+for an arpeggio. Bigger arrangements (the hub, crystal, jungle) are built by a
+small function returning `Voice[]`.
+
+## Add a new rich track
+
+1. **Name it** in the `MusicTrack` union.
+2. **Add a `RichTrack` to `TRACKS`** — pick `bpm`, `root`, and author `voices`
+   (reuse the instruments above; mind that voice `gain`s are small and sum). For
+   anything past a few notes, write a `…Voices()` builder like `everwakeVoices()`.
 3. **Point an area at it** — set `music: '<name>'` on the reach's data file
    (`src/data/<name>.ts`). `DungeonScene` calls `audio.music(reach.music)` on
-   enter, so nothing else is needed. (Battle/boss/hub tracks are triggered by
-   their own scenes.)
+   enter; the hub/battle/boss keys are triggered by their own scenes. No scene
+   code changes needed — only the `TRACKS` definition.
 
-Tips for a pattern that doesn't grate on loop:
+Composition tips: give the arrangement a real **melody + counter-line + harmony
++ bass** rather than one part; keep parts in a scale/mode; make voice lengths
+differ so the loop takes longer to repeat; BPM sets the mood (~60–80 calm,
+~96–112 driving, ~148+ combat).
 
-- Keep `arp` to a scale/mode so it stays consonant — e.g. **minor pentatonic**
-  `[0, 3, 5, 7, 10]` (+12 per octave) reads as "exotic/earthy"; a bright
-  **major** arp reads as "airy/crystalline".
-- Give `bass` movement (`[0, 0, 7, 5]`) so the harmony shifts across the bar.
-- Make `arp` and `bass` different lengths (8 vs 4) so the combined pattern takes
-  longer to obviously repeat.
-- BPM sets the vibe more than anything: ~72–96 = calm, ~100–120 = driving,
-  ~148–160 = combat.
+## Ambience (birds)
 
-## Add ambience (the bird pattern)
+Long loops feel dead, so a track can layer a **randomised** ambience via the
+`birds?: boolean` flag. `chirp()` synthesises one bird call — 1–3 high syllables
+(~1.8–3.5 kHz) with jittered count, pitch, sweep, waveform, gain and gaps, so no
+two are alike. The rich `scheduler()` (and the legacy loop) roll for a chirp each
+step at a low probability and fire it at a random off-beat offset. Set
+`birds: true` on a track to enable it; add a new flag + `chirp`-style method for
+a different ambience (frogs, wind, drips).
 
-Static loops feel dead over a several-minute dungeon crawl. The fix is a
-**randomised layer** on top of the loop, gated by a per-track flag so any track
-can opt in without touching others. The jungle's birds are the reference
-implementation:
+## What's wired
 
-- **`birds?: boolean` on the `TRACKS` value type** — an optional, additive flag.
-  Prefer this pattern for future ambience (frogs, dripping water, wind): add a
-  flag, not a special-cased track name.
-- **`chirp(when)`** synthesises one bird call: 1–3 short, high syllables
-  (~1.8–3.5 kHz), each a quick pitch *sweep* via
-  `frequency.exponentialRampToValueAtTime`. **Everything is jittered** —
-  syllable count, base pitch, sweep direction, waveform (`sine`/`triangle`),
-  gain and inter-syllable gaps — so no two calls are alike. Routed through
-  `musicGain`, so ambience mutes and ducks with the music, never with combat
-  SFX.
-- **The trigger** lives in the `music()` loop: once per step, `if (t.birds &&
-  Math.random() < 0.12) this.chirp(now + random offset)`. ~12% per step ≈ a
-  call every few seconds; the random offset keeps calls off the beat. Tune the
-  probability up for a denser soundscape, down for a sparser one.
-
-To give another track ambient birds: set `birds: true` on it — done. To add a
-*different* ambient sound, add a new flag + a new `chirp`-style synth method + a
-matching roll in the loop.
-
-## What's been built
-
-- **The Overgrowth (jungle)** — `music: 'jungle'` in
-  [`src/data/jungleReach.ts`](../src/data/jungleReach.ts); track defined in
-  `TRACKS`: a warm, laid-back **minor-pentatonic** groove
-  (`root: 130.8, bpm: 92`) with **`birds: true`** ambience.
+| Area | Track key | Style |
+|---|---|---|
+| Intro town (The Everwake) | `hub` | orchestral ensemble — flute melody, cello counter, harp, strings |
+| The Quiet Crossing | `dungeon` | "Underhush" — dark ambient, near-beatless |
+| Crystal Cavern | `crystal` | bright, shimmering bells + high harp |
+| Haunted Dungeon | `haunted` | "Bone Rhythm" — ritual percussion + Phrygian bass |
+| The Overgrowth | `jungle` | warm marimba/flute groove, `birds: true` |
+| Normal / boss battles | `battle` / `boss` | still the legacy loop (rich arrangements + transition handling are a follow-up) |
 
 ## Build & verify
 
-Sound can't be asserted headlessly, but the wiring must typecheck and the melody
-is judged by ear:
+Sound can't be asserted headlessly, but the wiring must typecheck **and** the
+engine must not throw at runtime. `tsc` covers the first; a quick playwright
+smoke covers the second by driving every track through the real build:
 
 ```bash
-npm run build        # tsc --noEmit proves the MusicTrack union is exhaustive
-npm run preview      # then walk into the area and listen
+npm run build                       # tsc --noEmit + vite build
+npm run preview -- --port 4199      # then, in a headless page:
+#   window.hd2dGame.audio.music('hub'|'dungeon'|'crystal'|'haunted'|'jungle'|'battle'|'boss')
+# and assert no pageerror/console errors while the scheduler runs.
 ```
+
+`audio` is exposed on `window.hd2dGame`, so a smoke can start each track
+directly without navigating scenes. The actual *sound* is judged by ear in
+`npm run preview`.
 
 Follow the repo's git rule (see [CLAUDE.md](../CLAUDE.md)): build before every
 push, commit straight to `main`.
