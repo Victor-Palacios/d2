@@ -944,7 +944,7 @@ export class BattleScene extends GameScene {
     const reward = this.battle
       .side('enemy')
       .reduce((sum, b) => sum + b.creature.level * (this.params.isBoss ? 40 : 11), 0);
-    game.credits += reward;
+    game.obols += reward;
     reviveFainted(game.party, 0.3);
     // A little breathing room between fights.
     for (const c of game.party) {
@@ -967,7 +967,7 @@ export class BattleScene extends GameScene {
       if (nl !== null) levelUps.push(`${c.name} → Lv${nl}`);
     }
 
-    this.hud.setLog(`The echo is quieted. +${reward} credits.`);
+    this.hud.setLog(`The echo is quieted. +${reward} obols.`);
     await sleep(1500);
 
     for (const msg of levelUps) {

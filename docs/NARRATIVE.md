@@ -174,7 +174,7 @@ down.").
   speaks in duties, paperwork, short verdicts ("That is either talent or mercy,
   and I will take either").
 - **Quartermaster Ilsa** — the supply bay. **Voice:** terse, transactional;
-  gatekeeps, then opens up once you're licensed.
+  gatekeeps, then opens up once the Vigil has given you leave.
 - **Soul Broker Vex** — the Soul Store. **Voice:** smooth up-seller; everything
   is available "for a price."
 - **Companion souls** (the Ember / the Nightnip / the Glidefang, §4) — do not

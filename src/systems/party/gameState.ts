@@ -41,7 +41,7 @@ export interface CaptureResult {
  */
 export class GameState {
   playerName = 'REN';
-  credits = 320;
+  obols = 320;
   party: CreatureInstance[] = [];
   bag: Record<string, number> = {};
   flags = new Set<string>();
@@ -50,7 +50,8 @@ export class GameState {
   light = QUIET_CROSSING.startingLight;
   maxLight = QUIET_CROSSING.startingLight;
 
-  hasLicense = false;
+  /** Whether the Vigil has given you leave to keep past the Crossing. */
+  hasLeave = false;
   teamId: string | null = null;
   teamAttribute: AttributeId | null = null;
 

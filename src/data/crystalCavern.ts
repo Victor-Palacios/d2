@@ -91,7 +91,7 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '15,2': { credits: 220, item: 'repairChip', note: 'A prospector left a crate wedged in the ice.' },
+      '15,2': { obols: 220, item: 'repairChip', note: 'A prospector left a crate wedged in the ice.' },
     },
     encounterRate: 0.06,
     encounters: [
@@ -152,7 +152,7 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '15,2': { credits: 300, note: 'A frozen cache, credits still legible under the frost.' },
+      '15,2': { obols: 300, note: 'A frozen cache, obols still legible under the frost.' },
     },
     encounterRate: 0.07,
     encounters: [

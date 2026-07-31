@@ -58,7 +58,7 @@ export interface HubSceneParams {
  * The Everwake, simplified (plan §2.2, M4/M5).
  *
  * One room, walk-around movement, bump-to-talk NPCs and a portal to the world
- * map. This is also where the post-boss progression beats fire: licence,
+ * map. This is also where the post-boss progression beats fire: the Vigil's leave,
  * Guard Team choice, rival intro and the Mission 2 briefing.
  */
 export class HubScene extends GameScene {
@@ -209,7 +209,7 @@ export class HubScene extends GameScene {
       game.resetCrawl();
       fullRestore(game.party);
     } else if (kind === 'reachCleared') {
-      await this.licenseCeremony();
+      await this.leaveCeremony();
     } else if (kind === 'teamChosen') {
       await this.rivalAndBriefing();
     }
@@ -270,7 +270,7 @@ export class HubScene extends GameScene {
     }
   }
 
-  private async licenseCeremony() {
+  private async leaveCeremony() {
     fullRestore(game.party);
     await this.dialogue.play([
       ...narrate('The Quiet Crossing settles behind you. Your lantern is low, but it is lit.'),
@@ -284,8 +284,8 @@ export class HubScene extends GameScene {
         'The lantern is yours to carry, and your bonded soul has earned its place in it. Tend the reaches gently. Most of what you meet only wants to be remembered — or let go.',
       ),
     ]);
-    game.hasLicense = true;
-    game.set('licensed');
+    game.hasLeave = true;
+    game.set('givenLeave');
     toast(this.ctx.ui, '<span class="accent">Keeper\'s lantern acquired</span>', 2600);
     await sleep(1200);
     await this.dialogue.play([
@@ -623,7 +623,7 @@ export class HubScene extends GameScene {
         ...say(
           'Kade',
           `So you are the one who dropped the Vigil on your first crossing. Kade. Second year.`,
-          'Enjoy the licence. The next reach does not hand them out.',
+          'Enjoy your leave to keep. The next reach does not grant it so gently.',
         ),
         ...say('Kade', 'Try to keep up, rookie.'),
       ]);
@@ -660,7 +660,7 @@ export class HubScene extends GameScene {
     await this.dialogue.play(this.scriptFor(npc));
     this.busy = false;
 
-    if (npc.id === 'vendor' && game.hasLicense) {
+    if (npc.id === 'vendor' && game.hasLeave) {
       this.busy = true;
       await openShop(this.ctx.ui);
       this.busy = false;
@@ -676,7 +676,7 @@ export class HubScene extends GameScene {
   private scriptFor(npc: Npc): DialogueScript {
     switch (npc.id) {
       case 'chief':
-        if (!game.hasLicense) {
+        if (!game.hasLeave) {
           return say(
             'Chief Marrow',
             'The Quiet Crossing. Three floors, one warden. Take the south portal when you are ready.',
@@ -685,11 +685,11 @@ export class HubScene extends GameScene {
         }
         return say(
           'Chief Marrow',
-          `A licensed keeper whose lantern stayed lit. Rarer than you would think, ${game.playerName}.`,
-          'The reaches past the Crossing are yours to tend now. Mine is the paperwork you just made.',
+          `A keeper with the Vigil's leave, whose lantern stayed lit. Rarer than you would think, ${game.playerName}.`,
+          'The reaches past the Crossing are yours to tend now.',
         );
       case 'mentor':
-        if (!game.hasLicense) {
+        if (!game.hasLeave) {
           return say(
             'Halden',
             'Ground rules. Attack is free, Techniques cost MP, Guard halves the hit and gives MP back.',
@@ -703,10 +703,13 @@ export class HubScene extends GameScene {
           'Your bonded souls are yours to raise. Merging them comes later — not today.',
         );
       case 'vendor':
-        if (!game.hasLicense) {
-          return say('Quartermaster Ilsa', 'Supply bay is for licensed Keepers. Come back with a licence and credits.');
+        if (!game.hasLeave) {
+          return say(
+            'Quartermaster Ilsa',
+            'The supply bay is for keepers the Vigil has passed. Come back when you have its leave — and bring obols.',
+          );
         }
-        return say('Quartermaster Ilsa', 'Licensed, then. Take a look — the bay is open.');
+        return say('Quartermaster Ilsa', 'Given leave, then. Take a look — the bay is open.');
       case 'soulstore':
         return say(
           'Soul Broker Vex',

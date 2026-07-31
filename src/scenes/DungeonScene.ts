@@ -396,9 +396,9 @@ export class DungeonScene extends GameScene {
           life: 0.9,
         });
         const bits: string[] = [];
-        if (loot?.credits) {
-          game.credits += loot.credits;
-          bits.push(`<span class="accent">+${loot.credits} credits</span>`);
+        if (loot?.obols) {
+          game.obols += loot.obols;
+          bits.push(`<span class="accent">+${loot.obols} obols</span>`);
         }
         if (loot?.item) {
           game.addItem(loot.item);
@@ -665,8 +665,8 @@ export class DungeonScene extends GameScene {
     audio.sfx('portal');
     const dom = reach(game.activeReachId);
     game.set(dom.onClear.flag);
-    if (dom.onClear.licenseCeremony) {
-      // The Quiet Crossing only: the licence + Guard-Team ceremony.
+    if (dom.onClear.leaveCeremony) {
+      // The Quiet Crossing only: the Vigil's-leave ceremony.
       await this.ctx.go('hub', { arrival: 'reachCleared' });
     } else {
       // Any other reach: you're back in the safe city, patched up.

@@ -33,7 +33,7 @@ content). Keep it that way.
 
 | Feature | Notes |
 |---|---|
-| Full slice | title → name → hub → world map → 3-floor Quiet Crossing → boss → licence → Guard Team → rival → shop → Mission 2 hook |
+| Full slice | title → name → hub → world map → 3-floor Quiet Crossing → boss → the Vigil's leave → rival → shop → Mission 2 hook |
 | HD-2D rig | shared by crawl and battle; every parameter live-tunable via `` ` `` |
 | 3v3 grid battle | formation/cover, Boost, Break, field pulse, class + element multipliers, softmax AI — **plus the layered systems added this session**: melee-reach, elemental reactions, break-chains, Commune (see §9 and [docs/SYSTEMS.md](docs/SYSTEMS.md) §9) |
 | Auto-battle | basic Attack only, weakest target, Esc to stop; verified it spends **no MP** over 14 s hands-off |

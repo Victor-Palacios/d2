@@ -273,7 +273,8 @@ class AudioEngine {
     osc.type = note.type ?? 'square';
     osc.frequency.setValueAtTime(note.freq, when);
     if (note.f1 !== undefined && note.f1 !== note.freq) {
-      if ((note.glide ?? 'exp') === 'exp') osc.frequency.exponentialRampToValueAtTime(Math.max(1, note.f1), when + note.dur);
+      if ((note.glide ?? 'exp') === 'exp')
+        osc.frequency.exponentialRampToValueAtTime(Math.max(1, note.f1), when + note.dur);
       else osc.frequency.linearRampToValueAtTime(note.f1, when + note.dur);
     }
     const peak = note.gain ?? 0.12;

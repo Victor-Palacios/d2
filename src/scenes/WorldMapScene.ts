@@ -120,7 +120,7 @@ export class WorldMapScene extends GameScene {
         title: 'The Everwake',
         tag: 'Safe zone',
         tagColor: '#6fd3ff',
-        body: 'Licence office, supply bay, and everyone who wants something from you. Go back inside.',
+        body: 'The supply bay, the keepers’ hall, and everyone who wants something from you. Go back inside.',
       },
       ...REACH_ORDER.map((id): Card => {
         const d = reach(id);

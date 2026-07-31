@@ -25,7 +25,7 @@ const st = () => page.evaluate(() => {
   return {
     scene: g.manager.current,
     tile: s.tileX !== undefined ? `${s.tileX},${s.tileZ}` : null,
-    floor: g.game.floorIndex, fuel: g.game.fuel, credits: g.game.credits,
+    floor: g.game.floorIndex, fuel: g.game.fuel, obols: g.game.obols,
     name: g.game.playerName,
     busy: s.busy ?? null,
     dlg: (() => { const d = document.querySelector('#dialogue'); return !!d && d.style.display !== 'none'; })(),

@@ -92,7 +92,7 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '10,2': { credits: 260, item: 'repairChip', note: 'A traveller who did not leave. Their pack remains.' },
+      '10,2': { obols: 260, item: 'repairChip', note: 'A traveller who did not leave. Their pack remains.' },
     },
     encounterRate: 0.07,
     encounters: [
@@ -154,7 +154,7 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '15,2': { credits: 340, note: 'A reliquary, long since looted of everything but credits.' },
+      '15,2': { obols: 340, note: 'A reliquary, long since looted of everything but obols.' },
     },
     encounterRate: 0.08,
     encounters: [

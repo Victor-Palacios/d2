@@ -10,7 +10,7 @@ import type { AttributeId } from '../../data/elements';
  * Two kinds, deliberately different in weight:
  *
  * - **Autosave** — written at safe points (arriving in the city, taking the
- *   world map, after the licence/team beats). This is your progress.
+ *   world map, after the leave/team beats). This is your progress.
  * - **Suspend save** — written on demand *inside* a dungeon so you can stop
  *   mid-crawl, and **deleted the moment it is loaded**. It is a bookmark, not a
  *   checkpoint: you cannot reload it to retry a fight that went badly, which
@@ -21,7 +21,7 @@ import type { AttributeId } from '../../data/elements';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 /**
  * Oldest save this build can still read. Normally we keep this at 1 because
  * changes are additive, but v5/v6 renamed the tutorial reach's id and clear
@@ -30,9 +30,11 @@ export const SAVE_VERSION = 9;
  * change: drop anything older and start fresh. v7 adds the mag/res stats, which
  * `applySave` back-fills from the species curve — so a v6 save still loads. v9
  * adds the per-creature move `loadout`, back-filled from the known pool — so a
- * v8 save still loads.
+ * v8 save still loads. v10 renames two persisted fields (credits→`obols`,
+ * hasLicense→`hasLeave`) for the mood rework — a rename can't be back-filled,
+ * so anything older is dropped and started fresh.
  */
-export const MIN_SAVE_VERSION = 8;
+export const MIN_SAVE_VERSION = 10;
 
 const AUTO_KEY = 'hd2d.save.auto';
 const SUSPEND_KEY = 'hd2d.save.suspend';
@@ -48,13 +50,13 @@ export interface SaveData {
   label: string;
   state: {
     playerName: string;
-    credits: number;
+    obols: number;
     party: CreatureInstance[];
     bag: Record<string, number>;
     flags: string[];
     light: number;
     maxLight: number;
-    hasLicense: boolean;
+    hasLeave: boolean;
     teamId: string | null;
     teamAttribute: AttributeId | null;
     activeReachId: string;
@@ -88,13 +90,13 @@ export function snapshot(kind: SaveKind, scene: SaveData['scene'], label: string
     label,
     state: {
       playerName: game.playerName,
-      credits: game.credits,
+      obols: game.obols,
       party: JSON.parse(JSON.stringify(game.party)) as CreatureInstance[],
       bag: { ...game.bag },
       flags: [...game.flags],
       light: game.light,
       maxLight: game.maxLight,
-      hasLicense: game.hasLicense,
+      hasLeave: game.hasLeave,
       teamId: game.teamId,
       teamAttribute: game.teamAttribute,
       activeReachId: game.activeReachId,
@@ -178,13 +180,13 @@ export function bestSave(): SaveData | null {
 export function applySave(data: SaveData) {
   const s = data.state;
   game.playerName = s.playerName;
-  game.credits = s.credits;
+  game.obols = s.obols;
   game.party = s.party;
   game.bag = { ...s.bag };
   game.flags = new Set(s.flags);
   game.light = s.light;
   game.maxLight = s.maxLight;
-  game.hasLicense = s.hasLicense;
+  game.hasLeave = s.hasLeave;
   game.teamId = s.teamId;
   game.teamAttribute = s.teamAttribute;
   game.activeReachId = s.activeReachId ?? 'crossing';

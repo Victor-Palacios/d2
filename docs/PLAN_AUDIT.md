@@ -41,7 +41,7 @@ Pokémon × Digimon hybrid. Nothing tracked is silently missing.
 | §2.4 | The Quiet Crossing crawl | ✅ | `DungeonScene.ts` (M1/M3). |
 | §2.5 | *(not referenced by any code marker)* | ❔ Unconfirmed | No `plan §2.5` marker exists. Likely the rival-intro / Mission-2 hook, which **is** built (end of `HubScene`), but the mapping can't be confirmed without the plan text. |
 | §2.6 | Guard Team choice | ✅ | `CardSelect.ts` cites §2.6; `data/teams.ts` — three teams set class + starter. |
-| §2.7 | Shop / vendor | ✅ (buying only) | `ui/ShopScreen.ts`, `data/items.ts`. Credits deduct, item enters bag; **using** items is an intentional stub (below). |
+| §2.7 | Shop / vendor | ✅ (buying only) | `ui/ShopScreen.ts`, `data/items.ts`. Obols deduct, item enters bag; **using** items is an intentional stub (below). |
 
 ## §3 — HD-2D rendering rig
 

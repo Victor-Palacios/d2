@@ -1,5 +1,5 @@
 /**
- * Item stubs. The shop (plan §2.7) lists these; purchasing deducts credits and
+ * Item stubs. The shop (plan §2.7) lists these; purchasing deducts obols and
  * files the item into the bag. Using items in battle is deliberately out of
  * scope for the first hour — the Item action is present but disabled.
  */

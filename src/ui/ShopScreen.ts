@@ -7,13 +7,13 @@ import { audio } from '../engine/Audio';
 import { toast } from './Toast';
 
 /**
- * Vendor screen (plan §2.7). Buying is wired up (credits are deducted and the
+ * Vendor screen (plan §2.7). Buying is wired up (obols are deducted and the
  * item lands in the bag); *using* items is deliberately still a stub.
  */
 export async function openShop(parent: HTMLElement): Promise<void> {
   const root = el('div', 'screen');
   root.appendChild(el('h1', 'title-main', 'SUPPLY BAY'));
-  root.appendChild(el('p', 'title-sub', 'The Everwake — licensed Keepers only'));
+  root.appendChild(el('p', 'title-sub', 'The Everwake — keepers with leave only'));
 
   const wrap = el('div', 'shop-wrap');
   const listPanel = el('div', 'panel');
@@ -34,7 +34,7 @@ export async function openShop(parent: HTMLElement): Promise<void> {
   parent.appendChild(root);
 
   const refreshWallet = () => {
-    wallet.innerHTML = `<span class="dim">Credits</span> <span class="accent">${game.credits}</span>`;
+    wallet.innerHTML = `<span class="dim">Obols</span> <span class="accent">${game.obols}</span>`;
   };
 
   const items = (): MenuItem[] =>
@@ -45,7 +45,7 @@ export async function openShop(parent: HTMLElement): Promise<void> {
         value: id,
         label: it.name + (owned ? ` x${owned}` : ''),
         note: `${it.price}c`,
-        disabled: game.credits < it.price,
+        disabled: game.obols < it.price,
       };
     });
 
@@ -66,12 +66,12 @@ export async function openShop(parent: HTMLElement): Promise<void> {
     if (!choice) break;
 
     const it = ITEMS[choice];
-    if (game.credits < it.price) {
+    if (game.obols < it.price) {
       audio.sfx('cancel');
-      toast(parent, '<span class="danger">Not enough credits.</span>', 1400);
+      toast(parent, '<span class="danger">Not enough obols.</span>', 1400);
       continue;
     }
-    game.credits -= it.price;
+    game.obols -= it.price;
     game.addItem(it.id);
     audio.sfx('chest');
     toast(parent, `Bought <span class="accent">${esc(it.name)}</span>`, 1400);

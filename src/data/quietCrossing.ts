@@ -96,7 +96,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '11,2': { credits: 180, item: 'repairChip', note: 'Someone abandoned a supply crate up here.' },
+      '11,2': { obols: 180, item: 'repairChip', note: 'Someone abandoned a supply crate up here.' },
     },
     encounterRate: 0,
     encounters: [],
@@ -153,7 +153,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '12,2': { credits: 240, note: 'A cracked cache, still holding credits.' },
+      '12,2': { obols: 240, note: 'A cracked cache, still holding obols.' },
     },
     encounterRate: 0.06,
     encounters: [
@@ -241,5 +241,5 @@ export const QUIET_CROSSING: Reach = {
   floors: QUIET_CROSSING_FLOORS,
   startingLight: 120,
   music: 'dungeon',
-  onClear: { flag: 'crossingCleared', licenseCeremony: true },
+  onClear: { flag: 'crossingCleared', leaveCeremony: true },
 };

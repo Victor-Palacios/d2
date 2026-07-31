@@ -138,7 +138,7 @@ only thing still keyboard-only is the `` ` `` debug panel.
 
 Title → name entry → **pick your partner** → The Everwake hub → world map → **The Quiet Crossing**
 (3 floors: crawl, chests, element plates, draining EP, scripted fights,
-random encounters, and the warden boss) → licence + own vehicle → rival intro →
+random encounters, and the warden boss) → the Vigil's leave → rival intro →
 supply bay → Mission 2 briefing.
 
 - **Crawl**: tile-by-tile movement with wall collision, camera follow, treasure
@@ -165,8 +165,8 @@ supply bay → Mission 2 briefing.
   on cannot burn anything you were saving for the boss.
 - **Progression**: choose one of three partner monsters right after New Game
   (Emberling / Glidefang / Nightnip — one per class), then build a team by
-  **capturing** more (see below), earning a licence and your own vehicle after
-  the warden falls.
+  **capturing** more (see below), earning the Vigil's leave to keep past the
+  Crossing after the warden falls.
 - **More reaches**: the world map unlocks in story order — beyond **The Quiet
   Crossing** come **The Reliquary** (Water, warden Sena Vale), then **The
   Unremembered** (Dark/Nature, warden the Unnamed), with **The Overgrowth**

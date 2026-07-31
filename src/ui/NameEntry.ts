@@ -28,7 +28,7 @@ export class NameEntry {
     this.value = defaultName.toUpperCase().slice(0, MAX_LEN);
 
     this.root = el('div', 'screen');
-    this.root.append(el('h2', 'title-sub', 'Register your licence name'));
+    this.root.append(el('h2', 'title-sub', "Sign the keeper's roll"));
 
     const slotWrap = el('div', 'name-slots');
     for (let i = 0; i < MAX_LEN; i++) {

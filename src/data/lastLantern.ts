@@ -95,7 +95,7 @@ const FLOORS: DungeonFloor[] = [
     },
     chests: {
       '11,2': {
-        credits: 500,
+        obols: 500,
         item: 'repairChip',
         note: "A keeper's pack, left at the top of the last descent. They did not come back up.",
       },
@@ -176,7 +176,7 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '2,8': { credits: 640, note: 'A cache no one lived to spend.' },
+      '2,8': { obols: 640, note: 'A cache no one lived to spend.' },
     },
     encounterRate: 0.06,
     encounters: [

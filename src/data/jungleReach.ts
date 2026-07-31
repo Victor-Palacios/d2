@@ -95,7 +95,7 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '13,2': { credits: 260, item: 'repairChip', note: "A ranger's pack, half-swallowed by roots." },
+      '13,2': { obols: 260, item: 'repairChip', note: "A ranger's pack, half-swallowed by roots." },
     },
     encounterRate: 0.06,
     encounters: [
@@ -157,7 +157,7 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '15,2': { credits: 320, note: 'A strongbox, its lock long since rusted through by the damp.' },
+      '15,2': { obols: 320, note: 'A strongbox, its lock long since rusted through by the damp.' },
     },
     encounterRate: 0.08,
     encounters: [

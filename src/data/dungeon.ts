@@ -76,7 +76,7 @@ export interface DungeonFloor {
   rows: string[];
   theme: TileTheme;
   events: Record<string, FloorEvent>;
-  chests: Record<string, { credits?: number; item?: string; note: string }>;
+  chests: Record<string, { obols?: number; item?: string; note: string }>;
   /** Chance per step of a random encounter (0 disables). */
   encounterRate: number;
   encounters: EncounterEntry[];
@@ -91,11 +91,11 @@ export interface ReachClear {
   /** Flag set on the run when the reach is cleared. */
   flag: string;
   /**
-   * The Quiet Crossing only: return through the licence + Guard-Team ceremony
+   * The Quiet Crossing only: return through the Vigil's-leave ceremony
    * (`HubScene` arrival 'reachCleared'). Other reaches just restore the party
    * and drop you back in the city.
    */
-  licenseCeremony?: boolean;
+  leaveCeremony?: boolean;
 }
 
 export interface Reach {

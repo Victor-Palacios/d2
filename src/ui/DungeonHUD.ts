@@ -4,14 +4,14 @@ import { game } from '../systems/party/gameState';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
 import { classIcon } from './icons';
 
-/** Crawl HUD: floor, credits, the lent party — and the LP lantern (top-right). */
+/** Crawl HUD: floor, obols, the lent party — and the LP lantern (top-right). */
 export class DungeonHUD {
   private root: HTMLElement;
   private floorEl: HTMLElement;
   private lantern: HTMLElement;
   private lpLabel: HTMLElement;
   private partyEl: HTMLElement;
-  private creditsEl: HTMLElement;
+  private obolsEl: HTMLElement;
   private memberBars = new Map<
     string,
     { hp: (cur: number, max: number) => void; mp: (cur: number, max: number) => void; label: HTMLElement }
@@ -24,11 +24,11 @@ export class DungeonHUD {
     this.floorEl = el('h2', undefined, 'The Quiet Crossing');
     this.root.appendChild(this.floorEl);
 
-    const credRow = el('div', 'row');
-    credRow.appendChild(el('span', 'dim', 'Credits'));
-    this.creditsEl = el('span', undefined, '0');
-    credRow.appendChild(this.creditsEl);
-    this.root.appendChild(credRow);
+    const obolRow = el('div', 'row');
+    obolRow.appendChild(el('span', 'dim', 'Obols'));
+    this.obolsEl = el('span', undefined, '0');
+    obolRow.appendChild(this.obolsEl);
+    this.root.appendChild(obolRow);
 
     this.partyEl = el('div', 'party');
     this.root.appendChild(this.partyEl);
@@ -82,7 +82,7 @@ export class DungeonHUD {
     this.lantern.style.setProperty('--fill', String(Math.max(0, Math.min(1, frac))));
     this.lantern.classList.toggle('low', frac <= 0.25);
     this.lpLabel.innerHTML = `LP <span>${Math.ceil(game.light)}/${game.maxLight}</span>`;
-    this.creditsEl.textContent = String(game.credits);
+    this.obolsEl.textContent = String(game.obols);
     for (const c of party) {
       const b = this.memberBars.get(c.uid);
       if (!b) continue;

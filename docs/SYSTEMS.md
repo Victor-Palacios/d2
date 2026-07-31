@@ -246,11 +246,11 @@ just the pure model.
 On victory (`BattleScene.finishVictory`):
 
 ```
-reward = Σ over defeated enemies of  enemy.level × (isBoss ? 40 : 11)   credits
+reward = Σ over defeated enemies of  enemy.level × (isBoss ? 40 : 11)   obols
 ```
 
-- Three level-8 trash mobs → 3 × 8 × 11 = **264 credits**.
-- A level-16 boss → 16 × 40 = **640 credits**.
+- Three level-8 trash mobs → 3 × 8 × 11 = **264 obols**.
+- A level-16 boss → 16 × 40 = **640 obols**.
 
 Then a small breather so you are not sent into the next step empty:
 

@@ -25,7 +25,7 @@ const state = () => page.evaluate(() => {
     tile: s.tileX !== undefined ? `${s.tileX},${s.tileZ}` : null,
     floor: g.game.floorIndex,
     fuel: g.game.fuel,
-    credits: g.game.credits,
+    obols: g.game.obols,
     flags: [...g.game.flags],
     party: g.game.party.map((c) => `${c.name} ${c.hp}/${c.maxHp} mp${c.mp}`),
     dialogueOpen: !!dlg && dlg.style.display !== 'none',
