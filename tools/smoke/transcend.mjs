@@ -49,9 +49,15 @@ const r = await page.evaluate(() => {
   const opts = evolve.evolutionOptions(ready).map((o) => o.to);
   out.eligibleAtLevel = evolve.canEvolve(ready) && opts.includes('emberforge');
 
-  // Take the sole branch: species/moves change, class/uid/level preserved.
+  // Digimon-style branching: two same-class paths (its own line + another
+  // Hero line), and evolve() with no chosen target refuses the ambiguity.
+  out.branches = opts.includes('emberforge') && opts.includes('grovelord') && opts.length >= 2;
+  const ambiguous = makeCreature('emberling', 2);
+  out.refusesAmbiguous = evolve.evolve(ambiguous) === null && ambiguous.speciesId === 'emberling';
+
+  // Take a chosen branch: species/moves change, class/uid/level preserved.
   const uid = ready.uid; const lvl = ready.level;
-  const res = evolve.evolve(ready); // no toId — takes the single eligible branch
+  const res = evolve.evolve(ready, 'emberforge'); // pick a branch
   out.evolved = !!res && ready.speciesId === 'emberforge' &&
     ready.attribute === 'hero' && ready.uid === uid && ready.level === lvl &&
     ready.techniques.includes('emberFang');
@@ -68,11 +74,22 @@ const r = await page.evaluate(() => {
 
   // --- Multi-stage line: emberling → emberforge → ashwarden → pyrelord ---
   const line = makeCreature('emberling', 4);
-  const s1 = evolve.evolve(line); // → emberforge (Lv2)
-  const s2 = evolve.evolve(line); // → ashwarden  (Lv3)
-  const s3 = evolve.evolve(line); // → pyrelord   (Lv4)
+  const s1 = evolve.evolve(line, 'emberforge'); // → emberforge (Lv2, branch chosen)
+  const s2 = evolve.evolve(line); // → ashwarden  (Lv3, single branch)
+  const s3 = evolve.evolve(line); // → pyrelord   (Lv4, single branch)
   out.multiStage = !!s1 && !!s2 && !!s3 && line.speciesId === 'pyrelord' &&
     !evolve.canEvolve(line) && evolve.devolveTargetId(line) === 'ashwarden';
+
+  // --- Cross-line de-evolution is exact (ancestry, not the static tree) ---
+  // duskfang is shared by nightnip / prismoth / ashmoth; a prismoth that
+  // crosses into it must return to prismoth, not the canonical nightnip.
+  const crosser = makeCreature('prismoth', 2);
+  evolve.evolve(crosser, 'duskfang');
+  out.crossLineDevolve =
+    crosser.speciesId === 'duskfang' &&
+    evolve.devolveTargetId(crosser) === 'prismoth' &&
+    !!evolve.devolve(crosser) &&
+    crosser.speciesId === 'prismoth';
 
   // --- Class purity: no authored evolution crosses attribute ------------
   const cross = [];
@@ -157,8 +174,11 @@ line('bruiser OFF > MAG', r.bruiserOffBeatsMag);
 line('mag/res present on instances', r.statsPresent);
 line('cannot evolve before level', r.tooYoung);
 line('eligible at the debug gate (Lv2)', r.eligibleAtLevel);
-line('evolves along sole branch', r.evolved);
+line('offers two same-class branches', r.branches);
+line('refuses an ambiguous evolve', r.refusesAmbiguous);
+line('evolves along a chosen branch', r.evolved);
 line('de-evolution keeps every move', r.devolved);
+line('cross-line de-evolution is exact', r.crossLineDevolve);
 line('multi-stage line resolves (→pyrelord)', r.multiStage);
 line('terminal form has no path', r.terminal);
 line('all evolutions are class-pure', r.classPure);
@@ -169,8 +189,8 @@ console.log(`roster sweep: ${r.rosterCount} species` + (r.rosterProblems.length 
 line('every species + evolution resolves', r.rosterClean);
 
 const ok = r.learnsetGrows && r.mageMagBeatsOff && r.bruiserOffBeatsMag && r.statsPresent &&
-  r.tooYoung && r.eligibleAtLevel && r.evolved && r.devolved &&
-  r.multiStage && r.terminal && r.classPure && r.loadoutCapped &&
+  r.tooYoung && r.eligibleAtLevel && r.branches && r.refusesAmbiguous && r.evolved && r.devolved &&
+  r.crossLineDevolve && r.multiStage && r.terminal && r.classPure && r.loadoutCapped &&
   r.channelSplit && r.healUsesBoth && r.rosterClean;
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');

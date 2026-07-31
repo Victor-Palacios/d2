@@ -99,17 +99,25 @@ evolutions?: { to: string; level: number; branch?: string }[]
 - **Level-triggered:** a branch is eligible once `creature.level >= level`.
   Currently a temporary debug schedule (Lv2/3/4 per stage — see the banner
   above); many forms are terminal (no `evolutions`).
-- **Branching:** list more than one option. Keep branches thematically bound to
-  the base so identity holds.
+- **Branching (Digimon-style, cross-line):** a species may list more than one
+  option, and an option can point at a form in a *different line* — so a soul
+  can cross families the way a Digimon does, not just walk one fixed chain.
+  Every catchable base offers two paths: its own line, plus one alternate that
+  either revives an off-line form or crosses into another line of the same
+  class. Because branches converge, a form can be reachable from several bases
+  (e.g. `duskfang` from `nightnip`, `prismoth` and `ashmoth`).
 - **Class-pure:** every branch must stay in the source's `attribute` — a Mage
-  only ever becomes another Mage, a Hero a Hero, an Assassin an Assassin.
-  `evolutionOptions` filters cross-class branches out (via `isSameClass`) so a
-  stray data entry can never be *offered*, and `evolve.test.ts` fails the build
-  if one is ever *authored*. This is the house rule that keeps lines clean while
-  still letting a monster become a different monster within its tree.
-- **De-evolution** is derived — `evolve.ts` builds a reverse map from every
-  forward branch, so a form always knows its one source. No per-creature or
-  per-save data is needed.
+  only ever becomes another Mage, a Hero a Hero, an Assassin an Assassin. This
+  is exactly what makes cross-*line* branching coherent: the destination may be
+  a different family, but it is always the same class. `evolutionOptions`
+  filters cross-class branches out (via `isSameClass`) so a stray data entry can
+  never be *offered*, and `evolve.test.ts` fails the build if one is *authored*.
+- **De-evolution** follows the soul's own **ancestry stack**
+  (`CreatureInstance.evolvedFrom`): each evolve pushes the form left behind,
+  each de-evolve pops it. So a form shared by several bases returns to the base
+  *this* soul came from, at any depth — not a guess. The static reverse map
+  (`DEVOLVE_MAP`) is only the fallback for a soul caught already-evolved or from
+  a pre-ancestry save.
 
 ### API (`systems/party/evolve.ts`, headless & tested)
 
@@ -128,10 +136,14 @@ player.
 
 1. Author the evolved-form species in `SPECIES` (full `base`/`growth`/`learnset`,
    an `art` key — reuse an existing sprite for now, see below).
-2. Add an `evolutions` entry on the base form pointing at it.
-3. That's it — de-evolution, the Transcend UI, the fanfare and the reverse map
+2. Add an `evolutions` entry on the base form pointing at it. For a **cross-line**
+   branch, just point at an existing same-class form — no new species needed, and
+   sharing a target across bases is fine (the ancestry stack keeps de-evolution
+   exact). Keep it same-class or the guard/test will reject it.
+3. That's it — de-evolution, the Transcend UI, the fanfare and the ancestry stack
    pick it up automatically. Confirm with `tools/smoke/transcend.mjs` (it sweeps
-   every species and resolves every branch both directions).
+   every species and resolves every branch both directions) and
+   `evolve.test.ts` (class purity + cross-line de-evolution).
 
 ### The fanfare (cinematic)
 

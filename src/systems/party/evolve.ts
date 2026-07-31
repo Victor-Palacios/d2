@@ -9,19 +9,26 @@ import type { EvolutionOption } from '../../data/creatures';
  * A **Pokémon × Digimon hybrid**:
  * - **Level-triggered** (Pokémon): a branch unlocks at a set level (usually 10).
  *   Predictable, no items or hidden conditions to reverse-engineer.
- * - **Branching** (Digimon): a species may offer more than one form. Branches are
- *   authored to stay thematically bound to the base, so a line keeps its identity
- *   — the fix for Digimon's "any starter can become any top form" criticism.
+ * - **Branching** (Digimon): a species may offer more than one form, and those
+ *   forms can belong to *other lines* — so a soul can cross into a different
+ *   family the way a Digimon does, not just walk one fixed chain. Branches are
+ *   still curated (not "any starter → any top form"), and the class rule below
+ *   keeps them coherent.
  * - **Class-pure** (our house rule): every branch stays in the source's
  *   attribute — a Mage only ever becomes another Mage, a Hero a Hero, an
- *   Assassin an Assassin. `evolutionOptions` filters to same-attribute branches
- *   so a stray cross-class entry in the data can never be offered, and a unit
- *   test (`evolve.test.ts`) fails the build if one is authored.
+ *   Assassin an Assassin. This is what lets a line cross into another *line*
+ *   without losing its identity: the destination may be a different family, but
+ *   it is always the same class. `evolutionOptions` filters to same-attribute
+ *   branches so a stray cross-class entry in the data can never be offered, and
+ *   a unit test (`evolve.test.ts`) fails the build if one is authored.
  * - **Reversible** (Digimon): every evolution can be undone — a soul can always
- *   return to the shape it was, the part of Digimon players love. De-evolution is
- *   derived from the forward tree (below), so it is always exact and needs no
- *   extra data on the creature or in the save. Learned moves are *kept* on the
- *   way back down (the known pool only grows), so returning never costs a move.
+ *   return to the shape it was, the part of Digimon players love. De-evolution
+ *   follows the soul's own **ancestry stack** (`CreatureInstance.evolvedFrom`),
+ *   so it is exact even when a form is reachable from several bases (a cross-line
+ *   target returns to the base *this* soul actually came from). The static tree
+ *   (`DEVOLVE_MAP`) is only a fallback for a soul caught already-evolved or from
+ *   a save that predates the stack. Learned moves are *kept* on the way back down
+ *   (the known pool only grows), so returning never costs a move.
  *
  * Evolution is **out-of-battle and explicit**: reaching the level makes a creature
  * *eligible*, the player chooses when (and which branch) to take. Nothing here is
@@ -80,8 +87,15 @@ export function allEvolutions(c: CreatureInstance): EvolutionOption[] {
 
 export const canEvolve = (c: CreatureInstance): boolean => evolutionOptions(c).length > 0;
 
-/** The species this creature would de-evolve into, or null if it is a base form. */
+/**
+ * The species this creature would de-evolve into, or null if it is a base form.
+ * Prefers the soul's own ancestry (exact even for cross-line/shared targets),
+ * falling back to the static tree for a soul caught already-evolved or loaded
+ * from a pre-ancestry save.
+ */
 export function devolveTargetId(c: CreatureInstance): string | null {
+  const stack = c.evolvedFrom;
+  if (stack?.length) return stack[stack.length - 1];
   return DEVOLVE_MAP[c.speciesId] ?? null;
 }
 
@@ -139,12 +153,22 @@ export function evolve(c: CreatureInstance, toId?: string): EvolveResult | null 
     target = options[0].to;
   }
   if (!options.some((o) => o.to === target)) return null; // not an eligible branch
-  return applyForm(c, target);
+  const from = c.speciesId;
+  const res = applyForm(c, target);
+  // Remember exactly where this soul came from, so it can walk back down the
+  // same path even if `target` is reachable from other bases too.
+  c.evolvedFrom = [...(c.evolvedFrom ?? []), from];
+  return res;
 }
 
 /** De-evolves a creature one step back toward its base form. */
 export function devolve(c: CreatureInstance): EvolveResult | null {
+  const stack = c.evolvedFrom;
   const target = devolveTargetId(c);
   if (!target) return null;
-  return applyForm(c, target);
+  const res = applyForm(c, target);
+  // Pop the ancestry we just walked back into. When we were relying on the
+  // static fallback (no stack), stay on the fallback for any further steps.
+  c.evolvedFrom = stack?.length ? stack.slice(0, -1) : undefined;
+  return res;
 }

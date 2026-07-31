@@ -50,6 +50,16 @@ export interface CreatureInstance {
    * `game.joinCompanion`.
    */
   companion?: boolean;
+  /**
+   * The evolution ancestry stack — the forms this soul has climbed *up from*,
+   * oldest first, current form excluded. Each evolve pushes the form left
+   * behind; each de-evolve pops one. Empty/undefined for a base form or one
+   * caught already-evolved. This makes de-evolution exact for any branch — even
+   * a form reachable from several bases (cross-lines) returns to the one this
+   * soul actually came from, not a guess from the static tree. See
+   * `systems/party/evolve.ts`.
+   */
+  evolvedFrom?: string[];
 }
 
 let uidCounter = 0;
