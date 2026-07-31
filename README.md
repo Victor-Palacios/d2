@@ -145,7 +145,9 @@ supply bay → Mission 2 briefing.
   chests, five kinds of emissive element floor plates, an EP meter that drains
   one point per step (hit zero and you get towed home), descent portals, and a
   boss floor whose accent walls telegraph what is coming.
-- **Battle**: turn-based 3v3. Turn order by Speed with a random tiebreak band.
+- **Battle**: turn-based on a 2×3 grid. You field one soul per human keeper
+  (`game.fieldCap` — two at the Quiet Crossing, up to four; companions walk with
+  you but never fight). Turn order by Speed with a random tiebreak band.
   Attack / Technique / Guard / **Auto**, MP costs, AoE and heal techniques,
   class triangle (Assassin > Mage > Hero > Assassin, ×1.25 / ×0.8), element-plate
   buffs (×1.2), damage variance, faint / victory / defeat, and an enemy AI that

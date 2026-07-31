@@ -26,6 +26,10 @@ interface FighterCard {
 /** What the action menu can resolve to — a real action, "go auto", "boost", or "flee". */
 export type MenuChoice = BattleAction | { type: 'auto' } | { type: 'boost' } | { type: 'flee' };
 
+/** How many announcements stay stacked at once, and how long each one dwells (ms). */
+const LOG_MAX = 4;
+const LOG_DWELL = 2600;
+
 /** Human label for a formation cell, e.g. "Vanguard · Left". */
 function cellLabel(row: number, col: number): string {
   return `${row === 0 ? 'Vanguard' : 'Rear'} · ${['Left', 'Centre', 'Right'][col]}`;
@@ -50,7 +54,10 @@ export class BattleHUD {
 
     this.banner = el('div', 'panel');
     this.banner.id = 'battle-banner';
-    this.log = el('div', 'panel');
+    // A stack of transient announcements, newest at the bottom. Each line fades
+    // in, dwells long enough to read, then fades out — so nothing lingers on
+    // screen forever and a burst of messages can be read one above the other.
+    this.log = el('div');
     this.log.id = 'battle-log';
     this.enemyWrap = el('div');
     this.enemyWrap.id = 'enemy-hud';
@@ -218,8 +225,24 @@ export class BattleHUD {
     this.banner.textContent = text;
   }
 
+  /**
+   * Push a battle announcement onto the stack. It appears beneath the previous
+   * ones, dwells for `LOG_DWELL`, then fades out and removes itself. The stack
+   * is capped at `LOG_MAX` so a rapid sequence stays readable without piling up.
+   */
   setLog(text: string) {
-    this.log.innerHTML = esc(text);
+    const line = el('div', 'panel log-line');
+    line.innerHTML = esc(text);
+    this.log.appendChild(line);
+    while (this.log.childElementCount > LOG_MAX && this.log.firstElementChild) {
+      remove(this.log.firstElementChild as HTMLElement);
+    }
+    requestAnimationFrame(() => line.classList.add('show'));
+    setTimeout(() => {
+      line.classList.remove('show');
+      line.classList.add('gone');
+      setTimeout(() => remove(line), 450);
+    }, LOG_DWELL);
   }
 
   /**

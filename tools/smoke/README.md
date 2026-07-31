@@ -43,7 +43,7 @@ Environment variables:
 | `terrain.mjs` | Terrain uniqueness. Runs `validateReaches()` over every floor (rectangular rows, one start, reachable events/chests/portals, chest keys on C tiles, decor on walkable tiles); asserts each reach wears its expected terrain skins; then enters every floor (no combat) to confirm the grid + terrain textures + decor build in three.js. Fast and deterministic. |
 | `capture.mjs` | Soul Syphon capture loop: R1 → Soul menu → Soularium; an encounter primes syphon to 50%, a hit captures at 100% and grants a free copy; the species logs in the dex. Boosts the party for a deterministic win. |
 | `store.mjs` | Soul Store (summon a logged species, buy a party-slot upgrade) and Soul Sanctuary (bench a party member via R1 → Soul menu). Seeds a logged species + credits via the debug API. |
-| `grid.mjs` | Grid battle system, all four phases against the live engine: formation cells + melee cover + row damage (A); AoE shapes, reposition, swap, plate-on-cell (B); the Boost gauge (C); Break/stagger, field pulse, and the smarter AI (D). See [docs/battle-grid.md](../../docs/battle-grid.md). |
+| `grid.mjs` | Grid battle system, all four phases against the live engine: formation cells + melee cover + row damage (A); AoE shapes, reposition, swap, plate-on-cell (B); the Boost gauge (C); Break/stagger, field pulse, and the smarter AI (D). Recruits an extra keeper first so the field cap allows three souls (see the field-cap note below). See [docs/battle-grid.md](../../docs/battle-grid.md). |
 | `transcend.mjs` | Magick pass, learnsets and the evolution system against the live headless APIs: level-gated learnsets, the physical/magical (Off/Def vs Mag/Res) damage split, RES/MAG-blended heals, level-10 **branching** evolution with a refusal on ambiguous branches, exact **de-evolution**, the multi-stage Scrapmite→Cogling→Cogknight line, and a sweep that builds every species and resolves every evolution. No scene navigation, so it is fast and deterministic. |
 | `mechanics.mjs` | The layered battle systems against the live engine: data-driven melee (row modifier + cover), elemental reactions (different-element follow-up detonates), break-chains (escalating bonus + a banked Boost), Commune (a communable foe is pacified and leaves play), and that the injected RNG + smarter AI (Boost timing, grid shifts) are exposed. See [docs/SYSTEMS.md](../../docs/SYSTEMS.md) §9. |
 | `stages.mjs` | World-map per-stage level recommendation and the rebalanced progression curve (The Quiet Crossing Lv1 → The Reliquary Lv5 → The Unremembered Lv10). Reads the rendered cards + reach data; no fights, so it is fast and deterministic. |
@@ -53,7 +53,7 @@ Environment variables:
 | `lastlight.mjs` | The Last Light grief encounter: Comfort → Let Go releases the soul, granting the next Immortality poem piece and a 20× EXP boon; twelve pieces unlock the Immortality Memento. |
 | `midpoint.mjs` | The Act-II midpoint: clearing all three reaches triggers the unanswerable death (Halden) once — the Keeping fails, the player authors the farewell, and every philosophy hardens. |
 | `jungle.mjs` | The Overgrowth's aftermath: clearing the jungle brings Liora Fen to the Everwake to cross; the player names the truth of her keeping and receives Liora's Step (a Memento). Fires once and does not trigger the midpoint. |
-| `companions.mjs` | The party of four: Wren joins at the Everwake, Sena Vale after the Reliquary, Kade after the Unremembered. Verifies each join fires, the final party is the four (starter + three companions), and a companion cannot be benched to the Sanctuary. |
+| `companions.mjs` | The keepers who join — and that they are field slots, not fighters. Wren joins at the Everwake, Sena Vale after the Reliquary, Kade after the Unremembered. Verifies each join fires; that `humanCount`/`fieldCap` climbs 2→3→4 as they join; that a launched battle fields souls only (no companion takes the field); the final roster is the four (starter + three companions); and a companion cannot be benched to the Sanctuary. |
 | `finale.mjs` | The finale reach (The Last Lantern): gated on the midpoint (`actTwo`), its climax is a choice not a fight. Drives the 'let them cross' ending and asserts `ending:cross` / `gameComplete` / `lastLanternCleared`. |
 | `cries.mjs` | Monster battle cries (`audio.cry`): instruments the Web Audio graph to confirm each authored species voice (the starter trio plus every monster in The Quiet Crossing — Mitebug, Sprigling, Scrapmite, Gloomote, Dropletta and the warden Regalion) builds its oscillator layers and pitch glides, and that a species with no cry stays silent. Headless has no speakers, but the synth graph still schedules, so it is fast and deterministic. |
 
@@ -84,3 +84,10 @@ true while the arrival dialogue is still playing and input is ignored. Several
 "bugs" in this suite were really the harness racing that. Always wait for
 *idle* — scene matches, no dialogue open, `activeScene.busy` false — and
 advance dialogue while you wait. `save.mjs` has the helper worth copying.
+
+**3. The field cap is one soul per human keeper.** Battle deploys only your
+souls (never companions), and only as many as you have humans (`game.fieldCap` —
+two at the Quiet Crossing: you + Wren). A test that launches a fight and expects
+three or four souls on the field must first recruit the extra keepers, e.g.
+`g.game.joinCompanion({ ...clone, speciesId: 'senaVale', companion: true })`.
+`grid.mjs` and `mechanics.mjs` do exactly this before launching.

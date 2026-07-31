@@ -41,7 +41,10 @@ for (let i = 0; i < 40; i++) { if (await page.locator('.card', { hasText: 'Ember
 await page.locator('.card', { hasText: 'Emberling' }).click();
 await clearDlg(); await waitScene('hub'); await page.waitForTimeout(600); await clearDlg();
 await page.evaluate(() => { const g = window.hd2dGame;
-  ['sprigling', 'cogling'].forEach((id) => g.game.addMonster(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'x' + id, speciesId: id, name: id })))); });
+  ['sprigling', 'cogling'].forEach((id) => g.game.addMonster(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'x' + id, speciesId: id, name: id }))));
+  // Field cap = one soul per human keeper. Wren joined at the hub (2 humans);
+  // recruit one more so all three test souls deploy at once.
+  g.game.joinCompanion(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'ksena', speciesId: 'senaVale', name: 'Sena Vale', companion: true }))); });
 
 // Launch a fight directly from the hub via the scene manager — robust against
 // world-map / floor UI changes, and enough to exercise the engine. The reach is

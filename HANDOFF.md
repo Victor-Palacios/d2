@@ -263,3 +263,39 @@ fights. The mentor voice is `'Halden'`.
   (`COMMUNE_GAIN` is global today).
 - Learn-technique-on-level-up (the one remaining M7 item) would let melee/ranged
   and element coverage grow with a monster.
+
+## 10. Keepers as field slots + battle-announcement polish (added this session)
+
+**Humans do not fight — each human keeper lets you field one more soul.** The
+companions (Wren/Sena/Kade) still walk with you and carry their arcs, but they
+never take the battlefield. The field cap is the human count:
+
+- `game.humanCount` = `1` (you) `+` every joined companion; `game.fieldCap`
+  aliases it. Two at the Quiet Crossing (you + Wren), three after the Reliquary,
+  four after the Unremembered.
+- `BattleScene.enter` fields `game.party.filter(!companion && isUp).slice(0,
+  fieldCap)`; the rest are reserves. `MAX_FIELDED = 4` is just the hard ceiling
+  (the old `ACTIVE_PARTY` const is gone).
+- `partyCap` now governs **souls only** — companions ride along for free.
+  `soulsInParty()` is the count used by `addMonster`/`sanctuaryToParty` and the
+  Soul Store / Sanctuary / Party screens. `joinCompanion` no longer benches a
+  soul to make room. `partyToSanctuary` refuses to bench the last soul.
+- The join beats explain it in-game (Wren's line + the toasts: "you can now
+  field N souls"). `PartyScreen` marks fielded souls `F1..Fn` and companions
+  `◇ keeper`.
+- **Compat:** all additive; `companion` defaults false, so old saves load with
+  `humanCount = 1` until a join beat fires.
+
+**Battle announcements now stack and auto-fade; no more "Round N" banner.**
+
+- `BattleHUD.setLog` used to overwrite a single line (so bursts flashed by and
+  the last line stuck forever). It now appends a `.log-line` pill that fades in,
+  dwells `LOG_DWELL` (2.6 s), then fades out; the stack is capped at `LOG_MAX`
+  (4). CSS is in `style.css` (`#battle-log` flex column + `.log-line`).
+- The per-round `setBanner('Round N …')` is gone — the "Battle"/"Warden Battle"
+  title set at the start stays; a field pulse still announces via the log
+  (`PULSE_TEXT`). `PULSE_LABEL` was removed.
+- The victory loop dropped its redundant level-up `toast` — the battle log
+  carries the level-up now (one popup, not two).
+- Covered by `companions.mjs` (field cap) and a throwaway check confirming the
+  banner has no "Round", four lines coexist, and the stack self-clears.

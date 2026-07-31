@@ -373,14 +373,17 @@ taking, "carried so its bearer never does." Fires once, gated on `jungleCleared`
 → `jungleWakeDone`; it does not touch or trigger the midpoint. Implemented in
 `HubScene.jungleAftermath()`; covered by `tools/smoke/jungle.mjs`.
 
-## 11b. The party of four — companions who join (built)
+## 11b. The keepers who join — humans as field slots (built)
 
-The journey is walked by a fixed party of **four**: the Unfinished's first
-bonded soul plus **three companion keepers who join at story beats**, each a real
-party battler with a class, an element, and an arc (data in `data/creatures.ts`
-under *Companions*; joins in `HubScene`; `game.joinCompanion`). They are
-permanent — never released, never benched — so captured souls now rest in the
-Soularium/Sanctuary while your *party* is the people who walk with you.
+The journey is walked by up to **four humans**: the Unfinished plus **three
+companion keepers who join at story beats** (data in `data/creatures.ts` under
+*Companions*; joins in `HubScene`; `game.joinCompanion`). The keepers do **not
+fight** — a human steadies a soul, and each human you walk with lets you field
+**one more soul** in battle. So the Quiet Crossing, with two humans (you + Wren),
+fields two souls; the cap climbs to three after the Reliquary and four after the
+Unremembered (`game.fieldCap` / `game.humanCount`). Companions are permanent —
+never released, never benched — and ride along for free (they don't count
+against `partyCap`, which governs your souls).
 
 - **Wren** (Bereaved Witness — mage/dark) joins at the Everwake, the first time
   you arrive. Keeps the Book of Names; "no one leaves this book."
@@ -393,8 +396,9 @@ Soularium/Sanctuary while your *party* is the people who walk with you.
 
 The three carry the three relationships to death (Remember / Preserve / Avoid),
 so the party itself argues the dramatic question — and when the midpoint hardens
-each philosophy, it is your own companions turning (Kade included). Battle now
-fields all four (`ACTIVE_PARTY = 4`).
+each philosophy, it is your own companions turning (Kade included). In battle
+they stand with you as keepers, not fighters: each raises the field cap by one,
+so your bonded souls do the fighting (`game.fieldCap`, `BattleScene`).
 
 **Between-reach banter** keeps them alive in the downtime: on a quiet return to
 the Everwake (a visit with no scripted beat), `HubScene.partyBanter` plays the

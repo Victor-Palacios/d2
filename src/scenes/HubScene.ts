@@ -314,8 +314,12 @@ export class HubScene extends GameScene {
         'You are looking for someone. Everyone who comes here is. I will help you look — and write down everyone we meet on the way. No one leaves this book.',
       ),
       ...narrate('Wren closes the ledger, takes up a lantern of her own, and falls in beside you.'),
+      ...say(
+        'Wren',
+        'A lone keeper can steady only one soul in a fight. With two of us holding lanterns, two souls can answer the call. Find more keepers, and more will stand with you.',
+      ),
     ]);
-    toast(this.ctx.ui, '<span class="accent">Wren joins your party</span>', 2600);
+    toast(this.ctx.ui, '<span class="accent">Wren joins you — you can now field 2 souls</span>', 3000);
   }
 
   /** Sena Vale, the Defier, joins after the Reliquary — nothing left to guard. */
@@ -333,7 +337,7 @@ export class HubScene extends GameScene {
       ),
       ...say('Sena Vale', 'Let me carry a lantern beside yours until I do.'),
     ]);
-    toast(this.ctx.ui, '<span class="accent">Sena Vale joins your party</span>', 2600);
+    toast(this.ctx.ui, '<span class="accent">Sena Vale joins you — you can now field 3 souls</span>', 3000);
   }
 
   /** Kade, the rival who was always a reach ahead, joins after the Unremembered. */
@@ -351,7 +355,7 @@ export class HubScene extends GameScene {
       ),
       ...say('Kade', 'I am done running it. Slow me down — I will keep pace with you instead.'),
     ]);
-    toast(this.ctx.ui, '<span class="accent">Kade joins your party</span>', 2600);
+    toast(this.ctx.ui, '<span class="accent">Kade joins you — you can now field 4 souls</span>', 3000);
   }
 
   /**

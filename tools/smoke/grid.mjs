@@ -36,8 +36,11 @@ for (let i = 0; i < 40; i++) { if (await page.locator('.card', { hasText: 'Ember
 await page.locator('.card', { hasText: 'Emberling' }).click();
 await clearDlg(); await waitScene('hub'); await page.waitForTimeout(600); await clearDlg();
 await page.evaluate(() => { const g = window.hd2dGame;
-  // Three extra so the fight deploys 3 and keeps 1 in reserve (for the swap test).
-  ['sprigling', 'cogling', 'dropletta'].forEach((id) => g.game.addMonster(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'x' + id, speciesId: id, name: id })))); });
+  // Three extra souls so the fight deploys 3 and keeps 1 in reserve (swap test).
+  ['sprigling', 'cogling', 'dropletta'].forEach((id) => g.game.addMonster(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'x' + id, speciesId: id, name: id }))));
+  // Field cap = one soul per human keeper. Wren joined at the hub (2 humans);
+  // recruit one more so three souls deploy (as after clearing the Reliquary).
+  g.game.joinCompanion(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'ksena', speciesId: 'senaVale', name: 'Sena Vale', companion: true }))); });
 
 // Launch the first fight directly via the scene manager. This is robust against
 // world-map / floor UI churn (gating, mission labels, layout tweaks); the actual

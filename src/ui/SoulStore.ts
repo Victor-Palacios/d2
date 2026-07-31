@@ -58,7 +58,7 @@ export async function openSoulStore(parent: HTMLElement): Promise<void> {
   const refreshWallet = () => {
     wallet.innerHTML =
       `<span class="dim">Credits</span> <span class="accent">${game.credits}</span>` +
-      ` &nbsp; <span class="dim">Party</span> ${game.party.length}/${game.partyCap}` +
+      ` &nbsp; <span class="dim">Souls</span> ${game.soulsInParty()}/${game.partyCap}` +
       ` &nbsp; <span class="dim">Sanctuary</span> ${game.sanctuary.length}`;
   };
 

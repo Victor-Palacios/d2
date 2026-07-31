@@ -26,8 +26,12 @@ import type { DialogueScript } from '../systems/dialogue/script';
 import { say, narrate } from '../systems/dialogue/script';
 import type { DungeonSceneParams } from './DungeonScene';
 
-/** Fielded on screen at once: the full party of four (you + three companions). */
-const ACTIVE_PARTY = 4;
+/**
+ * Hard ceiling on how many souls deploy at once (the 2×3 grid holds more, but
+ * the front line is three columns). The live cap is `game.fieldCap` — one soul
+ * per human keeper — and never exceeds this.
+ */
+const MAX_FIELDED = 4;
 
 /** Chance a Run attempt succeeds (bosses cannot be fled). */
 const FLEE_CHANCE = 0.5;
@@ -66,8 +70,7 @@ function cellPos(side: 'party' | 'enemy', cell: { row: number; col: number }): {
   return { x: SLOT_X[cell.col], z: front + (cell.row === 1 ? dir * ROW_GAP : 0) };
 }
 
-/** Field-pulse banner suffix and announcement line (Phase D). */
-const PULSE_LABEL: Record<string, string> = { calm: '', crit: ' · ⚡ Crit Field', surge: ' · ▲ Surge Field' };
+/** Field-pulse announcement line (Phase D). */
 const PULSE_TEXT: Record<string, string> = {
   calm: '',
   crit: 'A Crit Field settles in — attacks bite deeper this round.',
@@ -104,9 +107,11 @@ export class BattleScene extends GameScene {
     this.params = params as BattleSceneParams;
 
     const enemies = this.makeEnemies(this.params.enemies);
-    // Only the first three living party members deploy — the rest are reserves
-    // (kept in game.party, not fielded). Combat is 3v3 on screen.
-    const active = game.party.filter(isUp).slice(0, ACTIVE_PARTY);
+    // Only souls fight — the human companions (Wren / Sena / Kade) walk with you
+    // but never take the field. Each human keeper instead lets you deploy one
+    // more soul, so the field cap is `game.fieldCap` (you + every companion).
+    const monsters = game.party.filter((c) => isUp(c) && !c.companion);
+    const active = monsters.slice(0, Math.min(game.fieldCap, MAX_FIELDED));
     this.battle = new Battle({
       party: active,
       enemies,
@@ -115,8 +120,8 @@ export class BattleScene extends GameScene {
       isBoss: this.params.isBoss,
       rng: this.params.rng,
     });
-    // Living party members who did not deploy are the swap-in reserves.
-    this.battle.reserves = game.party.filter(isUp).filter((c) => !active.some((a) => a.uid === c.uid));
+    // Living souls who did not deploy are the swap-in reserves (companions never are).
+    this.battle.reserves = monsters.filter((c) => !active.some((a) => a.uid === c.uid));
 
     // Encountering a wild species primes its Soul Syphon (before the HUD builds
     // so the meter already reads its primed value).
@@ -393,7 +398,8 @@ export class BattleScene extends GameScene {
 
     while (this.battle.outcome === 'ongoing' && !this.finished && !this.fled) {
       this.battle.beginRound();
-      this.hud.setBanner(`Round ${this.battle.round}${PULSE_LABEL[this.battle.fieldPulse]}`);
+      // No per-round "Round N" banner — the title set above stays put. A field
+      // pulse is the only thing worth announcing, and it goes to the log.
       if (this.battle.fieldPulse !== 'calm') {
         this.hud.setLog(PULSE_TEXT[this.battle.fieldPulse]);
         await sleep(700);
@@ -922,8 +928,8 @@ export class BattleScene extends GameScene {
     for (const msg of levelUps) {
       audio.sfx('heal');
       this.hud.refresh(this.battle);
+      // One announcement only — the battle log carries it (no extra toast).
       this.hud.setLog(`Level up! ${msg}`);
-      toast(this.ctx.ui, `<span class="accent">Level up!</span> ${msg}`, 2200);
       await sleep(1400);
     }
 

@@ -41,7 +41,7 @@ export async function openSanctuary(parent: HTMLElement): Promise<void> {
 
   const items = (): MenuItem[] => {
     const list: MenuItem[] = [];
-    list.push({ value: 'h:party', label: `— PARTY  ${game.party.length}/${game.partyCap} —`, disabled: true });
+    list.push({ value: 'h:party', label: `— PARTY  ${game.soulsInParty()}/${game.partyCap} souls —`, disabled: true });
     for (const c of game.party) {
       list.push({ value: `p:${c.uid}`, label: c.name, note: 'bench ▸', color: ATTRIBUTES[c.attribute].color });
     }
@@ -53,9 +53,9 @@ export async function openSanctuary(parent: HTMLElement): Promise<void> {
       list.push({
         value: `s:${c.uid}`,
         label: c.name,
-        note: game.party.length < game.partyCap ? '◂ call up' : 'party full',
+        note: game.soulsInParty() < game.partyCap ? '◂ call up' : 'party full',
         color: ATTRIBUTES[c.attribute].color,
-        disabled: game.party.length >= game.partyCap,
+        disabled: game.soulsInParty() >= game.partyCap,
       });
     }
     return list;

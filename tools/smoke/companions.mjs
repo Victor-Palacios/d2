@@ -20,6 +20,8 @@ const dlg = () => page.evaluate(() => { const d = document.querySelector('#dialo
 const wait = async (n, ms = 30000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if ((await scene()) === n) return true; await page.waitForTimeout(200); } return false; };
 const party = () => page.evaluate(() => window.hd2dGame.game.party.map((c) => ({ id: c.speciesId, companion: !!c.companion })));
 const hasCompanion = async (id) => (await party()).some((c) => c.id === id && c.companion);
+const humanCount = () => page.evaluate(() => window.hd2dGame.game.humanCount);
+const fieldCap = () => page.evaluate(() => window.hd2dGame.game.fieldCap);
 const flag = (f) => page.evaluate((x) => window.hd2dGame.game.has(x), f);
 const advanceUntilFlag = async (f, tries = 60) => {
   for (let i = 0; i < tries; i++) {
@@ -54,7 +56,10 @@ await wait('hub');
 
 const wren = await advanceUntilJoined('wren');
 const afterWren = await party();
+// Each human keeper lets you field one more soul: you + Wren = 2.
+const capAfterWren = (await humanCount()) === 2 && (await fieldCap()) === 2;
 console.log('Wren joins at the Everwake :', wren, JSON.stringify(afterWren));
+console.log('field cap = 2 souls (2 humans):', capAfterWren);
 
 // Quiet return with only the Crossing cleared: between-reach party banter fires.
 await page.evaluate(async () => { window.hd2dGame.game.set('crossingCleared'); await window.hd2dGame.manager.go('hub', {}); });
@@ -64,14 +69,31 @@ console.log('quiet-return banter fires  :', banter);
 // Clear the Reliquary and return: Sena Vale joins.
 await page.evaluate(async () => { window.hd2dGame.game.set('crystalCleared'); await window.hd2dGame.manager.go('hub', {}); });
 const sena = await advanceUntilJoined('senaVale');
+const capAfterSena = (await humanCount()) === 3 && (await fieldCap()) === 3;
 console.log('Sena joins after Reliquary :', sena);
+console.log('field cap = 3 souls (3 humans):', capAfterSena);
 
 // Clear the Unremembered and return: Kade joins.
 await page.evaluate(async () => { window.hd2dGame.game.set('hauntedCleared'); await window.hd2dGame.manager.go('hub', {}); });
 const kade = await advanceUntilJoined('kade');
 const full = await party();
+const capAfterKade = (await humanCount()) === 4 && (await fieldCap()) === 4;
 console.log('Kade joins after Unremembered:', kade);
+console.log('field cap = 4 souls (4 humans):', capAfterKade);
 console.log('final party                 :', JSON.stringify(full));
+
+// Companions never take the field: launch a battle and read the fielded side.
+// Only souls (non-companions) deploy, and no more than the field cap.
+const fielded = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  g.game.activeReachId = 'crossing';
+  await g.manager.go('battle', { enemies: [{ species: 'mitebug', level: 2 }], returnTo: 'hub' });
+  await new Promise((r) => setTimeout(r, 800));
+  const b = g.manager.activeScene.battle;
+  return b.side('party').map((u) => ({ id: u.creature.speciesId, companion: !!u.creature.companion }));
+});
+const noHumansOnField = fielded.length > 0 && fielded.every((u) => !u.companion);
+console.log('battle fields souls only    :', noHumansOnField, JSON.stringify(fielded));
 
 // Companions are permanent: benching one to the Sanctuary must be refused.
 const benchRefused = await page.evaluate(() => {
@@ -83,7 +105,17 @@ console.log('companion cannot be benched  :', benchRefused);
 
 const ids = full.map((c) => c.id);
 const partyOfFour = full.length === 4 && ['wren', 'senaVale', 'kade'].every((id) => ids.includes(id));
-const ok = wren && banter && sena && kade && partyOfFour && benchRefused;
+const ok =
+  wren &&
+  banter &&
+  sena &&
+  kade &&
+  partyOfFour &&
+  benchRefused &&
+  capAfterWren &&
+  capAfterSena &&
+  capAfterKade &&
+  noHumansOnField;
 console.log('\nCOMPANIONS OK :', ok);
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();
