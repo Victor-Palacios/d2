@@ -32,14 +32,22 @@ await page.evaluate(() => { const g = window.hd2dGame; const p = g.hd2d.params;
   g.hd2d.renderer.shadowMap.enabled = false; g.hd2d.applyParams(); });
 await page.waitForTimeout(1200);
 
-// New Game -> name -> partner -> hub, then inflate to a 4-strong party (3 fielded + 1 bench).
+// Lost Souls title: dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
+// New Game -> name -> partner -> hub, then inflate past the fielded cap so a bench exists.
 await page.keyboard.press('Enter'); await page.waitForTimeout(800);
 await page.locator('.keyboard button', { hasText: /^OK$/ }).click(); await page.waitForTimeout(600);
 for (let i = 0; i < 40; i++) { if (await page.locator('.card', { hasText: 'Emberling' }).count()) break; if (await dlg()) await page.keyboard.press('Enter'); await page.waitForTimeout(200); }
 await page.locator('.card', { hasText: 'Emberling' }).click();
 await clearDlg(); await waitScene('hub'); await page.waitForTimeout(600); await clearDlg();
 await page.evaluate(() => { const g = window.hd2dGame;
-  ['sprigling', 'cogling', 'dropletta'].forEach((id) => g.game.addMonster(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'x' + id, speciesId: id, name: id })))); });
+  // Raise the party cap above the fielded count so extras land on the party
+  // bench (reserves), not the Sanctuary — that is what the editor swaps with.
+  g.game.partyCap = 6;
+  ['sprigling', 'cogling', 'dropletta', 'gloomote'].forEach((id) => g.game.addMonster(JSON.parse(JSON.stringify({ ...g.game.party[0], uid: 'x' + id, speciesId: id, name: id })))); });
+// Fielded count comes straight from the game so this test tracks ACTIVE_PARTY.
+const FIELDED = await page.evaluate(() => window.hd2dGame.game.fieldedCount());
 
 const results = [];
 const check = (name, cond, extra = '') => { results.push({ name, ok: !!cond, extra }); };
@@ -56,7 +64,7 @@ check('formation grid opens from the Party menu', menuOpen && gridOpen);
 
 const formation = () => page.evaluate(() => window.hd2dGame.game.formation.map((c) => ({ ...c })));
 const before = await formation();
-check('default formation is the front line (all row 0)', before.slice(0, 3).every((c) => c.row === 0), JSON.stringify(before));
+check('default formation puts the first three on the Vanguard', before.slice(0, 3).every((c) => c.row === 0), JSON.stringify(before));
 
 // --- 2. grab the front-centre fighter (cursor starts at row0,col1) and drop it on the Rear ---
 await page.keyboard.press('Enter'); await page.waitForTimeout(250); // grab slot 0
@@ -66,7 +74,7 @@ const after = await formation();
 check('grabbing the front fighter and dropping on the Rear sets its cell to row 1', after[0].row === 1 && after[0].col === 1, JSON.stringify(after));
 
 // --- 4. bench-swap: navigate to bench and swap the first reserve onto the grid ---
-const fieldedBefore = await page.evaluate(() => window.hd2dGame.game.party.slice(0, 3).map((c) => c.uid));
+const fieldedBefore = await page.evaluate((n) => ( window.hd2dGame.game.party.slice(0, n).map((c) => c.uid)), FIELDED);
 // Cursor is at grid (1,1) after the place. Go down into the bench, grab reserve 0,
 // then drop it onto an OCCUPIED grid cell (the Vanguard, row 0) to field it.
 await page.keyboard.press('ArrowDown'); await page.waitForTimeout(200); // into bench
@@ -75,7 +83,7 @@ await page.keyboard.press('Enter'); await page.waitForTimeout(200);  // grab res
 await page.keyboard.press('ArrowUp'); await page.waitForTimeout(200); // up to grid Rear (1,0)
 await page.keyboard.press('ArrowUp'); await page.waitForTimeout(200); // up to grid Vanguard (0,0) — occupied
 await page.keyboard.press('Enter'); await page.waitForTimeout(250);   // place -> swap the reserve in
-const fieldedAfter = await page.evaluate(() => window.hd2dGame.game.party.slice(0, 3).map((c) => c.uid));
+const fieldedAfter = await page.evaluate((n) => ( window.hd2dGame.game.party.slice(0, n).map((c) => c.uid)), FIELDED);
 check('a reserve can be swapped onto the grid to become fielded', inBench && JSON.stringify(fieldedBefore) !== JSON.stringify(fieldedAfter), `${fieldedBefore} -> ${fieldedAfter}`);
 
 // Close the screen and the menu.

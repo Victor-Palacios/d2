@@ -44,6 +44,9 @@ await page.evaluate(() => { const g = window.hd2dGame; const p = g.hd2d.params;
   g.hd2d.renderer.shadowMap.enabled = false; g.hd2d.applyParams(); });
 await page.waitForTimeout(1200);
 
+// Lost Souls title: dismiss the "press any button" splash so the menu is reachable.
+await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
+if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 // New Game -> name -> partner (Emberling, Lv1, knows emberFang @6 MP) -> hub.
 await page.keyboard.press('Enter'); await page.waitForTimeout(800);
 await page.locator('.keyboard button', { hasText: /^OK$/ }).click(); await page.waitForTimeout(600);
@@ -62,25 +65,34 @@ await page.evaluate(() => {
   g.manager.go('battle', { enemies: [{ species: 'mitebug', level: 1 }], returnTo: 'hub' });
 });
 await waitScene('battle', 20000);
-// Make both sides durable so the fight reaches round 2 no matter what.
+// Make both sides durable so the fight reaches round 2 no matter how many
+// party members are fielded (a new game now starts with a companion, so the
+// party has more than one actor per round).
 await page.evaluate(() => {
   const s = window.hd2dGame.manager.activeScene;
-  const p = s.battle.side('party')[0].creature; p.hp = p.maxHp = 999;
-  const e = s.battle.side('enemy')[0].creature; e.hp = e.maxHp = 999; e.off = 1;
+  for (const b of s.battle.side('party')) { b.creature.hp = b.creature.maxHp = 999; }
+  for (const b of s.battle.side('enemy')) { b.creature.hp = b.creature.maxHp = 999; b.creature.off = 1; }
 });
 await clearDlg();
+const round = () => page.evaluate(() => window.hd2dGame.manager.activeScene.battle.round);
 
 // --- 1a. Round 1: Repeat is present but disabled (nothing to repeat yet) ---
 const t1 = await waitTop();
 check('action menu offers a Repeat item', t1 && t1.hasRepeat, t1 ? JSON.stringify(t1.labels) : 'no menu');
-check('Repeat is disabled in round 1', t1 && t1.repeatDisabled);
+check('Repeat is disabled in round 1', t1 && t1.repeatDisabled && (await round()) === 1);
 
-// Issue a manual command (Guard — no target, keeps the foe alive) to record it.
-await page.locator('#action-menu li', { hasText: 'Guard' }).click();
-await waitHidden();
+// Guard through every party turn (recording a command each) until round 2 opens.
+let t2 = null;
+const deadline = Date.now() + 30000;
+while (Date.now() < deadline) {
+  const t = await topMenu();
+  if (!t) { await page.waitForTimeout(150); continue; }
+  if ((await round()) >= 2) { t2 = t; break; }
+  await page.locator('#action-menu li', { hasText: 'Guard' }).click();
+  await waitHidden();
+}
 
 // --- 1b. Round 2: Repeat is now enabled ---
-const t2 = await waitTop();
 check('Repeat is enabled in round 2 (a command exists to replay)', t2 && t2.hasRepeat && !t2.repeatDisabled, t2 ? JSON.stringify(t2.labels) : 'no menu');
 
 // --- 2-4. The replay + MP-fallback logic, exercised directly on the scene ---
