@@ -315,11 +315,11 @@ export class BattleHUD {
       const canMove = battle.emptyCells(actor.side).length > 0;
       const canSwap = reserves.length > 0;
       const canCommune = battle.communeTargets('enemy').length > 0;
-      // Repeat and Auto lead the menu (hands-off options first, Repeat above
-      // Auto), then the manual actions. The cursor still starts on Attack so a
+      // The hands-off options lead the menu, then the manual actions. Repeat is
+      // shown only when there is a prior command to replay (round 2+) — it sits
+      // at the very top, above Auto. The cursor still starts on Attack so a
       // reflexive confirm never fires an accidental repeat / auto.
       const items: MenuItem[] = [
-        { value: 'repeat', label: 'Repeat', disabled: !canRepeat, note: canRepeat ? 'last commands' : '—' },
         { value: 'auto', label: 'Auto', note: 'L1' },
         { value: 'attack', label: 'Attack' },
         { value: 'technique', label: 'Technique', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
@@ -328,6 +328,7 @@ export class BattleHUD {
         { value: 'guard', label: 'Guard' },
         { value: 'run', label: 'Run', disabled: battle.isBoss, note: battle.isBoss ? "can't flee" : '50%' },
       ];
+      if (canRepeat) items.unshift({ value: 'repeat', label: 'Repeat', note: 'last commands' });
       // Commune only appears when a gentle soul is present to hear it (before Run).
       if (canCommune) items.splice(items.length - 1, 0, { value: 'commune', label: 'Commune', note: 'reach out' });
       const root = await this.runMenu(items, { startIndex: items.findIndex((i) => i.value === 'attack') });

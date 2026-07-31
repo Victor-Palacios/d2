@@ -2,8 +2,8 @@ import { chromium } from 'playwright';
 
 // Repeat command smoke test, against the built bundle via window.hd2dGame.
 // Covers:
-//   1. The action menu offers a 'Repeat' item, disabled in round 1 (nothing to
-//      repeat yet) and enabled from round 2 once a command has been issued.
+//   1. The 'Repeat' item is hidden in round 1 (nothing to repeat yet) and
+//      appears from round 2 once a command has been issued.
 //   2. Repeat replays the actor's last player-chosen command (a Technique).
 //   3. When the actor can no longer afford that Technique, Repeat falls back to
 //      a normal Attack (the requested behaviour).
@@ -76,10 +76,9 @@ await page.evaluate(() => {
 await clearDlg();
 const round = () => page.evaluate(() => window.hd2dGame.manager.activeScene.battle.round);
 
-// --- 1a. Round 1: Repeat is present but disabled (nothing to repeat yet) ---
+// --- 1a. Round 1: Repeat is hidden (nothing to repeat yet) ---
 const t1 = await waitTop();
-check('action menu offers a Repeat item', t1 && t1.hasRepeat, t1 ? JSON.stringify(t1.labels) : 'no menu');
-check('Repeat is disabled in round 1', t1 && t1.repeatDisabled && (await round()) === 1);
+check('Repeat is hidden in round 1 (nothing to replay)', t1 && !t1.hasRepeat && (await round()) === 1, t1 ? JSON.stringify(t1.labels) : 'no menu');
 
 // Guard through every party turn (recording a command each) until round 2 opens.
 let t2 = null;
@@ -92,8 +91,8 @@ while (Date.now() < deadline) {
   await waitHidden();
 }
 
-// --- 1b. Round 2: Repeat is now enabled ---
-check('Repeat is enabled in round 2 (a command exists to replay)', t2 && t2.hasRepeat && !t2.repeatDisabled, t2 ? JSON.stringify(t2.labels) : 'no menu');
+// --- 1b. Round 2: Repeat now appears (a command exists to replay) ---
+check('Repeat appears in round 2 (a command exists to replay)', t2 && t2.hasRepeat && !t2.repeatDisabled, t2 ? JSON.stringify(t2.labels) : 'no menu');
 
 // --- 2-4. The replay + MP-fallback logic, exercised directly on the scene ---
 const logic = await page.evaluate(() => {
