@@ -555,7 +555,13 @@ export class DungeonScene extends GameScene {
     this.busy = true;
     if (ev.intro) await this.dialogue.play(ev.intro);
     this.busy = false;
-    await this.startBattle(ev.enemies, ev.kind === 'boss', tile.eventId);
+    await this.startBattle(
+      ev.enemies,
+      ev.kind === 'boss',
+      tile.eventId,
+      undefined,
+      ev.kind === 'boss' && !!ev.finalBoss,
+    );
   }
 
   /**
@@ -662,7 +668,13 @@ export class DungeonScene extends GameScene {
     return this.grid.at(this.tileX, this.tileZ)?.element;
   }
 
-  private async startBattle(enemies: EnemySpec[], isBoss: boolean, eventId?: string, fieldElement?: ElementId) {
+  private async startBattle(
+    enemies: EnemySpec[],
+    isBoss: boolean,
+    eventId?: string,
+    fieldElement?: ElementId,
+    finalBoss = false,
+  ) {
     if (this.leaving) return;
     this.leaving = true;
     this.saveCrawl();
@@ -677,6 +689,7 @@ export class DungeonScene extends GameScene {
     const params: BattleSceneParams = {
       enemies,
       isBoss,
+      finalBoss,
       eventId,
       partyTiles: [tileElement, tileElement, tileElement],
       returnTo: 'dungeon',

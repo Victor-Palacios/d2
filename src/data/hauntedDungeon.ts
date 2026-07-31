@@ -207,6 +207,7 @@ const FLOORS: DungeonFloor[] = [
     events: {
       '1': {
         kind: 'boss',
+        finalBoss: true, // last boss fight before the Last Lantern finale
         enemies: [{ species: 'revenance', level: 7 }],
         intro: [
           ...narrate(

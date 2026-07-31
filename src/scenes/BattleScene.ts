@@ -32,6 +32,8 @@ const FLEE_CHANCE = 0.5;
 export interface BattleSceneParams {
   enemies: EnemySpec[];
   isBoss?: boolean;
+  /** The climactic boss — gets its own grander theme and a bigger sting. */
+  finalBoss?: boolean;
   eventId?: string;
   partyTiles?: (ElementId | undefined)[];
   enemyTiles?: (ElementId | undefined)[];
@@ -152,9 +154,12 @@ export class BattleScene extends GameScene {
     const isLastLight = this.params.enemies.some((e) => e.species === 'lastlight');
     if (!isLastLight) {
       // Pokémon-style handoff: a sting fires now (the field music is fading out),
-      // and the battle theme starts exactly on the sting's impact.
-      const stingDur = audio.encounterSting(!!this.params.isBoss);
-      audio.music(this.params.isBoss ? 'boss' : 'battle', stingDur);
+      // and the battle theme starts exactly on the sting's impact. The final boss
+      // gets its own grander theme and a bigger sting.
+      const isFinal = !!this.params.finalBoss;
+      const track = isFinal ? 'finalboss' : this.params.isBoss ? 'boss' : 'battle';
+      const stingDur = audio.encounterSting(!!this.params.isBoss || isFinal, isFinal);
+      audio.music(track, stingDur);
     }
 
     // Escape / L1 drops out of auto-battle. Registered scene-wide rather than on
@@ -507,6 +512,7 @@ export class BattleScene extends GameScene {
 
         await this.animateTurn(actor, result);
         this.hud.refresh(this.battle);
+        this.updateDanger();
         this.hud.setActive(null);
         if (this.battle.outcome !== 'ongoing') break;
       }
@@ -721,6 +727,16 @@ export class BattleScene extends GameScene {
    * voice cries once. Deliberately not a roll-call of every species — just one
    * creature sound to open the fight. No-op if none of the foes has a cry.
    */
+  /**
+   * Toggle the low-HP danger pulse: on while any fielded ally is at or below a
+   * quarter HP, off otherwise. `audio.setDanger` is idempotent, and any music
+   * change (victory, defeat, returning to the reach) clears it regardless.
+   */
+  private updateDanger() {
+    const inPeril = this.battle.side('party').some((b) => isUp(b.creature) && b.creature.hp <= b.creature.maxHp * 0.25);
+    audio.setDanger(inPeril);
+  }
+
   private cryRandomEnemy() {
     const voiced = this.battle.side('enemy').filter((b) => audio.hasCry(b.creature.speciesId));
     if (!voiced.length) return;
@@ -1177,6 +1193,7 @@ export class BattleScene extends GameScene {
   private async onDefeat() {
     if (this.finished) return;
     this.finished = true;
+    audio.music(null); // fade the combat theme and clear the danger pulse
     audio.sfx('defeat');
     this.hud.setBanner('Defeat');
     this.hud.setLog('The lantern goes dark...');

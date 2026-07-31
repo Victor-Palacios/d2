@@ -105,6 +105,7 @@ a different ambience (frogs, wind, drips).
 | The Overgrowth | `jungle` | warm marimba/flute groove, `birds: true` |
 | Normal battle | `battle` | "Onset" — heroic drive, running bass, bright lead |
 | Boss battle | `boss` | "The Warden" — crushing, Phrygian, double-kick + dissonant bell |
+| Final boss | `finalboss` | "Everwake's End" — fast, cinematic, soaring lead over a churning ostinato |
 
 ## Combat transitions
 
@@ -120,6 +121,19 @@ music never hard-cuts:
   battle theme first); field music resumes when the scene returns to the reach.
 - The **Last Light** grief encounter is exempt — it keeps the dungeon ambience,
   with no combat sting or theme.
+
+The **final boss** (the last reach's boss, flagged `finalBoss: true` on its
+event) gets the `finalboss` theme and a lower, longer sting
+(`encounterSting(boss, final)`), routed from `DungeonScene` →
+`BattleScene.params.finalBoss`.
+
+### Low-HP danger pulse
+
+`setDanger(on)` lays a fixed high alarm beep over the battle track on every
+quarter note — the Pokémon low-HP cue. `BattleScene` calls it after each turn
+(on while any fielded ally is ≤25% HP), and any `music()` change clears it, so
+it always stops when the fight ends. The beep runs through its own dry gain
+straight into the compressor, so it cuts through the mix without reverb.
 
 ## Build & verify
 

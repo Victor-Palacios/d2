@@ -200,7 +200,7 @@ const CRIES: Record<string, CryLayer[]> = {
   ],
 };
 
-export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | 'crystal' | 'haunted' | 'jungle' | null;
+export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | 'finalboss' | 'crystal' | 'haunted' | 'jungle' | null;
 
 // ============================ MUSIC DATA ==================================
 // Rich tracks are step sequences on a 16th-note grid. A voice's `seq` holds, per
@@ -533,6 +533,32 @@ const TRACKS: Record<Exclude<MusicTrack, null>, RichTrack> = {
       { inst: 'pluck', gain: 0.07, dur: 2, bright: true, seq: pmap(32, { 8: 0, 10: 1, 12: 0, 24: 0, 26: -2, 28: 0 }) },
     ],
   },
+  // Final boss — "Everwake's End": fast and cinematic, a churning 16th ostinato
+  // under a soaring lead and a choir-like pad. Grander and more tragic than the
+  // Warden — reserved for the last reach's boss.
+  finalboss: {
+    rich: true,
+    bpm: 168,
+    root: 146.8,
+    voices: [
+      { inst: 'kick', gain: 0.12, seq: prep(phits(16, [0, 4, 8, 10, 12]), 2) },
+      { inst: 'hat', gain: 0.03, open: false, seq: prep(phits(16, [0, 2, 4, 6, 8, 10, 12, 14]), 2) },
+      { inst: 'pluck', gain: 0.06, dur: 1, bright: true, seq: prep([0, 3, 7, 12, 7, 3, 0, 3], 4) },
+      {
+        inst: 'bass',
+        gain: 0.14,
+        dur: 2,
+        seq: prep([0, null, null, 0, null, 0, null, null, -2, null, null, -2, null, -4, null, -5], 2),
+      },
+      { inst: 'pad', gain: 0.04, dur: 16, seq: pmap(32, { 0: [7, 10, 14], 16: [5, 9, 12] }) },
+      {
+        inst: 'flute',
+        gain: 0.1,
+        dur: 4,
+        seq: pmap(32, { 0: 19, 6: 22, 8: 21, 12: 19, 16: 24, 22: 22, 24: 21, 28: 19 }),
+      },
+    ],
+  },
 };
 
 /** Resting music level. Kept in one place so `duck()` can restore it exactly. */
@@ -575,6 +601,9 @@ class AudioEngine {
   private convolver: ConvolverNode | null = null;
   private richDry: GainNode | null = null;
   private ins: Record<'strings' | 'flute' | 'cello' | 'abass', VoiceCfg> | null = null;
+  private dangerGain: GainNode | null = null;
+  /** When true, an urgent low-HP pulse rides over the current battle track. */
+  private danger = false;
   private trackGain: GainNode | null = null;
   private curTrack: RichTrack | null = null;
   private curRoot = 0;
@@ -797,8 +826,34 @@ class AudioEngine {
       this.trackGain = null;
     }
     this.curTrack = null;
+    this.danger = false; // any track change clears the low-HP pulse
     if (!track || !this.ctx || !this.musicGain) return;
     this.startRich(TRACKS[track], startDelay);
+  }
+
+  /**
+   * Toggle the low-HP "danger" state — a Pokémon-style urgent pulse laid over the
+   * battle track while a fielded ally is critically hurt. Cleared automatically
+   * on the next `music()` change (i.e. when the fight ends).
+   */
+  setDanger(on: boolean) {
+    this.danger = on;
+  }
+
+  /** One urgent alarm beep of the danger pulse. */
+  private beep(when: number) {
+    if (!this.ctx || !this.dangerGain) return;
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(1245, when); // a fixed high alarm, above the music
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(0.06, when + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 0.11);
+    o.connect(g);
+    g.connect(this.dangerGain);
+    o.start(when);
+    o.stop(when + 0.13);
   }
 
   private startRich(def: RichTrack, startDelay = 0) {
@@ -845,29 +900,29 @@ class AudioEngine {
    * (`music(track, stingDur)`). Heavier and lower for a boss. No-op if audio is
    * still locked.
    */
-  encounterSting(boss = false): number {
+  encounterSting(boss = false, final = false): number {
     if (!this.ctx) return 0;
     const bus = this.richOneShot();
     if (!bus) return 0;
     const when = this.ctx.currentTime + 0.05;
-    const root = boss ? 110 : 220;
-    this.vNoise(bus, when, 0.55, 0.11);
-    const run = boss ? [0, 2, 4, 6, 8, 10, 12] : [12, 15, 17, 19, 22, 24];
-    const beat = boss ? 0.08 : 0.07;
+    const root = final ? 82.4 : boss ? 110 : 220;
+    this.vNoise(bus, when, final ? 0.75 : 0.55, final ? 0.13 : 0.11);
+    const run = final ? [0, 2, 3, 5, 7, 8, 10, 12] : boss ? [0, 2, 4, 6, 8, 10, 12] : [12, 15, 17, 19, 22, 24];
+    const beat = final ? 0.09 : boss ? 0.08 : 0.07;
     run.forEach((s, i) => {
       this.vPluck(bus, root * 2 ** (s / 12), when + i * beat, 0.12, 0.11, true);
     });
     const hit = when + run.length * beat + 0.02;
-    this.vKick(bus, hit, 0.24);
-    const chord = boss ? [0, 3, 7, 10] : [0, 4, 7, 12];
+    this.vKick(bus, hit, final ? 0.28 : 0.24);
+    const chord = final ? [0, 3, 7, 10, 15] : boss ? [0, 3, 7, 10] : [0, 4, 7, 12];
     this.vPad(
       bus,
       chord.map((s) => root * 2 ** (s / 12)),
       hit,
-      0.5,
+      final ? 0.7 : 0.5,
       0.12,
     );
-    this.vBell(bus, root * 2 ** ((boss ? 12 : 24) / 12), hit, 0.5, 0.09);
+    this.vBell(bus, root * 2 ** ((boss || final ? 12 : 24) / 12), hit, 0.6, 0.09);
     return hit - this.ctx.currentTime;
   }
 
@@ -910,6 +965,8 @@ class AudioEngine {
         }
         // Birds: ~6% per 16th ≈ a call every few seconds.
         if (this.curTrack.birds && Math.random() < 0.06) this.chirp(this.nextT + Math.random() * this.curStepDur);
+        // Low-HP danger pulse: a steady alarm on every quarter note.
+        if (this.danger && this.g16 % 4 === 0) this.beep(this.nextT);
       }
       this.nextT += this.curStepDur;
       this.g16++;
@@ -1062,6 +1119,12 @@ class AudioEngine {
     wet.connect(comp);
     this.richDry = dry;
     this.convolver = conv;
+    // Danger pulse: dry and present (no reverb), straight into the compressor so
+    // the alarm cuts through the battle mix.
+    const danger = ctx.createGain();
+    danger.gain.value = 1;
+    danger.connect(comp);
+    this.dangerGain = danger;
 
     this.ins = {
       strings: {
