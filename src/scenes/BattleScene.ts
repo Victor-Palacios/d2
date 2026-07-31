@@ -147,7 +147,15 @@ export class BattleScene extends GameScene {
     this.ctx.hd2d.focusTarget.set(0, 0.9, 0.4);
     this.ctx.hd2d.snapCamera();
 
-    audio.music(this.params.isBoss ? 'boss' : 'battle');
+    // The Last Light is a grief encounter, not a fight — leave the dungeon's
+    // ambience playing rather than crashing in with a combat sting + theme.
+    const isLastLight = this.params.enemies.some((e) => e.species === 'lastlight');
+    if (!isLastLight) {
+      // Pokémon-style handoff: a sting fires now (the field music is fading out),
+      // and the battle theme starts exactly on the sting's impact.
+      const stingDur = audio.encounterSting(!!this.params.isBoss);
+      audio.music(this.params.isBoss ? 'boss' : 'battle', stingDur);
+    }
 
     // Escape / L1 drops out of auto-battle. Registered scene-wide rather than on
     // the menu, because while auto is running no menu is open to receive the key.
@@ -967,7 +975,10 @@ export class BattleScene extends GameScene {
   private async onVictory() {
     if (this.finished) return;
     this.finished = true;
-    audio.sfx('victory');
+    // Battle won: fade the combat theme and ring a victory fanfare. Field music
+    // resumes when we return to the dungeon.
+    audio.music(null);
+    audio.victoryFanfare();
     this.hud.setActive(null);
     this.hud.setBanner('Victory');
 

@@ -23,17 +23,13 @@ start/stop. `sfx(name)` plays a fixed list of `Note`s from the `SFX` table
 deterministic — the same name is the same sound every time, which is what you
 want for UI blips and hit stings.
 
-## Music: two track formats
+## Music: rich tracks
 
-`music(track)` reads `TRACKS[track]`, which is one of two shapes:
-
-- **`RichTrack`** (`rich: true`) — the baked-sampler engine. Used by the hub and
-  every reach.
-- **`LegacyTrack`** — the original one-line loop (a triangle bass on downbeats +
-  a square arp). Still used by `battle` and `boss`.
-
-`music()` dispatches on `'rich' in def`, fades out the previous rich track's
-`trackGain` (a short crossfade, not a cut), and starts the new one.
+`music(track, startDelay?)` reads `TRACKS[track]` — every entry is a
+**`RichTrack`** (the baked-sampler engine). It fades out the previous track's
+`trackGain` (a short crossfade, not a cut) and starts the new one; `startDelay`
+(seconds) holds the first note back so battle music can land on an encounter
+sting's impact (see *Combat transitions* below).
 
 ### The baked sampler
 
@@ -107,7 +103,23 @@ a different ambience (frogs, wind, drips).
 | Crystal Cavern | `crystal` | bright, shimmering bells + high harp |
 | Haunted Dungeon | `haunted` | "Bone Rhythm" — ritual percussion + Phrygian bass |
 | The Overgrowth | `jungle` | warm marimba/flute groove, `birds: true` |
-| Normal / boss battles | `battle` / `boss` | still the legacy loop (rich arrangements + transition handling are a follow-up) |
+| Normal battle | `battle` | "Onset" — heroic drive, running bass, bright lead |
+| Boss battle | `boss` | "The Warden" — crushing, Phrygian, double-kick + dissonant bell |
+
+## Combat transitions
+
+Entering and leaving a fight is bridged the way a Pokémon battle opens, so the
+music never hard-cuts:
+
+- **`encounterSting(boss)`** plays a rising sting over a whoosh that resolves on
+  a hard impact, and **returns the seconds until that impact**. `BattleScene`
+  calls it on enter, then `music(isBoss ? 'boss' : 'battle', stingDur)` so the
+  battle theme's first downbeat lands exactly on the impact while the field
+  music crossfades out under the sting.
+- **`victoryFanfare()`** rings a short flourish on a win (`onVictory` fades the
+  battle theme first); field music resumes when the scene returns to the reach.
+- The **Last Light** grief encounter is exempt — it keeps the dungeon ambience,
+  with no combat sting or theme.
 
 ## Build & verify
 
