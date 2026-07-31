@@ -569,8 +569,8 @@ export class BattleScene extends GameScene {
         'tut.melee',
         say(
           'Halden',
-          'One more thing before the scraps get real. Your basic Attack — and some heavy Invocations — are melee: they only reach the front row.',
-          'A soul in the Rear is covered while an ally holds the front of its column, so melee cannot touch it. Ranged Invocations ignore cover and reach anyone.',
+          'One more thing before the scraps get real. Your basic Attack is melee — it only reaches the front row.',
+          'A soul in the Rear is covered while an ally holds the front of its column, so melee cannot touch it. But some invocations can strike souls at a range, cover or no cover.',
           'So keep a fragile caster in the Rear, a sturdy body in the Vanguard ahead of it. Use Move to set your line.',
         ),
       );
