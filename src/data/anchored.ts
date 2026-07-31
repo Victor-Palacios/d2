@@ -57,8 +57,8 @@ export const ANCHORED: Record<string, Anchored> = {
     feeling: 'a rage that would not be put out',
     element: 'fire',
     enemies: [
-      { species: 'cinderfang', level: 8 },
-      { species: 'emberling', level: 7 },
+      { species: 'cinderfang', level: 4 },
+      { species: 'emberling', level: 3 },
     ],
     intro: [
       ...narrate(
@@ -81,8 +81,8 @@ export const ANCHORED: Record<string, Anchored> = {
     feeling: 'a grief that froze before it could fall',
     element: 'water',
     enemies: [
-      { species: 'glaciark', level: 13 },
-      { species: 'tidecaller', level: 11 },
+      { species: 'glaciark', level: 6 },
+      { species: 'tidecaller', level: 5 },
     ],
     intro: [
       ...narrate(
@@ -106,8 +106,8 @@ export const ANCHORED: Record<string, Anchored> = {
     feeling: 'a longing so deep it took root',
     element: 'nature',
     enemies: [
-      { species: 'verdanox', level: 15 },
-      { species: 'direfang', level: 13 },
+      { species: 'verdanox', level: 7 },
+      { species: 'direfang', level: 6 },
     ],
     intro: [
       ...narrate(
@@ -131,8 +131,8 @@ export const ANCHORED: Record<string, Anchored> = {
     feeling: 'a fear of being forgotten, hidden until it was',
     element: 'dark',
     enemies: [
-      { species: 'revenance', level: 18 },
-      { species: 'banshade', level: 16 },
+      { species: 'revenance', level: 9 },
+      { species: 'banshade', level: 8 },
     ],
     intro: [
       ...narrate(
