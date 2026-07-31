@@ -11,14 +11,18 @@ what those systems were praised for and sidesteps what they were criticised for.
   made combat feel more tactical than one-on-one; the depth lived in raising and
   recruiting. Criticised: the CPU was often **predictable** and the systems felt
   unchanged between entries, shining mainly in PvP.
-- **Xenosaga I / III** — praised: the **Boost** gauge (build with basic attacks,
-  spend to act again / cut the turn order) and telegraphed per-turn events.
+- **Xenosaga I / III** — praised: telegraphed per-turn events (echoed here by the
+  field pulse).
 - **Xenosaga II** — criticised: a mandatory **Break** combo system that *gated*
   damage behind memorised patterns; slow and obtuse.
 
-Two rules fell out of that: steal Boost, and make any Break mechanic an
-**accelerator, never a damage gate**; and fix predictable AI with
-position-aware, non-deterministic targeting.
+Two rules fell out of that: make any Break mechanic an **accelerator, never a
+damage gate**; and fix predictable AI with position-aware, non-deterministic
+targeting.
+
+> **Removed:** an early build had a Xenosaga-style **Boost** gauge (build charges
+> with basic attacks, spend for an extra turn). It was cut for reading as too
+> close to Octopath Traveler's BP; Guard now simply braces and restores MP.
 
 ## The grid
 
@@ -46,29 +50,26 @@ back row is something you deploy into deliberately.
   **Move** (reposition to an empty cell) and **Swap** (bench the actor, field a
   reserve), both consuming the turn; plates belong to cells, so a moved unit
   leaves its plate and can step onto another.
-- **C — Boost.** A per-side gauge (cap 3) filled by Attack/Guard (never
-  Techniques), spent to take an immediate extra turn (`requeueFront`). Enemies
-  bank and spend it too — bosses often.
+- **C — Boost.** *(Removed — see the note above.)*
 - **D — Break, field pulse, smarter AI.** A stagger meter fills on hits (faster
   on class advantage / plate hits); at full the target **Breaks** — loses its
   next turn and takes +50% until then. A per-round **field pulse** rotates
-  calm/crit(+20% dmg)/surge(+1 Boost). The enemy AI scores exposed back-liners,
+  calm/crit(+20% dmg). The enemy AI scores exposed back-liners,
   plate threats and existing Breaks, draws with a **softmax** (variety, not
   argmax), catches shaped AoE against stacked columns, and feints with Guard.
 
 ## Where it lives
 
-- `src/systems/battle/engine.ts` — grid model, cover, shapes, Boost, Break,
-  field pulse, AI. Headless; no three.js/DOM.
+- `src/systems/battle/engine.ts` — grid model, cover, shapes, Break, field
+  pulse, AI. Headless; no three.js/DOM.
 - `src/systems/battle/formula.ts` — row damage modifiers.
 - `src/data/techniques.ts` — `shape` / `techShape`.
 - `src/scenes/BattleScene.ts` — cell→world placement, grid outlines, the turn
-  loop (Boost spend, Break skip, pulse announce), sprite re-placement on
-  move/swap.
-- `src/ui/BattleHUD.ts` — Move/Swap/Boost menu entries, the Boost gauge, the
-  per-card stagger meter and BROKEN tag.
+  loop (Break skip, pulse announce), sprite re-placement on move/swap.
+- `src/ui/BattleHUD.ts` — Move/Swap menu entries, the per-card stagger meter and
+  BROKEN tag.
 
-All the tunable constants (`BOOST_MAX`, `STAGGER_*`, `BREAK_DAMAGE_MULT`,
-`PULSE_CYCLE`, `CRIT_PULSE_MULT`, the row multipliers) are exported and
-intentionally readable. `tools/smoke/grid.mjs` exercises every phase against the
-live engine in the built bundle.
+All the tunable constants (`STAGGER_*`, `BREAK_DAMAGE_MULT`, `PULSE_CYCLE`,
+`CRIT_PULSE_MULT`, the row multipliers) are exported and intentionally readable.
+`tools/smoke/grid.mjs` exercises the surviving phases against the live engine in
+the built bundle.

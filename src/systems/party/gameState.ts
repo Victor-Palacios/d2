@@ -3,6 +3,8 @@ import { makeCreature } from './creature';
 import { QUIET_CROSSING } from '../../data/quietCrossing';
 import type { AttributeId } from '../../data/elements';
 import { IMMORTALITY_POEM, IMMORTALITY_TOTAL } from '../../data/immortality';
+import type { Cell } from '../battle/engine';
+import { defaultFormation, cellIndex } from '../battle/engine';
 
 /**
  * Soul Syphon capture tuning. An *encounter* primes a wild species to
@@ -16,6 +18,12 @@ export const SYPHON_HIT = 50;
 /** Party size: starts here, upgradeable one slot at a time up to the cap. */
 export const START_PARTY_CAP = 4;
 export const MAX_PARTY_CAP = 10;
+/**
+ * Hard ceiling on souls deployed at once (the 2×3 grid holds more, but the front
+ * line is three columns). The live cap is `fieldCap` — one soul per human keeper
+ * — and never exceeds this. `formation` is sized to this maximum.
+ */
+export const MAX_FIELDED = 4;
 
 /** A species' entry in the Soularium (the capture dex). */
 export interface SoulEntry {
@@ -52,6 +60,15 @@ export class GameState {
 
   /** Whether the Vigil has given you leave to keep past the Crossing. */
   hasLeave = false;
+
+  /**
+   * Where each fielded soul stands on the 2×3 battle grid. `formation[i]` is the
+   * cell the i-th deployed soul takes (Vanguard row 0 / Rear row 1, columns
+   * left→right). Defaults to the front line; the player edits it in the Party
+   * screen to pull squishy casters into the covered Rear. Sized to `MAX_FIELDED`
+   * (always distinct cells), so it stays valid however many souls deploy.
+   */
+  formation: Cell[] = defaultFormation(MAX_FIELDED);
   teamId: string | null = null;
   teamAttribute: AttributeId | null = null;
 
@@ -218,6 +235,65 @@ export class GameState {
     const j = i + delta;
     if (i < 0 || j < 0 || j >= this.party.length) return false;
     [this.party[i], this.party[j]] = [this.party[j], this.party[i]];
+    return true;
+  }
+
+  // --- Formation ----------------------------------------------------------
+
+  /** The fighting souls (non-companions) in party order — companions never field. */
+  souls(): CreatureInstance[] {
+    return this.party.filter((c) => !c.companion);
+  }
+
+  /**
+   * How many souls actually deploy: the field cap (one per human keeper), capped
+   * by the hard `MAX_FIELDED` ceiling and by how many souls you actually have.
+   */
+  fieldedCount(): number {
+    return Math.min(this.soulsInParty(), this.fieldCap, MAX_FIELDED);
+  }
+
+  /** The fielded slot standing on `cell`, or -1 if that cell is empty. */
+  slotAtCell(cell: Cell): number {
+    const idx = cellIndex(cell);
+    const n = this.fieldedCount();
+    for (let i = 0; i < n; i++) if (cellIndex(this.formation[i]) === idx) return i;
+    return -1;
+  }
+
+  /**
+   * Move a fielded `slot` onto `cell`. Whichever slot currently holds that cell
+   * trades places — and that is checked across ALL `MAX_FIELDED` slots, not just
+   * the fielded ones, so every stored cell stays distinct. That matters because
+   * `fieldCap` can grow when a companion joins: a slot that was idle becomes
+   * fielded, and it must never share a cell with an already-fielded one.
+   */
+  moveFormationSlot(slot: number, cell: Cell): boolean {
+    if (slot < 0 || slot >= this.fieldedCount()) return false;
+    if (cellIndex(this.formation[slot]) === cellIndex(cell)) return false;
+    const idx = cellIndex(cell);
+    for (let i = 0; i < this.formation.length; i++) {
+      if (i !== slot && cellIndex(this.formation[i]) === idx) {
+        this.formation[i] = { ...this.formation[slot] };
+        break;
+      }
+    }
+    this.formation[slot] = { row: cell.row, col: cell.col };
+    return true;
+  }
+
+  /**
+   * Reorder two souls by their soul-order index (fielding a benched soul, or
+   * reordering the reserve), keeping companions in their roster place. Formation
+   * cells belong to the slot, not the soul, so a soul that lands in a fielded
+   * slot inherits that slot's grid position.
+   */
+  swapSouls(a: number, b: number): boolean {
+    const souls = this.souls();
+    if (a === b || a < 0 || b < 0 || a >= souls.length || b >= souls.length) return false;
+    const ia = this.party.indexOf(souls[a]);
+    const ib = this.party.indexOf(souls[b]);
+    [this.party[ia], this.party[ib]] = [this.party[ib], this.party[ia]];
     return true;
   }
 

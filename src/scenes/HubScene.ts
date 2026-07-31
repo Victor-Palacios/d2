@@ -700,7 +700,8 @@ export class HubScene extends GameScene {
         return say(
           'Halden',
           'You have the measure of it now — meet what lingers, and decide, each time, whether to keep it or let it go.',
-          'Your bonded souls are yours to raise. Merging them comes later — not today.',
+          'Some souls, though, are too heavy with one feeling to lift — rage, grief, longing, fear. They sink into a reach and hold a whole floor down with them. We call those the Anchored.',
+          'You will feel one before you see it: the ground goes all one element. Do not throw yourself at an Anchored unprepared. Come back matched to it, and strong. Freeing one is worth the trip.',
         );
       case 'vendor':
         if (!game.hasLeave) {

@@ -122,14 +122,12 @@ export function reactionName(a: ElementId, b: ElementId): string {
 }
 
 /**
- * Break chains (ties Break + Boost + turn order into a coordination burst).
- * Every hit landed on a Broken target before it recovers extends a chain: the
- * Break damage bonus escalates per link, and a long enough chain banks the
- * attacking side a Boost charge. Rewards ordering your turns onto a broken foe.
+ * Break chains. Every hit landed on a Broken target before it recovers extends a
+ * chain: the Break damage bonus escalates per link. Rewards ordering your turns
+ * onto a broken foe.
  */
 export const CHAIN_STEP = 0.15;
 export const CHAIN_DAMAGE_MAX = 2.25;
-export const CHAIN_BOOST_AT = 3;
 
 /**
  * Commune (empathy as a resolution verb, generalised from the Last Light).
@@ -140,9 +138,6 @@ export const CHAIN_BOOST_AT = 3;
 export const COMMUNE_MAX = 100;
 export const COMMUNE_GAIN = 34;
 export const COMMUNE_VARIANCE = 12;
-
-/** Maximum stored Boost charges per side (grid battle, Phase C). */
-export const BOOST_MAX = 3;
 
 /**
  * Break / Stagger (grid battle, Phase D). Damaging hits fill a target's stagger
@@ -160,11 +155,10 @@ export const BREAK_DAMAGE_MULT = 1.5;
  * Field pulse (grid battle, Phase D): a telegraphed per-round condition that
  * favours whoever acts into it, echoing Xenosaga's turn events.
  * - `crit`: damaging actions deal +20% this round.
- * - `surge`: every action grants an extra Boost charge.
  * - `calm`: nothing.
  */
-export type FieldPulse = 'calm' | 'crit' | 'surge';
-export const PULSE_CYCLE: readonly FieldPulse[] = ['calm', 'crit', 'surge'];
+export type FieldPulse = 'calm' | 'crit';
+export const PULSE_CYCLE: readonly FieldPulse[] = ['calm', 'crit'];
 export const CRIT_PULSE_MULT = 1.2;
 /** Guaranteed-critical multiplier (Immortality Memento). */
 export const CRIT_MULT = 1.5;
@@ -231,9 +225,9 @@ export class Battle {
   private queue: Battler[] = [];
   /**
    * The single random source for the whole fight. Public so the scene can route
-   * *its* rolls (flee, enemy Boost timing, the Last Light) through it too — with
-   * a seeded `rng` in the config that makes an entire played battle reproducible,
-   * not just the pure model.
+   * *its* rolls (flee, the Last Light) through it too — with a seeded `rng` in
+   * the config that makes an entire played battle reproducible, not just the pure
+   * model.
    */
   readonly rng: () => number;
 
@@ -241,11 +235,6 @@ export class Battle {
   private plates: Record<Side, (ElementId | undefined)[]>;
   /** Benched party creatures available to swap in; the scene keeps this current. */
   reserves: CreatureInstance[] = [];
-  /**
-   * Boost charges per side (Xenosaga-style timing layer). Filled by basic
-   * Attacks and Guards; spent to grant an immediate extra turn.
-   */
-  boost: Record<Side, number> = { party: 0, enemy: 0 };
   /** The current round's field pulse (Phase D). */
   fieldPulse: FieldPulse = 'calm';
 
@@ -381,23 +370,6 @@ export class Battle {
     return null;
   }
 
-  /** Adds `n` Boost charges to a side (capped at BOOST_MAX). */
-  gainBoost(side: Side, n = 1) {
-    this.boost[side] = Math.min(BOOST_MAX, this.boost[side] + n);
-  }
-
-  /** Spends one Boost charge; returns false if the side had none. */
-  spendBoost(side: Side): boolean {
-    if (this.boost[side] < 1) return false;
-    this.boost[side]--;
-    return true;
-  }
-
-  /** Inserts a battler at the front of the turn queue for an immediate extra turn. */
-  requeueFront(b: Battler) {
-    if (this.inPlay(b)) this.queue.unshift(b);
-  }
-
   /** Ends a Break: clears the staggered flag, the chain and empties the meter. */
   clearStagger(b: Battler) {
     b.staggered = false;
@@ -437,7 +409,6 @@ export class Battle {
       c.guarding = true;
       const restored = Math.min(c.maxMp - c.mp, Math.round(c.maxMp * GUARD_MP_RESTORE));
       c.mp += restored;
-      this.gainBoost(actor.side); // patience builds Boost
       result.actionLabel = 'Guard';
       result.log.push(`${c.name} braces for impact.`);
       if (restored > 0) result.log.push(`${c.name} recovers ${restored} MP.`);
@@ -506,9 +477,6 @@ export class Battle {
         return result;
       }
       c.mp -= tech.mpCost;
-    } else {
-      // Only the free basic Attack builds Boost — Techniques spend, they don't feed.
-      this.gainBoost(actor.side);
     }
 
     const targets = this.targetsFor(actor, tech, action.targetUid);
@@ -543,8 +511,8 @@ export class Battle {
 
       // Post-multipliers, all multiplicative: a broken target takes extra
       // (escalating with the chain), a reaction detonates, the `crit` field pulse
-      // boosts every damaging action this round, and an Immortality Memento makes
-      // the wearer's hits guaranteed criticals for the first three rounds.
+      // adds +20% to every damaging action this round, and an Immortality Memento
+      // makes the wearer's hits guaranteed criticals for the first three rounds.
       let dealt = breakdown.amount;
       let chainN = 0;
       if (t.staggered) {
@@ -572,22 +540,14 @@ export class Battle {
         breakdown,
       });
 
-      if (critHit) result.log.push('A remembered life strikes true — critical!');
-      if (reactName) result.log.push(`${reactName}! The clashing ${mark}/${tech.element} energies detonate!`);
-      if (breakdown.attackerTileBonus) result.log.push(`The ${actor.tile} plate amplifies it!`);
-      if (breakdown.effectiveness === 'super') result.log.push('Class advantage — it hits hard!');
-      else if (breakdown.effectiveness === 'weak') result.log.push('Class disadvantage — it is resisted.');
-      if (chainN >= 2) result.log.push(`${chainN}-chain — the Break bites deeper!`);
-      else if (t.staggered) result.log.push(`${t.creature.name} is broken — it takes extra damage!`);
+      // Combo effects (elemental reactions, break-chains) and class
+      // effectiveness are deliberately NOT narrated — the player reads them off
+      // the FX and the fighter cards (impact burst, screen shake, the reaction
+      // pip and BROKEN badge), not a line of text.
+      if (critHit) result.log.push('A remembered life strikes true');
+      if (breakdown.attackerTileBonus) result.log.push(`The ${actor.tile} plate amplifies your power!`);
       if (breakdown.guarded) result.log.push(`${t.creature.name} guards against it.`);
       if (fainted) result.log.push(`${t.creature.name} is knocked out!`);
-
-      // A long enough chain banks the attacking side a Boost — coordinating your
-      // turns onto a broken foe pays you back with another action.
-      if (chainN === CHAIN_BOOST_AT) {
-        this.gainBoost(actor.side);
-        result.log.push('The chain holds — a Boost charge is banked!');
-      }
 
       // Elemental mark bookkeeping: a reaction consumes the mark (you must
       // re-establish it); otherwise this hit leaves its own element behind.
@@ -607,15 +567,10 @@ export class Battle {
         if (breakdown.attackerTileBonus) gain += STAGGER_PLATE;
         if (reacts) gain += REACTION_STAGGER;
         t.stagger = Math.min(STAGGER_MAX, t.stagger + gain);
-        if (t.stagger >= STAGGER_MAX) {
-          t.staggered = true;
-          result.log.push(`${t.creature.name} is BROKEN!`);
-        }
+        // Break onset shows on the card (BROKEN badge + full stagger meter); no line.
+        if (t.stagger >= STAGGER_MAX) t.staggered = true;
       }
     }
-
-    // The `surge` field pulse feeds Boost on top of the normal Attack gain.
-    if (this.fieldPulse === 'surge') this.gainBoost(actor.side);
 
     return result;
   }
@@ -635,22 +590,6 @@ export class Battle {
       if (r <= 0) return items[i].item;
     }
     return items[items.length - 1].item;
-  }
-
-  /**
-   * Whether a side should cash a banked Boost for an extra turn *now*. The
-   * decision lives in the model (not the scene) so it is tactical and testable:
-   * an exposed opening — a Broken or nearly-dead foe on the board — is worth
-   * pressing; bosses press harder. Routed through the injected `rng`.
-   */
-  shouldSpendBoost(actor: Battler): boolean {
-    if (this.boost[actor.side] < 1) return false;
-    const oppSide: Side = actor.side === 'party' ? 'enemy' : 'party';
-    const foes = this.living(oppSide);
-    const pressWorthy = foes.some((f) => f.staggered || f.creature.hp / f.creature.maxHp < 0.3);
-    const base = this.isBoss ? 0.5 : 0.18;
-    const p = pressWorthy ? Math.min(0.85, base + 0.4) : base;
-    return this.rng() < p;
   }
 
   /**
@@ -733,7 +672,7 @@ export class Battle {
       return { type: 'technique', techniqueId: pick.id, targetUid: target.creature.uid };
     }
 
-    // Feint: low on HP with nothing better, brace instead (also banks Boost).
+    // Feint: low on HP with nothing better, brace instead (Guard restores MP).
     if (c.hp / c.maxHp < 0.25 && this.rng() < 0.3) return { type: 'guard' };
 
     // A basic Attack is melee: it can only reach the Vanguard (and exposed Rear),

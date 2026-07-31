@@ -1,9 +1,9 @@
 import { chromium } from 'playwright';
 const OUT = process.env.OUT ?? new URL('./shots', import.meta.url).pathname;
 
-// Main grid menu (opened by R1 / E / Start) and party reordering ("move monster
-// positions"). Verifies the grid entries render and that grab-and-move reorders
-// the fielded party. See tools/smoke/README.md.
+// Main grid menu (opened by R1 / E / Start) and the formation editor. Verifies
+// the grid entries render and that grab-and-move on the 2×3 formation grid
+// repositions a fielded soul (front → Rear row). See tools/smoke/README.md.
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROME,
@@ -19,6 +19,7 @@ const dlg = () => page.evaluate(() => { const d = document.querySelector('#dialo
 const wait = async (n, ms = 30000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if ((await scene()) === n) return true; await page.waitForTimeout(200); } return false; };
 const cards = () => page.evaluate(() => [...document.querySelectorAll('.grid-card .grid-text b')].map((n) => n.textContent));
 const party = () => page.evaluate(() => window.hd2dGame.game.party.map((c) => c.speciesId));
+const formation = () => page.evaluate(() => window.hd2dGame.game.formation.map((c) => ({ ...c })));
 
 await page.goto(process.env.URL ?? 'http://localhost:4173/', { waitUntil: 'networkidle' });
 // Lost Souls title: wait for and dismiss the "press any button" splash so the menu is reachable.
@@ -48,22 +49,32 @@ console.log('grid menu entries  :', JSON.stringify(entries));
 await page.screenshot({ path: `${OUT}/menu-grid.png` });
 const hasEntries = ['Party', 'Soularium', 'Sanctuary'].every((e) => entries.includes(e));
 
-// Party is the first card — open it, grab the top soul, move it down, drop.
-await page.keyboard.press('Enter'); await page.waitForTimeout(500); // open Party
+// Open the formation grid via the Party card (clicked directly — the default
+// selection can be shifted by a stray mouse-hover), then park the mouse; the
+// grid is keyboard-only. The cursor starts on the front-centre soul; grab it,
+// move down onto the Rear row, and drop.
+await page.locator('.grid-card', { hasText: 'Party' }).click(); await page.waitForTimeout(500);
+await page.mouse.move(0, 0);
 await page.screenshot({ path: `${OUT}/menu-party.png` });
-await page.keyboard.press('Enter'); await page.waitForTimeout(250);   // grab party[0]
-await page.keyboard.press('ArrowDown'); await page.waitForTimeout(250); // move it to slot 2
+const formBefore = await formation();
+console.log('formation before   :', JSON.stringify(formBefore));
+await page.keyboard.press('Enter'); await page.waitForTimeout(250);   // grab front-centre soul
+await page.keyboard.press('ArrowDown'); await page.waitForTimeout(250); // move it to the Rear row
 await page.keyboard.press('Enter'); await page.waitForTimeout(250);   // drop
+const formAfter = await formation();
 const after = await party();
-console.log('party after move   :', JSON.stringify(after));
-const reordered = before.length === after.length && before[0] === after[1] && after[0] === before[1];
+console.log('formation after    :', JSON.stringify(formAfter));
+// The move edits the formation (front → Rear), not the party order.
+const repositioned = formBefore[0].row === 0 && formAfter[0].row === 1;
+const orderIntact = before.length === after.length && before.every((s, i) => s === after[i]);
 
 await page.keyboard.press('Escape'); await page.waitForTimeout(200); // close party
 await page.keyboard.press('Escape'); await page.waitForTimeout(200); // close menu
 
 console.log('grid has 3 entries :', hasEntries);
-console.log('reorder works      :', reordered);
-const ok = hasEntries && reordered;
+console.log('reposition works   :', repositioned);
+console.log('party order intact :', orderIntact);
+const ok = hasEntries && repositioned && orderIntact;
 console.log('\nMENU OK :', ok);
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();

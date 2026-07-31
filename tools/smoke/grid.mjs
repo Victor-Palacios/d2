@@ -159,57 +159,7 @@ console.log('swap tags in reserve:', r2.hadReserve && r2.swapMoved);
 
 const okB = r2.rowHits === 3 && r2.colHits === 2 && r2.shiftMoved && r2.shiftPlate && r2.hadReserve && r2.swapMoved;
 
-// --- Phase C: Boost gauge -----------------------------------------------
-const r3 = await page.evaluate(() => {
-  const b = window.hd2dGame.manager.activeScene.battle;
-  const party = b.side('party');
-  party.forEach((p) => { p.creature.hp = p.creature.maxHp; });
-  const out = {};
-
-  // Basic Attack builds a charge.
-  b.boost.party = 0;
-  const foe = b.meleeTargets('enemy')[0];
-  b.perform(party[0], { type: 'attack', targetUid: foe.creature.uid });
-  out.attackGain = b.boost.party === 1;
-
-  // Guard builds a charge too.
-  b.perform(party[1], { type: 'guard' });
-  out.guardGain = b.boost.party === 2;
-
-  // A Technique spends MP but does not feed Boost.
-  b.boost.party = 0;
-  party[0].creature.mp = 99;
-  b.perform(party[0], { type: 'technique', techniqueId: 'emberFang', targetUid: foe.creature.uid });
-  out.techNoGain = b.boost.party === 0;
-
-  // Gauge caps, and spend decrements / returns false when empty.
-  b.gainBoost('party', 10);
-  out.capped = b.boost.party; // expect BOOST_MAX (3)
-  const spent = b.spendBoost('party');
-  out.spendWorks = spent && b.boost.party === 2;
-  b.boost.party = 0;
-  out.spendEmptyFails = b.spendBoost('party') === false;
-
-  // requeueFront grants the same actor an immediate extra turn.
-  b.beginRound();
-  const a1 = b.nextTurn();
-  b.requeueFront(a1);
-  const a2 = b.nextTurn();
-  out.extraTurn = !!a1 && !!a2 && a1.creature.uid === a2.creature.uid;
-  return out;
-});
-
-console.log('\n== Phase C ==');
-console.log('attack builds boost:', r3.attackGain);
-console.log('guard builds boost :', r3.guardGain);
-console.log('technique no boost :', r3.techNoGain);
-console.log(`gauge caps at 3    : ${r3.capped} (=3? ${r3.capped === 3})`);
-console.log('spend decrements   :', r3.spendWorks);
-console.log('empty spend fails  :', r3.spendEmptyFails);
-console.log('boost -> extra turn:', r3.extraTurn);
-
-const okC = r3.attackGain && r3.guardGain && r3.techNoGain && r3.capped === 3 &&
-  r3.spendWorks && r3.spendEmptyFails && r3.extraTurn;
+// (Phase C was the Boost gauge — removed with the Boost mechanic.)
 
 // --- Phase D: Break / stagger, field pulse, smarter AI -------------------
 const r4 = await page.evaluate(() => {
@@ -237,9 +187,9 @@ const r4 = await page.evaluate(() => {
   // clearStagger resets the meter.
   b.clearStagger(T); out.clearWorks = !T.staggered && T.stagger === 0;
 
-  // Field pulse rotates with a period of 3 across rounds.
+  // Field pulse rotates with a period of 2 across rounds (calm, crit).
   const pulses = []; for (let i = 0; i < 6; i++) { b.beginRound(); pulses.push(b.fieldPulse); }
-  out.pulsePeriodic = new Set(pulses).size === 3 && pulses[0] === pulses[3] && pulses[1] === pulses[4] && pulses[2] === pulses[5];
+  out.pulsePeriodic = new Set(pulses).size === 2 && pulses[0] === pulses[2] && pulses[2] === pulses[4] && pulses[1] === pulses[3] && pulses[3] === pulses[5];
 
   // Crit pulse deals more than calm; summed over rolls so the +20% edge beats
   // per-hit variance/rounding.
@@ -248,9 +198,6 @@ const r4 = await page.evaluate(() => {
   b.fieldPulse = 'calm'; for (let i = 0; i < 12; i++) { reset(V); dc += b.perform(enemy, { type: 'attack', targetUid: V.creature.uid }).hits[0].damage; }
   b.fieldPulse = 'crit'; for (let i = 0; i < 12; i++) { reset(V); dcr += b.perform(enemy, { type: 'attack', targetUid: V.creature.uid }).hits[0].damage; }
   out.critPulseMore = dcr > dc;
-  reset(V); b.fieldPulse = 'surge'; b.boost.enemy = 0;
-  b.perform(enemy, { type: 'attack', targetUid: V.creature.uid });
-  out.surgeBoost = b.boost.enemy >= 2; // +1 Attack, +1 Surge
 
   // Smarter AI: softmax gives variety, and it focuses a broken, low-HP threat.
   b.fieldPulse = 'calm';
@@ -270,15 +217,14 @@ console.log('broken takes more   :', r4.brokenTakesMore);
 console.log('clearStagger resets :', r4.clearWorks);
 console.log('field pulse cycles  :', r4.pulsePeriodic);
 console.log('crit pulse > calm   :', r4.critPulseMore);
-console.log('surge banks boost   :', r4.surgeBoost);
 console.log(`AI target variety   : ${r4.aiDistinct} distinct (>=2? ${r4.aiDistinct >= 2})`);
 console.log('AI focuses threat   :', r4.aiFocus);
 
 const okD = r4.staggerBroke && r4.brokenTakesMore && r4.clearWorks && r4.pulsePeriodic &&
-  r4.critPulseMore && r4.surgeBoost && r4.aiDistinct >= 2 && r4.aiFocus;
+  r4.critPulseMore && r4.aiDistinct >= 2 && r4.aiFocus;
 
-const ok = okA && okB && okC && okD;
-console.log('\nPHASE A OK :', okA, '| B :', okB, '| C :', okC, '| D :', okD);
+const ok = okA && okB && okD;
+console.log('\nPHASE A OK :', okA, '| B :', okB, '| D :', okD);
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();
 process.exit(ok && !errs.length ? 0 : 1);

@@ -18,20 +18,13 @@ import { Battle } from '../systems/battle/engine';
 import type { BattleAction, Battler, TurnResult } from '../systems/battle/engine';
 import { makeCreature, isUp, reviveFainted, grantXp, xpFromEnemy } from '../systems/party/creature';
 import type { CreatureInstance } from '../systems/party/creature';
-import { game } from '../systems/party/gameState';
+import { game, MAX_FIELDED } from '../systems/party/gameState';
 import { BattleHUD } from '../ui/BattleHUD';
 import { DialogueBox } from '../ui/DialogueBox';
 import { toast } from '../ui/Toast';
 import type { DialogueScript } from '../systems/dialogue/script';
 import { say, narrate } from '../systems/dialogue/script';
 import type { DungeonSceneParams } from './DungeonScene';
-
-/**
- * Hard ceiling on how many souls deploy at once (the 2×3 grid holds more, but
- * the front line is three columns). The live cap is `game.fieldCap` — one soul
- * per human keeper — and never exceeds this.
- */
-const MAX_FIELDED = 4;
 
 /** Chance a Run attempt succeeds (bosses cannot be fled). */
 const FLEE_CHANCE = 0.5;
@@ -74,7 +67,6 @@ function cellPos(side: 'party' | 'enemy', cell: { row: number; col: number }): {
 const PULSE_TEXT: Record<string, string> = {
   calm: '',
   crit: 'A Crit Field settles in — attacks bite deeper this round.',
-  surge: 'A Surge Field crackles — every action banks extra Boost this round.',
 };
 
 /**
@@ -103,6 +95,15 @@ export class BattleScene extends GameScene {
   private fled = false;
   /** Auto-battle: party members take the basic Attack until the player cancels. */
   private autoBattle = false;
+  /** Repeat: party members re-issue their last player-chosen command until cancelled. */
+  private repeatBattle = false;
+  /**
+   * The most recent *player-chosen* action per party creature (by uid). Only
+   * manual menu picks are recorded — Auto and Repeat never overwrite it — so
+   * Repeat always replays what the player actually last commanded, and a
+   * technique that recovers its MP resumes instead of being stuck on Attack.
+   */
+  private lastActions = new Map<string, BattleAction>();
   private unsubInput: (() => void) | null = null;
 
   async enter(params?: unknown) {
@@ -119,6 +120,9 @@ export class BattleScene extends GameScene {
       enemies,
       partyTiles: this.params.partyTiles,
       enemyTiles: this.params.enemyTiles,
+      // Deploy each fielded member into the cell the player set in the Party
+      // screen (Vanguard/Rear × column); the i-th living member takes slot i.
+      partyCells: game.formation.slice(0, active.length).map((c) => ({ ...c })),
       isBoss: this.params.isBoss,
       rng: this.params.rng,
     });
@@ -150,6 +154,7 @@ export class BattleScene extends GameScene {
     // (L1 *starts* auto via the action menu's 'auto' item; here it stops it.)
     this.unsubInput = input.onAction((a) => {
       if ((a === 'cancel' || a === 'auto') && this.autoBattle) this.setAuto(false);
+      else if (a === 'cancel' && this.repeatBattle) this.setRepeat(false);
     });
 
     void this.run();
@@ -388,7 +393,8 @@ export class BattleScene extends GameScene {
     // the new systems arrive slowly across the three areas rather than at once.
     await this.maybeTutorial();
 
-    this.hud.setBanner(this.params.isBoss ? 'Warden Battle' : 'Battle');
+    // No "Battle" title — it says nothing. A boss still names the threat.
+    this.hud.setBanner(this.params.isBoss ? 'Warden' : '');
     this.hud.setLog(
       this.params.isBoss
         ? 'The warden blocks the hallway. There is no way past it.'
@@ -430,51 +436,48 @@ export class BattleScene extends GameScene {
         this.pulse(actor);
 
         let result: TurnResult;
-        let extraTurns = 0;
         if (actor.side === 'party') {
           let action: BattleAction | null = null;
           if (this.autoBattle) {
             this.hud.setLog(`${actor.creature.name} attacks on its own.`);
             await sleep(320);
             action = this.autoAction();
+          } else if (this.repeatBattle) {
+            this.hud.setLog(`${actor.creature.name} repeats its last command.`);
+            await sleep(320);
+            action = this.repeatAction(actor);
           } else {
-            // Loop so Boost can be spent (act again) before the real action.
-            for (;;) {
-              const choice = await this.hud.chooseAction(
-                this.battle,
-                actor,
-                (uid) => this.hoverTarget(uid),
-                this.battle.reserves.filter(isUp),
-              );
-              if (choice.type === 'boost') {
-                if (this.battle.spendBoost('party')) {
-                  extraTurns++;
-                  audio.sfx('confirm');
-                  this.hud.setLog(`${actor.creature.name} boosts — it will act again!`);
-                  this.hud.refresh(this.battle);
-                }
-                continue;
-              }
-              if (choice.type === 'flee') {
-                // A coin-flip escape; a failed attempt still costs the turn.
-                if (this.battle.rng() < FLEE_CHANCE) {
-                  this.fled = true;
-                } else {
-                  audio.sfx('cancel');
-                  this.hud.setLog(`${actor.creature.name} tried to run — no way out!`);
-                  await sleep(1000);
-                }
-                action = null;
-                break;
-              }
-              if (choice.type === 'auto') {
-                this.setAuto(true);
-                await sleep(200);
-                action = this.autoAction();
+            // Repeat is offered once a prior round's commands exist to replay.
+            const canRepeat = this.battle.round > 1 && this.lastActions.size > 0;
+            const choice = await this.hud.chooseAction(
+              this.battle,
+              actor,
+              (uid) => this.hoverTarget(uid),
+              this.battle.reserves.filter(isUp),
+              canRepeat,
+            );
+            if (choice.type === 'flee') {
+              // A coin-flip escape; a failed attempt still costs the turn.
+              if (this.battle.rng() < FLEE_CHANCE) {
+                this.fled = true;
               } else {
-                action = choice;
+                audio.sfx('cancel');
+                this.hud.setLog(`${actor.creature.name} tried to run — no way out!`);
+                await sleep(1000);
               }
-              break;
+              action = null;
+            } else if (choice.type === 'auto') {
+              this.setAuto(true);
+              await sleep(200);
+              action = this.autoAction();
+            } else if (choice.type === 'repeat') {
+              this.setRepeat(true);
+              await sleep(200);
+              action = this.repeatAction(actor);
+            } else {
+              action = choice;
+              // Remember this manual command so Repeat can replay it later.
+              this.lastActions.set(actor.creature.uid, choice);
             }
           }
           if (this.fled) break;
@@ -492,15 +495,7 @@ export class BattleScene extends GameScene {
           this.hud.setLog(`${actor.creature.name} is deciding...`);
           await sleep(480);
           result = this.battle.perform(actor, this.battle.chooseEnemyAction(actor));
-          // Boost-spend timing is a tactical, seeded decision in the model now.
-          if (this.battle.shouldSpendBoost(actor) && this.battle.spendBoost('enemy')) {
-            extraTurns++;
-            this.hud.setLog(`${actor.creature.name} boosts!`);
-          }
         }
-
-        // Boost spent this turn grants immediate extra turn(s) to the actor.
-        for (let i = 0; i < extraTurns; i++) this.battle.requeueFront(actor);
 
         await this.animateTurn(actor, result);
         this.hud.refresh(this.battle);
@@ -521,10 +516,35 @@ export class BattleScene extends GameScene {
    * turns are not wasted overkilling something already on its last legs.
    */
   private autoAction(): BattleAction {
+    return this.attackAction();
+  }
+
+  /**
+   * A basic Attack, targeting `preferredUid` when it is still a living foe,
+   * otherwise the weakest one — so turns are not wasted overkilling something
+   * already on its last legs. Shared by Auto and by Repeat's MP fallback.
+   */
+  private attackAction(preferredUid?: string): BattleAction {
     const foes = this.battle.living('enemy');
     if (!foes.length) return { type: 'guard' };
-    const target = foes.reduce((weakest, f) => (f.creature.hp < weakest.creature.hp ? f : weakest), foes[0]);
+    const keep = preferredUid ? foes.find((f) => f.creature.uid === preferredUid) : undefined;
+    const target = keep ?? foes.reduce((weakest, f) => (f.creature.hp < weakest.creature.hp ? f : weakest), foes[0]);
     return { type: 'attack', targetUid: target.creature.uid };
+  }
+
+  /**
+   * Repeat: replay this actor's last player-chosen command. If it was a
+   * Technique the actor can no longer afford, fall back to a normal Attack (as
+   * requested); if the actor never issued a command (e.g. it was swapped in),
+   * default to a normal Attack too. Stale targets are re-aimed by the engine.
+   */
+  private repeatAction(actor: Battler): BattleAction {
+    const last = this.lastActions.get(actor.creature.uid);
+    if (!last) return this.attackAction();
+    if (last.type === 'technique' && actor.creature.mp < technique(last.techniqueId).mpCost) {
+      return this.attackAction(last.targetUid);
+    }
+    return last;
   }
 
   /**
@@ -575,8 +595,8 @@ export class BattleScene extends GameScene {
           say(
             'Halden',
             'These are already half-gone. Break one and it cannot even shield itself — so when a soul is BROKEN, pile on before it recovers.',
-            'Each hit landed on it extends a chain: every link bites harder, and a long enough chain banks you a Boost charge.',
-            'Order your turns onto the broken one, and spend Boost to squeeze in an extra hit and keep the chain alive.',
+            'Each hit landed on it extends a chain: every link bites harder than the last.',
+            'Order your turns onto the broken one — keep the chain alive and it will fall fast.',
           ),
         );
       }
@@ -643,10 +663,20 @@ export class BattleScene extends GameScene {
 
   private setAuto(on: boolean) {
     if (this.autoBattle === on) return;
+    if (on) this.setRepeat(false); // the two hands-off modes are mutually exclusive
     this.autoBattle = on;
     this.hud.setAuto(on);
     audio.sfx(on ? 'confirm' : 'cancel');
     if (!on) this.hud.setLog('Auto off — you have the controls.');
+  }
+
+  private setRepeat(on: boolean) {
+    if (this.repeatBattle === on) return;
+    if (on) this.setAuto(false); // the two hands-off modes are mutually exclusive
+    this.repeatBattle = on;
+    this.hud.setRepeat(on);
+    audio.sfx(on ? 'confirm' : 'cancel');
+    if (!on) this.hud.setLog('Repeat off — you have the controls.');
   }
 
   private pulse(actor: Battler) {
@@ -798,16 +828,16 @@ export class BattleScene extends GameScene {
           size: fx.size,
         });
         const s = this.screenPos(worldTop);
+        // Combo / effectiveness are inferred from the FX, not labelled: a
+        // reaction or super-effective hit reads through a fatter impact burst,
+        // more shake and a brighter number — no "Steam!" / "N-chain" text.
         const superEffective = hit.crit || hit.breakdown?.effectiveness === 'super';
-        const big = superEffective || react;
+        const chained = !!hit.chain && hit.chain >= 2;
+        const big = superEffective || react || chained;
         this.impactFlash(worldTop, big ? 0xfff0c0 : fx.color, fx.flash * (big ? 1.5 : 1));
         this.hud.float(s.x, s.y, String(hit.damage), big ? '#ffd166' : '#ff9a8a');
         this.ctx.hd2d.addShake(react ? fx.shake * 1.6 : superEffective ? fx.shake * 1.3 : fx.shake);
-        if (react) {
-          audio.sfx('crit');
-          this.hud.float(s.x, s.y - 30, hit.reaction!, cssColor);
-        } else if (superEffective) audio.sfx('crit');
-        if (hit.chain && hit.chain >= 2) this.hud.float(s.x, s.y - 52, `${hit.chain}-chain`, '#ffd166');
+        if (react || superEffective) audio.sfx('crit');
       }
 
       if (hit.fainted) {

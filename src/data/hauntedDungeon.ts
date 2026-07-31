@@ -56,7 +56,6 @@ const FLOORS: DungeonFloor[] = [
       { x: 2, z: 1, kind: 'gravestone' },
       { x: 13, z: 2, kind: 'gravestone' },
       { x: 3, z: 5, kind: 'boneheap', height: 0.7 },
-      { x: 12, z: 6, kind: 'deadTree', height: 1.7 },
       { x: 9, z: 9, kind: 'gravestone' },
       { x: 5, z: 7, kind: 'boneheap', height: 0.7 },
     ],
@@ -66,10 +65,10 @@ const FLOORS: DungeonFloor[] = [
       '#..S......C#....#',
       '#..........#....#',
       '#....1.........2#',
-      '#...............#',
-      '#.$....###......#',
-      '#......#.#......#',
-      '#......#>#......#',
+      '#..........DDDD.#',
+      '#.$....###.D3DD.#',
+      '#......#.#.DDDD.#',
+      '#......#>#.DDDD.#',
       '#...............#',
       '#################',
     ],
@@ -90,6 +89,9 @@ const FLOORS: DungeonFloor[] = [
           { species: 'cryptguard', level: 7 },
         ],
       },
+      // The Unwitnessed — an Anchored crowded into a mass of packed dark. Well
+      // above the Unremembered's level; come back matched to dark. Re-fightable.
+      '3': { kind: 'anchored', id: 'hauntedAnchored' },
     },
     chests: {
       '10,2': { obols: 260, item: 'repairChip', note: 'A traveller who did not leave. Their pack remains.' },

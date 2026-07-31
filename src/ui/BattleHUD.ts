@@ -2,7 +2,7 @@ import { el, esc, meter, remove } from './dom';
 import { Menu } from './Menu';
 import type { MenuItem } from './Menu';
 import type { Battle, BattleAction, Battler } from '../systems/battle/engine';
-import { BOOST_MAX, isMeleeTechnique } from '../systems/battle/engine';
+import { isMeleeTechnique } from '../systems/battle/engine';
 import type { CreatureInstance } from '../systems/party/creature';
 import { activeMoves } from '../systems/party/creature';
 import { technique, techShape } from '../data/techniques';
@@ -23,8 +23,8 @@ interface FighterCard {
   markEl: HTMLElement;
 }
 
-/** What the action menu can resolve to — a real action, "go auto", "boost", or "flee". */
-export type MenuChoice = BattleAction | { type: 'auto' } | { type: 'boost' } | { type: 'flee' };
+/** What the action menu can resolve to — a real action, "go auto"/"repeat", or "flee". */
+export type MenuChoice = BattleAction | { type: 'auto' } | { type: 'repeat' } | { type: 'flee' };
 
 /** How many announcements stay stacked at once, and how long each one dwells (ms). */
 const LOG_MAX = 4;
@@ -44,7 +44,7 @@ export class BattleHUD {
   private partyWrap: HTMLElement;
   private menuHost: HTMLElement;
   private autoChip: HTMLElement;
-  private boostChip!: HTMLElement;
+  private repeatChip: HTMLElement;
   private cards = new Map<string, FighterCard>();
   private menu: Menu | null = null;
 
@@ -73,9 +73,11 @@ export class BattleHUD {
     this.autoChip.innerHTML = '<span class="accent">AUTO</span> — press ESC or L1 to take over';
     this.autoChip.style.display = 'none';
 
-    // Party Boost gauge — fills on Attack/Guard, spent to act again.
-    this.boostChip = el('div', 'panel');
-    this.boostChip.id = 'boost-chip';
+    // Shown only while Repeat is running (the party re-issues last round's commands).
+    this.repeatChip = el('div', 'panel');
+    this.repeatChip.id = 'repeat-chip';
+    this.repeatChip.innerHTML = '<span class="accent">REPEAT</span> — press ESC to take over';
+    this.repeatChip.style.display = 'none';
 
     this.root.append(
       this.banner,
@@ -84,13 +86,17 @@ export class BattleHUD {
       this.partyWrap,
       this.menuHost,
       this.autoChip,
-      this.boostChip,
+      this.repeatChip,
     );
     this.parent.appendChild(this.root);
   }
 
   setAuto(on: boolean) {
     this.autoChip.style.display = on ? '' : 'none';
+  }
+
+  setRepeat(on: boolean) {
+    this.repeatChip.style.display = on ? '' : 'none';
   }
 
   build(battle: Battle) {
@@ -211,10 +217,6 @@ export class BattleHUD {
         card.staggerEl.innerHTML = '';
       }
     }
-    const charges = battle.boost.party;
-    const pips = Array.from({ length: BOOST_MAX }, (_, i) => `<i class="${i < charges ? 'on' : ''}">▲</i>`).join('');
-    this.boostChip.innerHTML = `<span class="dim">BOOST</span> ${pips}`;
-    this.boostChip.classList.toggle('ready', charges > 0);
   }
 
   setActive(uid: string | null) {
@@ -223,6 +225,8 @@ export class BattleHUD {
 
   setBanner(text: string) {
     this.banner.textContent = text;
+    // An empty banner hides entirely rather than showing a blank pill.
+    this.banner.style.display = text ? '' : 'none';
   }
 
   /**
@@ -269,12 +273,16 @@ export class BattleHUD {
     setTimeout(() => remove(node), 950);
   }
 
-  private async runMenu(items: MenuItem[], opts: { cancellable?: boolean; onHighlight?: (v: string) => void } = {}) {
+  private async runMenu(
+    items: MenuItem[],
+    opts: { cancellable?: boolean; onHighlight?: (v: string) => void; startIndex?: number } = {},
+  ) {
     this.menuHost.style.display = '';
     this.menu?.destroy();
     this.menu = new Menu(this.menuHost, items, {
       cancellable: opts.cancellable,
       onHighlight: opts.onHighlight,
+      startIndex: opts.startIndex,
     });
     const v = await this.menu.open();
     this.menu.destroy();
@@ -295,6 +303,7 @@ export class BattleHUD {
     actor: Battler,
     onTargetHover?: (uid: string | null) => void,
     reserves: CreatureInstance[] = [],
+    canRepeat = false,
   ): Promise<MenuChoice> {
     const c = actor.creature;
 
@@ -306,29 +315,27 @@ export class BattleHUD {
       const canMove = battle.emptyCells(actor.side).length > 0;
       const canSwap = reserves.length > 0;
       const canCommune = battle.communeTargets('enemy').length > 0;
-      const charges = battle.boost.party;
+      // The hands-off options lead the menu, then the manual actions. Repeat is
+      // shown only when there is a prior command to replay (round 2+) — it sits
+      // at the very top, above Auto. The cursor still starts on Attack so a
+      // reflexive confirm never fires an accidental repeat / auto.
       const items: MenuItem[] = [
+        { value: 'auto', label: 'Auto', note: 'L1' },
         { value: 'attack', label: 'Attack' },
         { value: 'technique', label: 'Technique', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
-        {
-          value: 'boost',
-          label: 'Boost',
-          disabled: charges < 1,
-          note: charges > 0 ? `act again · ▲${charges}` : 'empty',
-        },
         { value: 'move', label: 'Move', disabled: !canMove, note: canMove ? undefined : 'no room' },
         { value: 'swap', label: 'Swap', disabled: !canSwap, note: canSwap ? undefined : '—' },
         { value: 'guard', label: 'Guard' },
         { value: 'run', label: 'Run', disabled: battle.isBoss, note: battle.isBoss ? "can't flee" : '50%' },
-        { value: 'auto', label: 'Auto', note: 'L1' },
       ];
-      // Commune only appears when a gentle soul is present to hear it.
-      if (canCommune) items.splice(6, 0, { value: 'commune', label: 'Commune', note: 'reach out' });
-      const root = await this.runMenu(items);
+      if (canRepeat) items.unshift({ value: 'repeat', label: 'Repeat', note: 'last commands' });
+      // Commune only appears when a gentle soul is present to hear it (before Run).
+      if (canCommune) items.splice(items.length - 1, 0, { value: 'commune', label: 'Commune', note: 'reach out' });
+      const root = await this.runMenu(items, { startIndex: items.findIndex((i) => i.value === 'attack') });
 
       if (root === 'auto') return { type: 'auto' };
 
-      if (root === 'boost') return { type: 'boost' };
+      if (root === 'repeat') return { type: 'repeat' };
 
       if (root === 'run') return { type: 'flee' };
 

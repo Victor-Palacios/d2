@@ -1,8 +1,10 @@
 import type { CreatureInstance } from './creature';
 import { statsAt, MAX_ACTIVE_MOVES } from './creature';
 import { SPECIES } from '../../data/creatures';
-import { game, START_PARTY_CAP } from './gameState';
+import { game, START_PARTY_CAP, MAX_FIELDED } from './gameState';
 import type { AttributeId } from '../../data/elements';
+import type { Cell } from '../battle/engine';
+import { defaultFormation } from '../battle/engine';
 
 /**
  * Saving.
@@ -21,7 +23,7 @@ import type { AttributeId } from '../../data/elements';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 /**
  * Oldest save this build can still read. Normally we keep this at 1 because
  * changes are additive, but v5/v6 renamed the tutorial reach's id and clear
@@ -32,7 +34,8 @@ export const SAVE_VERSION = 10;
  * adds the per-creature move `loadout`, back-filled from the known pool — so a
  * v8 save still loads. v10 renames two persisted fields (credits→`obols`,
  * hasLicense→`hasLeave`) for the mood rework — a rename can't be back-filled,
- * so anything older is dropped and started fresh.
+ * so anything older is dropped and started fresh. v11 adds the saved battle
+ * formation, which `applySave` defaults to the front line — so a v10 loads.
  */
 export const MIN_SAVE_VERSION = 10;
 
@@ -69,6 +72,7 @@ export interface SaveData {
     partyCap: number;
     sanctuary: CreatureInstance[];
     immortality: number;
+    formation: Cell[];
   };
 }
 
@@ -109,6 +113,7 @@ export function snapshot(kind: SaveKind, scene: SaveData['scene'], label: string
       partyCap: game.partyCap,
       sanctuary: JSON.parse(JSON.stringify(game.sanctuary)) as CreatureInstance[],
       immortality: game.immortality,
+      formation: game.formation.map((c) => ({ ...c })),
     },
   };
 }
@@ -199,6 +204,12 @@ export function applySave(data: SaveData) {
   game.partyCap = s.partyCap ?? START_PARTY_CAP;
   game.sanctuary = s.sanctuary ?? [];
   game.immortality = s.immortality ?? 0;
+  // Saves from before the formation editor have no stored layout — default the
+  // whole fielded party to the front line (the pre-formation behaviour).
+  game.formation =
+    Array.isArray(s.formation) && s.formation.length >= MAX_FIELDED
+      ? s.formation.slice(0, MAX_FIELDED).map((c) => ({ row: c.row, col: c.col }))
+      : defaultFormation(MAX_FIELDED);
   // Saves from before the leveling / equipment systems won't have these fields.
   for (const c of [...game.party, ...game.sanctuary]) {
     if (c.xp === undefined) c.xp = 0;
