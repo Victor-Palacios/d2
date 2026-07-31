@@ -34,7 +34,7 @@ export const ITEMS: Record<string, ItemDef> = {
     id: 'towBeacon',
     name: 'Homing Ember',
     price: 200,
-    desc: 'Emergency return to The Everwake without losing your haul.',
+    desc: 'Flare it from the crawl pause menu (ESC) for an emergency escape back to The Everwake. Your haul comes with you; one Ember is spent per use.',
   },
   reachMap: {
     id: 'reachMap',
