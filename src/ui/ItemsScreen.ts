@@ -70,7 +70,7 @@ export async function openItems(parent: HTMLElement): Promise<void> {
 
   /** Pick a party member for an HP/MP item; shows the relevant meter. Null cancels. */
   const pickTarget = async (stat: 'hp' | 'mp'): Promise<string | null> => {
-    const items: MenuItem[] = game.party.map((c) => ({
+    const items: MenuItem[] = game.souls().map((c) => ({
       value: c.uid,
       label: c.name,
       note: stat === 'hp' ? `HP ${c.hp}/${c.maxHp}` : `MP ${c.mp}/${c.maxMp}`,
@@ -79,7 +79,7 @@ export async function openItems(parent: HTMLElement): Promise<void> {
     const menu = new Menu(menuHost, items, {
       cancellable: true,
       onHighlight: (uid) => {
-        const c = game.party.find((m) => m.uid === uid);
+        const c = game.souls().find((m) => m.uid === uid);
         if (c) {
           const attr = ATTRIBUTES[c.attribute];
           desc.innerHTML =
@@ -121,7 +121,7 @@ export async function openItems(parent: HTMLElement): Promise<void> {
     const uid = await pickTarget(eff.kind);
     hint.textContent = 'UP/DOWN browse · Z/ENTER use · X close';
     if (!uid) return;
-    const c = game.party.find((m) => m.uid === uid);
+    const c = game.souls().find((m) => m.uid === uid);
     if (!c) return;
 
     if (eff.kind === 'hp') {

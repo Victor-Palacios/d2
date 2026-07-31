@@ -262,15 +262,22 @@ export class GameState {
   }
 
   /**
-   * Move fielded `slot` onto `cell`. If another fielded slot already stands
-   * there the two trade cells, so the formation keeps distinct positions no
-   * matter how the player shuffles them.
+   * Move a fielded `slot` onto `cell`. Whichever slot currently holds that cell
+   * trades places — and that is checked across ALL `MAX_FIELDED` slots, not just
+   * the fielded ones, so every stored cell stays distinct. That matters because
+   * `fieldCap` can grow when a companion joins: a slot that was idle becomes
+   * fielded, and it must never share a cell with an already-fielded one.
    */
   moveFormationSlot(slot: number, cell: Cell): boolean {
     if (slot < 0 || slot >= this.fieldedCount()) return false;
     if (cellIndex(this.formation[slot]) === cellIndex(cell)) return false;
-    const other = this.slotAtCell(cell);
-    if (other >= 0) this.formation[other] = { ...this.formation[slot] };
+    const idx = cellIndex(cell);
+    for (let i = 0; i < this.formation.length; i++) {
+      if (i !== slot && cellIndex(this.formation[i]) === idx) {
+        this.formation[i] = { ...this.formation[slot] };
+        break;
+      }
+    }
     this.formation[slot] = { row: cell.row, col: cell.col };
     return true;
   }
