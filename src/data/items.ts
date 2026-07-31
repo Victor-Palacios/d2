@@ -1,14 +1,23 @@
 /**
- * Item stubs. The shop (plan §2.7) lists these; purchasing deducts obols and
- * files the item into the bag. Using items in battle is deliberately out of
- * scope for the first hour — the Item action is present but disabled.
+ * Items. The shop (plan §2.7) lists these; purchasing deducts obols and files
+ * the item into the bag. Consumables carry an `effect` and can be used from the
+ * Items menu (see `ui/ItemsScreen.ts`); items with no `effect` are held for shop
+ * value or a future hook and cannot be used yet.
  */
+
+/** What using a consumable does. HP/MP target one creature; Light refills the lantern. */
+export type ItemEffect =
+  | { kind: 'hp'; amount: number }
+  | { kind: 'mp'; amount: number }
+  | { kind: 'light'; amount: number };
 
 export interface ItemDef {
   id: string;
   name: string;
   price: number;
   desc: string;
+  /** Present on consumables the Items menu can apply. */
+  effect?: ItemEffect;
 }
 
 export const ITEMS: Record<string, ItemDef> = {
@@ -16,19 +25,22 @@ export const ITEMS: Record<string, ItemDef> = {
     id: 'repairChip',
     name: 'Mending Balm',
     price: 120,
-    desc: 'Restores 60 HP to one creature. (Battle use not wired up yet.)',
+    desc: 'Restores 60 HP to one creature.',
+    effect: { kind: 'hp', amount: 60 },
   },
   bufferCell: {
     id: 'bufferCell',
     name: 'Focus Draught',
     price: 150,
     desc: 'Restores 30 MP to one creature.',
+    effect: { kind: 'mp', amount: 30 },
   },
   fuelCanister: {
     id: 'fuelCanister',
     name: 'Light Shard',
     price: 90,
-    desc: 'Restores 40 LP of lantern-light while crawling a reach.',
+    desc: 'Restores 40 LP to the lantern.',
+    effect: { kind: 'light', amount: 40 },
   },
   towBeacon: {
     id: 'towBeacon',
