@@ -273,12 +273,16 @@ export class BattleHUD {
     setTimeout(() => remove(node), 950);
   }
 
-  private async runMenu(items: MenuItem[], opts: { cancellable?: boolean; onHighlight?: (v: string) => void } = {}) {
+  private async runMenu(
+    items: MenuItem[],
+    opts: { cancellable?: boolean; onHighlight?: (v: string) => void; startIndex?: number } = {},
+  ) {
     this.menuHost.style.display = '';
     this.menu?.destroy();
     this.menu = new Menu(this.menuHost, items, {
       cancellable: opts.cancellable,
       onHighlight: opts.onHighlight,
+      startIndex: opts.startIndex,
     });
     const v = await this.menu.open();
     this.menu.destroy();
@@ -311,19 +315,22 @@ export class BattleHUD {
       const canMove = battle.emptyCells(actor.side).length > 0;
       const canSwap = reserves.length > 0;
       const canCommune = battle.communeTargets('enemy').length > 0;
+      // Repeat and Auto lead the menu (hands-off options first, Repeat above
+      // Auto), then the manual actions. The cursor still starts on Attack so a
+      // reflexive confirm never fires an accidental repeat / auto.
       const items: MenuItem[] = [
+        { value: 'repeat', label: 'Repeat', disabled: !canRepeat, note: canRepeat ? 'last commands' : '—' },
+        { value: 'auto', label: 'Auto', note: 'L1' },
         { value: 'attack', label: 'Attack' },
         { value: 'technique', label: 'Technique', disabled: !canTechnique, note: canTechnique ? undefined : 'no MP' },
         { value: 'move', label: 'Move', disabled: !canMove, note: canMove ? undefined : 'no room' },
         { value: 'swap', label: 'Swap', disabled: !canSwap, note: canSwap ? undefined : '—' },
         { value: 'guard', label: 'Guard' },
         { value: 'run', label: 'Run', disabled: battle.isBoss, note: battle.isBoss ? "can't flee" : '50%' },
-        { value: 'auto', label: 'Auto', note: 'L1' },
-        { value: 'repeat', label: 'Repeat', disabled: !canRepeat, note: canRepeat ? 'last commands' : '—' },
       ];
       // Commune only appears when a gentle soul is present to hear it (before Run).
-      if (canCommune) items.splice(5, 0, { value: 'commune', label: 'Commune', note: 'reach out' });
-      const root = await this.runMenu(items);
+      if (canCommune) items.splice(items.length - 1, 0, { value: 'commune', label: 'Commune', note: 'reach out' });
+      const root = await this.runMenu(items, { startIndex: items.findIndex((i) => i.value === 'attack') });
 
       if (root === 'auto') return { type: 'auto' };
 
