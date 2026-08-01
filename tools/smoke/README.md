@@ -33,6 +33,7 @@ Environment variables:
 |---|---|
 | `walk.mjs` | Title → name entry → hub → world map → dungeon → tutorial fight → back to the crawl |
 | `walkcycle.mjs` | The player's stride (`Billboard.walkBounce` / `setStride`): jumps into the crawl and samples the sprite across a step — two footfall bounces per tile, a body rock to opposite sides, planted at both ends, and a calm idle when standing. Frame-rate independent, so it holds on the GPU-less container. |
+| `reveal.mjs` | The occlusion reveal (`Billboard` `reveal` option): jumps into the crawl, drops an opaque blocker between camera and player, and asserts the see-through silhouette + flame glow both exist and are configured to draw only through occluders (`depthFunc` GreaterDepth, no depth write). Screenshots the player showing through the blocker. |
 | `save.mjs` | Autosave, suspend save, Continue, and that a suspend save is **consumed** on load (three simulated sessions across page reloads) |
 | `pad.mjs` | Controller support, using a synthetic standard-mapping gamepad injected via `addInitScript` |
 | `hud.mjs` | Battle HUD screenshots — class-coloured borders, HP/MP meters, element-tinted techniques |

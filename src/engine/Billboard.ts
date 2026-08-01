@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { artAspect, spriteTexture, mirrorTexture } from './pixel';
+import { artAspect, spriteTexture, mirrorTexture, flameTexture } from './pixel';
 import type { PixelArt } from './pixel';
 
 /**
@@ -26,6 +26,13 @@ export interface BillboardOptions {
   castShadow?: boolean;
   /** Lifts the sprite off the floor (floating creatures). */
   hover?: number;
+  /**
+   * Occlusion reveal (the player). When set, the sprite is *also* drawn through
+   * anything in front of it — a warm see-through silhouette wreathed in a
+   * flame-shaped glow — so walls between the camera and the player never hide
+   * them. Off by default; only the crawl/hub player uses it.
+   */
+  reveal?: boolean;
 }
 
 export class Billboard {
@@ -38,6 +45,11 @@ export class Billboard {
   private flash = 0;
   private hoverAmount: number;
   private height: number;
+  /** Occlusion-reveal silhouette (drawn only where geometry is in front). */
+  private ghost: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> | null = null;
+  /** Flame-shaped glow behind the reveal silhouette. */
+  private revealFlame: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> | null = null;
+  private revealPhase = Math.random() * 10;
 
   /** Vertical bob amplitude (0 disables). */
   bob = 0.03;
@@ -90,13 +102,55 @@ export class Billboard {
     this.mesh.receiveShadow = false;
     this.mesh.position.y = this.hoverAmount;
     this.object.add(this.mesh);
+
+    if (opts.reveal) {
+      // A flame-shaped glow, sitting behind the silhouette, that only draws where
+      // an occluder is in front (depthFunc GreaterDepth). Additive so it blooms.
+      const flameGeo = new THREE.PlaneGeometry(this.height * 0.85, this.height * 1.05);
+      flameGeo.translate(0, this.height * 0.6, 0);
+      const flameMat = new THREE.MeshBasicMaterial({
+        map: flameTexture('reveal'),
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+        depthFunc: THREE.GreaterDepth,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+      });
+      this.revealFlame = new THREE.Mesh(flameGeo, flameMat);
+      this.revealFlame.renderOrder = 19;
+      // Child of the sprite mesh, so it inherits the bob/walk/billboard transform.
+      this.mesh.add(this.revealFlame);
+
+      // The see-through silhouette: the player's own art, warm-tinted, shown
+      // through the wall. Shares the sprite geometry so it tracks exactly.
+      const ghostMat = new THREE.MeshBasicMaterial({
+        map: tex,
+        alphaTest: 0.5,
+        transparent: true,
+        opacity: 0.92,
+        color: new THREE.Color(0xffc27a),
+        depthWrite: false,
+        depthFunc: THREE.GreaterDepth,
+        side: THREE.DoubleSide,
+      });
+      this.ghost = new THREE.Mesh(geo, ghostMat);
+      this.ghost.renderOrder = 20;
+      this.ghost.castShadow = false;
+      this.mesh.add(this.ghost);
+    }
   }
 
   /** Swaps the displayed art (facing changes, chest open/closed, ...). */
   setArt(art: PixelArt, id: string, mirrored = false) {
-    this.mesh.material.map = mirrored ? mirrorTexture(id, art) : spriteTexture(id, art);
-    this.mesh.material.emissiveMap = this.mesh.material.map;
+    const map = mirrored ? mirrorTexture(id, art) : spriteTexture(id, art);
+    this.mesh.material.map = map;
+    this.mesh.material.emissiveMap = map;
     this.mesh.material.needsUpdate = true;
+    if (this.ghost) {
+      this.ghost.material.map = map;
+      this.ghost.material.needsUpdate = true;
+    }
   }
 
   get position(): THREE.Vector3 {
@@ -183,10 +237,22 @@ export class Billboard {
       this.flash = 0;
       this.mesh.material.emissiveIntensity = 0.06;
     }
+
+    if (this.revealFlame) {
+      // Candle-like flicker on the reveal glow: wobbling brightness and a slight
+      // vertical lick, so the flame reads as alive rather than a static decal.
+      const f = 0.72 + Math.sin(time * 9 + this.revealPhase) * 0.16 + Math.sin(time * 21.3 + this.revealPhase) * 0.08;
+      this.revealFlame.material.opacity = f;
+      this.revealFlame.scale.set(1 + Math.sin(time * 6.3 + this.revealPhase) * 0.05, 1 + Math.sin(time * 8.1 + this.revealPhase) * 0.09, 1);
+    }
   }
 
   dispose() {
     this.mesh.geometry.dispose();
     this.mesh.material.dispose();
+    // The ghost shares the sprite geometry (disposed above) — only its material.
+    this.ghost?.material.dispose();
+    this.revealFlame?.geometry.dispose();
+    this.revealFlame?.material.dispose();
   }
 }

@@ -147,7 +147,10 @@ supply bay → Mission 2 briefing.
   descent portals, and a boss floor whose accent walls telegraph what is coming.
   The player strides rather than floats — a two-footfall bounce and a
   side-to-side body rock play across each tile step (`Billboard.walkBounce` /
-  `setStride`), settling to a calm idle breath when standing.
+  `setStride`), settling to a calm idle breath when standing. When a wall would
+  hide the player, they show through it as a warm see-through silhouette wreathed
+  in a lantern-flame glow (`Billboard`'s `reveal` option, drawn with
+  `depthFunc: GreaterDepth` so it appears only where something is in front).
 - **Battle**: turn-based on a 2×3 grid. You field one soul per human keeper
   (`game.fieldCap` — two at the Quiet Crossing, up to four; companions walk with
   you but never fight). Turn order by Speed with a random tiebreak band.

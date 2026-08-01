@@ -132,7 +132,7 @@ export class HubScene extends GameScene {
     this.particles = new ParticleField(300);
     this.scene.add(this.particles.points);
 
-    this.player = new Billboard(HUMANS.hero, 'human:hero', { height: 1.55 });
+    this.player = new Billboard(HUMANS.hero, 'human:hero', { height: 1.55, reveal: true });
     this.player.bob = 0.014;
     this.player.bobSpeed = 2.4;
     this.player.walkBounce = 0.08;
