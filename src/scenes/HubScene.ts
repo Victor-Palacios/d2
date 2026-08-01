@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeObject3D } from '../engine/dispose';
 import { GameScene, sleep } from '../engine/SceneManager';
 import { TileGrid } from '../engine/TileGrid';
 import { Billboard } from '../engine/Billboard';
@@ -809,6 +810,7 @@ export class HubScene extends GameScene {
     this.player.dispose();
     for (const n of this.npcs) n.billboard.dispose();
     this.particles.dispose();
+    disposeObject3D(this.scene);
     this.scene.clear();
   }
 }

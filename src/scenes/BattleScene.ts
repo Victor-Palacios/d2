@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeObject3D } from '../engine/dispose';
 import { GameScene, sleep } from '../engine/SceneManager';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Torch, Aura } from '../engine/fx';
@@ -1258,6 +1259,7 @@ export class BattleScene extends GameScene {
     for (const bb of this.sprites.values()) bb.dispose();
     for (const a of this.auras.values()) a.dispose();
     this.particles.dispose();
+    disposeObject3D(this.scene);
     this.scene.clear();
   }
 }

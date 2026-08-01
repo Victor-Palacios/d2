@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeObject3D } from '../engine/dispose';
 import { GameScene } from '../engine/SceneManager';
 import { ParticleField } from '../engine/fx';
 import { floorTexture } from '../engine/pixel';
@@ -195,6 +196,7 @@ export class WorldMapScene extends GameScene {
   async exit() {
     this.select?.destroy();
     this.particles.dispose();
+    disposeObject3D(this.scene);
     this.scene.clear();
   }
 }

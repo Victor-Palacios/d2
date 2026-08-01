@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeObject3D } from '../engine/dispose';
 import { GameScene, sleep } from '../engine/SceneManager';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Torch } from '../engine/fx';
@@ -400,6 +401,7 @@ export class IntroScene extends GameScene {
     for (const b of this.billboards) b.dispose();
     for (const w of this.wisps) w.bb.dispose();
     this.particles.dispose();
+    disposeObject3D(this.scene);
     this.scene.clear();
   }
 }
