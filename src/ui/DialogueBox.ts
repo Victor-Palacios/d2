@@ -67,9 +67,17 @@ export class DialogueBox {
     }
   }
 
-  /** How long to dwell on a fully-revealed line before auto-advancing. */
+  /**
+   * How long to dwell on a fully-revealed line before auto-advancing, scaled by
+   * the amount of text: a brief beat for a one-liner, proportionally longer for
+   * a speech, so the reading pace stays even. The old fixed 1.1–3.6s band was
+   * the problem — it lingered on short lines and advanced long ones before you
+   * could finish. This dwell is *on top of* the typewriter reveal (during which
+   * the line is already being read), so the per-character rate is tuned for the
+   * catch-up reading that remains once a line is fully shown.
+   */
   private dwellFor(text: string): number {
-    return Math.min(3600, Math.max(1100, text.length * 32));
+    return Math.min(8000, Math.max(700, Math.round(400 + text.length * 42)));
   }
 
   private armAuto(c: LineController) {
