@@ -65,6 +65,14 @@ function cellPos(side: 'party' | 'enemy', cell: { row: number; col: number }): {
   return { x: SLOT_X[cell.col], z: front + (cell.row === 1 ? dir * ROW_GAP : 0) };
 }
 
+/**
+ * How long an enemy's action announcement ("X uses Y!") sits before the blow
+ * lands, so the player can read what is coming. Hands-off modes (auto / repeat)
+ * use a shorter beat so a self-driving fight still moves.
+ */
+const ENEMY_READ_MS = 1300;
+const ENEMY_READ_FAST_MS = 500;
+
 /** Field-pulse announcement line (Phase D). */
 const PULSE_TEXT: Record<string, string> = {
   calm: '',
@@ -751,6 +759,14 @@ export class BattleScene extends GameScene {
     const home = this.homePos.get(actor.creature.uid);
 
     for (const line of result.log.slice(0, 1)) this.hud.setLog(line);
+
+    // Give the player a beat to read an enemy's announced action before it
+    // strikes — the fast delivery otherwise lands before the text registers.
+    // (The player's own actions are self-chosen, so they need no such pause.)
+    if (actor.side === 'enemy' && result.log.length) {
+      await sleep(this.autoBattle || this.repeatBattle ? ENEMY_READ_FAST_MS : ENEMY_READ_MS);
+      if (this.disposed) return;
+    }
 
     // The move's own signature FX (melee slash / flying bolt / area nova /
     // mending bloom), derived from the technique — see data/moveFx.ts. Guard
