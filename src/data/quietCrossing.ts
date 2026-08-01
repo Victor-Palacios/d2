@@ -74,7 +74,8 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
         script: [
           ...say(
             MENTOR,
-            "Radio check. You are carrying a keeper's lantern across the Quiet Crossing — the threshold every soul passes on its way to rest.",
+            'Can you hear me? Good. My voice rides your lantern-flame — that is how one keeper reaches another across the dark, light to light. No device, no answering aloud; think it, and the light carries it back to me.',
+            "You are carrying a keeper's lantern across the Quiet Crossing — the threshold every soul passes on its way to rest.",
             'Arrow keys or WASD move you one tile at a time. Every step spends a little of your light — watch your lantern.',
             'Let it gutter out and you are spirited away, the dark left unattended.',
           ),
@@ -141,7 +142,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
         script: [
           ...say(
             MENTOR,
-            'Radio again. The chamber ahead is laid with element tiles — Water, Fire, Nature, Machine, Dark.',
+            'My voice in your flame again. The chamber ahead is laid with element tiles — Water, Fire, Nature, Machine, Dark.',
             'Fight while a creature stands on its own element and every hit lands harder.',
           ),
           ...say(MENTOR, 'Class matters more. Assassin beats Mage, Mage beats Hero, Hero beats Assassin.'),

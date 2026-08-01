@@ -83,7 +83,7 @@ each with a gameplay verb (§9) and a non-death desire (§6.1).
   that acceptance is not passivity but the hardest labor in the game (§5.4): how
   to sit with a soul, hear its name, and let it cross. He is calm, understated,
   and privately terrified that if he felt every loss he has tended, he would
-  collapse. He reads pulp mysteries on the radio between souls.
+  collapse. He reads pulp mysteries aloud through the lantern-light between souls.
 - **Sena Vale** is the warden of the second reach (below). She froze her
   sister's soul so it could never fade — and can never leave. She is not a
   villain; she *saved* someone (§5.2 necessary contradiction). Her verb,
@@ -192,7 +192,8 @@ reflects one idea from the framework and hosts one relationship with death.
   teaches otherwise.
 - **What it is:** the threshold every soul passes on its way to rest — quiet
   because most cross without trouble. You learn to meet an echo, to hear it, to
-  quiet or keep it. Halden guides you by radio.
+  quiet or keep it. Halden guides you through the lantern-light — a keeper's voice
+  carried flame to flame, established at the first tutorial beat.
 - **Boundary keeper (boss):** **the Vigil** (recast of Regalion, §5.8 Version G —
   the Boundary Keeper). It does not attack out of malice; it blocks the way to
   see whether you are fit to carry a lantern deeper. Beating it earns not a
@@ -320,8 +321,8 @@ filled before commercial use.
   **The Unremembered**; The Quiet Crossing kept, reframed.
 - **Boss reframes:** Regalion → **the Vigil**; Glaciark → **Sena Vale**;
   Revenance → **the Unnamed**. (Species ids unchanged; names/dialogue only.)
-- **Radio & boss dialogue** rewritten to carry the theme and introduce Halden,
-  Sena, and Wren.
+- **Lantern-voice & boss dialogue** rewritten to carry the theme and introduce
+  Halden, Sena, and Wren. Halden's guidance reaches you flame to flame, not by radio.
 - Smoke tests updated for the renamed reaches.
 
 ## 10. Built since (now in the game)

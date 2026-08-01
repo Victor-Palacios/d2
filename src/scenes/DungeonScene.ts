@@ -207,7 +207,7 @@ export class DungeonScene extends GameScene {
         this.scene.add(portal.object);
         this.portals.push({ portal, x: t.x, z: t.z });
       }
-      // Dialogue events are radio calls now — no on-screen NPC to drive into.
+      // Dialogue events are voices in the lantern now — no on-screen NPC to drive into.
       // They fire when the player crosses the tile (placed at map chokepoints).
     });
 

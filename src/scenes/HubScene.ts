@@ -146,7 +146,7 @@ export class HubScene extends GameScene {
       if (t.kind !== 'event') return;
       const entry = roster.find((r) => r.char === t.eventId);
       if (!entry) return;
-      // Halden is at his radio until the midpoint takes him.
+      // Halden tends his lantern until the midpoint takes him.
       if (entry.id === 'mentor' && game.has('haldenGone')) return;
       const b = new Billboard(HUMANS[entry.art], `human:${entry.art}`, { height: 1.6 });
       b.bob = 0.025;
@@ -442,7 +442,7 @@ export class HubScene extends GameScene {
 
     await this.dialogue.play([
       ...narrate(
-        'You come back to the Everwake with all three reaches quiet behind you. The lanterns are lit. Halden is not at his radio.',
+        'You come back to the Everwake with all three reaches quiet behind you. The lanterns are lit. But there is no voice in your flame — Halden is not answering.',
       ),
       ...narrate(
         'You find him in the back, his detective serial still murmuring a chapter from the end. He is not an echo. He is a person, and he is dying the ordinary way.',
@@ -484,7 +484,7 @@ export class HubScene extends GameScene {
       game.addItem('haldensSerial');
       await this.dialogue.play([
         ...narrate(
-          'You take his chair, his radio, the serial with its last chapter unread. The duty is yours now. You carry the unfinished story with you.',
+          'You take his chair, his lantern, the serial with its last chapter unread. The duty is yours now. You carry the unfinished story with you.',
         ),
       ]);
       toast(this.ctx.ui, '<span class="accent">Got Halden\'s Serial</span> — a Memento', 2600);
