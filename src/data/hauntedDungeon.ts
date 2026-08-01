@@ -76,17 +76,17 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'wispling', level: 7 },
-          { species: 'gravemaw', level: 7 },
+          { species: 'palefire', level: 7 },
+          { species: 'nullmancer', level: 7 },
         ],
         intro: narrate('Something cold passes through you. It leaves a shape behind.'),
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'gravemaw', level: 7 },
-          { species: 'wispling', level: 7 },
-          { species: 'cryptguard', level: 7 },
+          { species: 'nullmancer', level: 7 },
+          { species: 'palefire', level: 7 },
+          { species: 'hexshade', level: 7 },
         ],
       },
       // The Unwitnessed — an Anchored crowded into a mass of packed dark. Well
@@ -100,15 +100,15 @@ const FLOORS: DungeonFloor[] = [
     encounters: [
       { weight: 1, enemies: [{ species: 'lastlight', level: 7 }] }, // rare: a soul about to move on
       { weight: 3, enemies: [{ species: 'wispling', level: 7 }] },
-      { weight: 2, enemies: [{ species: 'gravemaw', level: 7 }] },
+      { weight: 2, enemies: [{ species: 'direwisp', level: 7 }] },
       {
         weight: 2,
         enemies: [
           { species: 'wispling', level: 7 },
-          { species: 'gravemaw', level: 7 },
+          { species: 'direwisp', level: 7 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'cryptguard', level: 7 }] },
+      { weight: 1, enemies: [{ species: 'hexshade', level: 7 }] },
     ],
   },
 
@@ -141,15 +141,15 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'cryptguard', level: 7 },
+          { species: 'hexshade', level: 7 },
           { species: 'wispling', level: 7 },
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'gravemaw', level: 7 },
-          { species: 'cryptguard', level: 7 },
+          { species: 'direwisp', level: 7 },
+          { species: 'hexshade', level: 7 },
           { species: 'wispling', level: 7 },
         ],
         intro: narrate('The nave breathes out. The dark at the far end is thicker than dark should be.'),
@@ -161,20 +161,20 @@ const FLOORS: DungeonFloor[] = [
     encounterRate: 0.08,
     encounters: [
       { weight: 1, enemies: [{ species: 'lastlight', level: 7 }] }, // rare: a soul about to move on
-      { weight: 3, enemies: [{ species: 'gravemaw', level: 7 }] },
+      { weight: 3, enemies: [{ species: 'direwisp', level: 7 }] },
       { weight: 3, enemies: [{ species: 'wispling', level: 7 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'cryptguard', level: 7 },
+          { species: 'hexshade', level: 7 },
           { species: 'wispling', level: 7 },
         ],
       },
       {
         weight: 1,
         enemies: [
-          { species: 'cryptguard', level: 7 },
-          { species: 'gravemaw', level: 7 },
+          { species: 'hexshade', level: 7 },
+          { species: 'direwisp', level: 7 },
         ],
       },
     ],
@@ -234,8 +234,8 @@ const FLOORS: DungeonFloor[] = [
       {
         weight: 1,
         enemies: [
-          { species: 'cryptguard', level: 7 },
-          { species: 'gravemaw', level: 7 },
+          { species: 'hexshade', level: 7 },
+          { species: 'direwisp', level: 7 },
         ],
       },
     ],

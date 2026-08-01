@@ -13,11 +13,13 @@
 import { CROSSING_MAGES } from './crossing-mages.mjs';
 import { CRYSTAL_HEROES } from './crystal-heroes.mjs';
 import { OVERGROWTH_ASSASSINS } from './overgrowth-assassins.mjs';
+import { HAUNTED_MAGES } from './haunted-mages.mjs';
 
 export const NEW_ART = {
   ...CROSSING_MAGES,
   ...CRYSTAL_HEROES,
   ...OVERGROWTH_ASSASSINS,
+  ...HAUNTED_MAGES,
 };
 
 export const NEW_MONSTERS = [
@@ -91,5 +93,31 @@ export const NEW_MONSTERS = [
     height: 2.3, boss: true, base: { hp: 76, mp: 22, off: 24, def: 16, spd: 18, mag: 12, res: 14 },
     learnset: [[1, 'savageBite'], [4, 'graveRot'], [8, 'thornspell'], [12, 'gustWing'], [16, 'wildgrowth'], [20, 'lifebloom']],
     blurb: 'The apex of the Overgrowth — a thorn-maned reaper that hunts the hunters. Nothing that walks the Heartwood is above it on the list.',
+  },
+
+  // === D4 · The Haunted Dungeon — Mage (spectral) =========================
+  {
+    id: 'hexshade', name: 'Hexshade', art: 'hdHexshade', attribute: 'mage', element: 'dark', growth: 'MAGE_GROWTH',
+    height: 1.7, hover: 0.3, base: { hp: 46, mp: 30, off: 10, def: 12, spd: 14, mag: 22, res: 16 },
+    learnset: [[1, 'gloomLance'], [4, 'hexBolt'], [8, 'nightSpiral'], [12, 'dirge'], [16, 'abyssalBolt'], [20, 'voidNova']],
+    blurb: 'A cowl with nothing in it but three uneven lights and a hex it will not stop turning over in its hands.',
+  },
+  {
+    id: 'palefire', name: 'Palefire', art: 'hdPalefire', attribute: 'mage', element: 'fire', growth: 'MAGE_GROWTH',
+    height: 1.3, hover: 0.4, base: { hp: 44, mp: 28, off: 11, def: 11, spd: 13, mag: 21, res: 14 },
+    learnset: [[1, 'cinderBurst'], [4, 'emberWave'], [8, 'hexBolt'], [12, 'pyreLance'], [16, 'abyssalBolt'], [20, 'infernoCore']],
+    blurb: 'A ghost carrying a cold flame that gives no warmth. It flinches from its own light and casts anyway.',
+  },
+  {
+    id: 'direwisp', name: 'Direwisp', art: 'hdDirewisp', attribute: 'mage', element: 'water', growth: 'MAGE_GROWTH',
+    height: 1.5, hover: 0.4, base: { hp: 45, mp: 30, off: 9, def: 12, spd: 15, mag: 22, res: 16 },
+    learnset: [[1, 'frostLance'], [4, 'mistVeil'], [8, 'tidalSlap'], [12, 'prismStorm'], [16, 'glacierSpire'], [20, 'renewingTide']],
+    blurb: 'A soul the deep water kept, weed-draped and dripping cold light. It casts in a voice full of swallowed river.',
+  },
+  {
+    id: 'nullmancer', name: 'Nullmancer', art: 'hdNullmancer', attribute: 'mage', element: 'dark', growth: 'MAGE_GROWTH',
+    height: 1.8, hover: 0.3, base: { hp: 48, mp: 32, off: 10, def: 13, spd: 13, mag: 23, res: 17 },
+    learnset: [[1, 'hexBolt'], [4, 'gloomLance'], [8, 'nightSpiral'], [12, 'dirge'], [16, 'abyssalBolt'], [20, 'voidNova']],
+    blurb: 'A caster who opens a small nothing between its hands and asks you, very politely, to step into it.',
   },
 ];
