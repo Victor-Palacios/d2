@@ -96,7 +96,7 @@ const FLOORS: DungeonFloor[] = [
     chests: {
       '11,2': {
         obols: 500,
-        item: 'repairChip',
+        item: 'mendingBalm',
         note: "A keeper's pack, left at the top of the last descent. They did not come back up.",
       },
     },

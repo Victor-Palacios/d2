@@ -164,7 +164,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
     chests: {
       '12,2': { obols: 240, note: 'A cracked cache, still holding obols.' },
       '2,10': {
-        item: 'towBeacon',
+        item: 'homingEmber',
         note: 'A second Homing Ember, cold in its cradle. Two is a habit worth keeping down here.',
       },
     },

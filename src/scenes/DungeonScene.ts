@@ -277,12 +277,12 @@ export class DungeonScene extends GameScene {
     const host = el('div', 'panel');
     host.id = 'pause-menu';
     host.appendChild(el('h2', undefined, 'Paused'));
-    const embers = game.itemCount('towBeacon');
+    const embers = game.itemCount('homingEmber');
     const options: MenuItem[] = [{ value: 'resume', label: 'Resume crawl' }];
     if (embers > 0) {
       // The Homing Ember bails you out of a crawl straight to the safety of
       // The Everwake — one is spent per use. Only offered when you hold one.
-      options.push({ value: 'ember', label: `Use ${ITEMS.towBeacon.name}`, note: `x${embers}` });
+      options.push({ value: 'ember', label: `Use ${ITEMS.homingEmber.name}`, note: `x${embers}` });
     }
     options.push({ value: 'suspend', label: 'Suspend & quit', note: 'temp' });
     const menu = new Menu(host, options, { cancellable: true });
@@ -756,7 +756,7 @@ export class DungeonScene extends GameScene {
   private async useHomingEmber() {
     if (this.leaving) return;
     this.leaving = true;
-    game.takeItem('towBeacon');
+    game.takeItem('homingEmber');
     audio.sfx('portal');
     this.ctx.hd2d.addShake(0.2);
     toast(this.ctx.ui, '<span class="accent">The Homing Ember flares — the dark folds you home.</span>', 2400);
