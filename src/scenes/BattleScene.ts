@@ -73,6 +73,9 @@ function cellPos(side: 'party' | 'enemy', cell: { row: number; col: number }): {
 const ENEMY_READ_MS = 1300;
 const ENEMY_READ_FAST_MS = 500;
 
+/** Share of a fight's EXP that souls who sat it out still earn (bench + Sanctuary). */
+const RESERVE_XP_SHARE = 0.25;
+
 /** Field-pulse announcement line (Phase D). */
 const PULSE_TEXT: Record<string, string> = {
   calm: '',
@@ -1037,6 +1040,17 @@ export class BattleScene extends GameScene {
       for (const e of enemies) gained += xpFromEnemy(c.level, e.creature.level);
       const nl = grantXp(c, gained);
       if (nl !== null) levelUps.push(`${c.name} → Lv${nl}`);
+    }
+
+    // Souls that sat the fight out (bench + Sanctuary, not companions) still earn
+    // a quiet 25% share so the collection never falls behind — no announcements,
+    // no level-up lines for these.
+    const fought = new Set(this.battle.side('party').map((b) => b.creature.uid));
+    for (const c of [...game.party, ...game.sanctuary]) {
+      if (c.companion || fought.has(c.uid)) continue;
+      let gained = 0;
+      for (const e of enemies) gained += xpFromEnemy(c.level, e.creature.level);
+      grantXp(c, Math.round(gained * RESERVE_XP_SHARE));
     }
 
     this.hud.setLog(`The echo is quieted. +${reward} obols.`);
