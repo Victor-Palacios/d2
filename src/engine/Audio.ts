@@ -8,8 +8,8 @@
  *     sequences of "voices" (pads, plucks, bells, strings, flute, cello, harp,
  *     percussion) played through a reverb + compressor bus. See docs/audio.md.
  *
- * A track is either a rich voice arrangement (`RichTrack`) or the original
- * bass+arp loop (`LegacyTrack`, still used by battle/boss).
+ * Every music track is a `RichTrack`. `encounterSting()` / `victoryFanfare()`
+ * bridge field ↔ battle music the way a Pokémon battle opens and resolves.
  */
 
 type SfxName =
@@ -200,7 +200,7 @@ const CRIES: Record<string, CryLayer[]> = {
   ],
 };
 
-export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | 'crystal' | 'haunted' | 'jungle' | null;
+export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | 'finalboss' | 'crystal' | 'haunted' | 'jungle' | null;
 
 // ============================ MUSIC DATA ==================================
 // Rich tracks are step sequences on a 16th-note grid. A voice's `seq` holds, per
@@ -246,16 +246,6 @@ interface RichTrack {
   birds?: boolean;
   voices: Voice[];
 }
-
-interface LegacyTrack {
-  root: number;
-  bpm: number;
-  bass: number[];
-  arp: number[];
-  birds?: boolean;
-}
-
-type TrackDef = RichTrack | LegacyTrack;
 
 /** Build a sparse sequence: `{step: note}`, everything else a rest. */
 function pmap(len: number, obj: Record<number, number | number[]>): (number | number[] | null)[] {
@@ -421,7 +411,7 @@ function overgrowthVoices(): Voice[] {
   ];
 }
 
-const TRACKS: Record<Exclude<MusicTrack, null>, TrackDef> = {
+const TRACKS: Record<Exclude<MusicTrack, null>, RichTrack> = {
   // Intro town — orchestral ensemble arrangement.
   hub: { rich: true, bpm: 78, root: 174.6, voices: everwakeVoices() },
   // The Quiet Crossing (first dungeon) — "Underhush": dark ambient, near-beatless.
@@ -460,10 +450,115 @@ const TRACKS: Record<Exclude<MusicTrack, null>, TrackDef> = {
   // The Overgrowth — warm, organic, with birds.
   jungle: { rich: true, bpm: 96, root: 130.8, birds: true, voices: overgrowthVoices() },
 
-  // Combat still uses the original loop engine (battle/boss get their own rich
-  // arrangements + transition handling in a later pass).
-  battle: { root: 146.8, bpm: 148, bass: [0, 0, 5, 3], arp: [12, 15, 19, 24, 19, 15, 12, 15] },
-  boss: { root: 110, bpm: 160, bass: [0, -1, 0, -3], arp: [12, 13, 19, 20, 12, 13, 24, 20] },
+  // Normal battle — "Onset": heroic, propulsive, running bass + bright lead riff.
+  battle: {
+    rich: true,
+    bpm: 150,
+    root: 146.8,
+    voices: [
+      { inst: 'kick', gain: 0.12, seq: prep(phits(16, [0, 3, 6, 10]), 2) },
+      { inst: 'hat', gain: 0.035, open: false, seq: prep(phits(16, [0, 2, 4, 6, 8, 10, 12, 14]), 2) },
+      { inst: 'tom', gain: 0.09, seq: pmap(32, { 29: 0, 30: -3, 31: -5 }) },
+      {
+        inst: 'bass',
+        gain: 0.14,
+        dur: 2,
+        seq: prep([0, null, 0, null, 7, null, 5, null, 0, null, 0, null, 10, null, 5, null], 2),
+      },
+      {
+        inst: 'pad',
+        gain: 0.05,
+        dur: 3,
+        seq: pmap(32, { 0: [0, 3, 7], 8: [0, 3, 7], 16: [-2, 1, 5], 24: [-2, 1, 5] }),
+      },
+      {
+        inst: 'pluck',
+        gain: 0.075,
+        dur: 1,
+        bright: true,
+        seq: [
+          12,
+          null,
+          15,
+          17,
+          null,
+          19,
+          17,
+          15,
+          null,
+          17,
+          19,
+          22,
+          19,
+          17,
+          15,
+          12,
+          12,
+          null,
+          15,
+          19,
+          null,
+          22,
+          19,
+          17,
+          null,
+          15,
+          17,
+          19,
+          22,
+          24,
+          22,
+          19,
+        ],
+      },
+    ],
+  },
+  // Boss battle — "The Warden": crushing, Phrygian, double-kick + dissonant bell.
+  boss: {
+    rich: true,
+    bpm: 158,
+    root: 130.8,
+    voices: [
+      { inst: 'kick', gain: 0.13, seq: prep(phits(16, [0, 2, 8, 10]), 2) },
+      { inst: 'tom', gain: 0.1, seq: prep(pmap(16, { 6: 0, 14: -2 }), 2) },
+      { inst: 'hat', gain: 0.04, open: false, seq: prep(phits(16, [4, 12]), 2) },
+      {
+        inst: 'bass',
+        gain: 0.15,
+        dur: 2,
+        seq: prep([-12, null, -12, -11, null, -12, null, -14, -12, null, -12, -11, null, -14, null, -17], 2),
+      },
+      { inst: 'pad', gain: 0.05, dur: 16, seq: pmap(32, { 0: [0, 3, 7], 16: [1, 4, 8] }) },
+      { inst: 'bell', gain: 0.06, dur: 8, seq: pmap(32, { 6: 13, 22: 18 }) },
+      { inst: 'pluck', gain: 0.07, dur: 2, bright: true, seq: pmap(32, { 8: 0, 10: 1, 12: 0, 24: 0, 26: -2, 28: 0 }) },
+    ],
+  },
+  // Final boss — "Everwake's End": fast and cinematic, a churning 16th ostinato
+  // under a soaring lead and a choir-like pad. Grander and more tragic than the
+  // Warden — reserved for the last reach's boss.
+  finalboss: {
+    rich: true,
+    bpm: 168,
+    root: 146.8,
+    voices: [
+      { inst: 'kick', gain: 0.12, seq: prep(phits(16, [0, 4, 8, 10, 12]), 2) },
+      { inst: 'hat', gain: 0.03, open: false, seq: prep(phits(16, [0, 2, 4, 6, 8, 10, 12, 14]), 2) },
+      { inst: 'pluck', gain: 0.06, dur: 1, bright: true, seq: prep([0, 3, 7, 12, 7, 3, 0, 3], 4) },
+      {
+        inst: 'bass',
+        gain: 0.14,
+        dur: 2,
+        seq: prep([0, null, null, 0, null, 0, null, null, -2, null, null, -2, null, -4, null, -5], 2),
+      },
+      { inst: 'pad', gain: 0.04, dur: 16, seq: pmap(32, { 0: [7, 10, 14], 16: [5, 9, 12] }) },
+      {
+        inst: 'flute',
+        gain: 0.1,
+        dur: 4,
+        seq: pmap(32, { 0: 19, 6: 22, 8: 21, 12: 19, 16: 24, 22: 22, 24: 21, 28: 19 }),
+      },
+    ],
+  },
 };
 
 /** Resting music level. Kept in one place so `duck()` can restore it exactly. */
@@ -493,7 +588,6 @@ class AudioEngine {
   private musicGain: GainNode | null = null;
   private sfxGain: GainNode | null = null;
   private timer: number | null = null;
-  private step = 0;
   private track: MusicTrack = null;
   muted = false;
   /** Overall level — placeholder audio should never be loud. */
@@ -507,6 +601,9 @@ class AudioEngine {
   private convolver: ConvolverNode | null = null;
   private richDry: GainNode | null = null;
   private ins: Record<'strings' | 'flute' | 'cello' | 'abass', VoiceCfg> | null = null;
+  private dangerGain: GainNode | null = null;
+  /** When true, an urgent low-HP pulse rides over the current battle track. */
+  private danger = false;
   private trackGain: GainNode | null = null;
   private curTrack: RichTrack | null = null;
   private curRoot = 0;
@@ -703,13 +800,17 @@ class AudioEngine {
 
   // ======================= MUSIC ==========================================
 
-  music(track: MusicTrack) {
+  /**
+   * Start a track. `startDelay` (seconds) holds the first note back — used so an
+   * encounter's battle music lands exactly on the `encounterSting()` impact.
+   */
+  music(track: MusicTrack, startDelay = 0) {
     this.track = track;
     if (this.timer !== null) {
       clearInterval(this.timer);
       this.timer = null;
     }
-    // Fade out and release any rich track that was playing, so the switch
+    // Fade out and release any track that was playing, so the switch
     // crossfades instead of cutting.
     if (this.trackGain && this.ctx) {
       const g = this.trackGain;
@@ -725,54 +826,131 @@ class AudioEngine {
       this.trackGain = null;
     }
     this.curTrack = null;
+    this.danger = false; // any track change clears the low-HP pulse
     if (!track || !this.ctx || !this.musicGain) return;
-    const def = TRACKS[track];
-    if ('rich' in def) this.startRich(def);
-    else this.startLegacy(def);
+    this.startRich(TRACKS[track], startDelay);
   }
 
-  private startLegacy(t: LegacyTrack) {
-    if (!this.ctx || !this.musicGain) return;
-    const stepMs = 60000 / t.bpm / 2;
-    this.step = 0;
-    this.timer = window.setInterval(() => {
-      if (!this.ctx || !this.musicGain || this.muted) return;
-      const now = this.ctx.currentTime + 0.02;
-      const s = this.step++;
-      const bass = t.bass[Math.floor(s / 4) % t.bass.length];
-      if (s % 4 === 0) {
-        this.tone(
-          { freq: t.root * 2 ** (bass / 12) * 0.5, time: 0, dur: stepMs / 700, type: 'triangle', gain: 0.16 },
-          this.musicGain,
-          now,
-        );
-      }
-      const arp = t.arp[s % t.arp.length];
-      this.tone(
-        { freq: t.root * 2 ** ((arp + bass) / 12), time: 0, dur: stepMs / 1100, type: 'square', gain: 0.05 },
-        this.musicGain,
-        now,
-      );
-      if (t.birds && Math.random() < 0.12) this.chirp(now + Math.random() * (stepMs / 1000));
-    }, stepMs);
+  /**
+   * Toggle the low-HP "danger" state — a Pokémon-style urgent pulse laid over the
+   * battle track while a fielded ally is critically hurt. Cleared automatically
+   * on the next `music()` change (i.e. when the fight ends).
+   */
+  setDanger(on: boolean) {
+    this.danger = on;
   }
 
-  private startRich(def: RichTrack) {
+  /** One urgent alarm beep of the danger pulse. */
+  private beep(when: number) {
+    if (!this.ctx || !this.dangerGain) return;
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(1245, when); // a fixed high alarm, above the music
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(0.06, when + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 0.11);
+    o.connect(g);
+    g.connect(this.dangerGain);
+    o.start(when);
+    o.stop(when + 0.13);
+  }
+
+  private startRich(def: RichTrack, startDelay = 0) {
     if (!this.ctx || !this.musicGain) return;
     this.ensureRich();
     this.curTrack = def;
     this.curRoot = def.root;
     this.curStepDur = 60 / def.bpm / 4; // 16th-note grid
     this.g16 = 0;
+    const t0 = this.ctx.currentTime + Math.max(0.08, startDelay);
     const tg = this.ctx.createGain();
     tg.gain.setValueAtTime(0.0001, this.ctx.currentTime);
-    tg.gain.exponentialRampToValueAtTime(1, this.ctx.currentTime + 0.25); // fade in, no click
+    tg.gain.setValueAtTime(0.0001, t0);
+    tg.gain.exponentialRampToValueAtTime(1, t0 + 0.25); // fade in at t0, no click
     tg.connect(this.richDry!);
     tg.connect(this.convolver!);
     this.trackGain = tg;
-    this.nextT = this.ctx.currentTime + 0.08;
+    this.nextT = t0;
     this.scheduler();
     this.timer = window.setInterval(() => this.scheduler(), 25);
+  }
+
+  /** A short-lived gain feeding the rich reverb bus — for one-off flourishes. */
+  private richOneShot(): GainNode | null {
+    this.ensureRich();
+    if (!this.ctx || !this.richDry || !this.convolver) return null;
+    const g = this.ctx.createGain();
+    g.connect(this.richDry);
+    g.connect(this.convolver);
+    window.setTimeout(() => {
+      try {
+        g.disconnect();
+      } catch {
+        /* already released */
+      }
+    }, 4000);
+    return g;
+  }
+
+  /**
+   * The Pokémon-style "a battle is starting" cue: a rising run over a whoosh
+   * that resolves onto a hard impact. Returns the seconds until that impact, so
+   * the caller can start the battle music exactly on the downbeat
+   * (`music(track, stingDur)`). Heavier and lower for a boss. No-op if audio is
+   * still locked.
+   */
+  encounterSting(boss = false, final = false): number {
+    if (!this.ctx) return 0;
+    const bus = this.richOneShot();
+    if (!bus) return 0;
+    const when = this.ctx.currentTime + 0.05;
+    const root = final ? 82.4 : boss ? 110 : 220;
+    this.vNoise(bus, when, final ? 0.75 : 0.55, final ? 0.13 : 0.11);
+    const run = final ? [0, 2, 3, 5, 7, 8, 10, 12] : boss ? [0, 2, 4, 6, 8, 10, 12] : [12, 15, 17, 19, 22, 24];
+    const beat = final ? 0.09 : boss ? 0.08 : 0.07;
+    run.forEach((s, i) => {
+      this.vPluck(bus, root * 2 ** (s / 12), when + i * beat, 0.12, 0.11, true);
+    });
+    const hit = when + run.length * beat + 0.02;
+    this.vKick(bus, hit, final ? 0.28 : 0.24);
+    const chord = final ? [0, 3, 7, 10, 15] : boss ? [0, 3, 7, 10] : [0, 4, 7, 12];
+    this.vPad(
+      bus,
+      chord.map((s) => root * 2 ** (s / 12)),
+      hit,
+      final ? 0.7 : 0.5,
+      0.12,
+    );
+    this.vBell(bus, root * 2 ** ((boss || final ? 12 : 24) / 12), hit, 0.6, 0.09);
+    return hit - this.ctx.currentTime;
+  }
+
+  /** A short triumphant flourish for a win, before field music resumes. */
+  victoryFanfare(): number {
+    if (!this.ctx) return 0;
+    const bus = this.richOneShot();
+    if (!bus) return 0;
+    const when = this.ctx.currentTime + 0.04;
+    const root = 349.2; // F4
+    const seq: [number, number][] = [
+      [7, 0],
+      [7, 0.14],
+      [7, 0.28],
+      [12, 0.44],
+      [11, 0.64],
+      [12, 0.78],
+    ];
+    for (const [s, dt] of seq) this.vBell(bus, root * 2 ** (s / 12), when + dt, 0.34, 0.12);
+    const end = when + 0.98;
+    this.vPad(
+      bus,
+      [0, 4, 7, 12].map((s) => root * 2 ** (s / 12)),
+      end,
+      1.2,
+      0.11,
+    );
+    return 1.9;
   }
 
   /** Lookahead scheduler: queue every 16th-note that falls inside the window. */
@@ -787,6 +965,8 @@ class AudioEngine {
         }
         // Birds: ~6% per 16th ≈ a call every few seconds.
         if (this.curTrack.birds && Math.random() < 0.06) this.chirp(this.nextT + Math.random() * this.curStepDur);
+        // Low-HP danger pulse: a steady alarm on every quarter note.
+        if (this.danger && this.g16 % 4 === 0) this.beep(this.nextT);
       }
       this.nextT += this.curStepDur;
       this.g16++;
@@ -939,6 +1119,12 @@ class AudioEngine {
     wet.connect(comp);
     this.richDry = dry;
     this.convolver = conv;
+    // Danger pulse: dry and present (no reverb), straight into the compressor so
+    // the alarm cuts through the battle mix.
+    const danger = ctx.createGain();
+    danger.gain.value = 1;
+    danger.connect(comp);
+    this.dangerGain = danger;
 
     this.ins = {
       strings: {

@@ -51,7 +51,7 @@ interface Npc {
 }
 
 export interface HubSceneParams {
-  arrival?: 'first' | 'reachCleared' | 'towed' | 'teamChosen';
+  arrival?: 'first' | 'reachCleared' | 'guttered' | 'teamChosen';
 }
 
 /**
@@ -198,7 +198,7 @@ export class HubScene extends GameScene {
         ),
         ...narrate('The south portal leads out to the reaches.'),
       ]);
-    } else if (kind === 'towed') {
+    } else if (kind === 'guttered') {
       await this.dialogue.play(
         say(
           'Halden',
@@ -215,7 +215,7 @@ export class HubScene extends GameScene {
     }
 
     // Did a scripted beat play this arrival? Quiet returns get party banter.
-    let beat = kind === 'first' || kind === 'towed' || kind === 'reachCleared' || kind === 'teamChosen';
+    let beat = kind === 'first' || kind === 'guttered' || kind === 'reachCleared' || kind === 'teamChosen';
 
     // Companions join at story beats — on the next return to the Everwake after
     // the reach that earns them. Each fires once (guarded by its flag). Placed
@@ -263,8 +263,8 @@ export class HubScene extends GameScene {
     if (this.disposed) return;
 
     // Autosave point: the city is the one place the run is unambiguously safe,
-    // and saving here keeps the out-of-EP tow a real cost rather than something
-    // you reload away.
+    // and saving here keeps a guttered-lantern return a real cost rather than
+    // something you reload away.
     if (game.has('prologueDone') && saveAuto('hub', 'The Everwake')) {
       toast(this.ctx.ui, '<span class="dim">Game saved</span>', 1400);
     }
@@ -692,7 +692,7 @@ export class HubScene extends GameScene {
         if (!game.hasLeave) {
           return say(
             'Halden',
-            'Ground rules. Attack is free, Techniques cost MP, Guard halves the hit and gives MP back.',
+            'Ground rules. Attack is free, Invocations cost MP, Guard halves the hit and gives MP back.',
             'Assassin beats Mage. Mage beats Hero. Hero beats Assassin. Element plates buff whoever matches them.',
             'Every step in the reach spends 1 LP. Light shards are worth the detour.',
           );

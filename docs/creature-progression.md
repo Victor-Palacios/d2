@@ -83,7 +83,7 @@ correct on any move you add (see §4).
 **To add/adjust a move:** edit the species' `learnset`. To add a brand-new
 technique, add it to `TECHNIQUES` in `techniques.ts` first (id, `kind`, `power`,
 `mpCost`, `element`, and — for damage — `category`; set `melee: true` only for
-close-in physical blows, and `shape`/`aoe` for row/column/all).
+close-in physical blows, and `shape` for row/column/all).
 
 ---
 

@@ -41,7 +41,7 @@ for current state, the one open bug, and the environment traps. Deeper docs live
 in [`docs/`](docs/):
 
 - **[docs/SYSTEMS.md](docs/SYSTEMS.md)** — how the battle numbers actually work
-  (classes, elements, damage, guard, EP, rewards), with worked examples.
+  (classes, elements, damage, guard, LP, rewards), with worked examples.
 - **[docs/PLAN_AUDIT.md](docs/PLAN_AUDIT.md)** — the original design plan audited
   section by section: implemented / partial / missing.
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** — the path from this first-hour slice
@@ -104,8 +104,8 @@ fails with `Resource not accessible by integration`. Until Pages is on, the
 | `` ` `` | Toggle the HD-2D debug panel |
 | M | Mute / unmute |
 
-Walk **into** an NPC to talk to them. In the crawl, drive into chests, fuel
-canisters and portals. Menus also respond to the mouse.
+Walk **into** an NPC to talk to them. In the crawl, step into chests, light
+shards and portals. Menus also respond to the mouse.
 
 ### Using a controller
 
@@ -137,13 +137,14 @@ only thing still keyboard-only is the `` ` `` debug panel.
 ## What's in the slice
 
 Title → name entry → **pick your partner** → The Everwake hub → world map → **The Quiet Crossing**
-(3 floors: crawl, chests, element plates, draining EP, scripted fights,
+(3 floors: crawl, chests, element plates, draining lantern-light, scripted fights,
 random encounters, and the warden boss) → the Vigil's leave → rival intro →
 supply bay → Mission 2 briefing.
 
 - **Crawl**: tile-by-tile movement with wall collision, camera follow, treasure
-  chests, five kinds of emissive element floor plates, an EP meter that drains
-  one point per step (hit zero and you get towed home), descent portals, and a
+  chests, five kinds of emissive element floor plates, a lantern (LP) meter that
+  drains one point per step (hit zero and your light gutters, returning you home),
+  descent portals, and a
   boss floor whose accent walls telegraph what is coming.
 - **Battle**: turn-based on a 2×3 grid. You field one soul per human keeper
   (`game.fieldCap` — two at the Quiet Crossing, up to four; companions walk with
@@ -228,7 +229,7 @@ Two kinds, deliberately different in weight:
 - **Suspend save** — press **Esc** mid-crawl and pick *Suspend & quit*. It puts
   the run down exactly where you stand, and is **deleted the moment you load
   it**. It is a bookmark for taking a break, not a checkpoint: you cannot reload
-  it to retry a fight that went badly, which is what keeps running out of EP a
+  it to retry a fight that went badly, which is what keeps running out of light a
   real cost.
 
 Both live in `localStorage`, so a save made on the live site is separate from
@@ -261,7 +262,7 @@ src/
 
 The battle model in `systems/battle/engine.ts` has no Three.js or DOM imports —
 it is pure rules, driven one action at a time by `BattleScene`. Crawl logic
-(movement, tile interactions, encounters, EP) lives in `scenes/DungeonScene.ts`
+(movement, tile interactions, encounters, LP) lives in `scenes/DungeonScene.ts`
 alongside its presentation.
 
 One invariant worth knowing: a scene's `enter()` must not await player input.
@@ -326,7 +327,7 @@ Everything is behind a data layer, so swapping art is a data edit:
 | A move's battle effect (per-technique FX) | `src/data/moveFx.ts` (`ELEMENT_LOOK` / `MOVE_FX_OVERRIDES`) |
 | A creature's stats, class, element, techniques | `src/data/creatures.ts` |
 | Techniques / damage numbers | `src/data/techniques.ts`, `src/systems/battle/formula.ts` |
-| NPCs and the vehicle | `HUMANS` / `VEHICLE` in `src/assets/art.ts` |
+| NPCs and human sprites | `HUMANS` in `src/assets/art.ts` |
 | A whole new dungeon | a new `src/data/<name>.ts` exporting a `Reach`, registered in `src/data/reaches.ts` |
 | Dungeon layouts, encounters, dialogue | `src/data/quietCrossing.ts`, `crystalCavern.ts`, `hauntedDungeon.ts` |
 | Guard teams and starters | `src/data/teams.ts` |
@@ -346,7 +347,7 @@ Floor layouts use this legend (see `src/engine/TileGrid.ts`):
 ```
 ' ' void        '#' wall          '=' accent wall (boss approach)
 '.' floor       'S' start         '>' portal down      '<' exit portal
-'C' chest       '$' fuel canister  W F N M D  element floor tiles
+'C' chest       '$' light shard     W F N M D  element floor tiles
 '1'-'9' scripted event, looked up in that floor's `events` map
 ```
 
@@ -358,7 +359,7 @@ Floor layouts use this legend (see `src/engine/TileGrid.ts`):
 | Element plate bonus (×1.2) | `data/elements.ts` |
 | Guard damage reduction & MP refund | `systems/battle/formula.ts` |
 | Damage curve and variance | `systems/battle/formula.ts` |
-| EP per step, pickup value | `scenes/DungeonScene.ts`, `data/quietCrossing.ts` |
+| LP per step, pickup value | `scenes/DungeonScene.ts`, `data/quietCrossing.ts` |
 | Encounter rates and tables | `data/quietCrossing.ts` |
 
 ## Debug hooks

@@ -13,7 +13,7 @@ can add an area end to end without rediscovering the invariants.
 ## The one principle
 
 **Mechanics are shared; the look is bespoke.** Every reach walks the same grid
-(tile movement, wall collision, portals, EP, encounters). What makes areas feel
+(tile movement, wall collision, portals, LP, encounters). What makes areas feel
 like different *places* is entirely presentational: the terrain skin, wall
 height, fog tint, decorative props, layout shape, roster and music. Never fork
 crawl logic to make an area distinct — reach for the data levers below.
@@ -109,7 +109,7 @@ Rules:
 - **Decor must sit on a walkable floor tile** (not `#`/`=`/void). A billboard on
   a wall clips into the 3D box. The validator enforces this.
 - **Solid decor must not block the only path to a target, or sit on a tile the
-  party has to stand on** (start, chest, fuel, portal/exit, element, event). The
+  party has to stand on** (start, chest, light, portal/exit, element, event). The
   validator flood-fills *through* solid decor and flags both mistakes — a prop
   dropped into a one-wide corridor is a soft-lock. Place solid decor beside
   pillars, in corners, off the main path; keep chokepoints and interactive tiles
@@ -129,7 +129,7 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
 ```
 ' ' void      '#' wall        '=' accent wall (boss approach)
 '.' floor     'S' start       '>' portal down     '<' exit portal
-'C' chest     '$' fuel        W F N M D  element floor tiles
+'C' chest     '$' light       W F N M D  element floor tiles
 '1'-'9'  scripted event tile (looked up in that floor's `events` map)
 ```
 
@@ -142,10 +142,10 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
 - non-boss floors have a `>` (or `<`); boss floors don't need one (the exit
   portal spawns when the warden falls).
 - **reachability**: a flood-fill from `S` — treating solid decor as a wall —
-  must reach every event, chest, fuel, portal and element tile. A walled-off
+  must reach every event, chest, light, portal and element tile. A walled-off
   portal (by geometry *or* by a solid prop) is a soft-lock.
 - decor is in-bounds, on a walkable tile, and its `kind` exists in `DECOR`;
-  solid decor never sits on an interactive tile (start/chest/fuel/portal/
+  solid decor never sits on an interactive tile (start/chest/light/portal/
   element/event).
 
 **Workflow — validate before you trust ASCII.** Do not eyeball coordinates.
@@ -195,7 +195,7 @@ Model a new file on `src/data/crystalCavern.ts` or `jungleReach.ts`. A `Reach`
 
 ```ts
 { id, name, blurb, color /* world-map accent */, recommendedLevel,
-  floors: DungeonFloor[], startingFuel, music, onClear: { flag } }
+  floors: DungeonFloor[], startingLight, music, onClear: { flag } }
 ```
 
 Annotate the `TileTheme` consts `: TileTheme` (so the `terrain` literal is

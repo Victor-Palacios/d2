@@ -63,7 +63,7 @@ Pokémon × Digimon hybrid. Nothing tracked is silently missing.
 | §5.2 | Damage / heal maths, speed order | ✅ | `systems/battle/formula.ts`, turn order in `engine.ts`. See `docs/SYSTEMS.md`. |
 | §5.3 | Headless 3v3 battle model + enemy AI | ✅ | `systems/battle/engine.ts` (rules-only, no Three.js/DOM), driven by `BattleScene.ts` (M2). |
 | §5.4 | Three Guard Teams, each setting class + starter | ✅ | `data/teams.ts`. |
-| §5.5 | The Quiet Crossing tutorial dungeon + vehicle EP | ✅ | `data/quietCrossing.ts` (3 floors, borrowed party, boss), EP drain in `DungeonScene.ts`. |
+| §5.5 | The Quiet Crossing tutorial dungeon + lantern LP | ✅ | `data/quietCrossing.ts` (3 floors, borrowed party, boss), LP drain in `DungeonScene.ts`. |
 | §5.6 | Evolution / transcendence | ✅ **Implemented (Pokémon × Digimon hybrid)** | `evolutions` tree on `Species` (`data/creatures.ts`); headless `systems/party/evolve.ts` (`evolve`/`devolve`); **Transcend** screen (`ui/TranscendScreen.ts`). Level-gated, branching, reversible. Ships alongside the magick pass (Mag/Res) and level 1–20 learnsets. Covered by `tools/smoke/transcend.mjs`; see `docs/SYSTEMS.md §7`. DNA-merge remains a future branch condition. |
 
 ## §6 — Polish pass

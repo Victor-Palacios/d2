@@ -99,7 +99,7 @@ The four items the owner asked for are written and live in [`docs/`](docs/)
 3. **Scope trim (five elements → three)** — folded into the roadmap as the first,
    cheapest task, with rationale and an exact edit list.
 4. **Systems explainer** — [`docs/SYSTEMS.md`](docs/SYSTEMS.md): types, class
-   advantage, damage, guard, EP and rewards with worked numbers.
+   advantage, damage, guard, LP and rewards with worked numbers.
 5. **Audio guide** — [`docs/audio.md`](docs/audio.md): how the procedural sound
    engine works and, step by step, how to add a music track and a randomised
    ambience layer (the jungle's birds are the reference).
@@ -124,8 +124,8 @@ from the original doc-request list is outstanding.
 - **Auto-battle uses only the free Attack.** Not an oversight: leaving it on must
   never spend MP you were saving.
 - **Suspend saves are consumed on load.** Also deliberate — it is a bookmark, not
-  a checkpoint. If it could be reloaded, the out-of-EP tow penalty would stop
-  meaning anything.
+  a checkpoint. If it could be reloaded, the guttered-lantern return penalty
+  would stop meaning anything.
 - **Saving is hub/world-map only** for the same reason.
 
 ## 6. Invariants that will bite you

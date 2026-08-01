@@ -32,6 +32,8 @@ const FLEE_CHANCE = 0.5;
 export interface BattleSceneParams {
   enemies: EnemySpec[];
   isBoss?: boolean;
+  /** The climactic boss — gets its own grander theme and a bigger sting. */
+  finalBoss?: boolean;
   eventId?: string;
   partyTiles?: (ElementId | undefined)[];
   enemyTiles?: (ElementId | undefined)[];
@@ -62,6 +64,14 @@ function cellPos(side: 'party' | 'enemy', cell: { row: number; col: number }): {
   const dir = side === 'party' ? 1 : -1;
   return { x: SLOT_X[cell.col], z: front + (cell.row === 1 ? dir * ROW_GAP : 0) };
 }
+
+/**
+ * How long an enemy's action announcement ("X uses Y!") sits before the blow
+ * lands, so the player can read what is coming. Hands-off modes (auto / repeat)
+ * use a shorter beat so a self-driving fight still moves.
+ */
+const ENEMY_READ_MS = 1300;
+const ENEMY_READ_FAST_MS = 500;
 
 /** Field-pulse announcement line (Phase D). */
 const PULSE_TEXT: Record<string, string> = {
@@ -147,7 +157,18 @@ export class BattleScene extends GameScene {
     this.ctx.hd2d.focusTarget.set(0, 0.9, 0.4);
     this.ctx.hd2d.snapCamera();
 
-    audio.music(this.params.isBoss ? 'boss' : 'battle');
+    // The Last Light is a grief encounter, not a fight — leave the dungeon's
+    // ambience playing rather than crashing in with a combat sting + theme.
+    const isLastLight = this.params.enemies.some((e) => e.species === 'lastlight');
+    if (!isLastLight) {
+      // Pokémon-style handoff: a sting fires now (the field music is fading out),
+      // and the battle theme starts exactly on the sting's impact. The final boss
+      // gets its own grander theme and a bigger sting.
+      const isFinal = !!this.params.finalBoss;
+      const track = isFinal ? 'finalboss' : this.params.isBoss ? 'boss' : 'battle';
+      const stingDur = audio.encounterSting(!!this.params.isBoss || isFinal, isFinal);
+      audio.music(track, stingDur);
+    }
 
     // Escape / L1 drops out of auto-battle. Registered scene-wide rather than on
     // the menu, because while auto is running no menu is open to receive the key.
@@ -439,7 +460,6 @@ export class BattleScene extends GameScene {
         if (actor.side === 'party') {
           let action: BattleAction | null = null;
           if (this.autoBattle) {
-            this.hud.setLog(`${actor.creature.name} attacks on its own.`);
             await sleep(320);
             action = this.autoAction();
           } else if (this.repeatBattle) {
@@ -492,13 +512,15 @@ export class BattleScene extends GameScene {
             result = { actorUid: actor.creature.uid, actionLabel: '', hits: [], log: [] };
           }
         } else {
-          this.hud.setLog(`${actor.creature.name} is deciding...`);
+          // No "deciding…" line — a brief pause + the active-fighter highlight
+          // are enough of a tell, and it keeps the log uncluttered.
           await sleep(480);
           result = this.battle.perform(actor, this.battle.chooseEnemyAction(actor));
         }
 
         await this.animateTurn(actor, result);
         this.hud.refresh(this.battle);
+        this.updateDanger();
         this.hud.setActive(null);
         if (this.battle.outcome !== 'ongoing') break;
       }
@@ -569,8 +591,8 @@ export class BattleScene extends GameScene {
         'tut.melee',
         say(
           'Halden',
-          'One more thing before the scraps get real. Your basic Attack — and some heavy Techniques — are melee: they only reach the front row.',
-          'A soul in the Rear is covered while an ally holds the front of its column, so melee cannot touch it. Ranged Techniques ignore cover and reach anyone.',
+          'One more thing before the scraps get real. Your basic Attack is melee — it only reaches the front row.',
+          'A soul in the Rear is covered while an ally holds the front of its column, so melee cannot touch it. But some invocations can strike souls at a range, cover or no cover.',
           'So keep a fragile caster in the Rear, a sturdy body in the Vanguard ahead of it. Use Move to set your line.',
         ),
       );
@@ -713,6 +735,16 @@ export class BattleScene extends GameScene {
    * voice cries once. Deliberately not a roll-call of every species — just one
    * creature sound to open the fight. No-op if none of the foes has a cry.
    */
+  /**
+   * Toggle the low-HP danger pulse: on while any fielded ally is at or below a
+   * quarter HP, off otherwise. `audio.setDanger` is idempotent, and any music
+   * change (victory, defeat, returning to the reach) clears it regardless.
+   */
+  private updateDanger() {
+    const inPeril = this.battle.side('party').some((b) => isUp(b.creature) && b.creature.hp <= b.creature.maxHp * 0.25);
+    audio.setDanger(inPeril);
+  }
+
   private cryRandomEnemy() {
     const voiced = this.battle.side('enemy').filter((b) => audio.hasCry(b.creature.speciesId));
     if (!voiced.length) return;
@@ -727,6 +759,14 @@ export class BattleScene extends GameScene {
     const home = this.homePos.get(actor.creature.uid);
 
     for (const line of result.log.slice(0, 1)) this.hud.setLog(line);
+
+    // Give the player a beat to read an enemy's announced action before it
+    // strikes — the fast delivery otherwise lands before the text registers.
+    // (The player's own actions are self-chosen, so they need no such pause.)
+    if (actor.side === 'enemy' && result.log.length) {
+      await sleep(this.autoBattle || this.repeatBattle ? ENEMY_READ_FAST_MS : ENEMY_READ_MS);
+      if (this.disposed) return;
+    }
 
     // The move's own signature FX (melee slash / flying bolt / area nova /
     // mending bloom), derived from the technique — see data/moveFx.ts. Guard
@@ -967,7 +1007,10 @@ export class BattleScene extends GameScene {
   private async onVictory() {
     if (this.finished) return;
     this.finished = true;
-    audio.sfx('victory');
+    // Battle won: fade the combat theme and ring a victory fanfare. Field music
+    // resumes when we return to the dungeon.
+    audio.music(null);
+    audio.victoryFanfare();
     this.hud.setActive(null);
     this.hud.setBanner('Victory');
 
@@ -1166,6 +1209,7 @@ export class BattleScene extends GameScene {
   private async onDefeat() {
     if (this.finished) return;
     this.finished = true;
+    audio.music(null); // fade the combat theme and clear the danger pulse
     audio.sfx('defeat');
     this.hud.setBanner('Defeat');
     this.hud.setLog('The lantern goes dark...');

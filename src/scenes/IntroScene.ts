@@ -18,6 +18,8 @@ import type { Card } from '../ui/CardSelect';
 import { applySave, bestSave, clearSuspend, describeSave } from '../systems/party/saveGame';
 import { NameEntry } from '../ui/NameEntry';
 import { DialogueBox } from '../ui/DialogueBox';
+import { playCutscene } from '../ui/Cutscene';
+import { cutscene } from '../data/cutscenes';
 import { narrate, say } from '../systems/dialogue/script';
 
 /** The three partner monsters offered at the start — one per class. */
@@ -275,6 +277,12 @@ export class IntroScene extends GameScene {
     if (this.disposed) return;
     game.playerName = name;
 
+    // A ten-second memory: how this keeper lived, and how they died — washed over
+    // the title diorama, then draining to the dark they wake in. See the Option-A
+    // cutscene system (src/ui/Cutscene.ts, src/data/cutscenes.ts).
+    await playCutscene(this.ctx.ui, cutscene('prologueLife'), { shouldAbort: () => this.disposed });
+    if (this.disposed) return;
+
     await sleep(200);
     await this.dialogue.play([
       ...narrate(
@@ -318,7 +326,6 @@ export class IntroScene extends GameScene {
     });
     const select = new CardSelect(this.ctx.ui, cards, {
       heading: 'BOND A SOUL',
-      subheading: 'The first to ride your lantern',
     });
     const choice = (await select.open()) ?? PARTNER_CHOICES[0];
     select.destroy();

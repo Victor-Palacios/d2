@@ -14,7 +14,7 @@ import { toast } from './Toast';
  * learned (its known pool, `creature.techniques`), but may field only
  * `MAX_ACTIVE_MOVES` at once. Here the player toggles which known moves are
  * active; the choice is permanent (persisted in the save) and drives the
- * Technique menu in battle. Basic Attack is always available and is not listed.
+ * Invoke menu in battle. Basic Attack is always available and is not listed.
  */
 export async function openMoves(parent: HTMLElement): Promise<void> {
   const root = el('div', 'screen');

@@ -94,7 +94,7 @@ const FLOORS: DungeonFloor[] = [
       '3': { kind: 'anchored', id: 'hauntedAnchored' },
     },
     chests: {
-      '10,2': { obols: 260, item: 'repairChip', note: 'A traveller who did not leave. Their pack remains.' },
+      '10,2': { obols: 260, item: 'mendingBalm', note: 'A traveller who did not leave. Their pack remains.' },
     },
     encounterRate: 0.07,
     encounters: [
@@ -207,6 +207,7 @@ const FLOORS: DungeonFloor[] = [
     events: {
       '1': {
         kind: 'boss',
+        finalBoss: true, // last boss fight before the Last Lantern finale
         enemies: [{ species: 'revenance', level: 7 }],
         intro: [
           ...narrate(

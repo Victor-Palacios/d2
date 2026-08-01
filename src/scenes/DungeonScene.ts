@@ -189,9 +189,9 @@ export class DungeonScene extends GameScene {
         b.object.position.copy(world);
         this.scene.add(b.object);
         this.props.set(key, b);
-      } else if (t.kind === 'fuel') {
+      } else if (t.kind === 'light') {
         if (game.takenPickups.has(`${this.floor.id}:${key}`)) return;
-        const b = new Billboard(PROPS.fuelCan, 'prop:fuelCan', { height: 0.7, emissive: 0.25 });
+        const b = new Billboard(PROPS.lightShard, 'prop:lightShard', { height: 0.7, emissive: 0.6 });
         b.bob = 0.06;
         b.object.position.copy(world);
         this.scene.add(b.object);
@@ -399,7 +399,7 @@ export class DungeonScene extends GameScene {
     // Reaching the way home is honored even if this very step emptied the
     // lantern: arriving at the exit supersedes running out of light, so a player
     // who rolls onto the exit on their last step escapes as intended (the story
-    // continues) instead of being towed back to repeat the dungeon.
+    // continues) instead of being sent back to repeat the dungeon.
     if (tile.kind === 'exit') {
       await this.leaveDungeon();
       return;
@@ -442,7 +442,7 @@ export class DungeonScene extends GameScene {
       return;
     }
 
-    if (tile.kind === 'fuel') {
+    if (tile.kind === 'light') {
       const id = `${this.floor.id}:${key}`;
       if (!game.takenPickups.has(id)) {
         game.takenPickups.add(id);
@@ -555,7 +555,13 @@ export class DungeonScene extends GameScene {
     this.busy = true;
     if (ev.intro) await this.dialogue.play(ev.intro);
     this.busy = false;
-    await this.startBattle(ev.enemies, ev.kind === 'boss', tile.eventId);
+    await this.startBattle(
+      ev.enemies,
+      ev.kind === 'boss',
+      tile.eventId,
+      undefined,
+      ev.kind === 'boss' && !!ev.finalBoss,
+    );
   }
 
   /**
@@ -662,7 +668,13 @@ export class DungeonScene extends GameScene {
     return this.grid.at(this.tileX, this.tileZ)?.element;
   }
 
-  private async startBattle(enemies: EnemySpec[], isBoss: boolean, eventId?: string, fieldElement?: ElementId) {
+  private async startBattle(
+    enemies: EnemySpec[],
+    isBoss: boolean,
+    eventId?: string,
+    fieldElement?: ElementId,
+    finalBoss = false,
+  ) {
     if (this.leaving) return;
     this.leaving = true;
     this.saveCrawl();
@@ -677,6 +689,7 @@ export class DungeonScene extends GameScene {
     const params: BattleSceneParams = {
       enemies,
       isBoss,
+      finalBoss,
       eventId,
       partyTiles: [tileElement, tileElement, tileElement],
       returnTo: 'dungeon',
@@ -767,7 +780,7 @@ export class DungeonScene extends GameScene {
     );
     game.resetCrawl();
     game.crawl.initialized = false;
-    await this.ctx.go('hub', { arrival: 'towed' });
+    await this.ctx.go('hub', { arrival: 'guttered' });
   }
 
   // --- frame ---------------------------------------------------------------

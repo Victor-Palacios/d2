@@ -92,7 +92,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
           MENTOR,
           'An echo, and a small one. Open with Attack. You are not hurting it — you are getting its attention.',
         ),
-        outro: say(MENTOR, 'Quieted, not slain. Attack costs nothing; Techniques cost MP but reach far deeper.'),
+        outro: say(MENTOR, 'Quieted, not slain. Attack costs nothing; Invocations cost MP but reach far deeper.'),
       },
       // The Unquenched — an Anchored, off in a dead-end pocket of coals. Far too
       // strong for a first-crossing party; a reason to come back leveled and
@@ -100,9 +100,9 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       '3': { kind: 'anchored', id: 'crossingAnchored' },
     },
     chests: {
-      '11,2': { obols: 180, item: 'repairChip', note: 'Someone abandoned a supply crate up here.' },
+      '11,2': { obols: 180, item: 'mendingBalm', note: 'Someone abandoned a supply crate up here.' },
       '3,10': {
-        item: 'towBeacon',
+        item: 'homingEmber',
         note: "A keeper's kit, left by the door: a Homing Ember to burn if the dark ever turns you back.",
       },
     },

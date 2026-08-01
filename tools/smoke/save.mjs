@@ -25,7 +25,7 @@ const st = () => page.evaluate(() => {
   return {
     scene: g.manager.current,
     tile: s.tileX !== undefined ? `${s.tileX},${s.tileZ}` : null,
-    floor: g.game.floorIndex, fuel: g.game.fuel, obols: g.game.obols,
+    floor: g.game.floorIndex, light: g.game.light, obols: g.game.obols,
     name: g.game.playerName,
     busy: s.busy ?? null,
     dlg: (() => { const d = document.querySelector('#dialogue'); return !!d && d.style.display !== 'none'; })(),
@@ -99,8 +99,8 @@ await waitScene('dungeon');
 await page.waitForTimeout(900);
 for (let i = 0; i < 3; i++) { await page.keyboard.press('ArrowRight'); await page.waitForTimeout(450); }
 s = await st();
-console.log('in dungeon :', JSON.stringify({ tile: s.tile, floor: s.floor, fuel: s.fuel }));
-const beforeTile = s.tile, beforeFuel = s.fuel, beforeFloor = s.floor;
+console.log('in dungeon :', JSON.stringify({ tile: s.tile, floor: s.floor, light: s.light }));
+const beforeTile = s.tile, beforeLight = s.light, beforeFloor = s.floor;
 
 // ESC -> pause menu -> Suspend & quit
 await page.keyboard.press('Escape');
@@ -132,9 +132,9 @@ await page.keyboard.press('Enter');
 await waitScene('dungeon');
 await page.waitForTimeout(1200);
 s = await st();
-console.log('resumed    :', JSON.stringify({ scene: s.scene, tile: s.tile, floor: s.floor, fuel: s.fuel, name: s.name }));
-console.log('  expected :', JSON.stringify({ tile: beforeTile, floor: beforeFloor, fuel: beforeFuel }));
-console.log('  MATCH    :', s.tile === beforeTile && s.floor === beforeFloor && s.fuel === beforeFuel);
+console.log('resumed    :', JSON.stringify({ scene: s.scene, tile: s.tile, floor: s.floor, light: s.light, name: s.name }));
+console.log('  expected :', JSON.stringify({ tile: beforeTile, floor: beforeFloor, light: beforeLight }));
+console.log('  MATCH    :', s.tile === beforeTile && s.floor === beforeFloor && s.light === beforeLight);
 console.log('  suspend consumed on load :', (await st()).saves.suspend === false);
 
 console.log('=== SESSION 3: reload again — suspend must be gone, autosave remains ===');

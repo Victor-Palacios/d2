@@ -48,7 +48,7 @@ export class GameOverScene extends GameScene {
     game.resetCrawl();
 
     if (choice === 'retry') await this.ctx.go('dungeon');
-    else await this.ctx.go('hub', { arrival: 'towed' });
+    else await this.ctx.go('hub', { arrival: 'guttered' });
   }
 
   async exit() {

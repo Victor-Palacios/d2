@@ -21,29 +21,29 @@ export interface ItemDef {
 }
 
 export const ITEMS: Record<string, ItemDef> = {
-  repairChip: {
-    id: 'repairChip',
+  mendingBalm: {
+    id: 'mendingBalm',
     name: 'Mending Balm',
     price: 120,
     desc: 'Restores 60 HP to one creature.',
     effect: { kind: 'hp', amount: 60 },
   },
-  bufferCell: {
-    id: 'bufferCell',
+  focusDraught: {
+    id: 'focusDraught',
     name: 'Focus Draught',
     price: 150,
     desc: 'Restores 30 MP to one creature.',
     effect: { kind: 'mp', amount: 30 },
   },
-  fuelCanister: {
-    id: 'fuelCanister',
+  lightShard: {
+    id: 'lightShard',
     name: 'Light Shard',
     price: 90,
     desc: 'Restores 40 LP to the lantern.',
     effect: { kind: 'light', amount: 40 },
   },
-  towBeacon: {
-    id: 'towBeacon',
+  homingEmber: {
+    id: 'homingEmber',
     name: 'Homing Ember',
     price: 200,
     desc: 'Flare it from the crawl pause menu (ESC) for an emergency escape back to The Everwake. Your haul comes with you; one Ember is spent per use.',
@@ -56,4 +56,4 @@ export const ITEMS: Record<string, ItemDef> = {
   },
 };
 
-export const SHOP_STOCK = ['repairChip', 'bufferCell', 'fuelCanister', 'towBeacon', 'reachMap'];
+export const SHOP_STOCK = ['mendingBalm', 'focusDraught', 'lightShard', 'homingEmber', 'reachMap'];

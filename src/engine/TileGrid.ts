@@ -7,7 +7,17 @@ import { ELEMENTS } from '../data/elements';
 /** World size of one dungeon tile. */
 export const TILE = 2;
 
-export type TileKind = 'void' | 'wall' | 'floor' | 'start' | 'portal' | 'exit' | 'chest' | 'fuel' | 'element' | 'event';
+export type TileKind =
+  | 'void'
+  | 'wall'
+  | 'floor'
+  | 'start'
+  | 'portal'
+  | 'exit'
+  | 'chest'
+  | 'light'
+  | 'element'
+  | 'event';
 
 export interface Tile {
   x: number;
@@ -16,7 +26,7 @@ export interface Tile {
   element?: ElementId;
   /** Key into the floor's `events` table for 'event' tiles. */
   eventId?: string;
-  /** Set once a chest/fuel/event has been consumed. */
+  /** Set once a chest/light/event has been consumed. */
   used?: boolean;
 }
 
@@ -55,7 +65,7 @@ export const DEFAULT_THEME: TileTheme = {
  *   '='  accent wall (boss)      '.'  floor
  *   'S'  player start            '>'  portal down
  *   '<'  exit portal             'C'  treasure chest
- *   '$'  fuel canister           'W F N M D'  element floor tiles
+ *   '$'  light shard             'W F N M D'  element floor tiles
  *   '1'-'9'  scripted event tile (looked up in the floor's `events` map)
  * ```
  */
@@ -109,7 +119,7 @@ export class TileGrid {
     if (ch === '>') return { x, z, kind: 'portal' };
     if (ch === '<') return { x, z, kind: 'exit' };
     if (ch === 'C') return { x, z, kind: 'chest' };
-    if (ch === '$') return { x, z, kind: 'fuel' };
+    if (ch === '$') return { x, z, kind: 'light' };
     if (ELEMENT_CHARS[ch]) return { x, z, kind: 'element', element: ELEMENT_CHARS[ch] };
     if (ch >= '1' && ch <= '9') return { x, z, kind: 'event', eventId: ch };
     return { x, z, kind: 'floor' };
