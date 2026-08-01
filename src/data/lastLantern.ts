@@ -235,7 +235,9 @@ const FLOORS: DungeonFloor[] = [
           { species: 'emberward', level: 9 },
           { species: 'wardling', level: 9 },
         ],
-        intro: narrate('The last of the lantern-glow falls away behind you. Ahead there is only the dark, and the things that kept it.'),
+        intro: narrate(
+          'The last of the lantern-glow falls away behind you. Ahead there is only the dark, and the things that kept it.',
+        ),
       },
       '2': {
         kind: 'battle',
@@ -246,7 +248,11 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '2,8': { obols: 400, item: 'lightShard', note: 'A keeper who came this far, and no further, left their reserve.' },
+      '2,8': {
+        obols: 400,
+        item: 'lightShard',
+        note: 'A keeper who came this far, and no further, left their reserve.',
+      },
     },
     encounterRate: 0.08,
     encounters: [
@@ -300,7 +306,9 @@ const FLOORS: DungeonFloor[] = [
           { species: 'stillguard', level: 9 },
           { species: 'keptsoul', level: 9 },
         ],
-        intro: narrate('The stair goes down and down, every lamp along it long since drowned. You count the steps to keep from counting the quiet.'),
+        intro: narrate(
+          'The stair goes down and down, every lamp along it long since drowned. You count the steps to keep from counting the quiet.',
+        ),
       },
     },
     chests: {
@@ -351,7 +359,9 @@ const FLOORS: DungeonFloor[] = [
           { species: 'keptsoul', level: 9 },
           { species: 'stillguard', level: 9 },
         ],
-        intro: narrate('A flooded antechamber, black water to the ankle. Faces turn just under the surface, and do not rise.'),
+        intro: narrate(
+          'A flooded antechamber, black water to the ankle. Faces turn just under the surface, and do not rise.',
+        ),
       },
       '2': {
         kind: 'battle',
@@ -409,7 +419,9 @@ const FLOORS: DungeonFloor[] = [
           { species: 'lanternlord', level: 9 },
           { species: 'wardling', level: 9 },
         ],
-        intro: narrate('One door left. Beyond it, a light — not held, not frozen, just burning, the way you had almost forgotten light could.'),
+        intro: narrate(
+          'One door left. Beyond it, a light — not held, not frozen, just burning, the way you had almost forgotten light could.',
+        ),
       },
       '2': {
         kind: 'battle',
@@ -420,7 +432,11 @@ const FLOORS: DungeonFloor[] = [
       },
     },
     chests: {
-      '15,8': { obols: 520, item: 'lightShard', note: 'The last cache before the flame. Whoever left it did not come back for it.' },
+      '15,8': {
+        obols: 520,
+        item: 'lightShard',
+        note: 'The last cache before the flame. Whoever left it did not come back for it.',
+      },
     },
     encounterRate: 0.08,
     encounters: [

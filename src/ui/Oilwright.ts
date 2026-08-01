@@ -24,7 +24,8 @@ interface Tradable {
 function tradables(): Tradable[] {
   const out: Tradable[] = [];
   for (const c of game.party) if (!c.companion) out.push({ uid: c.uid, name: c.name, level: c.level, where: 'party' });
-  for (const c of game.sanctuary) if (!c.companion) out.push({ uid: c.uid, name: c.name, level: c.level, where: 'sanctuary' });
+  for (const c of game.sanctuary)
+    if (!c.companion) out.push({ uid: c.uid, name: c.name, level: c.level, where: 'sanctuary' });
   return out;
 }
 

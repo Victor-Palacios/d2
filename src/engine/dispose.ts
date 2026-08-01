@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import type * as THREE from 'three';
 
 /**
  * Frees the GPU resources under an Object3D subtree: the geometry and

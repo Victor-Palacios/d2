@@ -243,7 +243,11 @@ export class Billboard {
       // vertical lick, so the flame reads as alive rather than a static decal.
       const f = 0.72 + Math.sin(time * 9 + this.revealPhase) * 0.16 + Math.sin(time * 21.3 + this.revealPhase) * 0.08;
       this.revealFlame.material.opacity = f;
-      this.revealFlame.scale.set(1 + Math.sin(time * 6.3 + this.revealPhase) * 0.05, 1 + Math.sin(time * 8.1 + this.revealPhase) * 0.09, 1);
+      this.revealFlame.scale.set(
+        1 + Math.sin(time * 6.3 + this.revealPhase) * 0.05,
+        1 + Math.sin(time * 8.1 + this.revealPhase) * 0.09,
+        1,
+      );
     }
   }
 

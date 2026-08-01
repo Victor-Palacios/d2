@@ -279,7 +279,9 @@ const FLOORS: DungeonFloor[] = [
           { species: 'hexshade', level: 8 },
           { species: 'wispling', level: 7 },
         ],
-        intro: narrate('The cloister runs in a ring, and the ring is weeping — water, or something like it, beading on every stone.'),
+        intro: narrate(
+          'The cloister runs in a ring, and the ring is weeping — water, or something like it, beading on every stone.',
+        ),
       },
     },
     chests: {
