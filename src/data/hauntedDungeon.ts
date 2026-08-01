@@ -25,14 +25,14 @@ const THEME_UPPER: TileTheme = {
 };
 
 const THEME_DEEP: TileTheme = {
-  floor: '#231d1a',
-  floorAlt: '#1a1512',
-  wall: '#332a22',
-  wallTop: '#120d0a',
-  accentWall: '#4a3a28',
-  terrain: 'cave',
+  floor: '#231e2e',
+  floorAlt: '#1a1624',
+  wall: '#322a44',
+  wallTop: '#130e1c',
+  accentWall: '#4d3a60',
+  terrain: 'crypt',
   wallHeight: 3.1,
-  fogColor: '#0e0a10',
+  fogColor: '#0d0913',
 };
 
 const THEME_BOSS: TileTheme = {
@@ -118,7 +118,7 @@ const FLOORS: DungeonFloor[] = [
     theme: THEME_DEEP,
     fog: 1.7,
     decor: [
-      { x: 2, z: 3, kind: 'rockPile', height: 0.9 },
+      { x: 2, z: 3, kind: 'boneheap', height: 0.8 },
       { x: 13, z: 4, kind: 'roots', height: 0.8 },
       { x: 13, z: 6, kind: 'roots', height: 0.8 },
       { x: 3, z: 8, kind: 'mushroomCluster', height: 0.7, emissive: 0.3 },

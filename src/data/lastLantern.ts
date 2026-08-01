@@ -31,7 +31,7 @@ const THEME_DEEP: TileTheme = {
   wall: '#1c1a26',
   wallTop: '#08070d',
   accentWall: '#5a4630',
-  terrain: 'crypt',
+  terrain: 'cave',
   wallHeight: 3.6,
   fogColor: '#050409',
 };

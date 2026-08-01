@@ -74,12 +74,14 @@ const terrains = await page.evaluate(() => {
   return out;
 });
 console.log('  terrain skins :', JSON.stringify(terrains));
+// Each reach wears ONE terrain skin across all its floors — the floors vary by
+// colour/fog/wall-height/decor, not by biome, so a reach reads as one place.
 const expect = {
   crossing: ['stone', 'stone', 'stone'],
-  crystal: ['crystal', 'metal', 'crystal'],
+  crystal: ['crystal', 'crystal', 'crystal'],
   jungle: ['jungle', 'jungle', 'jungle'],
-  haunted: ['crypt', 'cave', 'crypt'],
-  lantern: ['cave', 'crypt', 'cave'],
+  haunted: ['crypt', 'crypt', 'crypt'],
+  lantern: ['cave', 'cave', 'cave'],
 };
 for (const [id, exp] of Object.entries(expect)) {
   check(`${id} terrain = ${exp.join('/')}`, JSON.stringify(terrains[id]) === JSON.stringify(exp));

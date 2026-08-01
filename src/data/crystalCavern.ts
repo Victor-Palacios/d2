@@ -25,14 +25,14 @@ const THEME_UPPER: TileTheme = {
 };
 
 const THEME_DEEP: TileTheme = {
-  floor: '#2a3340',
-  floorAlt: '#1f2731',
-  wall: '#3a4656',
-  wallTop: '#151c25',
-  accentWall: '#5a86a8',
-  terrain: 'metal',
+  floor: '#203843',
+  floorAlt: '#182b34',
+  wall: '#294a5a',
+  wallTop: '#0f2028',
+  accentWall: '#3f7d94',
+  terrain: 'crystal',
   wallHeight: 2.9,
-  fogColor: '#0a1a22',
+  fogColor: '#081c26',
 };
 
 const THEME_BOSS: TileTheme = {
@@ -114,10 +114,10 @@ const FLOORS: DungeonFloor[] = [
     theme: THEME_DEEP,
     fog: 1.2,
     decor: [
-      { x: 5, z: 4, kind: 'machinePylon', height: 1.4, emissive: 0.4 },
-      { x: 8, z: 4, kind: 'conduit', height: 1.0, emissive: 0.5 },
-      { x: 14, z: 5, kind: 'conduit', height: 1.0, emissive: 0.5 },
-      { x: 12, z: 8, kind: 'machinePylon', height: 1.4, emissive: 0.4 },
+      { x: 5, z: 4, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
+      { x: 8, z: 4, kind: 'iceShard', height: 0.8, emissive: 0.4 },
+      { x: 14, z: 5, kind: 'crystalCluster', emissive: 0.6 },
+      { x: 12, z: 8, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
       { x: 2, z: 8, kind: 'iceShard', height: 0.8, emissive: 0.4 },
     ],
     rows: [
