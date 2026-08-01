@@ -4,7 +4,8 @@ import { GameScene, sleep } from '../engine/SceneManager';
 import { TILE, TileGrid } from '../engine/TileGrid';
 import type { Tile } from '../engine/TileGrid';
 import { Billboard } from '../engine/Billboard';
-import { ParticleField, Portal, Torch } from '../engine/fx';
+import { artAspect } from '../engine/pixel';
+import { ParticleField, Portal, Torch, contactShadow } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { DECOR, PROPS, HUMANS } from '../assets/art';
@@ -74,6 +75,10 @@ export class DungeonScene extends GameScene {
   private portals: { portal: Portal; x: number; z: number }[] = [];
   private props = new Map<string, Billboard>();
   private decor: Billboard[] = [];
+  /** Contact-shadow decals for removable props (lightShards), keyed by tile. */
+  private propShadows = new Map<string, THREE.Mesh>();
+  /** The player's own contact-shadow decal, repositioned each frame. */
+  private playerShadow: THREE.Mesh | null = null;
   private elementLights: THREE.PointLight[] = [];
   private elementMeshes = new Map<string, THREE.Mesh>();
 
@@ -198,6 +203,11 @@ export class DungeonScene extends GameScene {
     this.player.walkBounce = 0.09;
     this.scene.add(this.player.object);
 
+    // A small static decal keeps the hero planted while walking, on top of the
+    // dynamic cast shadow. Repositioned to the player's x/z each frame.
+    this.playerShadow = contactShadow(1.7 * artAspect(HUMANS.hero), 0.26);
+    this.scene.add(this.playerShadow);
+
     // Props, portals and torches.
     this.grid.forEach((t) => {
       const key = `${t.x},${t.z}`;
@@ -216,6 +226,9 @@ export class DungeonScene extends GameScene {
         b.object.position.copy(world);
         this.scene.add(b.object);
         this.props.set(key, b);
+        const cs = contactShadow(0.85 * artAspect(opened ? PROPS.chestOpen : PROPS.chestClosed));
+        cs.position.set(world.x, 0.02, world.z);
+        this.scene.add(cs);
       } else if (t.kind === 'light') {
         if (game.takenPickups.has(`${this.floor.id}:${key}`)) return;
         const b = new Billboard(PROPS.lightShard, 'prop:lightShard', { height: 0.7, emissive: 0.6 });
@@ -223,6 +236,11 @@ export class DungeonScene extends GameScene {
         b.object.position.copy(world);
         this.scene.add(b.object);
         this.props.set(key, b);
+        // Tracked: the shard is removed on pickup, so its decal must go too.
+        const cs = contactShadow(0.7 * artAspect(PROPS.lightShard), 0.22);
+        cs.position.set(world.x, 0.02, world.z);
+        this.scene.add(cs);
+        this.propShadows.set(key, cs);
       } else if (t.kind === 'portal') {
         const portal = new Portal(this.particles, 0x6fd3ff, false);
         portal.object.position.copy(world);
@@ -267,9 +285,15 @@ export class DungeonScene extends GameScene {
         emissive: d.emissive ?? 0.1,
       });
       b.bob = 0;
-      b.object.position.copy(this.grid.worldPos(d.x, d.z));
+      const world = this.grid.worldPos(d.x, d.z);
+      b.object.position.copy(world);
       this.scene.add(b.object);
       this.decor.push(b);
+      // Ground it: a soft contact-shadow decal footprint under the sprite. Not
+      // tracked — decor is never removed mid-scene, so teardown disposes it.
+      const cs = contactShadow((d.height ?? 1.1) * artAspect(art));
+      cs.position.set(world.x, 0.02, world.z);
+      this.scene.add(cs);
       if (decorIsSolid(d)) this.grid.blockTile(d.x, d.z);
     }
   }
@@ -478,6 +502,13 @@ export class DungeonScene extends GameScene {
           this.scene.remove(b.object);
           b.dispose();
           this.props.delete(key);
+        }
+        const cs = this.propShadows.get(key);
+        if (cs) {
+          this.scene.remove(cs);
+          cs.geometry.dispose();
+          (cs.material as THREE.Material).dispose();
+          this.propShadows.delete(key);
         }
         game.light = Math.min(game.maxLight, game.light + 40);
         audio.sfx('pickup');
@@ -896,6 +927,11 @@ export class DungeonScene extends GameScene {
     if (!this.moving) this.player.setStride(-1);
 
     this.player.update(dt, this.ctx.hd2d.camera, time);
+    if (this.playerShadow) {
+      // Track x/z only — keep it flat on the floor, ignoring the walk-bob.
+      this.playerShadow.position.x = this.player.object.position.x;
+      this.playerShadow.position.z = this.player.object.position.z;
+    }
     for (const t of this.torches) t.update(dt, this.ctx.hd2d.camera, time);
     for (const p of this.portals) p.portal.update(dt, time);
     for (const b of this.props.values()) b.update(dt, this.ctx.hd2d.camera, time);
@@ -915,6 +951,10 @@ export class DungeonScene extends GameScene {
     for (const b of this.props.values()) b.dispose();
     for (const b of this.decor) b.dispose();
     this.particles.dispose();
+    // Contact-shadow decals are plain scene children; disposeObject3D frees
+    // their geometry+material (the shared radial texture is intentionally kept).
+    this.propShadows.clear();
+    this.playerShadow = null;
     disposeObject3D(this.scene);
     this.scene.clear();
   }
