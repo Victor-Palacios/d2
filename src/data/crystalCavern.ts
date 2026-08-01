@@ -62,7 +62,7 @@ const FLOORS: DungeonFloor[] = [
       '#...............#',
       '#..S........2..C#',
       '#.....##.##.....#',
-      '#....1..........#',
+      '#....1..4.......#',
       '#.....##.##.....#',
       '#WWWW...........#',
       '#W3WW..$........#',
@@ -89,6 +89,33 @@ const FLOORS: DungeonFloor[] = [
       // The Unweeping — an Anchored on a mass of black ice. Well above the
       // Reliquary's level; come back matched to water. Not consumed on loss.
       '3': { kind: 'anchored', id: 'crystalAnchored' },
+      // Meet Sena Vale, the warden of this reach, before you ever fight her:
+      // she stops you here and tells you what she did, so her boss beat lands as
+      // a reckoning, not an introduction. She joins at the hub once freed.
+      '4': {
+        kind: 'dialogue',
+        once: true,
+        script: [
+          ...narrate(
+            'The cold sharpens. A woman stands in the corridor ahead, between you and the deeper vault, and does not step aside.',
+          ),
+          ...say(
+            'Sena Vale',
+            'Far enough. I am Sena Vale — I keep this reach, and one soul inside it I will never let go.',
+          ),
+          ...say(
+            'Sena Vale',
+            'My sister. I caught her in the moment before she faded and I froze her there — whole, laughing, forever. They call that a crime, here. I called it the last warm thing I ever did.',
+          ),
+          ...say(
+            'Sena Vale',
+            'You want past me, to the plates and the deep. Then you will have to get past what I did first. I do not recommend trying.',
+          ),
+          ...narrate(
+            'She turns back into the frost and is gone. Whatever waits at the heart of the Reliquary, Sena keeps it — and she means to be the last door before it.',
+          ),
+        ],
+      },
     },
     chests: {
       '15,2': { obols: 220, item: 'mendingBalm', note: 'A prospector left a crate wedged in the ice.' },

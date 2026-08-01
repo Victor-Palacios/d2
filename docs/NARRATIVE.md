@@ -386,14 +386,20 @@ Unremembered (`game.fieldCap` / `game.humanCount`). Companions are permanent —
 never released, never benched — and ride along for free (they don't count
 against `partyCap`, which governs your souls).
 
+Each is now met **where their story lives**, not all at the hub:
+
 - **Wren** (Bereaved Witness — mage/dark) joins at the Everwake, the first time
   you arrive. Keeps the Book of Names; "no one leaves this book."
-- **Sena Vale** (Defier — hero/water) joins on your return from **the Reliquary**,
-  the ice gone from her hands: "I kept one soul frozen and called it love. I
-  would like to learn the other kind."
-- **Kade** (the Avoider — assassin/fire) joins after **the Unremembered**, where
-  the death he'd been outrunning finally said his name back. The old cocky rival,
-  now standing still.
+- **Sena Vale** (Defier — hero/water) is **met inside the Reliquary** (a `dialogue`
+  beat on floor 1): its warden, she blocks the way and tells you what she did —
+  froze her sister whole — so the boss fight lands as a reckoning, not an
+  introduction. She then joins on your return, the ice gone from her hands.
+- **Kade** (the Avoider — assassin/fire) — the 4th, and the surprise: **found and
+  joined deep in the Unremembered itself** (a `recruit` FloorEvent, not the hub),
+  stopped cold near the descent beside the very name he'd been outrunning. The
+  hub join remains as a fallback if his tile is somehow missed, keeping the party
+  whole (four) before the midpoint. Recruits are data — `data/recruits.ts` plus a
+  `recruit` tile in a floor; see `DungeonScene.runEvent`.
 
 The three carry the three relationships to death (Remember / Preserve / Avoid),
 so the party itself argues the dramatic question — and when the midpoint hardens

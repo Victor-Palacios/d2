@@ -132,7 +132,7 @@ const FLOORS: DungeonFloor[] = [
       '#....1....###...#',
       '#.........#.#...#',
       '#..N...D..#.#...#',
-      '#.........#2#...#',
+      '#....3....#2#...#',
       '#....>.........##',
       '#...............#',
       '#################',
@@ -154,6 +154,10 @@ const FLOORS: DungeonFloor[] = [
         ],
         intro: narrate('The nave breathes out. The dark at the far end is thicker than dark should be.'),
       },
+      // The surprise: Kade — the rival who was always a reach ahead — found here,
+      // stopped cold near the descent, and joining you in the dark itself (not
+      // back at the hub). The hub `kadeJoin` remains a fallback if this is missed.
+      '3': { kind: 'recruit', id: 'kade' },
     },
     chests: {
       '15,2': { obols: 340, note: 'A reliquary, long since looted of everything but obols.' },

@@ -10,6 +10,7 @@ import { audio } from '../engine/Audio';
 import { DECOR, PROPS, HUMANS } from '../assets/art';
 import { reach } from '../data/reaches';
 import { anchored, anchoredFlag } from '../data/anchored';
+import { recruit } from '../data/recruits';
 import { equipment } from '../data/equipment';
 import { ITEMS } from '../data/items';
 import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
@@ -17,7 +18,7 @@ import { decorIsSolid } from '../data/dungeon';
 import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
 import { game, LP_PER_BOSS } from '../systems/party/gameState';
-import { fullRestore } from '../systems/party/creature';
+import { fullRestore, makeCreature } from '../systems/party/creature';
 import { DungeonHUD } from '../ui/DungeonHUD';
 import { DialogueBox } from '../ui/DialogueBox';
 import { toast } from '../ui/Toast';
@@ -551,6 +552,30 @@ export class DungeonScene extends GameScene {
       this.busy = true;
       await this.dialogue.play(ev.script);
       this.busy = false;
+      return;
+    }
+
+    if (ev.kind === 'recruit') {
+      // A companion met and joined in the field. Joining persists across runs,
+      // so guard on the permanent join flag (not just usedEvents, which
+      // resetCrawl wipes). If already aboard — e.g. the hub fallback fired — skip.
+      const r = recruit(ev.id);
+      if (game.has(r.flag)) {
+        game.usedEvents.add(id);
+        return;
+      }
+      game.usedEvents.add(id);
+      this.busy = true;
+      await this.dialogue.play(r.script);
+      game.joinCompanion(makeCreature(r.speciesId, r.level));
+      game.set(r.flag);
+      this.hud.buildParty(game.party);
+      this.busy = false;
+      toast(
+        this.ctx.ui,
+        `<span class="accent">${r.name} joins you — you can now field ${game.fieldCap} souls</span>`,
+        3000,
+      );
       return;
     }
 
