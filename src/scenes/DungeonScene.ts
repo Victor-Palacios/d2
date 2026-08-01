@@ -318,8 +318,8 @@ export class DungeonScene extends GameScene {
   private buildUI() {
     this.hud = new DungeonHUD(this.ctx.ui);
     this.hud.setFloor(this.floor.name);
-    this.hud.buildParty(game.party);
-    this.hud.update(game.party);
+    this.hud.buildParty(game.souls());
+    this.hud.update(game.souls());
     this.dialogue = new DialogueBox(this.ctx.ui);
     this.legend = document.createElement('div');
     this.legend.id = 'legend';
@@ -382,7 +382,7 @@ export class DungeonScene extends GameScene {
     audio.sfx('step');
 
     game.light = Math.max(0, game.light - LIGHT_PER_STEP);
-    this.hud.update(game.party);
+    this.hud.update(game.souls());
   }
 
   private finishStep() {
@@ -437,7 +437,7 @@ export class DungeonScene extends GameScene {
           bits.push(`<span class="ok">+1 ${ITEMS[loot.item]?.name ?? 'keepsake'}</span>`);
         }
         toast(this.ctx.ui, bits.join(' &nbsp; ') || 'Empty.', 2200);
-        this.hud.update(game.party);
+        this.hud.update(game.souls());
       }
       return;
     }
@@ -455,7 +455,7 @@ export class DungeonScene extends GameScene {
         game.light = Math.min(game.maxLight, game.light + 40);
         audio.sfx('pickup');
         toast(this.ctx.ui, '<span class="ok">+40 LP</span>', 1600);
-        this.hud.update(game.party);
+        this.hud.update(game.souls());
       }
       return;
     }

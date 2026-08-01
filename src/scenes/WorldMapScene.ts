@@ -15,9 +15,13 @@ interface Node3D {
   x: number;
 }
 
-/** Rough party strength for the readiness cue: the average party level, min 1. */
+/**
+ * Rough party strength for the readiness cue: the average level of your fighting
+ * souls, min 1. Human companions (Wren / Sena / Kade) never fight, so they are
+ * excluded — they must not skew how ready the party reads.
+ */
 function partyLevel(): number {
-  const p = game.party;
+  const p = game.souls();
   if (!p.length) return 1;
   return Math.max(1, Math.round(p.reduce((s, c) => s + c.level, 0) / p.length));
 }
