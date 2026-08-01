@@ -27,6 +27,40 @@ Environment variables:
 | `OUT` | Screenshot directory (default `tools/smoke/shots`) |
 | `CHROME` | Path to a Chromium binary; omit to use Playwright's own |
 
+## The shared harness (`_harness.mjs`)
+
+Most scripts used to inline the same ~40 lines — launch Chromium, dismiss the
+title splash, strip the post stack, then drive the *whole* opening UI (New Game →
+name → **mash Enter through the prologue cutscene** → click the Emberling card →
+drain the hub dialogue) just to reach a playable state. On a GPU-less box that
+runs at ~1fps, so the opening drive times out; the blocks had also drifted (some
+never disabled shadows, the real cause of the slowness).
+
+`_harness.mjs` centralises it, and its key export is the **headless entry point**:
+
+```js
+import { load, launch, openPage, startInHub, helpers } from './_harness.mjs';
+const browser = await launch();
+const { page, errs } = await openPage(browser);
+await load(page);                 // load, dismiss splash, full FX-strip (incl. shadows)
+await startInHub(page);           // seed a fresh run + land in the hub — no opening UI
+const h = helpers(page);          // scene / dlg / idle / waitScene / press / pickPartner
+```
+
+`startInHub` calls the game's own `game.startNewGame(partner)` (the same setup
+`IntroScene` runs — party, team, keeper's kit, `prologueDone`) and jumps to the
+hub with `arrival: 'first'`, so the started party (starter **+ Wren**) and the
+first autosave match a real playthrough — it just skips the slow title/cutscene/
+partner UI. A parity unit test (`src/systems/party/gameState.test.ts`) keeps
+`startNewGame` honest, so the harness can't drift from the opening.
+
+Scripts whose subject *is* the opening keep driving the real cards: `cutscene.mjs`
+(the prologue cutscene) and `opening.mjs` (partner select + Lv1 balance) use
+`load` + `helpers`/`playOpening` instead of `startInHub`.
+
+> Migration is in progress — `equip.mjs` is the reference. Scripts not yet moved
+> still inline their own opening block.
+
 ## The scripts
 
 | Script | Covers |

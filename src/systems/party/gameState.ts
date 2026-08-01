@@ -1,5 +1,6 @@
 import type { CreatureInstance } from './creature';
 import { makeCreature } from './creature';
+import { species } from '../../data/creatures';
 import { QUIET_CROSSING } from '../../data/quietCrossing';
 import type { AttributeId } from '../../data/elements';
 import { IMMORTALITY_POEM, IMMORTALITY_TOTAL } from '../../data/immortality';
@@ -32,6 +33,11 @@ export const MAX_FIELDED = 4;
  * reach (see `DungeonScene.afterBattle`).
  */
 export const LP_PER_BOSS = 20;
+
+/** The level a freshly-bonded starting partner begins at. */
+export const STARTER_LEVEL = 1;
+/** The keeper's kit, granted alongside the starting partner. */
+export const KEEPER_KIT = ['cinderEdge', 'paleShroud', 'quickLocket'] as const;
 
 /** A species' entry in the Soularium (the capture dex). */
 export interface SoulEntry {
@@ -179,6 +185,22 @@ export class GameState {
   syphonReady(speciesId: string): boolean {
     const e = this.soul(speciesId);
     return !e.captured && e.syphon >= 100;
+  }
+
+  /**
+   * Apply the state a fresh New Game produces: bond the chosen partner at the
+   * starting level, take the team attribute from its species, grant the keeper's
+   * kit, and mark the prologue done. This is the single source of truth for a
+   * started run — `IntroScene`'s partner-select calls it, and tests/tools can
+   * call it (via `window.hd2dGame.game`) to reach a playable state without
+   * replaying the opening cutscene and menus.
+   */
+  startNewGame(partnerId: string, name?: string): void {
+    if (name) this.playerName = name;
+    this.party = [makeCreature(partnerId, STARTER_LEVEL)];
+    this.teamAttribute = species(partnerId).attribute;
+    for (const item of KEEPER_KIT) this.addItem(item);
+    this.set('prologueDone');
   }
 
   /** Logs a species as captured and grants one free copy. */
