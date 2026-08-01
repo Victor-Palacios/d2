@@ -460,7 +460,6 @@ export class BattleScene extends GameScene {
         if (actor.side === 'party') {
           let action: BattleAction | null = null;
           if (this.autoBattle) {
-            this.hud.setLog(`${actor.creature.name} attacks on its own.`);
             await sleep(320);
             action = this.autoAction();
           } else if (this.repeatBattle) {
@@ -513,7 +512,8 @@ export class BattleScene extends GameScene {
             result = { actorUid: actor.creature.uid, actionLabel: '', hits: [], log: [] };
           }
         } else {
-          this.hud.setLog(`${actor.creature.name} is deciding...`);
+          // No "deciding…" line — a brief pause + the active-fighter highlight
+          // are enough of a tell, and it keeps the log uncluttered.
           await sleep(480);
           result = this.battle.perform(actor, this.battle.chooseEnemyAction(actor));
         }
