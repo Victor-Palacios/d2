@@ -74,21 +74,19 @@ const terrains = await page.evaluate(() => {
   return out;
 });
 console.log('  terrain skins :', JSON.stringify(terrains));
-// Each reach wears ONE terrain skin across all its floors — the floors vary by
-// colour/fog/wall-height/decor, not by biome, so a reach reads as one place.
-const expect = {
-  crossing: ['stone', 'stone', 'stone'],
-  crystal: ['crystal', 'crystal', 'crystal'],
-  jungle: ['jungle', 'jungle', 'jungle'],
-  haunted: ['crypt', 'crypt', 'crypt'],
-  lantern: ['cave', 'cave', 'cave'],
-};
-for (const [id, exp] of Object.entries(expect)) {
-  check(`${id} terrain = ${exp.join('/')}`, JSON.stringify(terrains[id]) === JSON.stringify(exp));
+// Each reach wears ONE terrain skin across ALL its floors (however many) — the
+// floors vary by colour/fog/wall-height/decor, not by biome, so a reach reads
+// as one place. Asserted by uniformity, not floor count, so it survives adding
+// floors to a reach.
+const expect = { crossing: 'stone', crystal: 'crystal', jungle: 'jungle', haunted: 'crypt', lantern: 'cave' };
+for (const [id, skin] of Object.entries(expect)) {
+  const skins = terrains[id] ?? [];
+  const uniform = skins.length > 0 && skins.every((s) => s === skin);
+  check(`${id} is all '${skin}' (${skins.length} floors)`, uniform, skins.join('/'));
 }
-// Between-reach uniqueness: no two reaches share the same skin sequence.
-const seqs = Object.values(terrains).map((t) => t.join(','));
-check('every reach has a distinct terrain sequence', new Set(seqs).size === seqs.length);
+// Between-reach uniqueness: no two reaches share the same single skin.
+const perReach = Object.values(expect);
+check('every reach has a distinct terrain skin', new Set(perReach).size === perReach.length);
 
 // --- reach a valid run state, then jump floor by floor -----------------------
 await page.keyboard.press('Enter'); await page.waitForTimeout(700);

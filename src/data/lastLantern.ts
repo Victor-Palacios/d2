@@ -194,6 +194,237 @@ const FLOORS: DungeonFloor[] = [
 
   {
     id: 'lantern-3',
+    name: 'The Last Lantern — The Long Dark',
+    theme: THEME_DEEP,
+    fog: 1.7,
+    decor: [
+      { x: 2, z: 4, kind: 'gravestone' },
+      { x: 14, z: 4, kind: 'boneheap', height: 0.7 },
+      { x: 2, z: 9, kind: 'mushroomGlow', height: 0.5, emissive: 0.6 },
+    ],
+    rows: [
+      '#################',
+      '#......S........#',
+      '#.......1.......#',
+      '#..###.....###..#',
+      '#..#.........#..#',
+      '#..#....2....#..#',
+      '#..#.........#..#',
+      '#..###.....###..#',
+      '#.C.....$.......#',
+      '#.........>.....#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'grievewisp', level: 9 },
+          { species: 'wardling', level: 9 },
+        ],
+        intro: narrate('The last of the lantern-glow falls away behind you. Ahead there is only the dark, and the things that kept it.'),
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'keptsoul', level: 9 },
+          { species: 'grievewisp', level: 9 },
+        ],
+      },
+    },
+    chests: {
+      '2,8': { obols: 400, item: 'lightShard', note: 'A keeper who came this far, and no further, left their reserve.' },
+    },
+    encounterRate: 0.08,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'grievewisp', level: 9 }] },
+      { weight: 2, enemies: [{ species: 'wardling', level: 9 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'keptsoul', level: 9 },
+          { species: 'grievewisp', level: 9 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'ashmoth', level: 9 }] },
+    ],
+  },
+
+  {
+    id: 'lantern-4',
+    name: 'The Last Lantern — The Unlit Stair',
+    theme: THEME_DEEP,
+    fog: 1.7,
+    decor: [
+      { x: 14, z: 1, kind: 'gravestone' },
+      { x: 14, z: 3, kind: 'mushroomGlow', height: 0.5, emissive: 0.6 },
+      { x: 2, z: 9, kind: 'boneheap', height: 0.7 },
+    ],
+    rows: [
+      '#################',
+      '#.S.............#',
+      '#....#...#...#..#',
+      '#.......2.......#',
+      '#..#...#...#....#',
+      '#....1.....#....#',
+      '#...#...#...#...#',
+      '#.......$.......#',
+      '#..#...#...#..C.#',
+      '#.........>.....#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'wardling', level: 9 },
+          { species: 'ashmoth', level: 9 },
+        ],
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'emberkeep', level: 9 },
+          { species: 'keptsoul', level: 9 },
+        ],
+        intro: narrate('The stair goes down and down, every lamp along it long since drowned. You count the steps to keep from counting the quiet.'),
+      },
+    },
+    chests: {
+      '14,8': { obols: 440, note: 'A satchel abandoned on the stair, its owner nowhere.' },
+    },
+    encounterRate: 0.09,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'ashmoth', level: 9 }] },
+      { weight: 2, enemies: [{ species: 'wardling', level: 9 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'emberkeep', level: 9 },
+          { species: 'ashmoth', level: 9 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'everember', level: 9 }] },
+    ],
+  },
+
+  {
+    id: 'lantern-5',
+    name: 'The Last Lantern — The Drowned Vestibule',
+    theme: THEME_DEEP,
+    fog: 1.8,
+    decor: [
+      { x: 2, z: 2, kind: 'deadTree', height: 1.6 },
+      { x: 14, z: 3, kind: 'gravestone' },
+      { x: 2, z: 8, kind: 'mushroomGlow', height: 0.5, emissive: 0.6 },
+    ],
+    rows: [
+      '#################',
+      '#.S.....#......$#',
+      '#.......#.......#',
+      '#...1...#...2...#',
+      '#.......#.......#',
+      '#####.###.#####.#',
+      '#...............#',
+      '#.......#.......#',
+      '#.......#.....C.#',
+      '#...>...#.......#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'keptsoul', level: 9 },
+          { species: 'emberkeep', level: 9 },
+        ],
+        intro: narrate('A flooded antechamber, black water to the ankle. Faces turn just under the surface, and do not rise.'),
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'everember', level: 9 },
+          { species: 'grievewisp', level: 9 },
+        ],
+      },
+    },
+    chests: {
+      '14,8': { obols: 480, item: 'focusDraught', note: 'A reliquary sealed against the damp, and still dry inside.' },
+    },
+    encounterRate: 0.09,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'keptsoul', level: 9 }] },
+      { weight: 2, enemies: [{ species: 'everember', level: 9 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'emberkeep', level: 9 },
+          { species: 'keptsoul', level: 9 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'lanternlord', level: 9 }] },
+    ],
+  },
+
+  {
+    id: 'lantern-6',
+    name: 'The Last Lantern — The Threshold',
+    theme: THEME_DEEP,
+    fog: 1.8,
+    decor: [
+      { x: 1, z: 1, kind: 'gravestone' },
+      { x: 15, z: 1, kind: 'gravestone' },
+      { x: 1, z: 9, kind: 'boneheap', height: 0.7 },
+    ],
+    rows: [
+      '#################',
+      '#......S........#',
+      '#.....#...#.....#',
+      '#....#.....#....#',
+      '#...#..1.2..#...#',
+      '#..#.........#..#',
+      '#...#.......#...#',
+      '#....#.....#....#',
+      '#.....#.$.#....C#',
+      '#......>........#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'lanternlord', level: 9 },
+          { species: 'wardling', level: 9 },
+        ],
+        intro: narrate('One door left. Beyond it, a light — not held, not frozen, just burning, the way you had almost forgotten light could.'),
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'everember', level: 9 },
+          { species: 'emberkeep', level: 9 },
+        ],
+      },
+    },
+    chests: {
+      '15,8': { obols: 520, item: 'lightShard', note: 'The last cache before the flame. Whoever left it did not come back for it.' },
+    },
+    encounterRate: 0.08,
+    encounters: [
+      { weight: 2, enemies: [{ species: 'lanternlord', level: 9 }] },
+      { weight: 2, enemies: [{ species: 'everember', level: 9 }] },
+      {
+        weight: 1,
+        enemies: [
+          { species: 'emberkeep', level: 9 },
+          { species: 'wardling', level: 9 },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'lantern-7',
     name: 'The Last Lantern — The Flame',
     theme: THEME_FINALE,
     fog: 1.8,
@@ -232,7 +463,7 @@ export const LAST_LANTERN: Reach = {
   color: '#ffd27a',
   recommendedLevel: 9,
   floors: FLOORS,
-  startingLight: 200,
+  startingLight: 300,
   music: 'haunted',
   onClear: { flag: 'lastLanternCleared' },
   requires: 'actTwo',

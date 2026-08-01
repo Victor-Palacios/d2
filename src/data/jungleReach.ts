@@ -184,6 +184,124 @@ const FLOORS: DungeonFloor[] = [
 
   {
     id: 'jungle-3',
+    name: 'The Overgrowth — Ferngloom Tier',
+    theme: THEME_DEEP,
+    fog: 1.4,
+    decor: [
+      { x: 2, z: 4, kind: 'palmTree', height: 1.8 },
+      { x: 14, z: 4, kind: 'bamboo', height: 1.6 },
+      { x: 8, z: 4, kind: 'jungleFlower', height: 0.5, emissive: 0.3 },
+      { x: 2, z: 9, kind: 'mossLog', height: 0.5 },
+    ],
+    rows: [
+      '#################',
+      '#......S........#',
+      '#.......1.......#',
+      '#..###.....###..#',
+      '#..#.........#..#',
+      '#..#.W..2..N.#..#',
+      '#..#.........#..#',
+      '#..###.....###..#',
+      '#.C.....$.......#',
+      '#.........>.....#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'thorncat', level: 5 },
+          { species: 'chitter', level: 5 },
+        ],
+        intro: narrate('The ferns hang so thick the light goes green. Something keeps pace in the wet dark.'),
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'boggle', level: 5 },
+          { species: 'frondle', level: 5 },
+        ],
+      },
+    },
+    chests: {
+      '2,8': { obols: 240, item: 'mendingBalm', note: 'A ranger’s kit, roots already threading through the strap.' },
+    },
+    encounterRate: 0.08,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'frondle', level: 5 }] },
+      { weight: 3, enemies: [{ species: 'chitter', level: 5 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'thorncat', level: 5 },
+          { species: 'boggle', level: 5 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'thorncat', level: 5 }] },
+    ],
+  },
+
+  {
+    id: 'jungle-4',
+    name: 'The Overgrowth — Sunken Boughs',
+    theme: THEME_DEEP,
+    fog: 1.5,
+    decor: [
+      { x: 14, z: 1, kind: 'totem', height: 1.6 },
+      { x: 14, z: 3, kind: 'fern', height: 0.8 },
+      { x: 2, z: 9, kind: 'mossLog', height: 0.5 },
+    ],
+    rows: [
+      '#################',
+      '#.S.............#',
+      '#....#...#...#..#',
+      '#.......2.......#',
+      '#..#...#...#..N.#',
+      '#....1.....#....#',
+      '#.W.#...#...#...#',
+      '#.......$.......#',
+      '#..#...#...#..C.#',
+      '#.........>.....#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'boggle', level: 6 },
+          { species: 'thorncat', level: 5 },
+        ],
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'frondle', level: 6 },
+          { species: 'chitter', level: 5 },
+          { species: 'thorncat', level: 5 },
+        ],
+        intro: narrate('The boughs sag underfoot — you are walking on a canopy, not a floor. Below, something stirs.'),
+      },
+    },
+    chests: {
+      '14,8': { obols: 300, note: 'Rainwater has pooled in the box; the obols beneath it are still bright.' },
+    },
+    encounterRate: 0.08,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'thorncat', level: 5 }] },
+      { weight: 2, enemies: [{ species: 'frondle', level: 6 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'boggle', level: 5 },
+          { species: 'chitter', level: 5 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'thorncat', level: 6 }] },
+    ],
+  },
+
+  {
+    id: 'jungle-5',
     name: 'The Overgrowth — Heartwood',
     theme: THEME_BOSS,
     fog: 1.5,
@@ -253,7 +371,7 @@ export const JUNGLE_REACH: Reach = {
   color: '#5fd66a',
   recommendedLevel: 5,
   floors: FLOORS,
-  startingLight: 135,
+  startingLight: 215,
   music: 'jungle',
   onClear: { flag: 'jungleCleared' },
   requires: 'crystalCleared',

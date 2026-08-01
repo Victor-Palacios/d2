@@ -59,6 +59,7 @@ export interface SaveData {
     flags: string[];
     light: number;
     maxLight: number;
+    lpBonus?: number;
     hasLeave: boolean;
     teamId: string | null;
     teamAttribute: AttributeId | null;
@@ -100,6 +101,7 @@ export function snapshot(kind: SaveKind, scene: SaveData['scene'], label: string
       flags: [...game.flags],
       light: game.light,
       maxLight: game.maxLight,
+      lpBonus: game.lpBonus,
       hasLeave: game.hasLeave,
       teamId: game.teamId,
       teamAttribute: game.teamAttribute,
@@ -191,6 +193,7 @@ export function applySave(data: SaveData) {
   game.flags = new Set(s.flags);
   game.light = s.light;
   game.maxLight = s.maxLight;
+  game.lpBonus = s.lpBonus ?? 0;
   game.hasLeave = s.hasLeave;
   game.teamId = s.teamId;
   game.teamAttribute = s.teamAttribute;

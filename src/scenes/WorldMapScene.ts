@@ -175,7 +175,7 @@ export class WorldMapScene extends GameScene {
     if (choice && choice !== 'city') {
       game.activeReachId = choice;
       const d = reach(choice);
-      game.maxLight = d.startingLight;
+      game.maxLight = d.startingLight + game.lpBonus;
       game.resetCrawl();
       await this.ctx.go('dungeon');
     } else {

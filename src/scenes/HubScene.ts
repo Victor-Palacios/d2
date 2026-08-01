@@ -15,6 +15,7 @@ import { Menu } from '../ui/Menu';
 import { openShop } from '../ui/ShopScreen';
 import { openSoulMenu } from '../ui/SoulMenu';
 import { openSoulStore } from '../ui/SoulStore';
+import { openOilwright } from '../ui/Oilwright';
 import { toast } from '../ui/Toast';
 import { el, remove } from '../ui/dom';
 import { narrate, say } from '../systems/dialogue/script';
@@ -139,6 +140,7 @@ export class HubScene extends GameScene {
       { id: 'chief', art: 'chief', char: '1' },
       { id: 'mentor', art: 'mentor', char: '2' },
       { id: 'vendor', art: 'vendor', char: '3' },
+      { id: 'oilwright', art: 'rival', char: '4' },
       { id: 'soulstore', art: 'soulkeeper', char: '5' },
     ];
 
@@ -671,6 +673,12 @@ export class HubScene extends GameScene {
       await openSoulStore(this.ctx.ui);
       this.busy = false;
     }
+
+    if (npc.id === 'oilwright') {
+      this.busy = true;
+      await openOilwright(this.ctx.ui);
+      this.busy = false;
+    }
   }
 
   private scriptFor(npc: Npc): DialogueScript {
@@ -716,6 +724,13 @@ export class HubScene extends GameScene {
           'Soul Broker Vex',
           'Welcome to the Soul Store. Syphon a soul in the field and I can conjure you a copy — for a price.',
           'I also sell capacity: more room in your active party. Souls you cannot carry rest in the Sanctuary.',
+        );
+      case 'oilwright':
+        return say(
+          'Rendell the Oilwright',
+          'Carrying more souls than you can bear to field? Bring me the spare ones.',
+          'I render them down to lamp-oil. The soul is spent — gone for good — but your lantern will hold more light on every reach you walk, however deep it runs.',
+          'A kindness, of a sort. A soul that would only sit benched, made into the thing that gets you home.',
         );
       case 'rival':
         return say(

@@ -57,6 +57,13 @@ export class GameState {
   /** Light Power (LP) — the lantern's charge while crawling; each step spends 1. */
   light = QUIET_CROSSING.startingLight;
   maxLight = QUIET_CROSSING.startingLight;
+  /**
+   * Permanent bonus to lantern capacity, earned by rendering spare souls into
+   * lamp-oil at the Oilwright. Added to every reach's `startingLight` when a
+   * crawl begins (see `WorldMapScene`), so it survives the per-reach reset that
+   * clobbers `maxLight`. Persisted in saves.
+   */
+  lpBonus = 0;
 
   /** Whether the Vigil has given you leave to keep past the Crossing. */
   hasLeave = false;
@@ -201,6 +208,27 @@ export class GameState {
     if (this.party.filter((c) => !c.companion).length <= 1) return false;
     this.sanctuary.push(this.party.splice(i, 1)[0]);
     return true;
+  }
+
+  /**
+   * Permanently remove a soul from the roster — the Oilwright renders it into
+   * lamp-oil. Mirrors `partyToSanctuary`'s guards: never a companion, and never
+   * the last fighting soul. Checks the party first, then the Sanctuary. Returns
+   * the consumed creature (for the UI to report its level), or null if refused.
+   */
+  consumeSoul(uid: string): CreatureInstance | null {
+    const pi = this.party.findIndex((c) => c.uid === uid);
+    if (pi >= 0) {
+      if (this.party[pi].companion) return null; // companions are not fuel
+      if (this.party.filter((c) => !c.companion).length <= 1) return null; // keep one fighter
+      return this.party.splice(pi, 1)[0];
+    }
+    const si = this.sanctuary.findIndex((c) => c.uid === uid);
+    if (si >= 0) {
+      if (this.sanctuary[si].companion) return null;
+      return this.sanctuary.splice(si, 1)[0];
+    }
+    return null;
   }
 
   /**

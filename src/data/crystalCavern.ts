@@ -176,6 +176,65 @@ const FLOORS: DungeonFloor[] = [
 
   {
     id: 'crystal-3',
+    name: 'The Reliquary — Shivering Gallery',
+    theme: THEME_DEEP,
+    fog: 1.3,
+    decor: [
+      { x: 3, z: 3, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
+      { x: 13, z: 3, kind: 'crystalCluster', emissive: 0.6 },
+      { x: 2, z: 8, kind: 'iceShard', height: 0.8, emissive: 0.4 },
+      { x: 14, z: 8, kind: 'iceShard', height: 0.8, emissive: 0.4 },
+    ],
+    rows: [
+      '#################',
+      '#...............#',
+      '#.S.........2..C#',
+      '#.....#####.....#',
+      '#.....#...#.....#',
+      '#..W..#.1.#..M..#',
+      '#.....#...#.....#',
+      '#.....##.##....$#',
+      '#...............#',
+      '#......>........#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'geodon', level: 4 },
+          { species: 'prismoth', level: 4 },
+        ],
+        intro: narrate('Facets close overhead like a shut hand. The gallery keeps its cold jealously.'),
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'shardling', level: 4 },
+          { species: 'geodon', level: 4 },
+        ],
+      },
+    },
+    chests: {
+      '15,2': { obols: 260, item: 'mendingBalm', note: 'A surveyor’s cache, sealed in a rind of frost.' },
+    },
+    encounterRate: 0.07,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'shardling', level: 4 }] },
+      { weight: 2, enemies: [{ species: 'prismoth', level: 4 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'geodon', level: 4 },
+          { species: 'shardling', level: 4 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'geodon', level: 4 }] },
+    ],
+  },
+
+  {
+    id: 'crystal-4',
     name: 'The Reliquary — Warden Vault',
     theme: THEME_BOSS,
     fog: 1.4,
@@ -243,7 +302,7 @@ export const CRYSTAL_CAVERN: Reach = {
   color: '#6fe0ff',
   recommendedLevel: 3,
   floors: FLOORS,
-  startingLight: 130,
+  startingLight: 175,
   music: 'crystal',
   onClear: { flag: 'crystalCleared' },
   requires: 'crossingCleared',

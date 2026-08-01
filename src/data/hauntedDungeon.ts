@@ -182,6 +182,181 @@ const FLOORS: DungeonFloor[] = [
 
   {
     id: 'haunted-3',
+    name: 'The Unremembered — Ossuary Walk',
+    theme: THEME_DEEP,
+    fog: 1.6,
+    decor: [
+      { x: 2, z: 2, kind: 'gravestone' },
+      { x: 14, z: 3, kind: 'deadTree', height: 1.6 },
+      { x: 2, z: 8, kind: 'boneheap', height: 0.7 },
+    ],
+    rows: [
+      '#################',
+      '#.S.....#......$#',
+      '#.......#.......#',
+      '#...1...#...2...#',
+      '#.......#.......#',
+      '#####.###.#####.#',
+      '#...............#',
+      '#...D...#...N...#',
+      '#.......#.....C.#',
+      '#...>...#.......#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'wispling', level: 7 },
+          { species: 'cryptguard', level: 7 },
+        ],
+        intro: narrate('Bone is stacked wall-high on both sides, sorted, catalogued. Someone still keeps this place.'),
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'revenance', level: 7 },
+          { species: 'wispling', level: 7 },
+        ],
+      },
+    },
+    chests: {
+      '14,8': { obols: 320, item: 'mendingBalm', note: 'A grave-warden’s satchel, the buckle green with age.' },
+    },
+    encounterRate: 0.08,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'wispling', level: 7 }] },
+      { weight: 2, enemies: [{ species: 'cryptguard', level: 7 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'revenance', level: 7 },
+          { species: 'wispling', level: 7 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'gravemaw', level: 7 }] },
+    ],
+  },
+
+  {
+    id: 'haunted-4',
+    name: 'The Unremembered — Weeping Cloister',
+    theme: THEME_DEEP,
+    fog: 1.7,
+    decor: [
+      { x: 1, z: 1, kind: 'gravestone' },
+      { x: 15, z: 1, kind: 'gravestone' },
+      { x: 1, z: 9, kind: 'boneheap', height: 0.7 },
+    ],
+    rows: [
+      '#################',
+      '#......S........#',
+      '#.....#...#.....#',
+      '#....#.....#....#',
+      '#...#..1.2..#...#',
+      '#..#.D.....N.#..#',
+      '#...#.......#...#',
+      '#....#.....#....#',
+      '#.....#.$.#....C#',
+      '#......>........#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'cryptguard', level: 8 },
+          { species: 'revenance', level: 7 },
+        ],
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'gravemaw', level: 8 },
+          { species: 'wispling', level: 7 },
+        ],
+        intro: narrate('The cloister runs in a ring, and the ring is weeping — water, or something like it, beading on every stone.'),
+      },
+    },
+    chests: {
+      '15,8': { obols: 360, note: 'An alms-box, its lock long since rusted through.' },
+    },
+    encounterRate: 0.09,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'revenance', level: 7 }] },
+      { weight: 2, enemies: [{ species: 'cryptguard', level: 8 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'wispling', level: 7 },
+          { species: 'gravemaw', level: 7 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'gravemaw', level: 8 }] },
+    ],
+  },
+
+  {
+    id: 'haunted-5',
+    name: 'The Unremembered — Sunken Reliquary',
+    theme: THEME_DEEP,
+    fog: 1.8,
+    decor: [
+      { x: 3, z: 3, kind: 'deadTree', height: 1.6 },
+      { x: 13, z: 3, kind: 'gravestone' },
+      { x: 2, z: 8, kind: 'boneheap', height: 0.7 },
+      { x: 14, z: 8, kind: 'mushroomCluster', height: 0.7, emissive: 0.3 },
+    ],
+    rows: [
+      '#################',
+      '#...............#',
+      '#.S.........2..C#',
+      '#.....#####.....#',
+      '#.....#...#.....#',
+      '#..D..#.1.#..N..#',
+      '#.....#...#.....#',
+      '#.....##.##....$#',
+      '#...............#',
+      '#......>........#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'gravemaw', level: 8 },
+          { species: 'revenance', level: 8 },
+        ],
+        intro: narrate('Reliquaries line the vault, each holding a single kept thing. Most are empty. Most.'),
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'cryptguard', level: 8 },
+          { species: 'gravemaw', level: 8 },
+        ],
+      },
+    },
+    chests: {
+      '15,2': { obols: 420, item: 'lightShard', note: 'A reliquary that still holds something useful.' },
+    },
+    encounterRate: 0.09,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'cryptguard', level: 8 }] },
+      { weight: 2, enemies: [{ species: 'gravemaw', level: 8 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'revenance', level: 8 },
+          { species: 'cryptguard', level: 8 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'gravemaw', level: 8 }] },
+    ],
+  },
+
+  {
+    id: 'haunted-6',
     name: 'The Unremembered — The Deletion',
     theme: THEME_BOSS,
     fog: 1.9,
@@ -250,7 +425,7 @@ export const HAUNTED_DUNGEON: Reach = {
   color: '#b48cff',
   recommendedLevel: 7,
   floors: FLOORS,
-  startingLight: 150,
+  startingLight: 255,
   music: 'haunted',
   onClear: { flag: 'hauntedCleared' },
   requires: 'crystalCleared',
