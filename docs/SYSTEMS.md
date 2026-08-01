@@ -318,6 +318,7 @@ makes the dungeon a place you can lose:
 | Thing | Value | Where |
 |---|---|---|
 | Starting / max LP | **120** | `QUIET_CROSSING.startingLight` |
+| Warden bonus (permanent) | **+20 per reach** | `LP_PER_BOSS`; granted once per reach in `DungeonScene.afterBattle`, stored as `game.lightBonus`, added to every reach's `startingLight` on entry (`WorldMapScene`) |
 | Drain per step | **1** | `LIGHT_PER_STEP`, `DungeonScene` |
 | Light shard pickup | **+40** | `DungeonScene` (crawl `$` tiles) |
 | Shop Light Shard item | **+40 LP** | `data/items.ts` |

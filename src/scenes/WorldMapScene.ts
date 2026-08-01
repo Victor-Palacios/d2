@@ -160,7 +160,7 @@ export class WorldMapScene extends GameScene {
           body:
             `<span style="color:${recColor}">◆ Recommended Lv ${rec}</span>` +
             `<span class="dim"> · your party ~Lv ${partyLv}</span><br><br>` +
-            `${d.blurb}<br><br><span class="dim">${d.floors.length} floors · LP ${d.startingLight}</span>`,
+            `${d.blurb}<br><br><span class="dim">${d.floors.length} floors · LP ${d.startingLight + game.lightBonus}</span>`,
         };
       }),
     ];
@@ -176,7 +176,9 @@ export class WorldMapScene extends GameScene {
     if (choice && choice !== 'city') {
       game.activeReachId = choice;
       const d = reach(choice);
-      game.maxLight = d.startingLight;
+      // The lantern's depth is the reach's baseline plus everything won from
+      // wardens so far — a deeper light is carried into every crawl that follows.
+      game.maxLight = d.startingLight + game.lightBonus;
       game.resetCrawl();
       await this.ctx.go('dungeon');
     } else {

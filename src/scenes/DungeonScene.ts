@@ -16,7 +16,7 @@ import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
 import { decorIsSolid } from '../data/dungeon';
 import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
-import { game } from '../systems/party/gameState';
+import { game, LP_PER_BOSS } from '../systems/party/gameState';
 import { fullRestore } from '../systems/party/creature';
 import { DungeonHUD } from '../ui/DungeonHUD';
 import { DialogueBox } from '../ui/DialogueBox';
@@ -138,6 +138,29 @@ export class DungeonScene extends GameScene {
       // The warden's portal home only opens once it is down.
       this.spawnExitPortal();
       game.set('bossDown');
+      // Some of the boundary keeper's light stays in your lantern, for good —
+      // once per reach (guarded so a re-cleared reach can't farm it). The gain
+      // fills you now and rides on top of every reach's startingLight after.
+      const lpFlag = `lpBoss:${game.activeReachId}`;
+      if (!game.has(lpFlag)) {
+        game.set(lpFlag);
+        game.lightBonus += LP_PER_BOSS;
+        game.maxLight += LP_PER_BOSS;
+        game.light = game.maxLight;
+        this.hud.update(game.party);
+        await this.dialogue.play([
+          ...narrate(
+            'As the warden’s light goes out, some of it does not — it crosses the small dark between you and settles into your lantern. Your flame stands taller than it did.',
+          ),
+          ...(game.has('haldenGone')
+            ? []
+            : say(
+                'Halden',
+                'That is how a keeper deepens. Every boundary you satisfy leaves a little of its light in yours. You will carry more of the dark back now — carry it well.',
+              )),
+        ]);
+        toast(this.ctx.ui, `<span class="accent">Lantern deepened · +${LP_PER_BOSS} LP</span>`, 2600);
+      }
     }
     if (ev?.kind === 'anchored') {
       // Victory is the only thing that consumes an Anchored — mark it used now

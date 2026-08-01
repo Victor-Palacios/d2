@@ -24,6 +24,14 @@ export const MAX_PARTY_CAP = 10;
  * — and never exceeds this. `formation` is sized to this maximum.
  */
 export const MAX_FIELDED = 4;
+/**
+ * Light Power the lantern gains, for good, each time a reach's warden is
+ * satisfied — some of the boundary keeper's own light stays in your flame. This
+ * bonus (`lightBonus`) rides on top of every reach's `startingLight`, so a
+ * deeper lantern is carried into every crawl that follows. Granted once per
+ * reach (see `DungeonScene.afterBattle`).
+ */
+export const LP_PER_BOSS = 20;
 
 /** A species' entry in the Soularium (the capture dex). */
 export interface SoulEntry {
@@ -57,6 +65,12 @@ export class GameState {
   /** Light Power (LP) — the lantern's charge while crawling; each step spends 1. */
   light = QUIET_CROSSING.startingLight;
   maxLight = QUIET_CROSSING.startingLight;
+  /**
+   * Permanent LP earned from satisfying wardens (`LP_PER_BOSS` each), added on
+   * top of a reach's `startingLight` when it is entered. Persists across reaches
+   * and saves — the lantern only ever grows deeper.
+   */
+  lightBonus = 0;
 
   /** Whether the Vigil has given you leave to keep past the Crossing. */
   hasLeave = false;
