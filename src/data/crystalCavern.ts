@@ -9,7 +9,7 @@ import type { Reach, DungeonFloor } from './dungeon';
  * symmetric geometry (a machine vault at its heart), tinted with icy fog and
  * dressed in crystal columns and ice shards — a deliberate contrast with the
  * broken, organic Unremembered. Leans on Water + Machine element plates and its
- * own roster (Shardling / Prismoth / Geodon), warded by Glaciark. Pure data —
+ * hero roster (Geodon / Shieldshard / Geomote / Prismguard), warded by Vaultwarden. Pure data —
  * see `dungeon.ts` for the model and `docs/ROADMAP.md` for how reaches slot in.
  */
 
@@ -74,15 +74,15 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'shardling', level: 3 },
-          { species: 'prismoth', level: 3 },
+          { species: 'shieldshard', level: 3 },
+          { species: 'prismguard', level: 3 },
         ],
         intro: narrate('Light scatters off a shelf of living crystal — and it turns toward you.'),
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'shardling', level: 3 },
+          { species: 'shieldshard', level: 3 },
           { species: 'geodon', level: 3 },
         ],
       },
@@ -95,13 +95,13 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'shardling', level: 3 }] },
-      { weight: 2, enemies: [{ species: 'prismoth', level: 3 }] },
+      { weight: 3, enemies: [{ species: 'geomote', level: 3 }] },
+      { weight: 2, enemies: [{ species: 'prismguard', level: 3 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'shardling', level: 3 },
-          { species: 'prismoth', level: 3 },
+          { species: 'shieldshard', level: 3 },
+          { species: 'prismguard', level: 3 },
         ],
       },
       { weight: 1, enemies: [{ species: 'geodon', level: 3 }] },
@@ -138,13 +138,13 @@ const FLOORS: DungeonFloor[] = [
         kind: 'battle',
         enemies: [
           { species: 'geodon', level: 3 },
-          { species: 'shardling', level: 3 },
+          { species: 'geomote', level: 3 },
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'prismoth', level: 3 },
+          { species: 'prismguard', level: 3 },
           { species: 'geodon', level: 3 },
         ],
         intro: narrate('The vault hums. Something big is keeping the cold in here.'),
@@ -155,20 +155,20 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.07,
     encounters: [
-      { weight: 3, enemies: [{ species: 'shardling', level: 3 }] },
+      { weight: 3, enemies: [{ species: 'geomote', level: 3 }] },
       { weight: 3, enemies: [{ species: 'geodon', level: 3 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'prismoth', level: 3 },
-          { species: 'shardling', level: 3 },
+          { species: 'prismguard', level: 3 },
+          { species: 'shieldshard', level: 3 },
         ],
       },
       {
         weight: 1,
         enemies: [
           { species: 'geodon', level: 3 },
-          { species: 'prismoth', level: 3 },
+          { species: 'prismguard', level: 3 },
         ],
       },
     ],
@@ -203,14 +203,14 @@ const FLOORS: DungeonFloor[] = [
         kind: 'battle',
         enemies: [
           { species: 'geodon', level: 4 },
-          { species: 'prismoth', level: 4 },
+          { species: 'prismguard', level: 4 },
         ],
         intro: narrate('Facets close overhead like a shut hand. The gallery keeps its cold jealously.'),
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'shardling', level: 4 },
+          { species: 'shieldshard', level: 4 },
           { species: 'geodon', level: 4 },
         ],
       },
@@ -220,13 +220,13 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.07,
     encounters: [
-      { weight: 3, enemies: [{ species: 'shardling', level: 4 }] },
-      { weight: 2, enemies: [{ species: 'prismoth', level: 4 }] },
+      { weight: 3, enemies: [{ species: 'shieldshard', level: 4 }] },
+      { weight: 2, enemies: [{ species: 'prismguard', level: 4 }] },
       {
         weight: 2,
         enemies: [
           { species: 'geodon', level: 4 },
-          { species: 'shardling', level: 4 },
+          { species: 'shieldshard', level: 4 },
         ],
       },
       { weight: 1, enemies: [{ species: 'geodon', level: 4 }] },
@@ -261,7 +261,7 @@ const FLOORS: DungeonFloor[] = [
     events: {
       '1': {
         kind: 'boss',
-        enemies: [{ species: 'glaciark', level: 3 }],
+        enemies: [{ species: 'vaultwarden', level: 3 }],
         intro: [
           ...narrate(
             "At the vault's heart, a woman kneels over a pane of ice. Inside it, a girl is laughing — frozen mid-laugh, forever.",
@@ -282,11 +282,11 @@ const FLOORS: DungeonFloor[] = [
     chests: {},
     encounterRate: 0.03,
     encounters: [
-      { weight: 2, enemies: [{ species: 'shardling', level: 3 }] },
+      { weight: 2, enemies: [{ species: 'geomote', level: 3 }] },
       {
         weight: 1,
         enemies: [
-          { species: 'prismoth', level: 3 },
+          { species: 'prismguard', level: 3 },
           { species: 'geodon', level: 3 },
         ],
       },

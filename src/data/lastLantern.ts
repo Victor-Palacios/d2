@@ -87,8 +87,8 @@ const FLOORS: DungeonFloor[] = [
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'emberkeep', level: 9 },
-          { species: 'ashmoth', level: 9 },
+          { species: 'emberward', level: 9 },
+          { species: 'vowkeeper', level: 9 },
         ],
         intro: narrate('Held souls drift out of the dark — kept so long they have forgotten they were ever let go of.'),
       },
@@ -102,15 +102,15 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.05,
     encounters: [
-      { weight: 3, enemies: [{ species: 'ashmoth', level: 9 }] },
+      { weight: 3, enemies: [{ species: 'vowkeeper', level: 9 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'emberkeep', level: 9 },
-          { species: 'grievewisp', level: 9 },
+          { species: 'emberward', level: 9 },
+          { species: 'stillguard', level: 9 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'everember', level: 9 }] },
+      { weight: 1, enemies: [{ species: 'reliquary', level: 9 }] },
     ],
   },
 
@@ -156,10 +156,23 @@ const FLOORS: DungeonFloor[] = [
         ],
       },
       '2': {
-        kind: 'battle',
-        enemies: [
-          { species: 'keptsoul', level: 9 },
-          { species: 'grievewisp', level: 9 },
+        kind: 'boss',
+        enemies: [{ species: 'lanternlord', level: 10 }],
+        intro: [
+          ...narrate(
+            'The hall opens, and the greatest of the keepers is waiting — a lord of leaded glass crowned in a flame that never falls. Every soul in these walls, it kept.',
+          ),
+          ...say(
+            'the Lanternlord',
+            'You carry a lantern too. Then you know. It is unbearable to let a light go out. Turn back — help me hold them, and never lose one again.',
+          ),
+        ],
+        outro: [
+          ...say(
+            'the Lanternlord',
+            'You would open your hands. After everything. ...Perhaps that is the braver keeping.',
+          ),
+          ...narrate('The great keeper dims, and lets you by. Only the last flame waits beyond, now.'),
         ],
       },
       '3': {
@@ -180,15 +193,15 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'keptsoul', level: 9 }] },
+      { weight: 3, enemies: [{ species: 'heldshade', level: 9 }] },
       {
         weight: 2,
         enemies: [
           { species: 'wardling', level: 9 },
-          { species: 'emberkeep', level: 9 },
+          { species: 'keptsoul', level: 9 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'lanternlord', level: 9 }] },
+      { weight: 1, enemies: [{ species: 'reliquary', level: 9 }] },
     ],
   },
 
@@ -219,7 +232,7 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'grievewisp', level: 9 },
+          { species: 'emberward', level: 9 },
           { species: 'wardling', level: 9 },
         ],
         intro: narrate('The last of the lantern-glow falls away behind you. Ahead there is only the dark, and the things that kept it.'),
@@ -228,7 +241,7 @@ const FLOORS: DungeonFloor[] = [
         kind: 'battle',
         enemies: [
           { species: 'keptsoul', level: 9 },
-          { species: 'grievewisp', level: 9 },
+          { species: 'emberward', level: 9 },
         ],
       },
     },
@@ -237,16 +250,16 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.08,
     encounters: [
-      { weight: 3, enemies: [{ species: 'grievewisp', level: 9 }] },
+      { weight: 3, enemies: [{ species: 'emberward', level: 9 }] },
       { weight: 2, enemies: [{ species: 'wardling', level: 9 }] },
       {
         weight: 2,
         enemies: [
           { species: 'keptsoul', level: 9 },
-          { species: 'grievewisp', level: 9 },
+          { species: 'emberward', level: 9 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'ashmoth', level: 9 }] },
+      { weight: 1, enemies: [{ species: 'vowkeeper', level: 9 }] },
     ],
   },
 
@@ -278,13 +291,13 @@ const FLOORS: DungeonFloor[] = [
         kind: 'battle',
         enemies: [
           { species: 'wardling', level: 9 },
-          { species: 'ashmoth', level: 9 },
+          { species: 'vowkeeper', level: 9 },
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'emberkeep', level: 9 },
+          { species: 'stillguard', level: 9 },
           { species: 'keptsoul', level: 9 },
         ],
         intro: narrate('The stair goes down and down, every lamp along it long since drowned. You count the steps to keep from counting the quiet.'),
@@ -295,16 +308,16 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.09,
     encounters: [
-      { weight: 3, enemies: [{ species: 'ashmoth', level: 9 }] },
+      { weight: 3, enemies: [{ species: 'vowkeeper', level: 9 }] },
       { weight: 2, enemies: [{ species: 'wardling', level: 9 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'emberkeep', level: 9 },
-          { species: 'ashmoth', level: 9 },
+          { species: 'stillguard', level: 9 },
+          { species: 'vowkeeper', level: 9 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'everember', level: 9 }] },
+      { weight: 1, enemies: [{ species: 'reliquary', level: 9 }] },
     ],
   },
 
@@ -336,15 +349,15 @@ const FLOORS: DungeonFloor[] = [
         kind: 'battle',
         enemies: [
           { species: 'keptsoul', level: 9 },
-          { species: 'emberkeep', level: 9 },
+          { species: 'stillguard', level: 9 },
         ],
         intro: narrate('A flooded antechamber, black water to the ankle. Faces turn just under the surface, and do not rise.'),
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'everember', level: 9 },
-          { species: 'grievewisp', level: 9 },
+          { species: 'reliquary', level: 9 },
+          { species: 'emberward', level: 9 },
         ],
       },
     },
@@ -354,11 +367,11 @@ const FLOORS: DungeonFloor[] = [
     encounterRate: 0.09,
     encounters: [
       { weight: 3, enemies: [{ species: 'keptsoul', level: 9 }] },
-      { weight: 2, enemies: [{ species: 'everember', level: 9 }] },
+      { weight: 2, enemies: [{ species: 'reliquary', level: 9 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'emberkeep', level: 9 },
+          { species: 'stillguard', level: 9 },
           { species: 'keptsoul', level: 9 },
         ],
       },
@@ -401,8 +414,8 @@ const FLOORS: DungeonFloor[] = [
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'everember', level: 9 },
-          { species: 'emberkeep', level: 9 },
+          { species: 'reliquary', level: 9 },
+          { species: 'stillguard', level: 9 },
         ],
       },
     },
@@ -412,11 +425,11 @@ const FLOORS: DungeonFloor[] = [
     encounterRate: 0.08,
     encounters: [
       { weight: 2, enemies: [{ species: 'lanternlord', level: 9 }] },
-      { weight: 2, enemies: [{ species: 'everember', level: 9 }] },
+      { weight: 2, enemies: [{ species: 'reliquary', level: 9 }] },
       {
         weight: 1,
         enemies: [
-          { species: 'emberkeep', level: 9 },
+          { species: 'stillguard', level: 9 },
           { species: 'wardling', level: 9 },
         ],
       },

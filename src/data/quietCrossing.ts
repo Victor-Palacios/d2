@@ -88,7 +88,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       },
       '2': {
         kind: 'battle',
-        enemies: [{ species: 'mitebug', level: 1 }],
+        enemies: [{ species: 'mistling', level: 1 }],
         intro: say(
           MENTOR,
           'An echo, and a small one. Open with Attack. You are not hurting it — you are getting its attention.',
@@ -150,7 +150,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       },
       '2': {
         kind: 'battle',
-        enemies: [{ species: 'sprigling', level: 1 }],
+        enemies: [{ species: 'cindermage', level: 1 }],
         intro: say(
           MENTOR,
           'Company at the gate. Guard when a creature is about to drop — it soaks the hit and recovers MP.',
@@ -170,9 +170,9 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'mitebug', level: 1 }] },
-      { weight: 3, enemies: [{ species: 'scrapmite', level: 1 }] },
-      { weight: 1, enemies: [{ species: 'sprigling', level: 1 }] },
+      { weight: 3, enemies: [{ species: 'mistling', level: 1 }] },
+      { weight: 3, enemies: [{ species: 'cindermage', level: 1 }] },
+      { weight: 1, enemies: [{ species: 'mistling', level: 2 }] },
     ],
   },
 
@@ -212,13 +212,13 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
           ...narrate('Something heavy shifts at the far end of the hallway.'),
           ...say(
             MENTOR,
-            'It stands like a Hero — armoured, certain. A Mage reaches past armour; lead with one if you have bonded one.',
+            "It fights like a Mage — it reaches with wards and hexes, not fists. An Assassin cuts through a caster's guard; lead with one if you have bonded one.",
           ),
         ],
       },
       '1': {
         kind: 'boss',
-        enemies: [{ species: 'regalion', level: 2 }],
+        enemies: [{ species: 'sigilwarden', level: 2 }],
         intro: [
           ...narrate(
             'The Vigil rises out of the dark and fills the hallway — a keeper older than the Crossing itself.',
@@ -237,9 +237,9 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
     chests: {},
     encounterRate: 0.04,
     encounters: [
-      { weight: 2, enemies: [{ species: 'gloomote', level: 1 }] },
-      { weight: 2, enemies: [{ species: 'mitebug', level: 1 }] },
-      { weight: 1, enemies: [{ species: 'dropletta', level: 1 }] },
+      { weight: 2, enemies: [{ species: 'cindermage', level: 1 }] },
+      { weight: 2, enemies: [{ species: 'mistling', level: 1 }] },
+      { weight: 1, enemies: [{ species: 'cindermage', level: 2 }] },
     ],
   },
 ];

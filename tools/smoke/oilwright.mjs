@@ -4,8 +4,8 @@ import { chromium } from 'playwright';
 // lantern capacity" mechanic without needing a full playthrough:
 //  1. consumeSoul() guards — removes a spare soul, refuses the last fighting
 //     soul and companions, and pulls from the Sanctuary.
-//  2. lpBonus survives a save/load round-trip.
-//  3. lpBonus is applied on top of a reach's startingLight (the WorldMap rule).
+//  2. lightBonus survives a save/load round-trip.
+//  3. lightBonus is applied on top of a reach's startingLight (the WorldMap rule).
 //  4. The Oilwright NPC ('4') is present in the hub.
 
 const browser = await chromium.launch({
@@ -30,7 +30,7 @@ await page.waitForFunction(() => !!window.hd2dGame, null, { timeout: 30000 });
 const r = await page.evaluate(() => {
   const g = window.hd2dGame, game = g.game, mk = g.creature.makeCreature;
   const out = {};
-  game.party.length = 0; game.sanctuary.length = 0; game.lpBonus = 0;
+  game.party.length = 0; game.sanctuary.length = 0; game.lightBonus = 0;
   const a = mk('shardling', 5), b = mk('geodon', 7);
   game.party.push(a, b);
   out.before = game.soulsInParty();                       // 2
@@ -43,14 +43,14 @@ const r = await page.evaluate(() => {
   out.consumedSanctuary = !!game.consumeSoul(s.uid);      // true
   out.sanctuaryEmpty = game.sanctuary.length === 0;       // true
   // persistence
-  game.lpBonus = 42;
+  game.lightBonus = 42;
   const snap = g.saves.snapshot('auto', 'hub', 't');
-  game.lpBonus = 0;
+  game.lightBonus = 0;
   g.saves.applySave(snap);
-  out.lpBonusRestored = game.lpBonus;                     // 42
-  // capacity rule: maxLight = reach.startingLight + lpBonus
+  out.lightBonusRestored = game.lightBonus;                     // 42
+  // capacity rule: maxLight = reach.startingLight + lightBonus
   const start = g.reaches.crystal.startingLight;
-  out.capacityWithBonus = start + game.lpBonus;
+  out.capacityWithBonus = start + game.lightBonus;
   out.crystalStart = start;
   return out;
 });
@@ -61,8 +61,8 @@ check('consumes a spare soul (2->1)', r.consumedSpare && r.after === 1);
 check('refuses the last fighting soul', r.refusedLast);
 check('refuses a companion', r.refusedCompanion);
 check('consumes a Sanctuary soul', r.consumedSanctuary && r.sanctuaryEmpty);
-check('lpBonus survives save/load', r.lpBonusRestored === 42, `${r.lpBonusRestored}`);
-check('capacity = startingLight + lpBonus', r.capacityWithBonus === r.crystalStart + 42, `${r.crystalStart}+42=${r.capacityWithBonus}`);
+check('lightBonus survives save/load', r.lightBonusRestored === 42, `${r.lightBonusRestored}`);
+check('capacity = startingLight + lightBonus', r.capacityWithBonus === r.crystalStart + 42, `${r.crystalStart}+42=${r.capacityWithBonus}`);
 
 // --- 4. Oilwright NPC present in the hub -------------------------------------
 const hubNpcs = await page.evaluate(async () => {

@@ -7,7 +7,7 @@ import { toast } from './Toast';
 
 /**
  * LP capacity a rendered soul is worth, scaled by its level — stronger souls
- * burn longer. Added to `game.lpBonus`, which every reach's lantern draws on.
+ * burn longer. Added to `game.lightBonus`, which every reach's lantern draws on.
  */
 export function oilFrom(level: number): number {
   return 20 + level * 2;
@@ -35,7 +35,7 @@ function fightingInParty(): number {
 
 /**
  * The Oilwright (hub NPC '4'). Trades captured souls for permanent lantern
- * capacity: each soul is consumed and lost, raising `game.lpBonus` so deeper,
+ * capacity: each soul is consumed and lost, raising `game.lightBonus` so deeper,
  * longer reaches don't gutter your light. Companions are never fuel, and the
  * last fighting soul in your party is protected. Mirrors the Soul Store shape.
  */
@@ -65,7 +65,7 @@ export async function openOilwright(parent: HTMLElement): Promise<void> {
 
   const refreshWallet = () => {
     wallet.innerHTML =
-      `<span class="dim">Lantern bonus</span> <span class="accent">+${game.lpBonus} LP</span>` +
+      `<span class="dim">Lantern bonus</span> <span class="accent">+${game.lightBonus} LP</span>` +
       ` &nbsp; <span class="dim">Party</span> ${game.soulsInParty()}/${game.partyCap}` +
       ` &nbsp; <span class="dim">Sanctuary</span> ${game.sanctuary.length}`;
   };
@@ -124,7 +124,7 @@ export async function openOilwright(parent: HTMLElement): Promise<void> {
       continue;
     }
     const gain = oilFrom(t.level);
-    game.lpBonus += gain;
+    game.lightBonus += gain;
     audio.sfx('chest');
     toast(parent, `Rendered <span class="accent">${esc(c.name)}</span> — lantern +${gain} LP`, 1900);
     refreshWallet();

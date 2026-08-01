@@ -23,7 +23,7 @@ import { defaultFormation } from '../battle/engine';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 /**
  * Oldest save this build can still read. Normally we keep this at 1 because
  * changes are additive, but v5/v6 renamed the tutorial reach's id and clear
@@ -36,6 +36,8 @@ export const SAVE_VERSION = 11;
  * hasLicense→`hasLeave`) for the mood rework — a rename can't be back-filled,
  * so anything older is dropped and started fresh. v11 adds the saved battle
  * formation, which `applySave` defaults to the front line — so a v10 loads.
+ * v12 adds `lightBonus` (permanent LP won from wardens), back-filled to 0 — so a
+ * v11 save still loads.
  */
 export const MIN_SAVE_VERSION = 10;
 
@@ -59,7 +61,7 @@ export interface SaveData {
     flags: string[];
     light: number;
     maxLight: number;
-    lpBonus?: number;
+    lightBonus: number;
     hasLeave: boolean;
     teamId: string | null;
     teamAttribute: AttributeId | null;
@@ -101,7 +103,7 @@ export function snapshot(kind: SaveKind, scene: SaveData['scene'], label: string
       flags: [...game.flags],
       light: game.light,
       maxLight: game.maxLight,
-      lpBonus: game.lpBonus,
+      lightBonus: game.lightBonus,
       hasLeave: game.hasLeave,
       teamId: game.teamId,
       teamAttribute: game.teamAttribute,
@@ -193,7 +195,7 @@ export function applySave(data: SaveData) {
   game.flags = new Set(s.flags);
   game.light = s.light;
   game.maxLight = s.maxLight;
-  game.lpBonus = s.lpBonus ?? 0;
+  game.lightBonus = s.lightBonus ?? 0;
   game.hasLeave = s.hasLeave;
   game.teamId = s.teamId;
   game.teamAttribute = s.teamAttribute;

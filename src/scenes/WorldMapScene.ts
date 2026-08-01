@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeObject3D } from '../engine/dispose';
 import { GameScene } from '../engine/SceneManager';
 import { ParticleField } from '../engine/fx';
 import { floorTexture } from '../engine/pixel';
@@ -159,7 +160,7 @@ export class WorldMapScene extends GameScene {
           body:
             `<span style="color:${recColor}">◆ Recommended Lv ${rec}</span>` +
             `<span class="dim"> · your party ~Lv ${partyLv}</span><br><br>` +
-            `${d.blurb}<br><br><span class="dim">${d.floors.length} floors · LP ${d.startingLight}</span>`,
+            `${d.blurb}<br><br><span class="dim">${d.floors.length} floors · LP ${d.startingLight + game.lightBonus}</span>`,
         };
       }),
     ];
@@ -175,7 +176,10 @@ export class WorldMapScene extends GameScene {
     if (choice && choice !== 'city') {
       game.activeReachId = choice;
       const d = reach(choice);
-      game.maxLight = d.startingLight + game.lpBonus;
+      // The lantern's depth is the reach's baseline plus every permanent bonus
+      // earned so far (wardens satisfied + souls rendered at the Oilwright) — a
+      // deeper light is carried into every crawl that follows.
+      game.maxLight = d.startingLight + game.lightBonus;
       game.resetCrawl();
       await this.ctx.go('dungeon');
     } else {
@@ -195,6 +199,7 @@ export class WorldMapScene extends GameScene {
   async exit() {
     this.select?.destroy();
     this.particles.dispose();
+    disposeObject3D(this.scene);
     this.scene.clear();
   }
 }
