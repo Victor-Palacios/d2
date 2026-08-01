@@ -463,7 +463,6 @@ export class BattleScene extends GameScene {
             await sleep(320);
             action = this.autoAction();
           } else if (this.repeatBattle) {
-            this.hud.setLog(`${actor.creature.name} repeats its last command.`);
             await sleep(320);
             action = this.repeatAction(actor);
           } else {
