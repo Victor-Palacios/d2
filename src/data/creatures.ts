@@ -2010,6 +2010,67 @@ export const SPECIES: Record<string, Species> = {
     ],
     blurb: 'A caster who opens a small nothing between its hands and asks you, very politely, to step into it.',
   },
+
+  // === Type-themed roster expansion (20 new monsters) ====================
+  emberward: {
+    id: 'emberward',
+    name: 'Emberward',
+    attribute: 'hero',
+    element: 'fire',
+    art: 'llEmberward',
+    height: 1.7,
+    base: { hp: 58, mp: 20, off: 17, def: 19, spd: 11, mag: 14, res: 18 },
+    growth: HERO_GROWTH,
+    learnset: [
+      { level: 1, tech: 'emberFang' },
+      { level: 4, tech: 'cinderBurst' },
+      { level: 8, tech: 'emberRend' },
+      { level: 12, tech: 'quakeCore' },
+      { level: 16, tech: 'pyreLance' },
+      { level: 20, tech: 'infernoCore' },
+    ],
+    blurb:
+      'A keeper of leaded glass around a flame it swore never to let die. It has kept that vow far past when it should have.',
+  },
+  vowkeeper: {
+    id: 'vowkeeper',
+    name: 'Vowkeeper',
+    attribute: 'hero',
+    element: 'dark',
+    art: 'llVowkeeper',
+    height: 1.75,
+    base: { hp: 60, mp: 20, off: 16, def: 20, spd: 10, mag: 15, res: 19 },
+    growth: HERO_GROWTH,
+    learnset: [
+      { level: 1, tech: 'gloomLance' },
+      { level: 4, tech: 'shadowRend' },
+      { level: 8, tech: 'dirge' },
+      { level: 12, tech: 'hexBolt' },
+      { level: 16, tech: 'abyssalBolt' },
+      { level: 20, tech: 'voidNova' },
+    ],
+    blurb: 'A guardian that holds a single held soul behind violet glass, and a promise it will not explain to anyone.',
+  },
+  stillguard: {
+    id: 'stillguard',
+    name: 'Stillguard',
+    attribute: 'hero',
+    element: 'water',
+    art: 'llStillguard',
+    height: 1.7,
+    base: { hp: 58, mp: 20, off: 16, def: 19, spd: 12, mag: 15, res: 19 },
+    growth: HERO_GROWTH,
+    learnset: [
+      { level: 1, tech: 'frostLance' },
+      { level: 4, tech: 'tidalCrash' },
+      { level: 8, tech: 'glacierSpire' },
+      { level: 12, tech: 'quakeCore' },
+      { level: 16, tech: 'prismStorm' },
+      { level: 20, tech: 'renewingTide' },
+    ],
+    blurb:
+      'It keeps a still, cold light that never ripples. To pass, you must convince it that stillness is not the same as safe.',
+  },
 };
 
 export const COMPANION_IDS = ['wren', 'senaVale', 'kade'] as const;

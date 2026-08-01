@@ -14,12 +14,14 @@ import { CROSSING_MAGES } from './crossing-mages.mjs';
 import { CRYSTAL_HEROES } from './crystal-heroes.mjs';
 import { OVERGROWTH_ASSASSINS } from './overgrowth-assassins.mjs';
 import { HAUNTED_MAGES } from './haunted-mages.mjs';
+import { LANTERN_HEROES } from './lantern-heroes.mjs';
 
 export const NEW_ART = {
   ...CROSSING_MAGES,
   ...CRYSTAL_HEROES,
   ...OVERGROWTH_ASSASSINS,
   ...HAUNTED_MAGES,
+  ...LANTERN_HEROES,
 };
 
 export const NEW_MONSTERS = [
@@ -119,5 +121,25 @@ export const NEW_MONSTERS = [
     height: 1.8, hover: 0.3, base: { hp: 48, mp: 32, off: 10, def: 13, spd: 13, mag: 23, res: 17 },
     learnset: [[1, 'hexBolt'], [4, 'gloomLance'], [8, 'nightSpiral'], [12, 'dirge'], [16, 'abyssalBolt'], [20, 'voidNova']],
     blurb: 'A caster who opens a small nothing between its hands and asks you, very politely, to step into it.',
+  },
+
+  // === D5 · The Last Lantern — Hero (reliquary) ===========================
+  {
+    id: 'emberward', name: 'Emberward', art: 'llEmberward', attribute: 'hero', element: 'fire', growth: 'HERO_GROWTH',
+    height: 1.7, base: { hp: 58, mp: 20, off: 17, def: 19, spd: 11, mag: 14, res: 18 },
+    learnset: [[1, 'emberFang'], [4, 'cinderBurst'], [8, 'emberRend'], [12, 'quakeCore'], [16, 'pyreLance'], [20, 'infernoCore']],
+    blurb: 'A keeper of leaded glass around a flame it swore never to let die. It has kept that vow far past when it should have.',
+  },
+  {
+    id: 'vowkeeper', name: 'Vowkeeper', art: 'llVowkeeper', attribute: 'hero', element: 'dark', growth: 'HERO_GROWTH',
+    height: 1.75, base: { hp: 60, mp: 20, off: 16, def: 20, spd: 10, mag: 15, res: 19 },
+    learnset: [[1, 'gloomLance'], [4, 'shadowRend'], [8, 'dirge'], [12, 'hexBolt'], [16, 'abyssalBolt'], [20, 'voidNova']],
+    blurb: 'A guardian that holds a single held soul behind violet glass, and a promise it will not explain to anyone.',
+  },
+  {
+    id: 'stillguard', name: 'Stillguard', art: 'llStillguard', attribute: 'hero', element: 'water', growth: 'HERO_GROWTH',
+    height: 1.7, base: { hp: 58, mp: 20, off: 16, def: 19, spd: 12, mag: 15, res: 19 },
+    learnset: [[1, 'frostLance'], [4, 'tidalCrash'], [8, 'glacierSpire'], [12, 'quakeCore'], [16, 'prismStorm'], [20, 'renewingTide']],
+    blurb: 'It keeps a still, cold light that never ripples. To pass, you must convince it that stillness is not the same as safe.',
   },
 ];
