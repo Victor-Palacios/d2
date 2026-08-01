@@ -29,7 +29,7 @@ await page.evaluate(() => { const g = window.hd2dGame; const p = g.hd2d.params; 
 
 await page.keyboard.press('Enter'); await page.waitForTimeout(800);
 await page.locator('.keyboard button', { hasText: /^OK$/ }).click(); await page.waitForTimeout(600);
-for (let i = 0; i < 40; i++) { if (await page.locator('.card', { hasText: 'Emberling' }).count()) break; if (await dlg()) await page.keyboard.press('Enter'); await page.waitForTimeout(200); }
+for (let i = 0; i < 40; i++) { if (await page.locator('.card', { hasText: 'Emberling' }).count()) break; await page.keyboard.press('Enter'); /* press through the prologue cutscene */ await page.waitForTimeout(200); }
 await page.locator('.card', { hasText: 'Emberling' }).click();
 await clearDlg(); await waitScene('hub'); await page.waitForTimeout(600); await clearDlg();
 
@@ -37,7 +37,9 @@ await clearDlg(); await waitScene('hub'); await page.waitForTimeout(600); await 
 await press('ArrowDown', 5); await press('ArrowLeft', 3); await press('ArrowDown', 2);
 for (let i = 0; i < 12 && (await scene()) !== 'worldmap'; i++) { await page.keyboard.press('ArrowDown'); await page.waitForTimeout(300); if (await dlg()) await page.keyboard.press('Enter'); }
 await waitScene('worldmap'); await page.waitForTimeout(600);
-await page.locator('.card', { hasText: 'The Quiet Crossing' }).click();
+// Match by the card's title heading — a locked reach's note ("clear The Quiet
+// Crossing first") would otherwise make a bare hasText ambiguous.
+await page.locator('.card', { has: page.locator('h3', { hasText: 'The Quiet Crossing' }) }).click();
 await waitScene('dungeon'); await page.waitForTimeout(900); await clearDlg();
 await press('ArrowDown', 4);
 for (let i = 0; i < 8 && (await scene()) === 'dungeon'; i++) { await page.keyboard.press('ArrowRight'); await page.waitForTimeout(320); if (await dlg()) await clearDlg(); }

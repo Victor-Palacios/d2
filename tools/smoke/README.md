@@ -99,3 +99,24 @@ two at the Quiet Crossing: you + Wren). A test that launches a fight and expects
 three or four souls on the field must first recruit the extra keepers, e.g.
 `g.game.joinCompanion({ ...clone, speciesId: 'senaVale', companion: true })`.
 `grid.mjs` and `mechanics.mjs` do exactly this before launching.
+
+**4. The prologue cutscene sits inside the New Game start flow.** After you name
+the keeper and press **OK**, a letterboxed memory beat (`src/ui/Cutscene.ts`)
+plays *before* the partner-select cards appear. It is not a `#dialogue`, so the
+old "advance only when a dialogue is up" start loops stalled on it forever. The
+shared start loop now presses **Enter** every tick until the Emberling card is
+present, which both tears the cutscene down and confirms nothing (the card check
+runs before the press):
+
+```js
+for (let i = 0; i < 40; i++) {
+  if (await page.locator('.card', { hasText: 'Emberling' }).count()) break;
+  await page.keyboard.press('Enter'); /* press through the prologue cutscene */
+  await page.waitForTimeout(200);
+}
+```
+
+`cutscene.mjs` asserts the cutscene itself; every other test just presses
+through it. Reach cards are matched by their title heading
+(`.card` with `has: h3` = name) — a locked reach's note ("clear The Quiet
+Crossing first") otherwise makes a bare `hasText` ambiguous.
