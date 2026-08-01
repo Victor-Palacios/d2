@@ -68,12 +68,12 @@ console.log('no double-grant on re-win :', noDouble, JSON.stringify(guarded));
 
 // The bonus rides on top of a *later* reach's startingLight (WorldMapScene logic).
 const rides = await page.evaluate(() => {
-  const baseline = 130; // The Reliquary's startingLight (WorldMapScene: startingLight + lightBonus)
-  return { expected: baseline + window.hd2dGame.game.lightBonus, bonus: window.hd2dGame.game.lightBonus };
+  const baseline = window.hd2dGame.reaches.crystal.startingLight; // WorldMapScene: startingLight + lightBonus
+  return { expected: baseline + window.hd2dGame.game.lightBonus, bonus: window.hd2dGame.game.lightBonus, baseline };
 });
-console.log('bonus rides onto next reach:', rides.expected === 130 + rides.bonus, JSON.stringify(rides));
+console.log('bonus rides onto next reach:', rides.expected === rides.baseline + rides.bonus, JSON.stringify(rides));
 
-const ok = granted && noDouble && rides.expected === 130 + rides.bonus;
+const ok = granted && noDouble && rides.expected === rides.baseline + rides.bonus;
 console.log('\nLP BOSS OK :', ok);
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();
