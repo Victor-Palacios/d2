@@ -7716,7 +7716,18 @@ export const CREATURES: Record<string, PixelArt> = {
 
 export const PROPS: Record<string, PixelArt> = {
   chestClosed: {
-    palette: { k: '#160d05', a: '#5c3a1a', b: '#7a4f24', c: '#9a6330', d: '#c08a45', e: '#e9c48a', m: '#3f434c', n: '#8b93a2', y: '#ffd166', Y: '#fff1b0' },
+    palette: {
+      k: '#160d05',
+      a: '#5c3a1a',
+      b: '#7a4f24',
+      c: '#9a6330',
+      d: '#c08a45',
+      e: '#e9c48a',
+      m: '#3f434c',
+      n: '#8b93a2',
+      y: '#ffd166',
+      Y: '#fff1b0',
+    },
     rows: [
       '....................',
       '....kkkkkkkkkkkk....',
@@ -7737,7 +7748,18 @@ export const PROPS: Record<string, PixelArt> = {
     ],
   },
   chestOpen: {
-    palette: { k: '#160d05', a: '#5c3a1a', b: '#7a4f24', c: '#9a6330', d: '#c08a45', e: '#e9c48a', m: '#3f434c', n: '#8b93a2', g: '#ffe9a8', G: '#fff8e0' },
+    palette: {
+      k: '#160d05',
+      a: '#5c3a1a',
+      b: '#7a4f24',
+      c: '#9a6330',
+      d: '#c08a45',
+      e: '#e9c48a',
+      m: '#3f434c',
+      n: '#8b93a2',
+      g: '#ffe9a8',
+      G: '#fff8e0',
+    },
     rows: [
       '....................',
       '..kkkkkkkkkkkkkkkk..',
@@ -7837,16 +7859,7 @@ export const DECOR: Record<string, PixelArt> = {
   },
   iceShard: {
     palette: { k: '#0a1728', a: '#5f96b8', b: '#7fc4e8', c: '#a8e4ff', d: '#cfeeff', e: '#ffffff' },
-    rows: [
-      '..e...',
-      '.edc..',
-      '.dcba.',
-      '.dcba.',
-      '.cbaa.',
-      'ecbaa.',
-      'kcbak.',
-      '.kkk..',
-    ],
+    rows: ['..e...', '.edc..', '.dcba.', '.dcba.', '.cbaa.', 'ecbaa.', 'kcbak.', '.kkk..'],
   },
   // --- metal skin ---
   machinePylon: {
@@ -7867,16 +7880,7 @@ export const DECOR: Record<string, PixelArt> = {
   },
   conduit: {
     palette: { k: '#0a0d13', a: '#4a5468', b: '#7d8798', c: '#c8d2e0', d: '#39e0ff' },
-    rows: [
-      '.dddd.',
-      'cbaabc',
-      'cbddbc',
-      'cbaabc',
-      'cbddbc',
-      'cbaabc',
-      'kbaabk',
-      '.kkkk.',
-    ],
+    rows: ['.dddd.', 'cbaabc', 'cbddbc', 'cbaabc', 'cbddbc', 'cbaabc', 'kbaabk', '.kkkk.'],
   },
   // --- crypt / haunted skin ---
   gravestone: {
@@ -7897,15 +7901,7 @@ export const DECOR: Record<string, PixelArt> = {
   },
   boneheap: {
     palette: { k: '#0e0b14', a: '#8a856f', b: '#b8b09a', c: '#d8d2c0', e: '#f4efe0' },
-    rows: [
-      '..ec..ec..',
-      '.ecb.ecb..',
-      'kacbkacbk.',
-      '.baa.baab.',
-      'kacbaacbak',
-      'kbaabbaabk',
-      '.kkkkkkkk.',
-    ],
+    rows: ['..ec..ec..', '.ecb.ecb..', 'kacbkacbk.', '.baa.baab.', 'kacbaacbak', 'kbaabbaabk', '.kkkkkkkk.'],
   },
   deadTree: {
     palette: { k: '#0d0a12', a: '#2f2636', b: '#4a3a52', c: '#6a5568', e: '#8a7590' },
@@ -7925,20 +7921,20 @@ export const DECOR: Record<string, PixelArt> = {
   },
   roots: {
     palette: { k: '#0d0a12', a: '#2c3a1f', b: '#405a2a', c: '#6a8a3a', e: '#8aa858' },
-    rows: [
-      'e..c...e.',
-      '.ec.ceb..',
-      '..ecbcecb',
-      'ec.bcbbc.',
-      '.ecbcbc..',
-      '..kbabk..',
-      '..kaak...',
-      '...kk....',
-    ],
+    rows: ['e..c...e.', '.ec.ceb..', '..ecbcecb', 'ec.bcbbc.', '.ecbcbc..', '..kbabk..', '..kaak...', '...kk....'],
   },
   // --- cave skin ---
   mushroomCluster: {
-    palette: { k: '#0e1410', a: '#a03a4a', b: '#c85a6a', B: '#e88a98', c: '#d8ceb0', d: '#f0e8d0', g: '#7fc85a', G: '#9adf7a' },
+    palette: {
+      k: '#0e1410',
+      a: '#a03a4a',
+      b: '#c85a6a',
+      B: '#e88a98',
+      c: '#d8ceb0',
+      d: '#f0e8d0',
+      g: '#7fc85a',
+      G: '#9adf7a',
+    },
     rows: [
       '...BB.....',
       '..BbaB....',
@@ -7968,16 +7964,7 @@ export const DECOR: Record<string, PixelArt> = {
   },
   mushroomGlow: {
     palette: { k: '#0a1810', a: '#2a5f80', b: '#3a7fa8', c: '#7fd6ff', d: '#d6f4ff', e: '#ffffff' },
-    rows: [
-      '..dd..',
-      '.dccd.',
-      'dccbba',
-      'ecbbae',
-      '.aaa..',
-      '.kbk..',
-      '.kbk..',
-      '.kkk..',
-    ],
+    rows: ['..dd..', '.dccd.', 'dccbba', 'ecbbae', '.aaa..', '.kbk..', '.kbk..', '.kkk..'],
   },
   // --- generic / stone (the Quiet Crossing) ---
   crate: {
@@ -7996,30 +7983,24 @@ export const DECOR: Record<string, PixelArt> = {
   },
   rubble: {
     palette: { k: '#0c0d12', a: '#3a3742', b: '#565360', c: '#726f7e', d: '#9a98a6', e: '#cfcdd8' },
-    rows: [
-      '...ed...ed...',
-      '..edcb.edcb..',
-      '.kdccbkdccbk.',
-      'kbccbaabccbak',
-      '.kkaakkaaakk.',
-    ],
+    rows: ['...ed...ed...', '..edcb.edcb..', '.kdccbkdccbk.', 'kbccbaabccbak', '.kkaakkaaakk.'],
   },
   // --- jungle skin ---
   fern: {
     palette: { k: '#13260f', a: '#2f7a2f', b: '#5fbf4f', c: '#8fdf6f', e: '#b8ef92' },
-    rows: [
-      'e...e...e',
-      '.b.aba.b.',
-      '.cb.b.bc.',
-      '..cbcbc..',
-      '...cbc...',
-      '...ebe...',
-      '...kak...',
-      '..kkakk..',
-    ],
+    rows: ['e...e...e', '.b.aba.b.', '.cb.b.bc.', '..cbcbc..', '...cbc...', '...ebe...', '...kak...', '..kkakk..'],
   },
   palmTree: {
-    palette: { k: '#0e1a0a', t: '#6a4a2a', T: '#8a6a3a', e: '#a8865a', a: '#2f7a2f', b: '#5fbf4f', c: '#8fdf6f', d: '#b8ef92' },
+    palette: {
+      k: '#0e1a0a',
+      t: '#6a4a2a',
+      T: '#8a6a3a',
+      e: '#a8865a',
+      a: '#2f7a2f',
+      b: '#5fbf4f',
+      c: '#8fdf6f',
+      d: '#b8ef92',
+    },
     rows: [
       '...b..d..b...',
       '..b.aacaa.b..',
@@ -8056,16 +8037,7 @@ export const DECOR: Record<string, PixelArt> = {
   },
   jungleFlower: {
     palette: { k: '#13260f', s: '#3f8f3a', a: '#ff5aa0', c: '#ff8fc0', b: '#ffd166', e: '#ffe8b0' },
-    rows: [
-      '..cac..',
-      '.caeac.',
-      '.aabaa.',
-      '.caeac.',
-      '..cac..',
-      '..sss..',
-      '...s...',
-      '..ksk..',
-    ],
+    rows: ['..cac..', '.caeac.', '.aabaa.', '.caeac.', '..cac..', '..sss..', '...s...', '..ksk..'],
   },
   bamboo: {
     palette: { k: '#0e140a', a: '#4f8f3a', b: '#7ec850', c: '#c8e89a', e: '#e2f4c0' },
@@ -8098,7 +8070,16 @@ export const DECOR: Record<string, PixelArt> = {
     ],
   },
   totem: {
-    palette: { k: '#0e0a08', w: '#5a3a24', W: '#7a5030', e: '#9a6a3a', y: '#ffd166', Y: '#fff1b0', a: '#c85a6a', A: '#e88a98' },
+    palette: {
+      k: '#0e0a08',
+      w: '#5a3a24',
+      W: '#7a5030',
+      e: '#9a6a3a',
+      y: '#ffd166',
+      Y: '#fff1b0',
+      a: '#c85a6a',
+      A: '#e88a98',
+    },
     rows: [
       '..kkkkk..',
       '.keWWWwk.',
