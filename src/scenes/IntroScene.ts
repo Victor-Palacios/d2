@@ -326,7 +326,6 @@ export class IntroScene extends GameScene {
     });
     const select = new CardSelect(this.ctx.ui, cards, {
       heading: 'BOND A SOUL',
-      subheading: 'The first to ride your lantern',
     });
     const choice = (await select.open()) ?? PARTNER_CHOICES[0];
     select.destroy();
