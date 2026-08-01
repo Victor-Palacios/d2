@@ -12,10 +12,12 @@
 // standalone (no evolutions), so all are trivially class-pure.
 import { CROSSING_MAGES } from './crossing-mages.mjs';
 import { CRYSTAL_HEROES } from './crystal-heroes.mjs';
+import { OVERGROWTH_ASSASSINS } from './overgrowth-assassins.mjs';
 
 export const NEW_ART = {
   ...CROSSING_MAGES,
   ...CRYSTAL_HEROES,
+  ...OVERGROWTH_ASSASSINS,
 };
 
 export const NEW_MONSTERS = [
@@ -63,5 +65,31 @@ export const NEW_MONSTERS = [
     height: 2.4, boss: true, base: { hp: 86, mp: 24, off: 18, def: 24, spd: 11, mag: 14, res: 22 },
     learnset: [[1, 'frostLance'], [4, 'rendingStrike'], [8, 'glacierSpire'], [12, 'quakeCore'], [16, 'overload'], [20, 'maelstrom']],
     blurb: 'The keeper of the Warden Vault — a mountain of stone around a burning amethyst heart. It has turned back every thief but grief.',
+  },
+
+  // === D3 · The Overgrowth — Assassin (gouache) ===========================
+  {
+    id: 'sporefang', name: 'Sporefang', art: 'ogSporefang', attribute: 'assassin', element: 'nature', growth: 'ASSASSIN_GROWTH',
+    height: 1.35, base: { hp: 48, mp: 18, off: 20, def: 13, spd: 20, mag: 12, res: 11 },
+    learnset: [[1, 'seedVolley'], [4, 'graveRot'], [8, 'savageBite'], [12, 'thornspell'], [16, 'gustWing'], [20, 'wildgrowth']],
+    blurb: 'A low, fanged hunter that seeds the air with spores and waits in the murk for something to breathe them.',
+  },
+  {
+    id: 'vineraptor', name: 'Vineraptor', art: 'ogVineraptor', attribute: 'assassin', element: 'nature', growth: 'ASSASSIN_GROWTH',
+    height: 1.5, base: { hp: 46, mp: 16, off: 22, def: 12, spd: 21, mag: 10, res: 10 },
+    learnset: [[1, 'savageBite'], [4, 'gustWing'], [8, 'graveRot'], [12, 'thornspell'], [16, 'seedVolley'], [20, 'wildgrowth']],
+    blurb: 'A raptor grown of grasping vine, one sickle claw raised. It runs down anything the canopy lets flee.',
+  },
+  {
+    id: 'bloomstalker', name: 'Bloomstalker', art: 'ogBloomstalker', attribute: 'assassin', element: 'nature', growth: 'ASSASSIN_GROWTH',
+    height: 1.4, base: { hp: 48, mp: 18, off: 19, def: 14, spd: 19, mag: 13, res: 12 },
+    learnset: [[1, 'seedVolley'], [4, 'gustWing'], [8, 'savageBite'], [12, 'graveRot'], [16, 'thornspell'], [20, 'wildgrowth']],
+    blurb: 'A patient cat that grows a false flower on its tail — the last pretty thing many a smaller soul ever chases.',
+  },
+  {
+    id: 'thornreaper', name: 'Thornreaper', art: 'ogThornreaper', attribute: 'assassin', element: 'nature', growth: 'ASSASSIN_GROWTH',
+    height: 2.3, boss: true, base: { hp: 76, mp: 22, off: 24, def: 16, spd: 18, mag: 12, res: 14 },
+    learnset: [[1, 'savageBite'], [4, 'graveRot'], [8, 'thornspell'], [12, 'gustWing'], [16, 'wildgrowth'], [20, 'lifebloom']],
+    blurb: 'The apex of the Overgrowth — a thorn-maned reaper that hunts the hunters. Nothing that walks the Heartwood is above it on the list.',
   },
 ];

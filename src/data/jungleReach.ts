@@ -9,7 +9,7 @@ import type { Reach, DungeonFloor } from './dungeon';
  * dense foliage walls hung with vines — dressed in ferns, palms, bamboo and
  * carved totems, tinted with green haze under a tall canopy. Leans on Nature +
  * Water element plates and its own roster (Frondle / Thorncat / Boggle /
- * Chitter), warded by Verdanox. Pure data — see `dungeon.ts` for the model and
+ * Chitter), warded by Thornreaper. Pure data — see `dungeon.ts` for the model and
  * `docs/ROADMAP.md` for how reaches slot in.
  */
 
@@ -78,8 +78,8 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'frondle', level: 5 },
-          { species: 'boggle', level: 5 },
+          { species: 'bloomstalker', level: 5 },
+          { species: 'vineraptor', level: 5 },
         ],
         intro: narrate(
           'The green closes over the path behind you. Something shifts in the leaves — and turns to face you.',
@@ -102,11 +102,11 @@ const FLOORS: DungeonFloor[] = [
     encounterRate: 0.06,
     encounters: [
       { weight: 3, enemies: [{ species: 'chitter', level: 5 }] },
-      { weight: 3, enemies: [{ species: 'frondle', level: 5 }] },
+      { weight: 3, enemies: [{ species: 'sporefang', level: 5 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'boggle', level: 5 },
+          { species: 'vineraptor', level: 5 },
           { species: 'chitter', level: 5 },
         ],
       },
@@ -145,15 +145,15 @@ const FLOORS: DungeonFloor[] = [
         kind: 'battle',
         enemies: [
           { species: 'thorncat', level: 5 },
-          { species: 'frondle', level: 5 },
+          { species: 'sporefang', level: 5 },
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'boggle', level: 5 },
+          { species: 'vineraptor', level: 5 },
           { species: 'thorncat', level: 5 },
-          { species: 'frondle', level: 5 },
+          { species: 'bloomstalker', level: 5 },
         ],
         intro: narrate('The hollow breathes out a wet green warmth. Whatever keeps this place is close now.'),
       },
@@ -164,12 +164,12 @@ const FLOORS: DungeonFloor[] = [
     encounterRate: 0.08,
     encounters: [
       { weight: 3, enemies: [{ species: 'thorncat', level: 5 }] },
-      { weight: 3, enemies: [{ species: 'frondle', level: 5 }] },
+      { weight: 3, enemies: [{ species: 'sporefang', level: 5 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'boggle', level: 5 },
-          { species: 'frondle', level: 5 },
+          { species: 'vineraptor', level: 5 },
+          { species: 'sporefang', level: 5 },
         ],
       },
       {
@@ -211,7 +211,7 @@ const FLOORS: DungeonFloor[] = [
     events: {
       '1': {
         kind: 'boss',
-        enemies: [{ species: 'verdanox', level: 5 }],
+        enemies: [{ species: 'thornreaper', level: 5 }],
         intro: [
           ...narrate(
             'At the heart of the wood, a woman sits half-grown into a great mossed trunk, roots where her legs were. She is smiling, and she has been for a very long time.',
@@ -233,12 +233,12 @@ const FLOORS: DungeonFloor[] = [
     chests: {},
     encounterRate: 0.04,
     encounters: [
-      { weight: 2, enemies: [{ species: 'frondle', level: 5 }] },
+      { weight: 2, enemies: [{ species: 'sporefang', level: 5 }] },
       {
         weight: 1,
         enemies: [
           { species: 'thorncat', level: 5 },
-          { species: 'boggle', level: 5 },
+          { species: 'vineraptor', level: 5 },
         ],
       },
     ],

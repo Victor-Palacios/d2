@@ -1847,6 +1847,86 @@ export const SPECIES: Record<string, Species> = {
     blurb:
       'The keeper of the Warden Vault — a mountain of stone around a burning amethyst heart. It has turned back every thief but grief.',
   },
+
+  // === Type-themed roster expansion (20 new monsters) ====================
+  sporefang: {
+    id: 'sporefang',
+    name: 'Sporefang',
+    attribute: 'assassin',
+    element: 'nature',
+    art: 'ogSporefang',
+    height: 1.35,
+    base: { hp: 48, mp: 18, off: 20, def: 13, spd: 20, mag: 12, res: 11 },
+    growth: ASSASSIN_GROWTH,
+    learnset: [
+      { level: 1, tech: 'seedVolley' },
+      { level: 4, tech: 'graveRot' },
+      { level: 8, tech: 'savageBite' },
+      { level: 12, tech: 'thornspell' },
+      { level: 16, tech: 'gustWing' },
+      { level: 20, tech: 'wildgrowth' },
+    ],
+    blurb: 'A low, fanged hunter that seeds the air with spores and waits in the murk for something to breathe them.',
+  },
+  vineraptor: {
+    id: 'vineraptor',
+    name: 'Vineraptor',
+    attribute: 'assassin',
+    element: 'nature',
+    art: 'ogVineraptor',
+    height: 1.5,
+    base: { hp: 46, mp: 16, off: 22, def: 12, spd: 21, mag: 10, res: 10 },
+    growth: ASSASSIN_GROWTH,
+    learnset: [
+      { level: 1, tech: 'savageBite' },
+      { level: 4, tech: 'gustWing' },
+      { level: 8, tech: 'graveRot' },
+      { level: 12, tech: 'thornspell' },
+      { level: 16, tech: 'seedVolley' },
+      { level: 20, tech: 'wildgrowth' },
+    ],
+    blurb: 'A raptor grown of grasping vine, one sickle claw raised. It runs down anything the canopy lets flee.',
+  },
+  bloomstalker: {
+    id: 'bloomstalker',
+    name: 'Bloomstalker',
+    attribute: 'assassin',
+    element: 'nature',
+    art: 'ogBloomstalker',
+    height: 1.4,
+    base: { hp: 48, mp: 18, off: 19, def: 14, spd: 19, mag: 13, res: 12 },
+    growth: ASSASSIN_GROWTH,
+    learnset: [
+      { level: 1, tech: 'seedVolley' },
+      { level: 4, tech: 'gustWing' },
+      { level: 8, tech: 'savageBite' },
+      { level: 12, tech: 'graveRot' },
+      { level: 16, tech: 'thornspell' },
+      { level: 20, tech: 'wildgrowth' },
+    ],
+    blurb:
+      'A patient cat that grows a false flower on its tail — the last pretty thing many a smaller soul ever chases.',
+  },
+  thornreaper: {
+    id: 'thornreaper',
+    name: 'Thornreaper',
+    attribute: 'assassin',
+    element: 'nature',
+    art: 'ogThornreaper',
+    height: 2.3,
+    base: { hp: 76, mp: 22, off: 24, def: 16, spd: 18, mag: 12, res: 14 },
+    growth: ASSASSIN_GROWTH,
+    learnset: [
+      { level: 1, tech: 'savageBite' },
+      { level: 4, tech: 'graveRot' },
+      { level: 8, tech: 'thornspell' },
+      { level: 12, tech: 'gustWing' },
+      { level: 16, tech: 'wildgrowth' },
+      { level: 20, tech: 'lifebloom' },
+    ],
+    blurb:
+      'The apex of the Overgrowth — a thorn-maned reaper that hunts the hunters. Nothing that walks the Heartwood is above it on the list.',
+  },
 };
 
 export const COMPANION_IDS = ['wren', 'senaVale', 'kade'] as const;
