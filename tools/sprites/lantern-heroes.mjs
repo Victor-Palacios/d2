@@ -56,9 +56,12 @@ export function emberward() { return keeper(canvas(58, 70), { plateL: ROSE, plat
 export function vowkeeper() { return keeper(canvas(58, 70), { plateL: VIOLET, plateR: ASHV, coreRamp: ['#3a1a6a', '#ac82ff', '#ecdfff'], coreHot: '#ecdfff', crown: '#ac82ff', eyeIris: '#c8a0ff' }); }
 // --- stillguard — Stillguard (water / hero) --------------------------------
 export function stillguard() { return keeper(canvas(58, 70), { plateL: TEAL, plateR: TEAL, coreRamp: ['#0e4a44', '#5fd4ba', '#d6fff2'], coreHot: '#d6fff2', crown: '#5fd4ba', eyeIris: '#8fe6d0' }); }
+// --- ashkeeper — Ashkeeper (nature / hero) — a somber grey-glass warden -----
+export function ashkeeper() { return keeper(canvas(60, 72), { plateL: ASHV, plateR: ROSE, coreRamp: ['#2a2432', '#877e94', '#e6ffe6'], coreHot: '#e6ffe6', crown: '#a6d6a0', eyeIris: '#c8e6c0', big: 1 }); }
 
 export const LANTERN_HEROES = {
   llEmberward: { species: 'Emberward', element: 'fire', personality: 'fierce', build: emberward },
   llVowkeeper: { species: 'Vowkeeper', element: 'dark', personality: 'fierce', build: vowkeeper },
   llStillguard: { species: 'Stillguard', element: 'water', personality: 'fierce', build: stillguard },
+  llAshkeeper: { species: 'Ashkeeper', element: 'nature', personality: 'fierce', build: ashkeeper },
 };

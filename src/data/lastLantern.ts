@@ -110,7 +110,7 @@ const FLOORS: DungeonFloor[] = [
           { species: 'stillguard', level: 9 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'reliquary', level: 9 }] },
+      { weight: 1, enemies: [{ species: 'ashkeeper', level: 9 }] },
     ],
   },
 

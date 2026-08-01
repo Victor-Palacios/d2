@@ -27,6 +27,16 @@ const RETIRED = /\bvehicles?\b|\bfuel\b|\bEP\b|\btowed?\b|\bcar\b|\bcanisters?\b
 // Legit words that survive a loosened boundary — scrubbed before testing.
 const RETIRED_ALLOW = /refuel(s|led|ling)?/gi;
 
+// src/assets/art.ts stores sprites as quoted rows of single-char colour codes
+// (the pixel alphabet plus '.' for transparent). A row can coincidentally spell
+// a banned fragment — e.g. `'...abSbOOTUDDJdObOOTUa...'` reads as "bOOT". Strip
+// those pixel-row literals before testing so sprite DATA never trips the guard.
+// The rule stays tight: only a long (≥16-char) quoted run of the pixel alphabet
+// that contains a '.' pad qualifies, so real identifiers ("bootDomain") — which
+// have no interior dot — are still caught.
+const PIXEL_FILE = 'src/assets/art.ts';
+const PIXEL_ROW = /(['"])(?=[A-Za-z0-9.]*\.)[A-Za-z0-9.]{16,}\1/g;
+
 // Files that may legitimately mention the banned words (and this script itself).
 const SKIP = new Set(['CLAUDE.md', 'tools/check-naming.mjs', 'package-lock.json']);
 
@@ -43,8 +53,10 @@ for (const file of files) {
   } catch {
     continue; // unreadable/binary — skip
   }
+  const stripPixels = file === PIXEL_FILE;
   text.split('\n').forEach((line, i) => {
-    if (BANNED.test(line.replace(ALLOW, ''))) reaches.push(`${file}:${i + 1}: ${line.trim()}`);
+    const scan = stripPixels ? line.replace(PIXEL_ROW, '') : line;
+    if (BANNED.test(scan.replace(ALLOW, ''))) reaches.push(`${file}:${i + 1}: ${line.trim()}`);
     if (RETIRED.test(line.replace(RETIRED_ALLOW, ''))) retired.push(`${file}:${i + 1}: ${line.trim()}`);
   });
 }

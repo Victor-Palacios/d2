@@ -96,9 +96,26 @@ export function nullmancer() {
   return haunt(c, AC, 62, 76);
 }
 
+// --- gravecant — Gravecant (dark / mage, Uncanny) --------------------------
+// A hunched grave-chanter swinging a censer of green soul-smoke.
+export function gravecant() {
+  const c = canvas(56, 72); const cx = 28; const AC = '#8fe0a0';
+  robe(c, cx, 52, 15, 20);
+  form(c, cx - 14, 46, 4, 12, BONE, { light: DUSK, steps: 6, ambient: 0.2 }); form(c, cx + 14, 46, 4, 12, BONE, { light: DUSK, steps: 6, ambient: 0.2 });
+  // a censer on a chain, wafting green smoke
+  for (let i = 0; i < 8; i++) put(c, cx + 16 - i * 0.3, 34 + i, shade('#4a4256', 0.1)); // chain
+  flat(c, cx + 13, 44, 3, 3.5, '#0a1a0e'); form(c, cx + 13, 44, 2, 2.6, ['#1a3a1e', AC, '#e6ffe6'], { light: [0, 0, 1], steps: 4, ambient: 0.5 });
+  for (const [sx, sy] of [[cx + 13, 39], [cx + 15, 36], [cx + 12, 33]]) put(c, sx, sy, shade(AC, -0.3)); // smoke
+  // stooped empty cowl, bowed forward
+  form(c, cx - 1, 24, 11, 11, ASH, { light: DUSK, steps: 7, ambient: 0.16 }); flat(c, cx - 1, 26, 7, 7, '#040309');
+  glowEyes(c, cx - 1, 4, 26, AC, 1.9); put(c, cx - 3, 22, shade(AC, -0.3)); // a stray third light
+  return haunt(c, AC, 60, 72);
+}
+
 export const HAUNTED_MAGES = {
   hdHexshade: { species: 'Hexshade', element: 'dark', personality: 'uncanny', build: hexshade },
   hdPalefire: { species: 'Palefire', element: 'fire', personality: 'nervous', build: palefire },
   hdDirewisp: { species: 'Direwisp', element: 'water', personality: 'nervous', build: direwisp },
   hdNullmancer: { species: 'Nullmancer', element: 'dark', personality: 'uncanny', build: nullmancer },
+  hdGravecant: { species: 'Gravecant', element: 'dark', personality: 'uncanny', build: gravecant },
 };
