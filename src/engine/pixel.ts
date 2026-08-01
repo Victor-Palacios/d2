@@ -551,7 +551,45 @@ export function flameTexture(id = 'default', res = 128): THREE.Texture {
   ctx.fillStyle = core;
   ctx.fillRect(0, 0, res, res);
   ctx.restore();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  texCache.set(key, tex);
+  return tex;
+}
 
+/**
+ * A five-pointed star with a soft glowing core — the sprite that bursts out on a
+ * critical/reaction flourish (additive-blended, so any tint reads). Cached by id.
+ */
+export function starTexture(id: string, color = '#ffffff', res = 64): THREE.Texture {
+  const key = `star:${id}`;
+  const cached = texCache.get(key);
+  if (cached) return cached;
+  const [c, ctx] = canvas(res, res);
+  const cx = res / 2;
+  const cy = res / 2;
+  const outer = res * 0.46;
+  const inner = outer * 0.42;
+  // Soft glow behind the star so it doesn't read as a hard sticker.
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, outer);
+  glow.addColorStop(0, color);
+  glow.addColorStop(0.5, 'rgba(255,255,255,0.25)');
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, res, res);
+  // The star itself.
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? outer : inner;
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    const x = cx + Math.cos(a) * r;
+    const y = cy + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   texCache.set(key, tex);

@@ -183,6 +183,8 @@ export interface Hit {
   crit?: boolean;
   /** Reaction detonated on this hit (element mismatch), for FX/log. */
   reaction?: string;
+  /** The two clashing elements of a reaction (mark, incoming), for its FX. */
+  reactionElements?: [ElementId, ElementId];
   /** Chain length this hit landed at, if it struck a Broken target. */
   chain?: number;
   breakdown?: DamageBreakdown;
@@ -536,15 +538,15 @@ export class Battle {
         fainted,
         crit: critHit,
         reaction: reactName,
+        reactionElements: reacts ? [mark!, tech.element] : undefined,
         chain: chainN || undefined,
         breakdown,
       });
 
-      // Combo effects (elemental reactions, break-chains) and class
+      // Combo effects (elemental reactions, break-chains), criticals and class
       // effectiveness are deliberately NOT narrated — the player reads them off
-      // the FX and the fighter cards (impact burst, screen shake, the reaction
-      // pip and BROKEN badge), not a line of text.
-      if (critHit) result.log.push('A remembered life strikes true');
+      // the FX and the fighter cards (the crit/reaction star-burst flourish, the
+      // impact burst, screen shake, the reaction pip and BROKEN badge).
       if (breakdown.attackerTileBonus) result.log.push(`The ${actor.tile} plate amplifies your power!`);
       if (breakdown.guarded) result.log.push(`${t.creature.name} guards against it.`);
       if (fainted) result.log.push(`${t.creature.name} is knocked out!`);

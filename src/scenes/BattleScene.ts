@@ -6,7 +6,14 @@ import { ParticleField, Torch, Aura } from '../engine/fx';
 import { battleAura } from '../data/battleFx';
 import { audio } from '../engine/Audio';
 import { input } from '../engine/Input';
-import { elementGlowTexture, elementTileTexture, floorTexture, radialTexture, wallTexture } from '../engine/pixel';
+import {
+  elementGlowTexture,
+  elementTileTexture,
+  floorTexture,
+  radialTexture,
+  starTexture,
+  wallTexture,
+} from '../engine/pixel';
 import { speciesArt, species } from '../data/creatures';
 import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
@@ -76,6 +83,19 @@ const ENEMY_READ_FAST_MS = 500;
 
 /** Share of a fight's EXP that souls who sat it out still earn (bench + Sanctuary). */
 const RESERVE_XP_SHARE = 0.25;
+
+/**
+ * Critical / reaction "flourish" (Octopath-style): a hard freeze at the impact,
+ * then a slow-motion beat with the camera pushing in and a star burst — so a
+ * special hit *reads* without any text. All times are real (wall-clock) ms; the
+ * slow-mo comes from dropping `hd2d.timeScale` for the window.
+ */
+const FLOURISH_FREEZE_MS = 110;
+const FLOURISH_SLOWMO = 0.32;
+const FLOURISH_SLOWMO_MS = 360;
+const FLOURISH_RECOVER_MS = 260;
+/** How far the camera dollies in (world units off the base distance) during it. */
+const FLOURISH_PUSH = 3.2;
 
 /** Field-pulse announcement line (Phase D). */
 const PULSE_TEXT: Record<string, string> = {
@@ -835,6 +855,9 @@ export class BattleScene extends GameScene {
       }
     }
 
+    // At most one crit/reaction flourish per turn (the first special hit), so an
+    // AoE that crits several targets doesn't stack freezes.
+    let flourished = false;
     for (const hit of result.hits) {
       const target = this.battle.find(hit.targetUid);
       const tbb = this.sprites.get(hit.targetUid);
@@ -881,6 +904,16 @@ export class BattleScene extends GameScene {
         this.hud.float(s.x, s.y, String(hit.damage), big ? '#ffd166' : '#ff9a8a');
         this.ctx.hd2d.addShake(react ? fx.shake * 1.6 : superEffective ? fx.shake * 1.3 : fx.shake);
         if (react || superEffective) audio.sfx('crit');
+
+        // A crit or elemental reaction earns the slow-mo star-burst flourish —
+        // gold stars for a crit, the two clashing element colours for a reaction.
+        if ((superEffective || react) && !flourished) {
+          flourished = true;
+          const colors = react
+            ? (hit.reactionElements?.map((e) => ELEMENTS[e].color) ?? [fx.color, '#ffffff'])
+            : [0xffd166, '#ffffff'];
+          await this.specialFlourish(worldTop, colors);
+        }
       }
 
       if (hit.fainted) {
@@ -949,6 +982,83 @@ export class BattleScene extends GameScene {
       this.scene.remove(sprite);
       mat.dispose();
     });
+  }
+
+  /**
+   * A ring of spinning star sprites bursting outward from a point — the visible
+   * signature of a critical / reaction, in place of any text. Fire-and-forget;
+   * each star flies out, spins and fades on its own real-time tween.
+   */
+  private starburst(pos: THREE.Vector3, colors: Array<number | string>, count = 12) {
+    for (let i = 0; i < count; i++) {
+      const color = colors[i % colors.length];
+      const mat = new THREE.SpriteMaterial({
+        map: starTexture(`s${i % colors.length}`),
+        color: new THREE.Color(color),
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        depthTest: false,
+      });
+      const sprite = new THREE.Sprite(mat);
+      sprite.position.copy(pos);
+      sprite.renderOrder = 7;
+      // Even fan around the impact, with a little jitter so it never looks rigid.
+      const ang = (i / count) * Math.PI * 2 + (i % 2) * 0.4;
+      const reach = 1.1 + (i % 3) * 0.35;
+      const dx = Math.cos(ang) * reach;
+      const dy = Math.abs(Math.sin(ang)) * reach * 0.9 + 0.2;
+      const spin = (i % 2 === 0 ? 1 : -1) * Math.PI * 1.5;
+      const base = pos.clone();
+      this.scene.add(sprite);
+      void this.tween(0.7, (t) => {
+        const e = 1 - (1 - t) ** 2; // ease-out fly
+        sprite.position.set(base.x + dx * e, base.y + dy * e - 0.9 * t * t, base.z);
+        const s = 0.85 * (1 - t) + 0.25;
+        sprite.scale.set(s, s, 1);
+        sprite.material.rotation = spin * t;
+        mat.opacity = t < 0.15 ? t / 0.15 : (1 - (t - 0.15) / 0.85) ** 1.3;
+      }).then(() => {
+        this.scene.remove(sprite);
+        mat.dispose();
+      });
+    }
+  }
+
+  /**
+   * The critical / reaction flourish: freeze the frame, then run a slow-motion
+   * beat with the camera pushing in and stars bursting out, so a special hit
+   * reads on its own. Restores time and camera even if the scene tears down.
+   */
+  private async specialFlourish(pos: THREE.Vector3, colors: Array<number | string>) {
+    const hd = this.ctx.hd2d;
+    const baseDist = hd.params.distance;
+    const baseTarget = hd.cameraTarget.clone();
+    try {
+      this.starburst(pos, colors);
+      // Hitstop: a hard freeze right on the impact.
+      hd.timeScale = 0;
+      await sleep(FLOURISH_FREEZE_MS);
+      if (this.disposed) return;
+      // Slow-mo: ease time back up while the camera dollies toward the hit.
+      hd.timeScale = FLOURISH_SLOWMO;
+      await this.tween(FLOURISH_SLOWMO_MS / 1000, (t) => {
+        hd.params.distance = baseDist - FLOURISH_PUSH * (1 - (1 - t) ** 2);
+        hd.cameraTarget.lerpVectors(baseTarget, pos, 0.35 * t);
+      });
+      if (this.disposed) return;
+      // Recover: time and camera glide back to normal.
+      hd.timeScale = 1;
+      await this.tween(FLOURISH_RECOVER_MS / 1000, (t) => {
+        hd.params.distance = baseDist - FLOURISH_PUSH * (1 - t);
+        hd.cameraTarget.lerpVectors(pos, baseTarget, 0.65 + 0.35 * t);
+      });
+    } finally {
+      // Never leave the world frozen or the lens zoomed, whatever happened.
+      hd.timeScale = 1;
+      hd.params.distance = baseDist;
+      hd.cameraTarget.copy(baseTarget);
+    }
   }
 
   /** A puff of the move's element gathering on the caster, just before it lands. */
