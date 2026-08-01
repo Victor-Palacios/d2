@@ -11,9 +11,11 @@
 // creatures.ts; encounters are wired by hand in each reach file. Every line is
 // standalone (no evolutions), so all are trivially class-pure.
 import { CROSSING_MAGES } from './crossing-mages.mjs';
+import { CRYSTAL_HEROES } from './crystal-heroes.mjs';
 
 export const NEW_ART = {
   ...CROSSING_MAGES,
+  ...CRYSTAL_HEROES,
 };
 
 export const NEW_MONSTERS = [
@@ -35,5 +37,31 @@ export const NEW_MONSTERS = [
     height: 2.2, hover: 0.3, boss: true, base: { hp: 72, mp: 34, off: 14, def: 15, spd: 12, mag: 24, res: 18 },
     learnset: [[1, 'gloomLance'], [4, 'hexBolt'], [8, 'nightSpiral'], [12, 'dirge'], [16, 'abyssalBolt'], [20, 'voidNova']],
     blurb: 'The Vigil of the Warden Hall — a great eye of wards that keeps the crossing. Nothing passes it unread.',
+  },
+
+  // === D2 · The Crystal Cavern — Hero (painterly) =========================
+  {
+    id: 'shieldshard', name: 'Shieldshard', art: 'ccShieldshard', attribute: 'hero', element: 'machine', growth: 'HERO_GROWTH',
+    height: 1.6, base: { hp: 58, mp: 18, off: 17, def: 20, spd: 11, mag: 11, res: 17 },
+    learnset: [[1, 'quakeCore'], [4, 'ironHowl'], [8, 'rendingStrike'], [12, 'boltPierce'], [16, 'overload'], [20, 'railvolt']],
+    blurb: 'A guard hewn from cavern-stone, a slab of gemglass bound to its arm. It plants itself and does not yield.',
+  },
+  {
+    id: 'geomote', name: 'Geomote', art: 'ccGeomote', attribute: 'hero', element: 'nature', growth: 'HERO_GROWTH',
+    height: 1.4, base: { hp: 60, mp: 18, off: 15, def: 21, spd: 10, mag: 12, res: 18 },
+    learnset: [[1, 'seedVolley'], [4, 'bloomPulse'], [8, 'savageBite'], [12, 'wildgrowth'], [16, 'thornspell'], [20, 'lifebloom']],
+    blurb: 'A boulder the moss claimed and a soul moved into. Slow, patient, and impossibly hard to knock over.',
+  },
+  {
+    id: 'prismguard', name: 'Prismguard', art: 'ccPrismguard', attribute: 'hero', element: 'water', growth: 'HERO_GROWTH',
+    height: 1.7, base: { hp: 56, mp: 20, off: 16, def: 19, spd: 12, mag: 14, res: 19 },
+    learnset: [[1, 'frostLance'], [4, 'tidalCrash'], [8, 'glacierSpire'], [12, 'quakeCore'], [16, 'prismStorm'], [20, 'renewingTide']],
+    blurb: 'An ice-crystal sentinel with a spear of frozen light. It guards the deep vaults where the cold never breaks.',
+  },
+  {
+    id: 'vaultwarden', name: 'Vaultwarden', art: 'ccVaultwarden', attribute: 'hero', element: 'water', growth: 'HERO_GROWTH',
+    height: 2.4, boss: true, base: { hp: 86, mp: 24, off: 18, def: 24, spd: 11, mag: 14, res: 22 },
+    learnset: [[1, 'frostLance'], [4, 'rendingStrike'], [8, 'glacierSpire'], [12, 'quakeCore'], [16, 'overload'], [20, 'maelstrom']],
+    blurb: 'The keeper of the Warden Vault — a mountain of stone around a burning amethyst heart. It has turned back every thief but grief.',
   },
 ];
