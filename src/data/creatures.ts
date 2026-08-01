@@ -2071,6 +2071,48 @@ export const SPECIES: Record<string, Species> = {
     blurb:
       'It keeps a still, cold light that never ripples. To pass, you must convince it that stillness is not the same as safe.',
   },
+
+  // === Type-themed roster expansion (20 new monsters) ====================
+  gravecant: {
+    id: 'gravecant',
+    name: 'Gravecant',
+    attribute: 'mage',
+    element: 'dark',
+    art: 'hdGravecant',
+    height: 1.7,
+    hover: 0.25,
+    base: { hp: 47, mp: 31, off: 10, def: 13, spd: 13, mag: 23, res: 17 },
+    growth: MAGE_GROWTH,
+    learnset: [
+      { level: 1, tech: 'gloomLance' },
+      { level: 4, tech: 'dirge' },
+      { level: 8, tech: 'hexBolt' },
+      { level: 12, tech: 'nightSpiral' },
+      { level: 16, tech: 'abyssalBolt' },
+      { level: 20, tech: 'voidNova' },
+    ],
+    blurb:
+      'A stooped chanter swinging a censer of green soul-smoke. It sings the dead to sleep — and will not stop for the living.',
+  },
+  ashkeeper: {
+    id: 'ashkeeper',
+    name: 'Ashkeeper',
+    attribute: 'hero',
+    element: 'nature',
+    art: 'llAshkeeper',
+    height: 1.9,
+    base: { hp: 62, mp: 20, off: 16, def: 21, spd: 10, mag: 14, res: 19 },
+    growth: HERO_GROWTH,
+    learnset: [
+      { level: 1, tech: 'seedVolley' },
+      { level: 4, tech: 'savageBite' },
+      { level: 8, tech: 'wildgrowth' },
+      { level: 12, tech: 'quakeCore' },
+      { level: 16, tech: 'thornspell' },
+      { level: 20, tech: 'lifebloom' },
+    ],
+    blurb: 'A grey-glass warden that keeps the ash itself, so that even what burned away is not wholly lost.',
+  },
 };
 
 export const COMPANION_IDS = ['wren', 'senaVale', 'kade'] as const;

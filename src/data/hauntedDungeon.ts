@@ -100,7 +100,7 @@ const FLOORS: DungeonFloor[] = [
     encounters: [
       { weight: 1, enemies: [{ species: 'lastlight', level: 7 }] }, // rare: a soul about to move on
       { weight: 3, enemies: [{ species: 'wispling', level: 7 }] },
-      { weight: 2, enemies: [{ species: 'direwisp', level: 7 }] },
+      { weight: 2, enemies: [{ species: 'gravecant', level: 7 }] },
       {
         weight: 2,
         enemies: [

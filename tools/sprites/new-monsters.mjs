@@ -142,4 +142,18 @@ export const NEW_MONSTERS = [
     learnset: [[1, 'frostLance'], [4, 'tidalCrash'], [8, 'glacierSpire'], [12, 'quakeCore'], [16, 'prismStorm'], [20, 'renewingTide']],
     blurb: 'It keeps a still, cold light that never ripples. To pass, you must convince it that stillness is not the same as safe.',
   },
+
+  // === Two more, to round the expansion to twenty ==========================
+  {
+    id: 'gravecant', name: 'Gravecant', art: 'hdGravecant', attribute: 'mage', element: 'dark', growth: 'MAGE_GROWTH',
+    height: 1.7, hover: 0.25, base: { hp: 47, mp: 31, off: 10, def: 13, spd: 13, mag: 23, res: 17 },
+    learnset: [[1, 'gloomLance'], [4, 'dirge'], [8, 'hexBolt'], [12, 'nightSpiral'], [16, 'abyssalBolt'], [20, 'voidNova']],
+    blurb: 'A stooped chanter swinging a censer of green soul-smoke. It sings the dead to sleep — and will not stop for the living.',
+  },
+  {
+    id: 'ashkeeper', name: 'Ashkeeper', art: 'llAshkeeper', attribute: 'hero', element: 'nature', growth: 'HERO_GROWTH',
+    height: 1.9, base: { hp: 62, mp: 20, off: 16, def: 21, spd: 10, mag: 14, res: 19 },
+    learnset: [[1, 'seedVolley'], [4, 'savageBite'], [8, 'wildgrowth'], [12, 'quakeCore'], [16, 'thornspell'], [20, 'lifebloom']],
+    blurb: 'A grey-glass warden that keeps the ash itself, so that even what burned away is not wholly lost.',
+  },
 ];
