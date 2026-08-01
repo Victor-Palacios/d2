@@ -228,7 +228,7 @@ export class GameState {
   consumeSoul(uid: string): CreatureInstance | null {
     const pi = this.party.findIndex((c) => c.uid === uid);
     if (pi >= 0) {
-      if (this.party[pi].companion) return null; // companions are not fuel
+      if (this.party[pi].companion) return null; // companions are never spent for light
       if (this.party.filter((c) => !c.companion).length <= 1) return null; // keep one fighter
       return this.party.splice(pi, 1)[0];
     }

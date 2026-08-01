@@ -36,7 +36,7 @@ function fightingInParty(): number {
 /**
  * The Oilwright (hub NPC '4'). Trades captured souls for permanent lantern
  * capacity: each soul is consumed and lost, raising `game.lightBonus` so deeper,
- * longer reaches don't gutter your light. Companions are never fuel, and the
+ * longer reaches don't gutter your light. Companions are never spent this way, and the
  * last fighting soul in your party is protected. Mirrors the Soul Store shape.
  */
 export async function openOilwright(parent: HTMLElement): Promise<void> {
