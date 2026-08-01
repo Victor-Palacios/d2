@@ -55,4 +55,21 @@ describe('makeCreature + grantXp', () => {
     expect(grantXp(c, 1)).toBeNull();
     expect(c.level).toBe(1);
   });
+
+  it('fully restores HP and MP on every level-up', () => {
+    const c = makeCreature('emberling', 1);
+    c.hp = 1;
+    c.mp = 0;
+    expect(grantXp(c, 10000)).not.toBeNull();
+    expect(c.hp).toBe(c.maxHp);
+    expect(c.mp).toBe(c.maxMp);
+  });
+
+  it('revives a fainted soul when it levels up', () => {
+    const c = makeCreature('emberling', 1);
+    c.hp = 0; // fainted
+    expect(grantXp(c, 10000)).not.toBeNull();
+    expect(c.hp).toBe(c.maxHp);
+    expect(c.hp).toBeGreaterThan(0);
+  });
 });

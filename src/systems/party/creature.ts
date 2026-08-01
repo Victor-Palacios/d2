@@ -203,7 +203,9 @@ export function xpFromEnemy(monsterLevel: number, enemyLevel: number): number {
 
 /**
  * Grants EXP to one creature, applying any level-ups. Stats are recomputed from
- * the species growth curve; a level-up raises max HP/MP and heals the gain.
+ * the species growth curve; every level gained **fully restores HP and MP** —
+ * topping off a hurt soul and reviving a fainted one. Level-ups happen
+ * post-battle (see `BattleScene`), so this reads as the reward it is.
  * Returns the new level if it changed, else null.
  */
 export function grantXp(c: CreatureInstance, amount: number): number | null {
@@ -214,12 +216,10 @@ export function grantXp(c: CreatureInstance, amount: number): number | null {
     c.xp -= xpToNext(c.level);
     c.level++;
     const st = statsAt(s, c.level);
-    const dHp = Math.max(0, st.hp - c.maxHp);
-    const dMp = Math.max(0, st.mp - c.maxMp);
     c.maxHp = st.hp;
     c.maxMp = st.mp;
-    if (isUp(c)) c.hp = Math.min(c.maxHp, c.hp + dHp); // level-up heals the delta
-    c.mp = Math.min(c.maxMp, c.mp + dMp);
+    c.hp = c.maxHp; // a level-up fully restores the soul…
+    c.mp = c.maxMp; // …HP and MP both topped off (a fainted one revives)
     c.off = st.off;
     c.def = st.def;
     c.spd = st.spd;
