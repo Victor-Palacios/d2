@@ -192,8 +192,10 @@ export class DungeonScene extends GameScene {
 
     // The player, lantern in hand, on foot.
     this.player = new Billboard(HUMANS.hero, 'player', { height: 1.7 });
-    this.player.bob = 0.03;
-    this.player.bobSpeed = 3;
+    // A calm idle breath, and a pronounced stride while walking a tile.
+    this.player.bob = 0.018;
+    this.player.bobSpeed = 2.4;
+    this.player.walkBounce = 0.09;
     this.scene.add(this.player.object);
 
     // Props, portals and torches.
@@ -883,12 +885,15 @@ export class DungeonScene extends GameScene {
       // Ease-out so each tile step has a little weight.
       const e = 1 - (1 - t) ** 2.2;
       this.player.object.position.lerpVectors(this.moveFrom, this.moveTo, e);
+      // Linear progress (not the eased position) drives an even footfall cadence.
+      this.player.setStride(t);
       if (t >= 1) this.finishStep();
     } else if (!this.busy && !this.dialogue.visible && this.buffered) {
       const dir = this.buffered;
       this.buffered = null;
       this.tryStep(dir);
     }
+    if (!this.moving) this.player.setStride(-1);
 
     this.player.update(dt, this.ctx.hd2d.camera, time);
     for (const t of this.torches) t.update(dt, this.ctx.hd2d.camera, time);

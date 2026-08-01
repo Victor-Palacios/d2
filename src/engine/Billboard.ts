@@ -44,6 +44,17 @@ export class Billboard {
   /** Bob speed multiplier. */
   bobSpeed = 2.2;
   /**
+   * Walk cycle. When `walkBounce > 0` and the owner feeds step progress via
+   * `setStride`, the sprite bounces on each footfall and rocks side to side so a
+   * tile step reads as a stride rather than a glide. 0 keeps the plain idle bob
+   * (every non-walking billboard).
+   */
+  walkBounce = 0;
+  /** Footfalls per tile step — 2 reads as a left-right stride. */
+  walkSteps = 2;
+  /** Step progress 0..1 fed by the owner while moving; -1 means standing still. */
+  private walkT = -1;
+  /**
    * How far the sprite leans back toward the camera, 0..1 of the camera's
    * pitch. A pure upright billboard is badly foreshortened under the ¾
    * dungeon-crawler angle; leaning it back keeps the art readable while the
@@ -117,6 +128,16 @@ export class Billboard {
     this.object.visible = v;
   }
 
+  /**
+   * Drive the walk cycle. The owner calls this each frame of a tile step with
+   * progress in [0,1]; pass a negative value (or omit) to return to idle. The
+   * cycle is authored to be zero at both ends of a step, so idle ↔ walk needs no
+   * blending.
+   */
+  setStride(t: number) {
+    this.walkT = t;
+  }
+
   update(dt: number, camera: THREE.Camera, time: number) {
     if (this.mode === 'y') {
       // Cardboard-standee billboarding: yaw to the camera, then lean back by a
@@ -132,9 +153,26 @@ export class Billboard {
       this.object.quaternion.copy(camera.quaternion);
     }
 
-    if (this.bob > 0) {
-      this.mesh.position.y = this.hoverAmount + Math.sin(time * this.bobSpeed + this.bobPhase) * this.bob;
+    // Vertical motion: a plain idle bob for most sprites, or — for anything with
+    // a walk cycle mid-step — a footfall bounce plus a side-to-side body rock, so
+    // it strides instead of floating. The cycle zeroes at t=0 and t=1, so it
+    // hands off to the idle pose with no snap.
+    let y = this.hoverAmount;
+    if (this.walkBounce > 0 && this.walkT >= 0) {
+      const t = this.walkT;
+      const bounce = Math.abs(Math.sin(t * this.walkSteps * Math.PI)) * this.walkBounce;
+      const rock = Math.sin(t * Math.PI * 2);
+      y += bounce;
+      this.mesh.position.x = rock * this.walkBounce * 0.5;
+      this.mesh.rotation.z = -rock * 0.1;
+    } else {
+      if (this.walkBounce > 0) {
+        this.mesh.position.x = 0;
+        this.mesh.rotation.z = 0;
+      }
+      if (this.bob > 0) y += Math.sin(time * this.bobSpeed + this.bobPhase) * this.bob;
     }
+    this.mesh.position.y = y;
 
     this.object.scale.copy(this.baseScale);
 

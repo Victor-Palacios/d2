@@ -144,8 +144,10 @@ supply bay → Mission 2 briefing.
 - **Crawl**: tile-by-tile movement with wall collision, camera follow, treasure
   chests, five kinds of emissive element floor plates, a lantern (LP) meter that
   drains one point per step (hit zero and your light gutters, returning you home),
-  descent portals, and a
-  boss floor whose accent walls telegraph what is coming.
+  descent portals, and a boss floor whose accent walls telegraph what is coming.
+  The player strides rather than floats — a two-footfall bounce and a
+  side-to-side body rock play across each tile step (`Billboard.walkBounce` /
+  `setStride`), settling to a calm idle breath when standing.
 - **Battle**: turn-based on a 2×3 grid. You field one soul per human keeper
   (`game.fieldCap` — two at the Quiet Crossing, up to four; companions walk with
   you but never fight). Turn order by Speed with a random tiebreak band.

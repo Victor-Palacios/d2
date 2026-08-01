@@ -133,8 +133,9 @@ export class HubScene extends GameScene {
     this.scene.add(this.particles.points);
 
     this.player = new Billboard(HUMANS.hero, 'human:hero', { height: 1.55 });
-    this.player.bob = 0.02;
-    this.player.bobSpeed = 4;
+    this.player.bob = 0.014;
+    this.player.bobSpeed = 2.4;
+    this.player.walkBounce = 0.08;
     this.scene.add(this.player.object);
 
     const roster: { id: string; art: string; char: string }[] = [
@@ -798,6 +799,7 @@ export class HubScene extends GameScene {
       this.moveT += dt / 0.17;
       const t = Math.min(1, this.moveT);
       this.player.object.position.lerpVectors(this.moveFrom, this.moveTo, 1 - (1 - t) ** 2.2);
+      this.player.setStride(t);
       if (t >= 1) {
         this.moving = false;
         void this.onArrive();
@@ -807,6 +809,7 @@ export class HubScene extends GameScene {
       this.buffered = null;
       this.tryStep(dir);
     }
+    if (!this.moving) this.player.setStride(-1);
 
     this.player.update(dt, this.ctx.hd2d.camera, time);
     for (const n of this.npcs) n.billboard.update(dt, this.ctx.hd2d.camera, time);

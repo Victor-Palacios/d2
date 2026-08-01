@@ -32,6 +32,7 @@ Environment variables:
 | Script | Covers |
 |---|---|
 | `walk.mjs` | Title → name entry → hub → world map → dungeon → tutorial fight → back to the crawl |
+| `walkcycle.mjs` | The player's stride (`Billboard.walkBounce` / `setStride`): jumps into the crawl and samples the sprite across a step — two footfall bounces per tile, a body rock to opposite sides, planted at both ends, and a calm idle when standing. Frame-rate independent, so it holds on the GPU-less container. |
 | `save.mjs` | Autosave, suspend save, Continue, and that a suspend save is **consumed** on load (three simulated sessions across page reloads) |
 | `pad.mjs` | Controller support, using a synthetic standard-mapping gamepad injected via `addInitScript` |
 | `hud.mjs` | Battle HUD screenshots — class-coloured borders, HP/MP meters, element-tinted techniques |
