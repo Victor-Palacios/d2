@@ -14,6 +14,8 @@ import { chromium } from 'playwright';
 // toggleWall (not passable, mesh visible), stepping a '*' switch flips it open
 // (passable, mesh hidden), and the toggle-aware validator accepts a
 // switch-solvable floor but flags a barrier with no reachable switch.
+// Finally: ambient dust motes — a persistent in-bounds mote cloud that drifts
+// each frame (visual-depth atmosphere).
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROME,
@@ -207,6 +209,43 @@ check('validator accepts a floor whose switch opens the barrier',
   !tval.solvable.some((e) => /unreachable/.test(e)), tval.solvable.join(' | '));
 check('validator flags a barrier with no reachable switch',
   tval.stuck.some((e) => /no reachable switch|unreachable/.test(e)), tval.stuck.join(' | '));
+
+// --- ambient dust motes (visual depth) --------------------------------------
+// A persistent, in-bounds mote cloud that drifts each frame. Verify it exists,
+// sits inside the floor's footprint, and actually moves when the scene updates.
+const dust = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  const s = g.manager.activeScene; // still on crystal-3 from the block above
+  const d = s.dust;
+  if (!d) return { present: false };
+  const pos = d.points.geometry.getAttribute('position');
+  const n = pos.count;
+  // Grid footprint in world units (± a tile of slack, matching the spawn box).
+  const halfW = ((s.grid.width - 1) / 2) * 2 + 2;
+  const halfD = ((s.grid.depth - 1) / 2) * 2 + 2;
+  let inBounds = 0;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  const before = [];
+  for (let i = 0; i < n; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    if (Math.abs(x) <= halfW + 0.001 && Math.abs(z) <= halfD + 0.001) inBounds++;
+    minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    if (i < 8) before.push([x, y, z]);
+  }
+  // Advance a few frames and confirm the cloud drifted (positions changed).
+  for (let f = 0; f < 5; f++) d.update(0.2, f * 0.2);
+  let moved = 0;
+  for (let i = 0; i < 8; i++) {
+    if (Math.abs(pos.getX(i) - before[i][0]) + Math.abs(pos.getY(i) - before[i][1]) + Math.abs(pos.getZ(i) - before[i][2]) > 1e-4) moved++;
+  }
+  return { present: true, n, inBounds, minY, maxY, moved };
+});
+
+check('dust: an ambient mote cloud exists with points', dust.present && dust.n > 0, JSON.stringify({ n: dust.n }));
+check('dust: motes sit inside the floor footprint and above the ground',
+  dust.present && dust.inBounds === dust.n && dust.minY >= 0, JSON.stringify(dust));
+check('dust: motes drift when the scene updates', dust.present && dust.moved > 0, `${dust.moved}/8 moved`);
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 if (errs.length) failures += errs.length;

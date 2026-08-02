@@ -224,6 +224,114 @@ export class Aura {
   }
 }
 
+export interface DustBounds {
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
+  minY: number;
+  maxY: number;
+}
+
+/**
+ * Ambient dust motes: a persistent, slow-drifting field of fine points that
+ * fills the play volume so lit air reads as *volume*, not vacuum. Unlike
+ * `ParticleField` (emit-and-die sparks) these live forever — each mote drifts on
+ * its own gentle velocity, wraps at the volume's edges so the cloud never
+ * depletes, and twinkles on its own phase so the haze shimmers as the key light
+ * rakes across it. Additive, so it sits in the bloom threshold and reads as fine
+ * suspended dust rather than hard specks.
+ */
+export class DustMotes {
+  readonly points: THREE.Points;
+  private positions: Float32Array;
+  private colors: Float32Array;
+  private vel: Float32Array;
+  private phase: Float32Array;
+  private base: THREE.Color;
+  private min: { x: number; y: number; z: number };
+  private span: { x: number; y: number; z: number };
+
+  constructor(bounds: DustBounds, color: THREE.ColorRepresentation = '#bfe6ff', readonly count = 130, size = 0.07) {
+    this.base = new THREE.Color(color);
+    this.min = { x: bounds.minX, y: bounds.minY, z: bounds.minZ };
+    this.span = {
+      x: Math.max(0.001, bounds.maxX - bounds.minX),
+      y: Math.max(0.001, bounds.maxY - bounds.minY),
+      z: Math.max(0.001, bounds.maxZ - bounds.minZ),
+    };
+    this.positions = new Float32Array(count * 3);
+    this.colors = new Float32Array(count * 3);
+    this.vel = new Float32Array(count * 3);
+    this.phase = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3;
+      this.positions[i3] = this.min.x + Math.random() * this.span.x;
+      this.positions[i3 + 1] = this.min.y + Math.random() * this.span.y;
+      this.positions[i3 + 2] = this.min.z + Math.random() * this.span.z;
+      // Slow, mostly-horizontal drift with a faint updraft — dust caught in a
+      // draught, not snowfall.
+      this.vel[i3] = (Math.random() - 0.5) * 0.14;
+      this.vel[i3 + 1] = 0.02 + Math.random() * 0.05;
+      this.vel[i3 + 2] = (Math.random() - 0.5) * 0.14;
+      this.phase[i] = Math.random() * Math.PI * 2;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(this.colors, 3));
+    const mat = new THREE.PointsMaterial({
+      size,
+      map: radialTexture('spark', '#ffffff'),
+      vertexColors: true,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true,
+    });
+    this.points = new THREE.Points(geo, mat);
+    this.points.frustumCulled = false;
+    this.points.renderOrder = 4;
+  }
+
+  /** Retint the motes (e.g. to match a floor's mood) without rebuilding. */
+  setColor(color: THREE.ColorRepresentation) {
+    this.base.set(color);
+  }
+
+  update(dt: number, time: number) {
+    const { x: sx, y: sy, z: sz } = this.span;
+    for (let i = 0; i < this.count; i++) {
+      const i3 = i * 3;
+      let x = this.positions[i3] + this.vel[i3] * dt;
+      let y = this.positions[i3 + 1] + this.vel[i3 + 1] * dt;
+      let z = this.positions[i3 + 2] + this.vel[i3 + 2] * dt;
+      // Wrap within the volume so the cloud is inexhaustible; motes that rise out
+      // the top respawn at the floor.
+      if (x < this.min.x) x += sx;
+      else if (x > this.min.x + sx) x -= sx;
+      if (z < this.min.z) z += sz;
+      else if (z > this.min.z + sz) z -= sz;
+      if (y > this.min.y + sy) y = this.min.y;
+      this.positions[i3] = x;
+      this.positions[i3 + 1] = y;
+      this.positions[i3 + 2] = z;
+      // Twinkle: a slow per-mote sine keeps the cloud alive without strobing.
+      const tw = 0.3 + 0.4 * (0.5 + 0.5 * Math.sin(time * 1.3 + this.phase[i]));
+      this.colors[i3] = this.base.r * tw;
+      this.colors[i3 + 1] = this.base.g * tw;
+      this.colors[i3 + 2] = this.base.b * tw;
+    }
+    const geo = this.points.geometry;
+    geo.getAttribute('position').needsUpdate = true;
+    geo.getAttribute('color').needsUpdate = true;
+  }
+
+  dispose() {
+    this.points.geometry.dispose();
+    (this.points.material as THREE.Material).dispose();
+  }
+}
+
 /** A wall torch: emissive sprite + flickering point light + rising embers. */
 export class Torch {
   readonly object = new THREE.Group();

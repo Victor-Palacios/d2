@@ -5,7 +5,7 @@ import { TILE, TileGrid } from '../engine/TileGrid';
 import type { Tile } from '../engine/TileGrid';
 import { Billboard } from '../engine/Billboard';
 import { artAspect } from '../engine/pixel';
-import { ParticleField, Portal, Torch, contactShadow } from '../engine/fx';
+import { DustMotes, ParticleField, Portal, Torch, contactShadow } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { DECOR, PROPS, HUMANS } from '../assets/art';
@@ -89,6 +89,7 @@ export class DungeonScene extends GameScene {
   private hud!: DungeonHUD;
   private dialogue!: DialogueBox;
   private particles!: ParticleField;
+  private dust: DustMotes | null = null;
   private torches: Torch[] = [];
   private portals: { portal: Portal; x: number; z: number }[] = [];
   private props = new Map<string, Billboard>();
@@ -223,6 +224,28 @@ export class DungeonScene extends GameScene {
 
     this.particles = new ParticleField(500);
     this.scene.add(this.particles.points);
+
+    // Ambient dust motes fill the play volume so the key light has *air* to rake
+    // across. Sized to the floor's footprint and tinted from its mood (the same
+    // ambient/hemisphere colour the rig uses), so each reach's haze matches its
+    // atmosphere; falls back to a pale lift of the floor palette.
+    const theme = this.floor.theme;
+    const lo = this.grid.worldPos(0, 0);
+    const hi = this.grid.worldPos(this.grid.width - 1, this.grid.depth - 1);
+    const dustSrc = theme.ambientColor ?? theme.hemiSky ?? theme.floorAlt;
+    const dustColor = new THREE.Color(dustSrc).lerp(new THREE.Color('#ffffff'), theme.ambientColor ? 0.25 : 0.55);
+    this.dust = new DustMotes(
+      {
+        minX: Math.min(lo.x, hi.x) - TILE,
+        maxX: Math.max(lo.x, hi.x) + TILE,
+        minZ: Math.min(lo.z, hi.z) - TILE,
+        maxZ: Math.max(lo.z, hi.z) + TILE,
+        minY: 0.1,
+        maxY: (theme.wallHeight ?? 2.6) * 0.95,
+      },
+      `#${dustColor.getHexString()}`,
+    );
+    this.scene.add(this.dust.points);
 
     // The player, lantern in hand, on foot.
     this.player = new Billboard(HUMANS.hero, 'player', { height: 1.7, reveal: true });
@@ -1128,6 +1151,7 @@ export class DungeonScene extends GameScene {
     for (const b of this.props.values()) b.update(dt, this.ctx.hd2d.camera, time);
     for (const b of this.decor) b.update(dt, this.ctx.hd2d.camera, time);
     this.particles.update(dt);
+    this.dust?.update(dt, time);
     this.updateElementLights();
     this.syncCamera();
   }
@@ -1142,6 +1166,8 @@ export class DungeonScene extends GameScene {
     for (const b of this.props.values()) b.dispose();
     for (const b of this.decor) b.dispose();
     this.particles.dispose();
+    this.dust?.dispose();
+    this.dust = null;
     // Contact-shadow decals are plain scene children; disposeObject3D frees
     // their geometry+material (the shared radial texture is intentionally kept).
     this.propShadows.clear();
