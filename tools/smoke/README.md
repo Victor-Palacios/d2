@@ -103,6 +103,17 @@ Scripts whose subject *is* the opening keep driving the real cards: `cutscene.mj
 | `anchored.mjs` | The Anchored (`src/data/anchored.ts`) — optional element super-encounters. Walks the crossing crawl onto The Unquenched's fire mass and proves the three guarantees: engaging does **not** consume the event (re-fightable after a loss/flee), the enemy roster is element-pure, victory consumes it once + grants its Memento + sets `anchored:crossing`, and a non-victory return consumes nothing. |
 | `cries.mjs` | Monster battle cries (`audio.cry`): instruments the Web Audio graph to confirm each authored species voice (the starter trio plus every monster in The Quiet Crossing — Mitebug, Sprigling, Scrapmite, Gloomote, Dropletta and the warden Regalion) builds its oscillator layers and pitch glides, and that a species with no cry stays silent. Headless has no speakers, but the synth graph still schedules, so it is fast and deterministic. |
 
+## Running in CI
+
+A **reliable subset** now runs in CI as a required gate before the Pages deploy
+(`.github/workflows/ci.yml`, the `smoke` job → `node tools/smoke/ci.mjs`). The
+subset (`transcend`, `transcend-fx`, `terrain`, `cries`, `equip`) is the scripts
+that either never render a crawl scene or seed state directly and strip the FX
+stack, so they stay deterministic on the GPU-less runner. Grow the list in
+`ci.mjs` as more scripts move to the `_harness.mjs` `startInHub` entry point and
+their crawl navigation is made frame-rate-independent. The full 40-script suite
+is still local/on-demand until that migration lands.
+
 ## Two environment traps that cost real time
 
 **1. Software rendering is ~0.3 fps.** A headless container has no GPU, so
