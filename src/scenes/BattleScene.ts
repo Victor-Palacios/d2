@@ -371,14 +371,13 @@ export class BattleScene extends GameScene {
       this.scene.add(bb.object);
       this.sprites.set(b.creature.uid, bb);
 
-      // A signature aura for the species, if the first-dungeon roster defines
-      // one. Only wardens carry a glow — the arena's light budget is small.
-      const cfg = battleAura(b.creature.speciesId);
-      if (cfg) {
-        const aura = new Aura(this.particles, cfg);
-        if (aura.light) this.scene.add(aura.light);
-        this.auras.set(b.creature.uid, aura);
-      }
+      // Every species wears a signature aura: a hand-tuned entry if it has one,
+      // otherwise its element's default nudged by class. Only wardens carry a
+      // glow — the arena's light budget is small.
+      const cfg = battleAura(b.creature.speciesId, b.creature.element, b.creature.attribute);
+      const aura = new Aura(this.particles, cfg);
+      if (aura.light) this.scene.add(aura.light);
+      this.auras.set(b.creature.uid, aura);
 
       if (!isUp(b.creature)) {
         bb.setOpacity(0.28);
