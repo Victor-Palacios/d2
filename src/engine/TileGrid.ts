@@ -20,6 +20,8 @@ export type TileKind =
   | 'hazard'
   | 'key'
   | 'door'
+  | 'switch'
+  | 'toggleWall'
   | 'event';
 
 export interface Tile {
@@ -79,6 +81,7 @@ export const DEFAULT_THEME: TileTheme = {
  *   '$'  light shard             'W F N M D'  element floor tiles
  *   '^'  hazard tile (drains lantern light on entry — a glowing warning plate)
  *   'k'  key pickup              '+'  locked door (blocks until a key is spent)
+ *   '*'  switch (flips barriers) '%'  toggle-wall barrier (starts solid)
  *   '1'-'9'  scripted event tile (looked up in the floor's `events` map)
  * ```
  */
@@ -105,6 +108,13 @@ export class TileGrid {
 
   /** Door tiles that have been unlocked — a closed door blocks like a wall. */
   private doorsOpen = new Set<string>();
+
+  /**
+   * Whether the floor's toggle-wall group is open (passable). Every `%` barrier
+   * flips together when a `*` switch is stepped on. Starts solid (closed).
+   * Transient — not saved; resets to solid when the floor is rebuilt.
+   */
+  private togglesOpen = false;
 
   /** Per-tile height offset in world units, keyed `"x,z"` (purely visual). */
   private elevation: Record<string, number>;
@@ -143,6 +153,8 @@ export class TileGrid {
     if (ch === '^') return { x, z, kind: 'hazard' };
     if (ch === 'k') return { x, z, kind: 'key' };
     if (ch === '+') return { x, z, kind: 'door' };
+    if (ch === '*') return { x, z, kind: 'switch' };
+    if (ch === '%') return { x, z, kind: 'toggleWall' };
     if (ELEMENT_CHARS[ch]) return { x, z, kind: 'element', element: ELEMENT_CHARS[ch] };
     if (ch >= '1' && ch <= '9') return { x, z, kind: 'event', eventId: ch };
     return { x, z, kind: 'floor' };
@@ -174,14 +186,27 @@ export class TileGrid {
     return t?.kind === 'door' && !this.doorsOpen.has(`${x},${z}`);
   }
 
+  /** Flips the floor's toggle-wall group (all `%` barriers) open↔solid. */
+  flipToggles() {
+    this.togglesOpen = !this.togglesOpen;
+  }
+
+  /** Whether a toggle-wall tile at (x, z) is currently a solid barrier. */
+  isToggleSolid(x: number, z: number): boolean {
+    const t = this.at(x, z);
+    return t?.kind === 'toggleWall' && !this.togglesOpen;
+  }
+
   /**
    * Whether the party can step onto (x, z): a walkable tile not occupied by
-   * solid decor and not a still-locked door. Use this for movement;
-   * `walkable()` is pure grid geometry.
+   * solid decor, not a still-locked door, and not a raised toggle-wall barrier.
+   * Use this for movement; `walkable()` is pure grid geometry.
    */
   passable(x: number, z: number): boolean {
     const k = `${x},${z}`;
-    return this.walkable(x, z) && !this.blocked.has(k) && !this.isDoorClosed(x, z);
+    return (
+      this.walkable(x, z) && !this.blocked.has(k) && !this.isDoorClosed(x, z) && !this.isToggleSolid(x, z)
+    );
   }
 
   worldPos(x: number, z: number, y = 0): THREE.Vector3 {
@@ -202,9 +227,14 @@ export class TileGrid {
    * so the environment has genuine depth and can receive the key light's
    * shadows (plan §3, "the 3D half").
    */
-  build(): { group: THREE.Group; elementMeshes: Map<string, THREE.Mesh> } {
+  build(): {
+    group: THREE.Group;
+    elementMeshes: Map<string, THREE.Mesh>;
+    toggleMeshes: Map<string, THREE.Mesh>;
+  } {
     const group = new THREE.Group();
     const elementMeshes = new Map<string, THREE.Mesh>();
+    const toggleMeshes = new Map<string, THREE.Mesh>();
 
     const floors: Tile[] = [];
     const walls: Tile[] = [];
@@ -389,6 +419,58 @@ export class TileGrid {
       group.add(inst);
     }
 
-    return { group, elementMeshes };
+    // --- switches & toggle-wall barriers -----------------------------------
+    const switches: Tile[] = [];
+    const toggles: Tile[] = [];
+    this.forEach((t) => {
+      if (t.kind === 'switch') switches.push(t);
+      else if (t.kind === 'toggleWall') toggles.push(t);
+    });
+    // Switch: a walkable emissive lever plate; stepping it flips the group.
+    if (switches.length) {
+      const geo = new THREE.PlaneGeometry(TILE, TILE);
+      geo.rotateX(-Math.PI / 2);
+      const mat = new THREE.MeshStandardMaterial({
+        map: floorTexture('switch', this.theme.floorAlt, 29, 32, style),
+        emissive: new THREE.Color('#7bdc8a'),
+        emissiveIntensity: 0.7,
+        roughness: 0.6,
+        metalness: 0.1,
+      });
+      const inst = new THREE.InstancedMesh(geo, mat, switches.length);
+      inst.receiveShadow = true;
+      const m = new THREE.Matrix4();
+      switches.forEach((t, i) => {
+        const p = this.worldPos(t.x, t.z);
+        m.makeTranslation(p.x, this.floorY(t.x, t.z) + 0.02, p.z);
+        inst.setMatrixAt(i, m);
+      });
+      inst.instanceMatrix.needsUpdate = true;
+      group.add(inst);
+    }
+    // Toggle-wall: an emissive barrier box, shown when solid and hidden once the
+    // switch opens the group. Individual meshes so visibility can flip live.
+    if (toggles.length) {
+      const bh = WALL_H * 0.9;
+      const barGeo = new THREE.BoxGeometry(TILE, bh, TILE);
+      const barMat = new THREE.MeshStandardMaterial({
+        map: wallTexture('toggle', this.theme.accentWall, 17, 32, style),
+        emissive: new THREE.Color('#5fd8ff'),
+        emissiveIntensity: 0.6,
+        roughness: 0.5,
+        metalness: 0.1,
+      });
+      for (const t of toggles) {
+        const mesh = new THREE.Mesh(barGeo, barMat);
+        mesh.castShadow = true;
+        const p = this.worldPos(t.x, t.z);
+        mesh.position.set(p.x, this.floorY(t.x, t.z) + bh / 2 - 0.05, p.z);
+        mesh.visible = this.isToggleSolid(t.x, t.z);
+        group.add(mesh);
+        toggleMeshes.set(`${t.x},${t.z}`, mesh);
+      }
+    }
+
+    return { group, elementMeshes, toggleMeshes };
   }
 }

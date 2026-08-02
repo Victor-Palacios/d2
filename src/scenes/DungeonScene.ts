@@ -99,6 +99,8 @@ export class DungeonScene extends GameScene {
   private playerShadow: THREE.Mesh | null = null;
   private elementLights: THREE.PointLight[] = [];
   private elementMeshes = new Map<string, THREE.Mesh>();
+  /** Toggle-wall barrier meshes, keyed by tile — visibility flips with switches. */
+  private toggleMeshes = new Map<string, THREE.Mesh>();
 
   /** Blocks input while a scripted beat is running. */
   private busy = false;
@@ -127,6 +129,13 @@ export class DungeonScene extends GameScene {
       this.tileZ = this.grid.start.z;
       this.facing = 'down';
       game.crawl.initialized = true;
+    }
+    // Toggle-wall state is transient (resets to solid on rebuild). If the player
+    // suspended standing on an open barrier, re-open the group so they don't
+    // resume embedded in a re-solidified wall.
+    if (p.resume && this.grid.at(this.tileX, this.tileZ)?.kind === 'toggleWall') {
+      this.grid.flipToggles();
+      this.syncToggleMeshes();
     }
     this.placePlayer();
     this.updateFacingArt();
@@ -210,6 +219,7 @@ export class DungeonScene extends GameScene {
     const built = this.grid.build();
     this.scene.add(built.group);
     this.elementMeshes = built.elementMeshes;
+    this.toggleMeshes = built.toggleMeshes;
 
     this.particles = new ParticleField(500);
     this.scene.add(this.particles.points);
@@ -569,6 +579,14 @@ export class DungeonScene extends GameScene {
     }
   }
 
+  /** Reflects the grid's toggle-wall state onto the barrier meshes' visibility. */
+  private syncToggleMeshes() {
+    for (const [k, mesh] of this.toggleMeshes) {
+      const [x, z] = k.split(',').map(Number);
+      mesh.visible = this.grid.isToggleSolid(x, z);
+    }
+  }
+
   private async onTileEntered(tile: Tile) {
     // Reaching the way home is honored even if this very step emptied the
     // lantern: arriving at the exit supersedes running out of light, so a player
@@ -661,6 +679,23 @@ export class DungeonScene extends GameScene {
         await this.outOfLight();
         return;
       }
+      return;
+    }
+
+    if (tile.kind === 'switch') {
+      // Flip the floor's toggle-wall group: every '%' barrier appears/vanishes.
+      this.grid.flipToggles();
+      this.syncToggleMeshes();
+      audio.sfx('confirm');
+      this.particles.emit(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z) + 0.3), {
+        count: 12,
+        color: 0x7bdc8a,
+        speed: 1.8,
+        life: 0.7,
+        gravity: -2,
+        upBias: 0.8,
+      });
+      toast(this.ctx.ui, '<span class="accent">The mechanism grinds — barriers shift.</span>', 1600);
       return;
     }
 

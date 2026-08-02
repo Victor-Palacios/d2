@@ -145,6 +145,7 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
 'C' chest     '$' light       W F N M D  element floor tiles
 '^' hazard tile (gutters extra lantern light on entry — a glowing warning plate)
 'k' key pickup          '+' locked door (spend a key to open; blocks until then)
+'*' switch              '%' toggle-wall barrier (starts solid; a switch flips it)
 '1'-'9'  scripted event tile (looked up in that floor's `events` map)
 ```
 
@@ -161,6 +162,15 @@ down: the validator runs lock-and-key reachability (open any affordable reachabl
 door, re-flood, repeat) and flags a target that no reachable key can unlock. Put
 `N` keys for `N` doors you want openable; a key sealed behind the only door it
 opens is (correctly) a soft-lock.
+
+**Switches & toggle-walls.** A `%` barrier starts solid and blocks like a wall;
+stepping any `*` switch flips *every* `%` on the floor between solid and open
+(the switch is a global toggle, not a per-door key). Toggle state is transient —
+it resets to solid on suspend/resume, and a resume standing on a `%` re-flips so
+you're never entombed. Like doors, gate an *optional* reward, not the descent:
+the validator runs a toggle-aware search over `(tile, toggleState)` and flags a
+target that no reachable switch can open. crystal-3 is the worked example — a
+corner chest walled off behind a `%` that a `*` across the gallery grinds aside.
 
 **Invariants the validator checks** (`src/data/validateReaches.ts`):
 - rows are all the same width; exactly one `S`.

@@ -10,6 +10,10 @@ import { chromium } from 'playwright';
 // pickup sets keysHeld, spending a key opens the door (passable + persisted),
 // and the validator's key-aware reachability accepts a keyed floor but flags a
 // door with no reachable key.
+// And, on crystal-3: switches & toggle-walls — a '%' barrier parses as a solid
+// toggleWall (not passable, mesh visible), stepping a '*' switch flips it open
+// (passable, mesh hidden), and the toggle-aware validator accepts a
+// switch-solvable floor but flags a barrier with no reachable switch.
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROME,
@@ -145,6 +149,64 @@ check('validator flags a door with no reachable key',
   val.noKey.some((e) => /locked|unreachable/.test(e)), val.noKey.join(' | '));
 check('validator accepts a door whose key is reachable',
   !val.withKey.some((e) => /locked|unreachable/.test(e)), val.withKey.join(' | '));
+
+// --- switches & toggle-walls (crystal-3) ------------------------------------
+const sw = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  g.game.activeReachId = 'crystal';
+  g.game.floorIndex = 2; // crystal-3 (Shivering Gallery)
+  g.game.crawl.initialized = false;
+  await g.manager.go('dungeon');
+  await new Promise((r) => setTimeout(r, 400));
+  const s = g.manager.activeScene;
+  const floor = g.reaches.crystal.floors[2];
+  const find = (ch) => { for (let z = 0; z < floor.rows.length; z++) { const x = floor.rows[z].indexOf(ch); if (x >= 0) return { x, z }; } return null; };
+  const barrier = find('%');
+  const swi = find('*');
+  const meshOf = (c) => s.toggleMeshes.get(`${c.x},${c.z}`);
+  const out = {
+    barrier, swi,
+    barrierKind: barrier && s.grid.at(barrier.x, barrier.z).kind,
+    switchKind: swi && s.grid.at(swi.x, swi.z).kind,
+    barrierPassableBefore: barrier && s.grid.passable(barrier.x, barrier.z),
+    barrierMeshVisibleBefore: barrier && !!meshOf(barrier)?.visible,
+  };
+  // Step the switch (resolve its tile-entry directly), then re-read the barrier.
+  s.busy = false; s.moving = false; s.leaving = false;
+  s.tileX = swi.x; s.tileZ = swi.z;
+  await s.onTileEntered(s.grid.at(swi.x, swi.z));
+  out.barrierPassableAfter = s.grid.passable(barrier.x, barrier.z);
+  out.barrierMeshVisibleAfter = !!meshOf(barrier)?.visible;
+  return out;
+});
+
+check('toggle-wall: \'%\' parses as a toggleWall that blocks (solid) initially',
+  sw.barrierKind === 'toggleWall' && sw.barrierPassableBefore === false && sw.barrierMeshVisibleBefore === true,
+  JSON.stringify(sw));
+check('switch: \'*\' parses as a switch tile',
+  sw.switchKind === 'switch', JSON.stringify({ swi: sw.swi, kind: sw.switchKind }));
+check('switch: stepping it flips the barrier open (passable + mesh hidden)',
+  sw.barrierPassableAfter === true && sw.barrierMeshVisibleAfter === false, JSON.stringify(sw));
+
+// --- validator: toggle-aware reachability (positive + negative) -------------
+const tval = await page.evaluate(() => {
+  const base = { id: 't', name: 't', theme: {}, events: {}, encounterRate: 0, encounters: [] };
+  // A reachable switch opens the barrier onto the chest + portal → solvable.
+  const solvable = window.hd2dGame.validateFloor({
+    ...base, chests: { '5,1': { note: 'x' } },
+    rows: ['########', '#S*.%C>#', '########'],
+  });
+  // No switch exists, so the barrier never opens → the target is a soft-lock.
+  const stuck = window.hd2dGame.validateFloor({
+    ...base, chests: { '4,1': { note: 'x' } },
+    rows: ['#######', '#S.%C>#', '#######'],
+  });
+  return { solvable, stuck };
+});
+check('validator accepts a floor whose switch opens the barrier',
+  !tval.solvable.some((e) => /unreachable/.test(e)), tval.solvable.join(' | '));
+check('validator flags a barrier with no reachable switch',
+  tval.stuck.some((e) => /no reachable switch|unreachable/.test(e)), tval.stuck.join(' | '));
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 if (errs.length) failures += errs.length;

@@ -229,14 +229,14 @@ const FLOORS: DungeonFloor[] = [
     ],
     rows: [
       '#################',
-      '#...............#',
-      '#.S.........2..C#',
-      '#.....#####.....#',
+      '#..............##',
+      '#.S.........2.%C#',
+      '#.....#####....##',
       '#.....#...#.....#',
       '#..W..#.1.#..M..#',
       '#.....#...#.....#',
       '#.....##.##....$#',
-      '#......3........#',
+      '#...*..3........#',
       '#......>........#',
       '#################',
     ],
@@ -277,8 +277,11 @@ const FLOORS: DungeonFloor[] = [
         ],
       },
     },
+    // The corner cache sits behind a shifting crystal barrier ('%' at 14,2); the
+    // switch that grinds it aside ('*' at 4,8) is across the gallery, so the loot
+    // is an optional detour, not on the path to the descent.
     chests: {
-      '15,2': { obols: 260, item: 'mendingBalm', note: 'A surveyor’s cache, sealed in a rind of frost.' },
+      '15,2': { obols: 260, item: 'mendingBalm', note: 'A surveyor’s cache, walled off until the barrier grinds aside.' },
     },
     encounterRate: 0.07,
     encounters: [
