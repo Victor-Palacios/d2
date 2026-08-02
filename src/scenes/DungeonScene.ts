@@ -999,12 +999,21 @@ export class DungeonScene extends GameScene {
     if (this.leaving) return;
     this.leaving = true;
     this.busy = true;
+    // Halden dies at the midpoint, but the Last Lantern (only reachable after) can
+    // gutter you out too — so once he is gone, Wren walks you home by the Book's
+    // light instead. Without this he would speak from beyond the grave.
     await this.dialogue.play(
-      say(
-        'Halden',
-        'Your lantern guttered out. Sit tight — I am walking you back by the last of mine.',
-        'Nothing lost but time. Gather more light and go again.',
-      ),
+      game.has('haldenGone')
+        ? say(
+            'Wren',
+            'Your lantern guttered out. We have you — I am walking you back by the light of the Book.',
+            'Nothing lost but time. Gather more light and go again.',
+          )
+        : say(
+            'Halden',
+            'Your lantern guttered out. Sit tight — I am walking you back by the last of mine.',
+            'Nothing lost but time. Gather more light and go again.',
+          ),
     );
     game.resetCrawl();
     game.crawl.initialized = false;

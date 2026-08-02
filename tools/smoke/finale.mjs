@@ -43,7 +43,7 @@ await page.evaluate(async () => {
   g.game.set('actTwo');
   g.game.activeReachId = 'lantern';
   g.game.maxLight = 999; g.game.light = 999;
-  g.game.floorIndex = 2; // The Flame (finale floor)
+  g.game.floorIndex = 6; // The Flame (finale floor — lantern-7, the 7th floor)
   g.game.crawl.initialized = false;
   await g.manager.go('dungeon');
 });

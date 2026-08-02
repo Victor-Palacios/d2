@@ -236,7 +236,7 @@ const FLOORS: DungeonFloor[] = [
       '#..W..#.1.#..M..#',
       '#.....#...#.....#',
       '#.....##.##....$#',
-      '#...............#',
+      '#......3........#',
       '#......>........#',
       '#################',
     ],
@@ -254,6 +254,26 @@ const FLOORS: DungeonFloor[] = [
         enemies: [
           { species: 'shieldshard', level: 4 },
           { species: 'geodon', level: 4 },
+        ],
+      },
+      // A quiet beat between the Sena meeting and the Sena boss: Wren, who keeps
+      // names so no one is forgotten twice, walks the frozen gallery and finds
+      // her own reflex looking back at her. Wren is aboard from the opening.
+      '3': {
+        kind: 'dialogue',
+        once: true,
+        script: [
+          ...narrate(
+            'Frost holds a hundred small shapes in the gallery walls — a laugh, a hand half-raised, a face turned to someone just out of the ice.',
+          ),
+          ...say(
+            'Wren',
+            'She caught each of them at their warmest and stopped the clock, so they would never have to end.',
+          ),
+          ...say(
+            'Wren',
+            'I keep names so no one is forgotten twice. She keeps the whole moment. ...I am no longer sure the two of us stand as far apart as I thought.',
+          ),
         ],
       },
     },
@@ -315,6 +335,7 @@ const FLOORS: DungeonFloor[] = [
         ],
         outro: [
           ...say('Sena Vale', "She was already gone, wasn't she. I only kept the shape."),
+          ...say('Wren', 'She kept the shape. I keep the name. ...I had never seen how thin the wall is between us.'),
           ...narrate(
             'The ice loosens its grip. Somewhere, at last, a soul is allowed to move on — and a portal home glimmers open behind you.',
           ),
