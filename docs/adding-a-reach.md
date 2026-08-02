@@ -47,6 +47,19 @@ levers on top of its colours:
 terrain?: TerrainStyle;  // surface generator; default 'stone'
 wallHeight?: number;     // world units, default 2.6 — taller = cavern/canopy
 fogColor?: string;       // tints the whole air for this floor
+ambientColor?: string;   // per-floor mood: tints the ambient light
+hemiSky?: string;        // per-floor mood: hemisphere sky tint
+hemiGround?: string;     // per-floor mood: hemisphere ground tint
+```
+
+And on the `DungeonFloor` itself, two more purely-visual levers:
+
+```ts
+elevation?: Record<'x,z', number>;  // per-tile height: +raises a dais, -sinks a
+                                     // pit (elevated tiles render as solid
+                                     // plinths; movement is unchanged)
+scatter?: boolean | number;          // auto-strew flat, passable ground decor
+                                     // across empty floor (never blocks)
 ```
 
 `TerrainStyle` (in `src/engine/pixel.ts`) currently has six skins:
@@ -130,8 +143,15 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
 ' ' void      '#' wall        '=' accent wall (boss approach)
 '.' floor     'S' start       '>' portal down     '<' exit portal
 'C' chest     '$' light       W F N M D  element floor tiles
+'^' hazard tile (gutters extra lantern light on entry — a glowing warning plate)
 '1'-'9'  scripted event tile (looked up in that floor's `events` map)
 ```
+
+Preview any floor (grid + live `validateFloor`, with elevation/hazard badges) at
+`tools/floor-preview.html` under `npm run dev` — author with instant feedback
+instead of eyeballing coordinates. A hazard must never be the *only* way to the
+descent portal (the validator enforces this so you're never forced to take
+damage to progress).
 
 **Invariants the validator checks** (`src/data/validateReaches.ts`):
 - rows are all the same width; exactly one `S`.

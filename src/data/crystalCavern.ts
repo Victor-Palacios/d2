@@ -22,6 +22,9 @@ const THEME_UPPER: TileTheme = {
   terrain: 'crystal',
   wallHeight: 3.0,
   fogColor: '#0c2530',
+  ambientColor: '#6fc6e6',
+  hemiSky: '#7fdcff',
+  hemiGround: '#12303a',
 };
 
 const THEME_DEEP: TileTheme = {
@@ -51,18 +54,27 @@ const FLOORS: DungeonFloor[] = [
     id: 'crystal-1',
     name: 'The Reliquary — Glimmer Shelf',
     theme: THEME_UPPER,
+    scatter: true,
     decor: [
       { x: 8, z: 3, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
       { x: 8, z: 5, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
       { x: 14, z: 6, kind: 'crystalCluster', emissive: 0.6 },
       { x: 13, z: 7, kind: 'iceShard', height: 0.8, emissive: 0.4 },
     ],
+    // A raised reliquary shelf the treasure sits on, and a sunken meltwater
+    // basin — purely visual depth (movement is unchanged).
+    elevation: {
+      '13,1': 0.55, '14,1': 0.55, '15,1': 0.55,
+      '13,2': 0.55, '14,2': 0.55, '15,2': 0.55,
+      '11,8': -0.5, '12,8': -0.5, '13,8': -0.5,
+      '11,9': -0.5, '12,9': -0.5, '13,9': -0.5,
+    },
     rows: [
       '#################',
       '#...............#',
       '#..S........2..C#',
       '#.....##.##.....#',
-      '#....1..4.......#',
+      '#....1..4..^^...#',
       '#.....##.##.....#',
       '#WWWW...........#',
       '#W3WW..$........#',

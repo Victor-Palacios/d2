@@ -35,6 +35,22 @@ type Facing = 'up' | 'down' | 'left' | 'right';
 
 const STEP_TIME = 0.19;
 const LIGHT_PER_STEP = 1;
+/** Extra lantern light a hazard tile gutters on entry, beyond the per-step 1. */
+const HAZARD_LP = 8;
+
+/**
+ * Flat, low ground-dressing decor scattered per terrain skin when a floor opts
+ * in with `scatter`. Always placed passable (never blocks) so it can go anywhere
+ * without a soft-lock — it's texture, not an obstacle.
+ */
+const SCATTER_KINDS: Record<string, string[]> = {
+  stone: ['rubble'],
+  crystal: ['iceShard'],
+  crypt: ['mushroomGlow'],
+  cave: ['mushroomGlow'],
+  jungle: ['jungleFlower'],
+  metal: ['rubble'],
+};
 
 export interface DungeonSceneParams {
   /** Set when returning from a battle so the crawl resumes in place. */
@@ -95,7 +111,7 @@ export class DungeonScene extends GameScene {
 
     const dom = reach(game.activeReachId);
     this.floor = dom.floors[game.floorIndex];
-    this.grid = new TileGrid(this.floor.rows, this.floor.theme);
+    this.grid = new TileGrid(this.floor.rows, this.floor.theme, this.floor.elevation);
 
     this.buildScene();
     this.buildUI();
@@ -115,6 +131,7 @@ export class DungeonScene extends GameScene {
     this.saveCrawl();
 
     this.ctx.hd2d.setScene(this.scene);
+    this.ctx.hd2d.applyMood(this.floor.theme);
     this.ctx.hd2d.applyFog(this.scene, this.floor.fog ?? 1, this.floor.theme.fogColor);
     this.ctx.hd2d.snapCamera();
     this.syncCamera();
@@ -211,7 +228,7 @@ export class DungeonScene extends GameScene {
     // Props, portals and torches.
     this.grid.forEach((t) => {
       const key = `${t.x},${t.z}`;
-      const world = this.grid.worldPos(t.x, t.z);
+      const world = this.grid.worldPos(t.x, t.z, this.grid.floorY(t.x, t.z));
       if (t.kind === 'chest') {
         const opened = game.openedChests.has(`${this.floor.id}:${key}`);
         const b = new Billboard(
@@ -227,7 +244,7 @@ export class DungeonScene extends GameScene {
         this.scene.add(b.object);
         this.props.set(key, b);
         const cs = contactShadow(0.85 * artAspect(opened ? PROPS.chestOpen : PROPS.chestClosed));
-        cs.position.set(world.x, 0.02, world.z);
+        cs.position.set(world.x, world.y + 0.02, world.z);
         this.scene.add(cs);
       } else if (t.kind === 'light') {
         if (game.takenPickups.has(`${this.floor.id}:${key}`)) return;
@@ -238,7 +255,7 @@ export class DungeonScene extends GameScene {
         this.props.set(key, b);
         // Tracked: the shard is removed on pickup, so its decal must go too.
         const cs = contactShadow(0.7 * artAspect(PROPS.lightShard), 0.22);
-        cs.position.set(world.x, 0.02, world.z);
+        cs.position.set(world.x, world.y + 0.02, world.z);
         this.scene.add(cs);
         this.propShadows.set(key, cs);
       } else if (t.kind === 'portal') {
@@ -285,17 +302,53 @@ export class DungeonScene extends GameScene {
         emissive: d.emissive ?? 0.1,
       });
       b.bob = 0;
-      const world = this.grid.worldPos(d.x, d.z);
+      const world = this.grid.worldPos(d.x, d.z, this.grid.floorY(d.x, d.z));
       b.object.position.copy(world);
       this.scene.add(b.object);
       this.decor.push(b);
       // Ground it: a soft contact-shadow decal footprint under the sprite. Not
       // tracked — decor is never removed mid-scene, so teardown disposes it.
       const cs = contactShadow((d.height ?? 1.1) * artAspect(art));
-      cs.position.set(world.x, 0.02, world.z);
+      cs.position.set(world.x, world.y + 0.02, world.z);
       this.scene.add(cs);
       if (decorIsSolid(d)) this.grid.blockTile(d.x, d.z);
     }
+    this.scatterDecor();
+  }
+
+  /**
+   * Deterministically scatter flat, passable ground-dressing across plain floor
+   * tiles so rooms don't read as bare (opt-in via `floor.scatter`). Never touches
+   * interactive tiles (only `kind === 'floor'`), never lands on authored decor,
+   * and never blocks — the scatter is always passable, so it can't create a
+   * soft-lock. Deterministic in (x,z), so it's identical every run.
+   */
+  private scatterDecor() {
+    const s = this.floor.scatter;
+    if (!s) return;
+    const every = Math.max(2, typeof s === 'number' ? s : 7);
+    const kinds = SCATTER_KINDS[this.floor.theme.terrain ?? 'stone'] ?? [];
+    if (!kinds.length) return;
+    const taken = new Set<string>((this.floor.decor ?? []).map((d) => `${d.x},${d.z}`));
+    this.grid.forEach((t) => {
+      if (t.kind !== 'floor') return;
+      const key = `${t.x},${t.z}`;
+      if (taken.has(key)) return;
+      if ((t.x * 7 + t.z * 13) % every !== 0) return;
+      const kind = kinds[(t.x + t.z) % kinds.length];
+      const art = DECOR[kind];
+      if (!art) return;
+      const b = new Billboard(art, `decor:${kind}`, { height: 0.5, emissive: 0.14 });
+      b.bob = 0;
+      const world = this.grid.worldPos(t.x, t.z, this.grid.floorY(t.x, t.z));
+      b.object.position.copy(world);
+      this.scene.add(b.object);
+      this.decor.push(b);
+      const cs = contactShadow(0.5 * artAspect(art), 0.18);
+      cs.position.set(world.x, world.y + 0.02, world.z);
+      this.scene.add(cs);
+      // Deliberately no blockTile: scatter is passable ground detail.
+    });
   }
 
   private placeTorches() {
@@ -309,7 +362,7 @@ export class DungeonScene extends GameScene {
       if (n++ % 5 !== 0) return;
       const torch = new Torch(this.particles);
       const p = this.grid.worldPos(t.x, t.z);
-      torch.object.position.set(p.x, 1.05, p.z - TILE * 0.42);
+      torch.object.position.set(p.x, 1.05 + this.grid.floorY(t.x, t.z), p.z - TILE * 0.42);
       this.scene.add(torch.object);
       this.torches.push(torch);
     });
@@ -394,7 +447,7 @@ export class DungeonScene extends GameScene {
   // --- movement ------------------------------------------------------------
 
   private placePlayer() {
-    const p = this.grid.worldPos(this.tileX, this.tileZ);
+    const p = this.grid.worldPos(this.tileX, this.tileZ, this.grid.floorY(this.tileX, this.tileZ));
     this.player.object.position.copy(p);
   }
 
@@ -425,7 +478,7 @@ export class DungeonScene extends GameScene {
       return;
     }
     this.moveFrom.copy(this.player.object.position);
-    this.moveTo.copy(this.grid.worldPos(nx, nz));
+    this.moveTo.copy(this.grid.worldPos(nx, nz, this.grid.floorY(nx, nz)));
     this.tileX = nx;
     this.tileZ = nz;
     this.moving = true;
@@ -472,7 +525,7 @@ export class DungeonScene extends GameScene {
         b?.setArt(PROPS.chestOpen, 'prop:chestOpen');
         if (b) b.mesh.material.emissiveIntensity = 0.5;
         audio.sfx('chest');
-        this.particles.emit(this.grid.worldPos(tile.x, tile.z, 0.6), {
+        this.particles.emit(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z) + 0.6), {
           count: 22,
           color: 0xffd166,
           speed: 2.4,
@@ -518,10 +571,33 @@ export class DungeonScene extends GameScene {
       return;
     }
 
+    if (tile.kind === 'hazard') {
+      // A trap: it gutters the lantern extra on every entry (not one-time), so
+      // routing around it matters. A hot red burst + hurt sfx sell the sting.
+      game.light = Math.max(0, game.light - HAZARD_LP);
+      audio.sfx('bump');
+      this.particles.emit(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z) + 0.3), {
+        count: 14,
+        color: 0xff4a2a,
+        speed: 2.2,
+        life: 0.7,
+        gravity: -3,
+        upBias: 0.7,
+      });
+      this.ctx.hd2d.addShake(0.35);
+      toast(this.ctx.ui, `<span class="danger">-${HAZARD_LP} LP</span>`, 1400);
+      this.hud.update(game.souls());
+      if (game.light <= 0) {
+        await this.outOfLight();
+        return;
+      }
+      return;
+    }
+
     if (tile.kind === 'element') {
       const mesh = this.elementMeshes.get(key);
       if (mesh) {
-        this.particles.emit(this.grid.worldPos(tile.x, tile.z, 0.2), {
+        this.particles.emit(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z) + 0.2), {
           count: 6,
           color: ELEMENTS[tile.element!].color,
           speed: 1,
@@ -805,7 +881,7 @@ export class DungeonScene extends GameScene {
     if (!tile) return;
     tile.kind = 'exit';
     const portal = new Portal(this.particles, 0xffd166, true);
-    portal.object.position.copy(this.grid.worldPos(tile.x, tile.z));
+    portal.object.position.copy(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z)));
     this.scene.add(portal.object);
     this.portals.push({ portal, x: tile.x, z: tile.z });
     audio.sfx('portal');
@@ -930,6 +1006,7 @@ export class DungeonScene extends GameScene {
     if (this.playerShadow) {
       // Track x/z only — keep it flat on the floor, ignoring the walk-bob.
       this.playerShadow.position.x = this.player.object.position.x;
+      this.playerShadow.position.y = this.player.object.position.y + 0.02;
       this.playerShadow.position.z = this.player.object.position.z;
     }
     for (const t of this.torches) t.update(dt, this.ctx.hd2d.camera, time);

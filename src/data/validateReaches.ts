@@ -127,6 +127,37 @@ export function validateFloor(floor: DungeonFloor): string[] {
         errs.push(`tile at ${t.x},${t.z} ('${at(t.x, t.z)}') is unreachable from the start`);
       }
     }
+
+    // Hazard safety: you must never be *forced* to gutter your lantern on a '^'
+    // to make progress. Re-flood treating hazards as walls; the descent/exit
+    // portal must still be reachable (optional chests behind a hazard are fine).
+    const safe = new Set<string>([`${start.x},${start.z}`]);
+    const st2: Coord[] = [start];
+    while (st2.length) {
+      const { x, z } = st2.pop()!;
+      for (const [dx, dz] of [
+        [0, 1],
+        [0, -1],
+        [1, 0],
+        [-1, 0],
+      ]) {
+        const nx = x + dx;
+        const nz = z + dz;
+        const k = `${nx},${nz}`;
+        if (!seen.has(k) || safe.has(k)) continue;
+        if (at(nx, nz) === '^') continue; // a hazard is a wall for this pass
+        safe.add(k);
+        st2.push({ x: nx, z: nz });
+      }
+    }
+    for (let z = 0; z < rows.length; z++) {
+      for (let x = 0; x < rows[z].length; x++) {
+        const ch = at(x, z);
+        if ((ch === '>' || ch === '<') && !safe.has(`${x},${z}`)) {
+          errs.push(`descent portal at ${x},${z} is only reachable by crossing a hazard`);
+        }
+      }
+    }
   }
 
   // decor: in bounds, on a walkable tile, and a known kind. Solid decor must
