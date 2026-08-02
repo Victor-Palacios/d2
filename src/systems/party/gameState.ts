@@ -91,7 +91,7 @@ export class GameState {
    * (always distinct cells), so it stays valid however many souls deploy.
    */
   formation: Cell[] = defaultFormation(MAX_FIELDED);
-  teamId: string | null = null;
+  /** The player's own class, taken from their chosen starter at New Game. */
   teamAttribute: AttributeId | null = null;
 
   /** Which reach the crawl scene is currently in (key into REACHES). */

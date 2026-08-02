@@ -7,7 +7,6 @@ import { ParticleField, Portal, Torch } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { HUMANS } from '../assets/art';
-import { TEAMS, team } from '../data/teams';
 import { game } from '../systems/party/gameState';
 import { saveAuto } from '../systems/party/saveGame';
 import { fullRestore, makeCreature } from '../systems/party/creature';
@@ -53,15 +52,15 @@ interface Npc {
 }
 
 export interface HubSceneParams {
-  arrival?: 'first' | 'reachCleared' | 'guttered' | 'teamChosen';
+  arrival?: 'first' | 'reachCleared' | 'guttered';
 }
 
 /**
- * The Everwake, simplified (plan §2.2, M4/M5).
+ * The Everwake.
  *
  * One room, walk-around movement, bump-to-talk NPCs and a portal to the world
- * map. This is also where the post-boss progression beats fire: the Vigil's leave,
- * Guard Team choice, rival intro and the Mission 2 briefing.
+ * map. This is also where the between-reach story beats fire: the Vigil's leave,
+ * the companion joins, the Overgrowth aftermath and the midpoint.
  */
 export class HubScene extends GameScene {
   private scene = new THREE.Scene();
@@ -73,7 +72,6 @@ export class HubScene extends GameScene {
   private portal!: Portal;
   private dialogue!: DialogueBox;
   private legend!: HTMLElement;
-  private banner: HTMLElement | null = null;
 
   private tileX = 0;
   private tileZ = 0;
@@ -214,12 +212,10 @@ export class HubScene extends GameScene {
       fullRestore(game.party);
     } else if (kind === 'reachCleared') {
       await this.leaveCeremony();
-    } else if (kind === 'teamChosen') {
-      await this.rivalAndBriefing();
     }
 
     // Did a scripted beat play this arrival? Quiet returns get party banter.
-    let beat = kind === 'first' || kind === 'guttered' || kind === 'reachCleared' || kind === 'teamChosen';
+    let beat = kind === 'first' || kind === 'guttered' || kind === 'reachCleared';
 
     // Companions join at story beats — on the next return to the Everwake after
     // the reach that earns them. Each fires once (guarded by its flag). Placed
@@ -619,44 +615,6 @@ export class HubScene extends GameScene {
     return (v ?? 'lonely') as 'lonely' | 'true';
   }
 
-  private async rivalAndBriefing() {
-    if (!game.has('rivalMet')) {
-      game.set('rivalMet');
-      await this.dialogue.play([
-        ...narrate('Someone is already leaning on the supply bay counter, watching you come in.'),
-        ...say(
-          'Kade',
-          `So you are the one who dropped the Vigil on your first crossing. Kade. Second year.`,
-          'Enjoy your leave to keep. The next reach does not grant it so gently.',
-        ),
-        ...say('Kade', 'Try to keep up, rookie.'),
-      ]);
-    }
-    if (!game.has('mission2')) {
-      const leader = game.teamId ? team(game.teamId) : TEAMS[0];
-      game.set('mission2');
-      await this.dialogue.play([
-        ...say(
-          leader.leaderName,
-          `Briefing, ${game.playerName}. The Cache reach has been letting souls slip through uncrossed for a week now.`,
-          'Refit at the supply bay, then take the map when you are ready. That is your mission.',
-        ),
-      ]);
-      this.showSliceEnd();
-    }
-  }
-
-  private showSliceEnd() {
-    this.banner = el('div', 'panel');
-    this.banner.style.cssText =
-      'position:absolute;left:50%;top:18%;transform:translateX(-50%);text-align:center;max-width:600px;';
-    this.banner.innerHTML =
-      '<h2>End of the first hour</h2>' +
-      '<p class="dim">Mission 2 — <span class="accent">the Cache reach</span> — is the hook the slice ends on.<br>' +
-      'The city, the shop and the Quiet Crossing stay open: walk into the vendor to buy, or take the south portal to crawl again.</p>';
-    this.ctx.ui.appendChild(this.banner);
-  }
-
   // --- interaction ---------------------------------------------------------
 
   private async talkTo(npc: Npc) {
@@ -733,12 +691,6 @@ export class HubScene extends GameScene {
           'Carrying more souls than you can bear to field? Bring me the spare ones.',
           'I render them down to lamp-oil. The soul is spent — gone for good — but your lantern will hold more light on every reach you walk, however deep it runs.',
           'A kindness, of a sort. A soul that would only sit benched, made into the thing that gets you home.',
-        );
-      case 'rival':
-        return say(
-          'Kade',
-          'the Cache reach. That is where they are sending you next, right?',
-          'I ran it last season. Bring more than one creature.',
         );
       default:
         return narrate('...');
@@ -824,7 +776,6 @@ export class HubScene extends GameScene {
     this.unsubInput = null;
     this.dialogue.destroy();
     remove(this.legend);
-    remove(this.banner);
     this.player.dispose();
     for (const n of this.npcs) n.billboard.dispose();
     this.particles.dispose();

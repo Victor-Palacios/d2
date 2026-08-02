@@ -1,6 +1,7 @@
 /**
- * Attributes and elements (plan §5.1). All values are starting placeholders —
- * they are meant to be tuned for feel, not to match any published table.
+ * Attributes and elements (plan §5.1). The numbers here are balance values,
+ * tuned for feel rather than to match any published table — adjust them by
+ * playtest, not by looking one up.
  */
 
 export type AttributeId = 'assassin' | 'mage' | 'hero';
