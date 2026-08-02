@@ -18,10 +18,12 @@ cookbook so a new voice reads as *that* creature and not a beep.
 | Battle hooks (opening cry + per-attack call) | `src/scenes/BattleScene.ts` |
 | The smoke test | `tools/smoke/cries.mjs` |
 
-A cry is keyed by **species id** (the `id` in `src/data/creatures.ts`). A
-species with no `CRIES` entry simply stays silent — `cry()` is a no-op for it,
-so callers fire it unconditionally and `hasCry()` gates anything that should
-only happen for a monster that *has* a voice (e.g. the opening cry).
+A cry is keyed by **species id** (the `id` in `src/data/creatures.ts`). **Every
+species in the roster is voiced** (see *Current coverage*); a species with no
+`CRIES` entry would simply stay silent — `cry()` is a no-op for it, so callers
+fire it unconditionally and `hasCry()` gates anything that should only happen
+for a monster that *has* a voice (e.g. the opening cry). Keep that invariant:
+add a new species, add its cry.
 
 ## The data format
 
@@ -85,16 +87,18 @@ entry is the whole job.
    the creature (see the cookbook below). Author per-layer `gain` in the
    ~0.05–0.18 band as before; `CRY_BOOST` then lifts the whole cry above the
    mix at playback, so a cry is heard, not buried under the impact sfx.
-3. **Cover it in the smoke test**: add the id to `SPECIES` in
-   `tools/smoke/cries.mjs`. Keep `NEGATIVE` pointed at some species that has
-   **no** cry (the silent-case assertion).
+3. **The smoke test needs no edit**: `tools/smoke/cries.mjs` derives the roster
+   from the running game (`Object.keys(hd2dGame.roster.SPECIES)`) and asserts
+   **every** species has a voice, so a new species is covered automatically —
+   and left silent, it fails the run. `NEGATIVE` is a deliberately unknown id
+   (`__not_a_species__`), the silent-case assertion.
 4. **Build**: `npm run build` (`tsc --noEmit` + `vite build`) must pass.
 5. **Verify** (below), then commit and push to `main` — the push deploys.
 
 ### The design cookbook
 
-Match the timbre to the creature. The nine authored voices are worked examples
-in `CRIES`; the recipes behind them:
+Match the timbre to the creature. The whole roster is authored in `CRIES`
+grouped by element; the recipes behind the archetypes:
 
 | Creature kind | Recipe |
 |---|---|
@@ -116,8 +120,8 @@ Rules of thumb: **lower + longer = bigger**; **fast wide vibrato = rough**;
 **By ear**, from the browser console (audio is exposed on the debug hook):
 
 ```js
-hd2dGame.audio.cry('regalion');   // play any species' voice on demand
-hd2dGame.audio.hasCry('bulwarq'); // false — no voice authored yet
+hd2dGame.audio.cry('regalion');            // play any species' voice on demand
+hd2dGame.audio.hasCry('__not_a_species__'); // false — unknown id stays silent
 ```
 
 (Audio needs a user gesture first — click the page once.) In an actual fight,
@@ -141,14 +145,17 @@ counts and exits non-zero on any failure. See
 
 ## Current coverage
 
-Voiced today (`CRIES` in `src/engine/Audio.ts`):
+**The entire roster is voiced** — all **95** species in `SPECIES`
+(`src/data/creatures.ts`) have a `CRIES` entry in `src/engine/Audio.ts`, from
+the starter trio through every reach's wild table, the evolution lines, both
+wardens and the final boss, the story souls and the named companions. Nothing
+is silent. The smoke test enforces it: it reads the roster live and fails if
+any species lacks a voice.
 
-- **Starter trio** — Emberling, Glidefang, Nightnip.
-- **The Quiet Crossing (first dungeon), complete** — the wild table (Mitebug,
-  Sprigling, Scrapmite, Gloomote, Dropletta) and the warden boss **Regalion**.
-
-Everything else — the Crystal Cavern, Overgrowth and Haunted Dungeon rosters,
-and their wardens — is **not voiced yet** and stays silent. Adding those is
-pure data: one `CRIES` entry each, following the cookbook above. A good next
-pass is one reach's roster at a time, matched to its element (water = bloops,
-dark = moans, machine = whirs, nature = warbles).
+Cries are grouped in `CRIES` by element and pitched by size, so the family
+resemblance is deliberate: **fire** = rough sawtooth growls, **water** = sine
+bloops and airy coos, **nature** = organic warbles and dry insect clicks,
+**machine** = stepped metallic beeps and motor whirs, **dark** = hollow moans
+and rising screeches — and a 2.4-tall boss reads far lower and longer than a
+1.0 rookie of the same element. When you add a species, add its cry in the
+matching element block and keep coverage complete.
