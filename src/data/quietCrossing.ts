@@ -74,7 +74,8 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
         script: [
           ...say(
             MENTOR,
-            "Radio check. You are carrying a keeper's lantern across the Quiet Crossing — the threshold every soul passes on its way to rest.",
+            'Can you hear me? Good. My voice rides your lantern-flame — that is how one keeper reaches another across the dark, light to light. No device, no answering aloud; think it, and the light carries it back to me.',
+            "You are carrying a keeper's lantern across the Quiet Crossing — the threshold every soul passes on its way to rest.",
             'Arrow keys or WASD move you one tile at a time. Every step spends a little of your light — watch your lantern.',
             'Let it gutter out and you are spirited away, the dark left unattended.',
           ),
@@ -87,7 +88,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       },
       '2': {
         kind: 'battle',
-        enemies: [{ species: 'mitebug', level: 1 }],
+        enemies: [{ species: 'mistling', level: 1 }],
         intro: say(
           MENTOR,
           'An echo, and a small one. Open with Attack. You are not hurting it — you are getting its attention.',
@@ -141,7 +142,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
         script: [
           ...say(
             MENTOR,
-            'Radio again. The chamber ahead is laid with element tiles — Water, Fire, Nature, Machine, Dark.',
+            'My voice in your flame again. The chamber ahead is laid with element tiles — Water, Fire, Nature, Machine, Dark.',
             'Fight while a creature stands on its own element and every hit lands harder.',
           ),
           ...say(MENTOR, 'Class matters more. Assassin beats Mage, Mage beats Hero, Hero beats Assassin.'),
@@ -149,7 +150,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       },
       '2': {
         kind: 'battle',
-        enemies: [{ species: 'sprigling', level: 1 }],
+        enemies: [{ species: 'cindermage', level: 1 }],
         intro: say(
           MENTOR,
           'Company at the gate. Guard when a creature is about to drop — it soaks the hit and recovers MP.',
@@ -163,15 +164,15 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
     chests: {
       '12,2': { obols: 240, note: 'A cracked cache, still holding obols.' },
       '2,10': {
-        item: 'towBeacon',
+        item: 'homingEmber',
         note: 'A second Homing Ember, cold in its cradle. Two is a habit worth keeping down here.',
       },
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'mitebug', level: 1 }] },
-      { weight: 3, enemies: [{ species: 'scrapmite', level: 1 }] },
-      { weight: 1, enemies: [{ species: 'sprigling', level: 1 }] },
+      { weight: 3, enemies: [{ species: 'mistling', level: 1 }] },
+      { weight: 3, enemies: [{ species: 'cindermage', level: 1 }] },
+      { weight: 1, enemies: [{ species: 'mistling', level: 2 }] },
     ],
   },
 
@@ -211,13 +212,13 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
           ...narrate('Something heavy shifts at the far end of the hallway.'),
           ...say(
             MENTOR,
-            'It stands like a Hero — armoured, certain. A Mage reaches past armour; lead with one if you have bonded one.',
+            "It fights like a Mage — it reaches with wards and hexes, not fists. An Assassin cuts through a caster's guard; lead with one if you have bonded one.",
           ),
         ],
       },
       '1': {
         kind: 'boss',
-        enemies: [{ species: 'regalion', level: 2 }],
+        enemies: [{ species: 'sigilwarden', level: 2 }],
         intro: [
           ...narrate(
             'The Vigil rises out of the dark and fills the hallway — a keeper older than the Crossing itself.',
@@ -236,9 +237,9 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
     chests: {},
     encounterRate: 0.04,
     encounters: [
-      { weight: 2, enemies: [{ species: 'gloomote', level: 1 }] },
-      { weight: 2, enemies: [{ species: 'mitebug', level: 1 }] },
-      { weight: 1, enemies: [{ species: 'dropletta', level: 1 }] },
+      { weight: 2, enemies: [{ species: 'cindermage', level: 1 }] },
+      { weight: 2, enemies: [{ species: 'mistling', level: 1 }] },
+      { weight: 1, enemies: [{ species: 'cindermage', level: 2 }] },
     ],
   },
 ];

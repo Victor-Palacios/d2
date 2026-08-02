@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeObject3D } from '../engine/dispose';
 import { GameScene, sleep } from '../engine/SceneManager';
 import { TileGrid } from '../engine/TileGrid';
 import { Billboard } from '../engine/Billboard';
@@ -6,7 +7,6 @@ import { ParticleField, Portal, Torch } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { HUMANS } from '../assets/art';
-import { TEAMS, team } from '../data/teams';
 import { game } from '../systems/party/gameState';
 import { saveAuto } from '../systems/party/saveGame';
 import { fullRestore, makeCreature } from '../systems/party/creature';
@@ -15,6 +15,7 @@ import { Menu } from '../ui/Menu';
 import { openShop } from '../ui/ShopScreen';
 import { openSoulMenu } from '../ui/SoulMenu';
 import { openSoulStore } from '../ui/SoulStore';
+import { openOilwright } from '../ui/Oilwright';
 import { toast } from '../ui/Toast';
 import { el, remove } from '../ui/dom';
 import { narrate, say } from '../systems/dialogue/script';
@@ -51,15 +52,15 @@ interface Npc {
 }
 
 export interface HubSceneParams {
-  arrival?: 'first' | 'reachCleared' | 'guttered' | 'teamChosen';
+  arrival?: 'first' | 'reachCleared' | 'guttered';
 }
 
 /**
- * The Everwake, simplified (plan §2.2, M4/M5).
+ * The Everwake.
  *
  * One room, walk-around movement, bump-to-talk NPCs and a portal to the world
- * map. This is also where the post-boss progression beats fire: the Vigil's leave,
- * Guard Team choice, rival intro and the Mission 2 briefing.
+ * map. This is also where the between-reach story beats fire: the Vigil's leave,
+ * the companion joins, the Overgrowth aftermath and the midpoint.
  */
 export class HubScene extends GameScene {
   private scene = new THREE.Scene();
@@ -71,7 +72,6 @@ export class HubScene extends GameScene {
   private portal!: Portal;
   private dialogue!: DialogueBox;
   private legend!: HTMLElement;
-  private banner: HTMLElement | null = null;
 
   private tileX = 0;
   private tileZ = 0;
@@ -130,15 +130,17 @@ export class HubScene extends GameScene {
     this.particles = new ParticleField(300);
     this.scene.add(this.particles.points);
 
-    this.player = new Billboard(HUMANS.hero, 'human:hero', { height: 1.55 });
-    this.player.bob = 0.02;
-    this.player.bobSpeed = 4;
+    this.player = new Billboard(HUMANS.hero, 'human:hero', { height: 1.55, reveal: true });
+    this.player.bob = 0.014;
+    this.player.bobSpeed = 2.4;
+    this.player.walkBounce = 0.08;
     this.scene.add(this.player.object);
 
     const roster: { id: string; art: string; char: string }[] = [
       { id: 'chief', art: 'chief', char: '1' },
       { id: 'mentor', art: 'mentor', char: '2' },
       { id: 'vendor', art: 'vendor', char: '3' },
+      { id: 'oilwright', art: 'rival', char: '4' },
       { id: 'soulstore', art: 'soulkeeper', char: '5' },
     ];
 
@@ -146,7 +148,7 @@ export class HubScene extends GameScene {
       if (t.kind !== 'event') return;
       const entry = roster.find((r) => r.char === t.eventId);
       if (!entry) return;
-      // Halden is at his radio until the midpoint takes him.
+      // Halden tends his lantern until the midpoint takes him.
       if (entry.id === 'mentor' && game.has('haldenGone')) return;
       const b = new Billboard(HUMANS[entry.art], `human:${entry.art}`, { height: 1.6 });
       b.bob = 0.025;
@@ -210,12 +212,10 @@ export class HubScene extends GameScene {
       fullRestore(game.party);
     } else if (kind === 'reachCleared') {
       await this.leaveCeremony();
-    } else if (kind === 'teamChosen') {
-      await this.rivalAndBriefing();
     }
 
     // Did a scripted beat play this arrival? Quiet returns get party banter.
-    let beat = kind === 'first' || kind === 'guttered' || kind === 'reachCleared' || kind === 'teamChosen';
+    let beat = kind === 'first' || kind === 'guttered' || kind === 'reachCleared';
 
     // Companions join at story beats — on the next return to the Everwake after
     // the reach that earns them. Each fires once (guarded by its flag). Placed
@@ -442,7 +442,7 @@ export class HubScene extends GameScene {
 
     await this.dialogue.play([
       ...narrate(
-        'You come back to the Everwake with all three reaches quiet behind you. The lanterns are lit. Halden is not at his radio.',
+        'You come back to the Everwake with all three reaches quiet behind you. The lanterns are lit. But there is no voice in your flame — Halden is not answering.',
       ),
       ...narrate(
         'You find him in the back, his detective serial still murmuring a chapter from the end. He is not an echo. He is a person, and he is dying the ordinary way.',
@@ -484,7 +484,7 @@ export class HubScene extends GameScene {
       game.addItem('haldensSerial');
       await this.dialogue.play([
         ...narrate(
-          'You take his chair, his radio, the serial with its last chapter unread. The duty is yours now. You carry the unfinished story with you.',
+          'You take his chair, his lantern, the serial with its last chapter unread. The duty is yours now. You carry the unfinished story with you.',
         ),
       ]);
       toast(this.ctx.ui, '<span class="accent">Got Halden\'s Serial</span> — a Memento', 2600);
@@ -615,44 +615,6 @@ export class HubScene extends GameScene {
     return (v ?? 'lonely') as 'lonely' | 'true';
   }
 
-  private async rivalAndBriefing() {
-    if (!game.has('rivalMet')) {
-      game.set('rivalMet');
-      await this.dialogue.play([
-        ...narrate('Someone is already leaning on the supply bay counter, watching you come in.'),
-        ...say(
-          'Kade',
-          `So you are the one who dropped the Vigil on your first crossing. Kade. Second year.`,
-          'Enjoy your leave to keep. The next reach does not grant it so gently.',
-        ),
-        ...say('Kade', 'Try to keep up, rookie.'),
-      ]);
-    }
-    if (!game.has('mission2')) {
-      const leader = game.teamId ? team(game.teamId) : TEAMS[0];
-      game.set('mission2');
-      await this.dialogue.play([
-        ...say(
-          leader.leaderName,
-          `Briefing, ${game.playerName}. The Cache reach has been letting souls slip through uncrossed for a week now.`,
-          'Refit at the supply bay, then take the map when you are ready. That is your mission.',
-        ),
-      ]);
-      this.showSliceEnd();
-    }
-  }
-
-  private showSliceEnd() {
-    this.banner = el('div', 'panel');
-    this.banner.style.cssText =
-      'position:absolute;left:50%;top:18%;transform:translateX(-50%);text-align:center;max-width:600px;';
-    this.banner.innerHTML =
-      '<h2>End of the first hour</h2>' +
-      '<p class="dim">Mission 2 — <span class="accent">the Cache reach</span> — is the hook the slice ends on.<br>' +
-      'The city, the shop and the Quiet Crossing stay open: walk into the vendor to buy, or take the south portal to crawl again.</p>';
-    this.ctx.ui.appendChild(this.banner);
-  }
-
   // --- interaction ---------------------------------------------------------
 
   private async talkTo(npc: Npc) {
@@ -669,6 +631,12 @@ export class HubScene extends GameScene {
     if (npc.id === 'soulstore') {
       this.busy = true;
       await openSoulStore(this.ctx.ui);
+      this.busy = false;
+    }
+
+    if (npc.id === 'oilwright') {
+      this.busy = true;
+      await openOilwright(this.ctx.ui);
       this.busy = false;
     }
   }
@@ -717,11 +685,12 @@ export class HubScene extends GameScene {
           'Welcome to the Soul Store. Syphon a soul in the field and I can conjure you a copy — for a price.',
           'I also sell capacity: more room in your active party. Souls you cannot carry rest in the Sanctuary.',
         );
-      case 'rival':
+      case 'oilwright':
         return say(
-          'Kade',
-          'the Cache reach. That is where they are sending you next, right?',
-          'I ran it last season. Bring more than one creature.',
+          'Rendell the Oilwright',
+          'Carrying more souls than you can bear to field? Bring me the spare ones.',
+          'I render them down to lamp-oil. The soul is spent — gone for good — but your lantern will hold more light on every reach you walk, however deep it runs.',
+          'A kindness, of a sort. A soul that would only sit benched, made into the thing that gets you home.',
         );
       default:
         return narrate('...');
@@ -782,6 +751,7 @@ export class HubScene extends GameScene {
       this.moveT += dt / 0.17;
       const t = Math.min(1, this.moveT);
       this.player.object.position.lerpVectors(this.moveFrom, this.moveTo, 1 - (1 - t) ** 2.2);
+      this.player.setStride(t);
       if (t >= 1) {
         this.moving = false;
         void this.onArrive();
@@ -791,6 +761,7 @@ export class HubScene extends GameScene {
       this.buffered = null;
       this.tryStep(dir);
     }
+    if (!this.moving) this.player.setStride(-1);
 
     this.player.update(dt, this.ctx.hd2d.camera, time);
     for (const n of this.npcs) n.billboard.update(dt, this.ctx.hd2d.camera, time);
@@ -805,10 +776,10 @@ export class HubScene extends GameScene {
     this.unsubInput = null;
     this.dialogue.destroy();
     remove(this.legend);
-    remove(this.banner);
     this.player.dispose();
     for (const n of this.npcs) n.billboard.dispose();
     this.particles.dispose();
+    disposeObject3D(this.scene);
     this.scene.clear();
   }
 }

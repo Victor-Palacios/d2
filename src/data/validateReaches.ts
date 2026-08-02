@@ -1,6 +1,7 @@
 import type { Reach, DungeonFloor } from './dungeon';
 import { decorIsSolid } from './dungeon';
 import { REACHES } from './reaches';
+import { ITEMS } from './items';
 import { DECOR } from '../assets/art';
 
 /**
@@ -72,11 +73,15 @@ export function validateFloor(floor: DungeonFloor): string[] {
     if (!floor.events[id]) errs.push(`event tile '${id}' has no entry in the events map`);
   }
 
-  // chest keys must land on C tiles, and every C must have a loot entry
+  // chest keys must land on C tiles, and every C must have a loot entry. A chest
+  // that grants an `item` must name one that exists in ITEMS — otherwise the loot
+  // silently degrades to a "keepsake" toast and files an unusable id into the bag.
   const chestKeys = new Set(Object.keys(floor.chests ?? {}));
-  for (const key of chestKeys) {
+  for (const [key, loot] of Object.entries(floor.chests ?? {})) {
     const [x, z] = key.split(',').map(Number);
     if (at(x, z) !== 'C') errs.push(`chest key '${key}' is not a C tile (found '${at(x, z)}')`);
+    if (loot.item && !(loot.item in ITEMS))
+      errs.push(`chest '${key}' grants unknown item '${loot.item}' (not in ITEMS)`);
   }
   for (const c of chestTiles) {
     if (!chestKeys.has(`${c.x},${c.z}`)) errs.push(`C tile at ${c.x},${c.z} has no chest entry`);

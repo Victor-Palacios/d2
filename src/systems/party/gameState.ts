@@ -1,5 +1,6 @@
 import type { CreatureInstance } from './creature';
 import { makeCreature } from './creature';
+import { species } from '../../data/creatures';
 import { QUIET_CROSSING } from '../../data/quietCrossing';
 import type { AttributeId } from '../../data/elements';
 import { IMMORTALITY_POEM, IMMORTALITY_TOTAL } from '../../data/immortality';
@@ -24,6 +25,19 @@ export const MAX_PARTY_CAP = 10;
  * — and never exceeds this. `formation` is sized to this maximum.
  */
 export const MAX_FIELDED = 4;
+/**
+ * Light Power the lantern gains, for good, each time a reach's warden is
+ * satisfied — some of the boundary keeper's own light stays in your flame. This
+ * bonus (`lightBonus`) rides on top of every reach's `startingLight`, so a
+ * deeper lantern is carried into every crawl that follows. Granted once per
+ * reach (see `DungeonScene.afterBattle`).
+ */
+export const LP_PER_BOSS = 20;
+
+/** The level a freshly-bonded starting partner begins at. */
+export const STARTER_LEVEL = 1;
+/** The keeper's kit, granted alongside the starting partner. */
+export const KEEPER_KIT = ['cinderEdge', 'paleShroud', 'quickLocket'] as const;
 
 /** A species' entry in the Soularium (the capture dex). */
 export interface SoulEntry {
@@ -57,6 +71,14 @@ export class GameState {
   /** Light Power (LP) — the lantern's charge while crawling; each step spends 1. */
   light = QUIET_CROSSING.startingLight;
   maxLight = QUIET_CROSSING.startingLight;
+  /**
+   * Permanent bonus to lantern capacity, added on top of a reach's
+   * `startingLight` when it is entered (see `WorldMapScene`), so it survives the
+   * per-reach reset that clobbers `maxLight`. Two sources feed it: satisfying a
+   * warden (`LP_PER_BOSS` each) and rendering spare souls to lamp-oil at the
+   * Oilwright. Persists across reaches and saves — the lantern only grows deeper.
+   */
+  lightBonus = 0;
 
   /** Whether the Vigil has given you leave to keep past the Crossing. */
   hasLeave = false;
@@ -69,7 +91,7 @@ export class GameState {
    * (always distinct cells), so it stays valid however many souls deploy.
    */
   formation: Cell[] = defaultFormation(MAX_FIELDED);
-  teamId: string | null = null;
+  /** The player's own class, taken from their chosen starter at New Game. */
   teamAttribute: AttributeId | null = null;
 
   /** Which reach the crawl scene is currently in (key into REACHES). */
@@ -165,6 +187,22 @@ export class GameState {
     return !e.captured && e.syphon >= 100;
   }
 
+  /**
+   * Apply the state a fresh New Game produces: bond the chosen partner at the
+   * starting level, take the team attribute from its species, grant the keeper's
+   * kit, and mark the prologue done. This is the single source of truth for a
+   * started run — `IntroScene`'s partner-select calls it, and tests/tools can
+   * call it (via `window.hd2dGame.game`) to reach a playable state without
+   * replaying the opening cutscene and menus.
+   */
+  startNewGame(partnerId: string, name?: string): void {
+    if (name) this.playerName = name;
+    this.party = [makeCreature(partnerId, STARTER_LEVEL)];
+    this.teamAttribute = species(partnerId).attribute;
+    for (const item of KEEPER_KIT) this.addItem(item);
+    this.set('prologueDone');
+  }
+
   /** Logs a species as captured and grants one free copy. */
   captureSpecies(speciesId: string, level: number): CaptureResult {
     const e = this.soul(speciesId);
@@ -201,6 +239,27 @@ export class GameState {
     if (this.party.filter((c) => !c.companion).length <= 1) return false;
     this.sanctuary.push(this.party.splice(i, 1)[0]);
     return true;
+  }
+
+  /**
+   * Permanently remove a soul from the roster — the Oilwright renders it into
+   * lamp-oil. Mirrors `partyToSanctuary`'s guards: never a companion, and never
+   * the last fighting soul. Checks the party first, then the Sanctuary. Returns
+   * the consumed creature (for the UI to report its level), or null if refused.
+   */
+  consumeSoul(uid: string): CreatureInstance | null {
+    const pi = this.party.findIndex((c) => c.uid === uid);
+    if (pi >= 0) {
+      if (this.party[pi].companion) return null; // companions are never spent for light
+      if (this.party.filter((c) => !c.companion).length <= 1) return null; // keep one fighter
+      return this.party.splice(pi, 1)[0];
+    }
+    const si = this.sanctuary.findIndex((c) => c.uid === uid);
+    if (si >= 0) {
+      if (this.sanctuary[si].companion) return null;
+      return this.sanctuary.splice(si, 1)[0];
+    }
+    return null;
   }
 
   /**

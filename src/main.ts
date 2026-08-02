@@ -99,8 +99,10 @@ let fpsFrames = 0;
 
 function frame(now: number) {
   // Clamp so a backgrounded tab does not teleport the party on return.
-  const dt = Math.min(0.05, (now - last) / 1000);
+  const rawDt = Math.min(0.05, (now - last) / 1000);
   last = now;
+  // A scene can slow (or freeze) simulation time for a hitstop / slow-mo beat.
+  const dt = rawDt * hd2d.timeScale;
   elapsed += dt;
 
   // Gamepads are polled, not evented — read them before scenes look at input.

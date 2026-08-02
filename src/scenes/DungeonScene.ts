@@ -1,22 +1,25 @@
 import * as THREE from 'three';
+import { disposeObject3D } from '../engine/dispose';
 import { GameScene, sleep } from '../engine/SceneManager';
 import { TILE, TileGrid } from '../engine/TileGrid';
 import type { Tile } from '../engine/TileGrid';
 import { Billboard } from '../engine/Billboard';
-import { ParticleField, Portal, Torch } from '../engine/fx';
+import { artAspect } from '../engine/pixel';
+import { ParticleField, Portal, Torch, contactShadow } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { DECOR, PROPS, HUMANS } from '../assets/art';
 import { reach } from '../data/reaches';
 import { anchored, anchoredFlag } from '../data/anchored';
+import { recruit } from '../data/recruits';
 import { equipment } from '../data/equipment';
 import { ITEMS } from '../data/items';
 import type { DungeonFloor, EnemySpec, FloorEvent } from '../data/dungeon';
 import { decorIsSolid } from '../data/dungeon';
 import { ELEMENTS } from '../data/elements';
 import type { ElementId } from '../data/elements';
-import { game } from '../systems/party/gameState';
-import { fullRestore } from '../systems/party/creature';
+import { game, LP_PER_BOSS } from '../systems/party/gameState';
+import { fullRestore, makeCreature } from '../systems/party/creature';
 import { DungeonHUD } from '../ui/DungeonHUD';
 import { DialogueBox } from '../ui/DialogueBox';
 import { toast } from '../ui/Toast';
@@ -72,6 +75,10 @@ export class DungeonScene extends GameScene {
   private portals: { portal: Portal; x: number; z: number }[] = [];
   private props = new Map<string, Billboard>();
   private decor: Billboard[] = [];
+  /** Contact-shadow decals for removable props (lightShards), keyed by tile. */
+  private propShadows = new Map<string, THREE.Mesh>();
+  /** The player's own contact-shadow decal, repositioned each frame. */
+  private playerShadow: THREE.Mesh | null = null;
   private elementLights: THREE.PointLight[] = [];
   private elementMeshes = new Map<string, THREE.Mesh>();
 
@@ -137,6 +144,29 @@ export class DungeonScene extends GameScene {
       // The warden's portal home only opens once it is down.
       this.spawnExitPortal();
       game.set('bossDown');
+      // Some of the boundary keeper's light stays in your lantern, for good —
+      // once per reach (guarded so a re-cleared reach can't farm it). The gain
+      // fills you now and rides on top of every reach's startingLight after.
+      const lpFlag = `lpBoss:${game.activeReachId}`;
+      if (!game.has(lpFlag)) {
+        game.set(lpFlag);
+        game.lightBonus += LP_PER_BOSS;
+        game.maxLight += LP_PER_BOSS;
+        game.light = game.maxLight;
+        this.hud.update(game.party);
+        await this.dialogue.play([
+          ...narrate(
+            'As the warden’s light goes out, some of it does not — it crosses the small dark between you and settles into your lantern. Your flame stands taller than it did.',
+          ),
+          ...(game.has('haldenGone')
+            ? []
+            : say(
+                'Halden',
+                'That is how a keeper deepens. Every boundary you satisfy leaves a little of its light in yours. You will carry more of the dark back now — carry it well.',
+              )),
+        ]);
+        toast(this.ctx.ui, `<span class="accent">Lantern deepened · +${LP_PER_BOSS} LP</span>`, 2600);
+      }
     }
     if (ev?.kind === 'anchored') {
       // Victory is the only thing that consumes an Anchored — mark it used now
@@ -166,10 +196,17 @@ export class DungeonScene extends GameScene {
     this.scene.add(this.particles.points);
 
     // The player, lantern in hand, on foot.
-    this.player = new Billboard(HUMANS.hero, 'player', { height: 1.7 });
-    this.player.bob = 0.03;
-    this.player.bobSpeed = 3;
+    this.player = new Billboard(HUMANS.hero, 'player', { height: 1.7, reveal: true });
+    // A calm idle breath, and a pronounced stride while walking a tile.
+    this.player.bob = 0.018;
+    this.player.bobSpeed = 2.4;
+    this.player.walkBounce = 0.09;
     this.scene.add(this.player.object);
+
+    // A small static decal keeps the hero planted while walking, on top of the
+    // dynamic cast shadow. Repositioned to the player's x/z each frame.
+    this.playerShadow = contactShadow(1.7 * artAspect(HUMANS.hero), 0.26);
+    this.scene.add(this.playerShadow);
 
     // Props, portals and torches.
     this.grid.forEach((t) => {
@@ -189,6 +226,9 @@ export class DungeonScene extends GameScene {
         b.object.position.copy(world);
         this.scene.add(b.object);
         this.props.set(key, b);
+        const cs = contactShadow(0.85 * artAspect(opened ? PROPS.chestOpen : PROPS.chestClosed));
+        cs.position.set(world.x, 0.02, world.z);
+        this.scene.add(cs);
       } else if (t.kind === 'light') {
         if (game.takenPickups.has(`${this.floor.id}:${key}`)) return;
         const b = new Billboard(PROPS.lightShard, 'prop:lightShard', { height: 0.7, emissive: 0.6 });
@@ -196,6 +236,11 @@ export class DungeonScene extends GameScene {
         b.object.position.copy(world);
         this.scene.add(b.object);
         this.props.set(key, b);
+        // Tracked: the shard is removed on pickup, so its decal must go too.
+        const cs = contactShadow(0.7 * artAspect(PROPS.lightShard), 0.22);
+        cs.position.set(world.x, 0.02, world.z);
+        this.scene.add(cs);
+        this.propShadows.set(key, cs);
       } else if (t.kind === 'portal') {
         const portal = new Portal(this.particles, 0x6fd3ff, false);
         portal.object.position.copy(world);
@@ -207,7 +252,7 @@ export class DungeonScene extends GameScene {
         this.scene.add(portal.object);
         this.portals.push({ portal, x: t.x, z: t.z });
       }
-      // Dialogue events are radio calls now — no on-screen NPC to drive into.
+      // Dialogue events are voices in the lantern now — no on-screen NPC to drive into.
       // They fire when the player crosses the tile (placed at map chokepoints).
     });
 
@@ -240,9 +285,15 @@ export class DungeonScene extends GameScene {
         emissive: d.emissive ?? 0.1,
       });
       b.bob = 0;
-      b.object.position.copy(this.grid.worldPos(d.x, d.z));
+      const world = this.grid.worldPos(d.x, d.z);
+      b.object.position.copy(world);
       this.scene.add(b.object);
       this.decor.push(b);
+      // Ground it: a soft contact-shadow decal footprint under the sprite. Not
+      // tracked — decor is never removed mid-scene, so teardown disposes it.
+      const cs = contactShadow((d.height ?? 1.1) * artAspect(art));
+      cs.position.set(world.x, 0.02, world.z);
+      this.scene.add(cs);
       if (decorIsSolid(d)) this.grid.blockTile(d.x, d.z);
     }
   }
@@ -277,12 +328,12 @@ export class DungeonScene extends GameScene {
     const host = el('div', 'panel');
     host.id = 'pause-menu';
     host.appendChild(el('h2', undefined, 'Paused'));
-    const embers = game.itemCount('towBeacon');
+    const embers = game.itemCount('homingEmber');
     const options: MenuItem[] = [{ value: 'resume', label: 'Resume crawl' }];
     if (embers > 0) {
       // The Homing Ember bails you out of a crawl straight to the safety of
       // The Everwake — one is spent per use. Only offered when you hold one.
-      options.push({ value: 'ember', label: `Use ${ITEMS.towBeacon.name}`, note: `x${embers}` });
+      options.push({ value: 'ember', label: `Use ${ITEMS.homingEmber.name}`, note: `x${embers}` });
     }
     options.push({ value: 'suspend', label: 'Suspend & quit', note: 'temp' });
     const menu = new Menu(host, options, { cancellable: true });
@@ -318,8 +369,8 @@ export class DungeonScene extends GameScene {
   private buildUI() {
     this.hud = new DungeonHUD(this.ctx.ui);
     this.hud.setFloor(this.floor.name);
-    this.hud.buildParty(game.party);
-    this.hud.update(game.party);
+    this.hud.buildParty(game.souls());
+    this.hud.update(game.souls());
     this.dialogue = new DialogueBox(this.ctx.ui);
     this.legend = document.createElement('div');
     this.legend.id = 'legend';
@@ -382,7 +433,7 @@ export class DungeonScene extends GameScene {
     audio.sfx('step');
 
     game.light = Math.max(0, game.light - LIGHT_PER_STEP);
-    this.hud.update(game.party);
+    this.hud.update(game.souls());
   }
 
   private finishStep() {
@@ -437,7 +488,7 @@ export class DungeonScene extends GameScene {
           bits.push(`<span class="ok">+1 ${ITEMS[loot.item]?.name ?? 'keepsake'}</span>`);
         }
         toast(this.ctx.ui, bits.join(' &nbsp; ') || 'Empty.', 2200);
-        this.hud.update(game.party);
+        this.hud.update(game.souls());
       }
       return;
     }
@@ -452,10 +503,17 @@ export class DungeonScene extends GameScene {
           b.dispose();
           this.props.delete(key);
         }
+        const cs = this.propShadows.get(key);
+        if (cs) {
+          this.scene.remove(cs);
+          cs.geometry.dispose();
+          (cs.material as THREE.Material).dispose();
+          this.propShadows.delete(key);
+        }
         game.light = Math.min(game.maxLight, game.light + 40);
         audio.sfx('pickup');
         toast(this.ctx.ui, '<span class="ok">+40 LP</span>', 1600);
-        this.hud.update(game.party);
+        this.hud.update(game.souls());
       }
       return;
     }
@@ -527,6 +585,30 @@ export class DungeonScene extends GameScene {
       this.busy = true;
       await this.dialogue.play(ev.script);
       this.busy = false;
+      return;
+    }
+
+    if (ev.kind === 'recruit') {
+      // A companion met and joined in the field. Joining persists across runs,
+      // so guard on the permanent join flag (not just usedEvents, which
+      // resetCrawl wipes). If already aboard — e.g. the hub fallback fired — skip.
+      const r = recruit(ev.id);
+      if (game.has(r.flag)) {
+        game.usedEvents.add(id);
+        return;
+      }
+      game.usedEvents.add(id);
+      this.busy = true;
+      await this.dialogue.play(r.script);
+      game.joinCompanion(makeCreature(r.speciesId, r.level));
+      game.set(r.flag);
+      this.hud.buildParty(game.party);
+      this.busy = false;
+      toast(
+        this.ctx.ui,
+        `<span class="accent">${r.name} joins you — you can now field ${game.fieldCap} souls</span>`,
+        3000,
+      );
       return;
     }
 
@@ -756,7 +838,7 @@ export class DungeonScene extends GameScene {
   private async useHomingEmber() {
     if (this.leaving) return;
     this.leaving = true;
-    game.takeItem('towBeacon');
+    game.takeItem('homingEmber');
     audio.sfx('portal');
     this.ctx.hd2d.addShake(0.2);
     toast(this.ctx.ui, '<span class="accent">The Homing Ember flares — the dark folds you home.</span>', 2400);
@@ -834,14 +916,22 @@ export class DungeonScene extends GameScene {
       // Ease-out so each tile step has a little weight.
       const e = 1 - (1 - t) ** 2.2;
       this.player.object.position.lerpVectors(this.moveFrom, this.moveTo, e);
+      // Linear progress (not the eased position) drives an even footfall cadence.
+      this.player.setStride(t);
       if (t >= 1) this.finishStep();
     } else if (!this.busy && !this.dialogue.visible && this.buffered) {
       const dir = this.buffered;
       this.buffered = null;
       this.tryStep(dir);
     }
+    if (!this.moving) this.player.setStride(-1);
 
     this.player.update(dt, this.ctx.hd2d.camera, time);
+    if (this.playerShadow) {
+      // Track x/z only — keep it flat on the floor, ignoring the walk-bob.
+      this.playerShadow.position.x = this.player.object.position.x;
+      this.playerShadow.position.z = this.player.object.position.z;
+    }
     for (const t of this.torches) t.update(dt, this.ctx.hd2d.camera, time);
     for (const p of this.portals) p.portal.update(dt, time);
     for (const b of this.props.values()) b.update(dt, this.ctx.hd2d.camera, time);
@@ -861,6 +951,11 @@ export class DungeonScene extends GameScene {
     for (const b of this.props.values()) b.dispose();
     for (const b of this.decor) b.dispose();
     this.particles.dispose();
+    // Contact-shadow decals are plain scene children; disposeObject3D frees
+    // their geometry+material (the shared radial texture is intentionally kept).
+    this.propShadows.clear();
+    this.playerShadow = null;
+    disposeObject3D(this.scene);
     this.scene.clear();
   }
 }

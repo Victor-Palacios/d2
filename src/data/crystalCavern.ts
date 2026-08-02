@@ -9,7 +9,7 @@ import type { Reach, DungeonFloor } from './dungeon';
  * symmetric geometry (a machine vault at its heart), tinted with icy fog and
  * dressed in crystal columns and ice shards — a deliberate contrast with the
  * broken, organic Unremembered. Leans on Water + Machine element plates and its
- * own roster (Shardling / Prismoth / Geodon), warded by Glaciark. Pure data —
+ * hero roster (Geodon / Shieldshard / Geomote / Prismguard), warded by Vaultwarden. Pure data —
  * see `dungeon.ts` for the model and `docs/ROADMAP.md` for how reaches slot in.
  */
 
@@ -25,14 +25,14 @@ const THEME_UPPER: TileTheme = {
 };
 
 const THEME_DEEP: TileTheme = {
-  floor: '#2a3340',
-  floorAlt: '#1f2731',
-  wall: '#3a4656',
-  wallTop: '#151c25',
-  accentWall: '#5a86a8',
-  terrain: 'metal',
+  floor: '#203843',
+  floorAlt: '#182b34',
+  wall: '#294a5a',
+  wallTop: '#0f2028',
+  accentWall: '#3f7d94',
+  terrain: 'crystal',
   wallHeight: 2.9,
-  fogColor: '#0a1a22',
+  fogColor: '#081c26',
 };
 
 const THEME_BOSS: TileTheme = {
@@ -62,7 +62,7 @@ const FLOORS: DungeonFloor[] = [
       '#...............#',
       '#..S........2..C#',
       '#.....##.##.....#',
-      '#....1..........#',
+      '#....1..4.......#',
       '#.....##.##.....#',
       '#WWWW...........#',
       '#W3WW..$........#',
@@ -74,34 +74,61 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'shardling', level: 3 },
-          { species: 'prismoth', level: 3 },
+          { species: 'shieldshard', level: 3 },
+          { species: 'prismguard', level: 3 },
         ],
         intro: narrate('Light scatters off a shelf of living crystal — and it turns toward you.'),
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'shardling', level: 3 },
+          { species: 'shieldshard', level: 3 },
           { species: 'geodon', level: 3 },
         ],
       },
       // The Unweeping — an Anchored on a mass of black ice. Well above the
       // Reliquary's level; come back matched to water. Not consumed on loss.
       '3': { kind: 'anchored', id: 'crystalAnchored' },
+      // Meet Sena Vale, the warden of this reach, before you ever fight her:
+      // she stops you here and tells you what she did, so her boss beat lands as
+      // a reckoning, not an introduction. She joins at the hub once freed.
+      '4': {
+        kind: 'dialogue',
+        once: true,
+        script: [
+          ...narrate(
+            'The cold sharpens. A woman stands in the corridor ahead, between you and the deeper vault, and does not step aside.',
+          ),
+          ...say(
+            'Sena Vale',
+            'Far enough. I am Sena Vale — I keep this reach, and one soul inside it I will never let go.',
+          ),
+          ...say(
+            'Sena Vale',
+            'My sister. I caught her in the moment before she faded and I froze her there — whole, laughing, forever. They call that a crime, here. I called it the last warm thing I ever did.',
+          ),
+          ...say(
+            'Sena Vale',
+            'You want past me, to the plates and the deep. Then you will have to get past what I did first. I do not recommend trying.',
+          ),
+          ...narrate(
+            'She turns back into the frost and is gone. Whatever waits at the heart of the Reliquary, Sena keeps it — and she means to be the last door before it.',
+          ),
+        ],
+      },
     },
     chests: {
       '15,2': { obols: 220, item: 'mendingBalm', note: 'A prospector left a crate wedged in the ice.' },
     },
     encounterRate: 0.06,
     encounters: [
-      { weight: 3, enemies: [{ species: 'shardling', level: 3 }] },
-      { weight: 2, enemies: [{ species: 'prismoth', level: 3 }] },
+      { weight: 3, enemies: [{ species: 'geomote', level: 3 }] },
+      { weight: 2, enemies: [{ species: 'prismguard', level: 3 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'shardling', level: 3 },
-          { species: 'prismoth', level: 3 },
+          { species: 'shieldshard', level: 3 },
+          { species: 'prismguard', level: 3 },
         ],
       },
       { weight: 1, enemies: [{ species: 'geodon', level: 3 }] },
@@ -114,10 +141,10 @@ const FLOORS: DungeonFloor[] = [
     theme: THEME_DEEP,
     fog: 1.2,
     decor: [
-      { x: 5, z: 4, kind: 'machinePylon', height: 1.4, emissive: 0.4 },
-      { x: 8, z: 4, kind: 'conduit', height: 1.0, emissive: 0.5 },
-      { x: 14, z: 5, kind: 'conduit', height: 1.0, emissive: 0.5 },
-      { x: 12, z: 8, kind: 'machinePylon', height: 1.4, emissive: 0.4 },
+      { x: 5, z: 4, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
+      { x: 8, z: 4, kind: 'iceShard', height: 0.8, emissive: 0.4 },
+      { x: 14, z: 5, kind: 'crystalCluster', emissive: 0.6 },
+      { x: 12, z: 8, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
       { x: 2, z: 8, kind: 'iceShard', height: 0.8, emissive: 0.4 },
     ],
     rows: [
@@ -138,13 +165,13 @@ const FLOORS: DungeonFloor[] = [
         kind: 'battle',
         enemies: [
           { species: 'geodon', level: 3 },
-          { species: 'shardling', level: 3 },
+          { species: 'geomote', level: 3 },
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'prismoth', level: 3 },
+          { species: 'prismguard', level: 3 },
           { species: 'geodon', level: 3 },
         ],
         intro: narrate('The vault hums. Something big is keeping the cold in here.'),
@@ -155,20 +182,20 @@ const FLOORS: DungeonFloor[] = [
     },
     encounterRate: 0.07,
     encounters: [
-      { weight: 3, enemies: [{ species: 'shardling', level: 3 }] },
+      { weight: 3, enemies: [{ species: 'geomote', level: 3 }] },
       { weight: 3, enemies: [{ species: 'geodon', level: 3 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'prismoth', level: 3 },
-          { species: 'shardling', level: 3 },
+          { species: 'prismguard', level: 3 },
+          { species: 'shieldshard', level: 3 },
         ],
       },
       {
         weight: 1,
         enemies: [
           { species: 'geodon', level: 3 },
-          { species: 'prismoth', level: 3 },
+          { species: 'prismguard', level: 3 },
         ],
       },
     ],
@@ -176,6 +203,65 @@ const FLOORS: DungeonFloor[] = [
 
   {
     id: 'crystal-3',
+    name: 'The Reliquary — Shivering Gallery',
+    theme: THEME_DEEP,
+    fog: 1.3,
+    decor: [
+      { x: 3, z: 3, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
+      { x: 13, z: 3, kind: 'crystalCluster', emissive: 0.6 },
+      { x: 2, z: 8, kind: 'iceShard', height: 0.8, emissive: 0.4 },
+      { x: 14, z: 8, kind: 'iceShard', height: 0.8, emissive: 0.4 },
+    ],
+    rows: [
+      '#################',
+      '#...............#',
+      '#.S.........2..C#',
+      '#.....#####.....#',
+      '#.....#...#.....#',
+      '#..W..#.1.#..M..#',
+      '#.....#...#.....#',
+      '#.....##.##....$#',
+      '#...............#',
+      '#......>........#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'geodon', level: 4 },
+          { species: 'prismguard', level: 4 },
+        ],
+        intro: narrate('Facets close overhead like a shut hand. The gallery keeps its cold jealously.'),
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'shieldshard', level: 4 },
+          { species: 'geodon', level: 4 },
+        ],
+      },
+    },
+    chests: {
+      '15,2': { obols: 260, item: 'mendingBalm', note: 'A surveyor’s cache, sealed in a rind of frost.' },
+    },
+    encounterRate: 0.07,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'shieldshard', level: 4 }] },
+      { weight: 2, enemies: [{ species: 'prismguard', level: 4 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'geodon', level: 4 },
+          { species: 'shieldshard', level: 4 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'geodon', level: 4 }] },
+    ],
+  },
+
+  {
+    id: 'crystal-4',
     name: 'The Reliquary — Warden Vault',
     theme: THEME_BOSS,
     fog: 1.4,
@@ -202,7 +288,7 @@ const FLOORS: DungeonFloor[] = [
     events: {
       '1': {
         kind: 'boss',
-        enemies: [{ species: 'glaciark', level: 3 }],
+        enemies: [{ species: 'vaultwarden', level: 3 }],
         intro: [
           ...narrate(
             "At the vault's heart, a woman kneels over a pane of ice. Inside it, a girl is laughing — frozen mid-laugh, forever.",
@@ -223,11 +309,11 @@ const FLOORS: DungeonFloor[] = [
     chests: {},
     encounterRate: 0.03,
     encounters: [
-      { weight: 2, enemies: [{ species: 'shardling', level: 3 }] },
+      { weight: 2, enemies: [{ species: 'geomote', level: 3 }] },
       {
         weight: 1,
         enemies: [
-          { species: 'prismoth', level: 3 },
+          { species: 'prismguard', level: 3 },
           { species: 'geodon', level: 3 },
         ],
       },
@@ -243,7 +329,7 @@ export const CRYSTAL_CAVERN: Reach = {
   color: '#6fe0ff',
   recommendedLevel: 3,
   floors: FLOORS,
-  startingLight: 130,
+  startingLight: 175,
   music: 'crystal',
   onClear: { flag: 'crystalCleared' },
   requires: 'crossingCleared',

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "A browser dungeon-crawler RPG vertical slice rendered in an HD-2D style (pixel billboards in a lit 3D world).",
+  "description": "A browser dungeon-crawler RPG rendered in an HD-2D style (pixel billboards in a lit 3D world).",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

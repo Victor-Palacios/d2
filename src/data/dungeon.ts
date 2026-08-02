@@ -28,7 +28,11 @@ export type FloorEvent =
   // super-encounter that is NOT consumed on defeat or flight — you come back
   // with a leveled, element-matched team. `id` indexes `src/data/anchored.ts`.
   // Handled by `DungeonScene.runEvent` / `afterBattle`.
-  | { kind: 'anchored'; id: string };
+  | { kind: 'anchored'; id: string }
+  // A recruit: a story companion met and joined mid-crawl (rather than back at
+  // the hub). Plays its scene and calls `joinCompanion`, once. `id` indexes
+  // `src/data/recruits.ts`. Handled by `DungeonScene.runEvent`.
+  | { kind: 'recruit'; id: string };
 
 export interface EncounterEntry {
   weight: number;

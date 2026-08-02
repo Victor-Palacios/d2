@@ -289,3 +289,25 @@ reversible transform). Bosses (Regalion, etc.) stay standalone, not evo targets.
   expression, and a raised lantern for the hero — and regenerated all nine
   `HUMANS` entries via `integrate-humans.mjs`. Verified in-engine (dungeon hero +
   hub NPCs).
+- **2026-07-31 — type-themed dungeons + 20-monster expansion.** Reorganized the
+  five reaches so each is a single class, with a progressively larger roster and
+  a unique boss: **D1 Quiet Crossing = Mage (3)**, **D2 Crystal Cavern = Hero
+  (5)**, **D3 Overgrowth = Assassin (6)**, **D4 Haunted = Mage (8)**, **D5 Last
+  Lantern = Hero (9)**. Added **20 new monsters**, each in its dungeon's style,
+  via five modules (`crossing-mages.mjs`, `crystal-heroes.mjs`,
+  `overgrowth-assassins.mjs`, `haunted-mages.mjs`, `lantern-heroes.mjs`), the
+  shared data file `new-monsters.mjs`, and `integrate-new.mjs` (inserts art +
+  generates species). New unique bosses: Sigilwarden (D1), Vaultwarden (D2),
+  Thornreaper (D3); D4 keeps the "Unnamed" Revenance, and Lanternlord is now a
+  proper pre-finale boss in D5. Off-type residents no longer spawn in their old
+  reach (they remain valid species). All standalone (no evolutions → class-pure).
+- **2026-07-31 — element rebalance + hue-shift recolor.** The roster skewed hard
+  on element (dark 25 / nature 24 / water 21 / fire 16 / **machine 9**). Re-
+  elemented 11 monsters to flatten it to **fire 20 / water 20 / nature 20 / dark
+  20 / machine 15** (→ Machine: geomote, prismguard, vaultwarden, sigilwarden,
+  nullmancer, hexshade; → Fire: sporefang, vineraptor, gravecant, vowkeeper; →
+  Water: bloomstalker), which also loosened the class↔element coupling (mage now
+  has Machine, assassin now has Fire) and gave most single-class dungeons a
+  varied element mix. `recolor.mjs` hue-shifts each re-elemented sprite's art.ts
+  palette to its new element (preserving lightness/outlines/glints), so the art
+  matches. Verified in-engine.

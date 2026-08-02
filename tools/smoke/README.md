@@ -27,11 +27,47 @@ Environment variables:
 | `OUT` | Screenshot directory (default `tools/smoke/shots`) |
 | `CHROME` | Path to a Chromium binary; omit to use Playwright's own |
 
+## The shared harness (`_harness.mjs`)
+
+Most scripts used to inline the same ~40 lines — launch Chromium, dismiss the
+title splash, strip the post stack, then drive the *whole* opening UI (New Game →
+name → **mash Enter through the prologue cutscene** → click the Emberling card →
+drain the hub dialogue) just to reach a playable state. On a GPU-less box that
+runs at ~1fps, so the opening drive times out; the blocks had also drifted (some
+never disabled shadows, the real cause of the slowness).
+
+`_harness.mjs` centralises it, and its key export is the **headless entry point**:
+
+```js
+import { load, launch, openPage, startInHub, helpers } from './_harness.mjs';
+const browser = await launch();
+const { page, errs } = await openPage(browser);
+await load(page);                 // load, dismiss splash, full FX-strip (incl. shadows)
+await startInHub(page);           // seed a fresh run + land in the hub — no opening UI
+const h = helpers(page);          // scene / dlg / idle / waitScene / press / pickPartner
+```
+
+`startInHub` calls the game's own `game.startNewGame(partner)` (the same setup
+`IntroScene` runs — party, team, keeper's kit, `prologueDone`) and jumps to the
+hub with `arrival: 'first'`, so the started party (starter **+ Wren**) and the
+first autosave match a real playthrough — it just skips the slow title/cutscene/
+partner UI. A parity unit test (`src/systems/party/gameState.test.ts`) keeps
+`startNewGame` honest, so the harness can't drift from the opening.
+
+Scripts whose subject *is* the opening keep driving the real cards: `cutscene.mjs`
+(the prologue cutscene) and `opening.mjs` (partner select + Lv1 balance) use
+`load` + `helpers`/`playOpening` instead of `startInHub`.
+
+> Migration is in progress — `equip.mjs` is the reference. Scripts not yet moved
+> still inline their own opening block.
+
 ## The scripts
 
 | Script | Covers |
 |---|---|
 | `walk.mjs` | Title → name entry → hub → world map → dungeon → tutorial fight → back to the crawl |
+| `walkcycle.mjs` | The player's stride (`Billboard.walkBounce` / `setStride`): jumps into the crawl and samples the sprite across a step — two footfall bounces per tile, a body rock to opposite sides, planted at both ends, and a calm idle when standing. Frame-rate independent, so it holds on the GPU-less container. |
+| `reveal.mjs` | The occlusion reveal (`Billboard` `reveal` option): jumps into the crawl, drops an opaque blocker between camera and player, and asserts the see-through silhouette + flame glow both exist and are configured to draw only through occluders (`depthFunc` GreaterDepth, no depth write). Screenshots the player showing through the blocker. |
 | `save.mjs` | Autosave, suspend save, Continue, and that a suspend save is **consumed** on load (three simulated sessions across page reloads) |
 | `pad.mjs` | Controller support, using a synthetic standard-mapping gamepad injected via `addInitScript` |
 | `hud.mjs` | Battle HUD screenshots — class-coloured borders, HP/MP meters, element-tinted techniques |
@@ -47,6 +83,8 @@ Environment variables:
 | `transcend.mjs` | Magick pass, learnsets and the evolution system against the live headless APIs: level-gated learnsets, the physical/magical (Off/Def vs Mag/Res) damage split, RES/MAG-blended heals, the **3 / 7 / 10** branching schedule (deepest lines gate a rung later) with a refusal on ambiguous branches, exact **de-evolution**, the multi-stage Emberling→Emberforge→Ashwarden→Pyrelord line, and a sweep that builds every species and resolves every evolution. No scene navigation, so it is fast and deterministic. |
 | `transcend-fx.mjs` | The transcendence **cinematic** (`src/ui/TranscendCinematic.ts`) via `window.hd2dGame.playTranscend`: the overlay mounts with both forms (the new one starting as a white silhouette) plus the on-screen skip note, **Start** (keyboard mirror **E**) skips straight to the coloured reveal + caption ("… evolved into Regalion!"), a second press tears the overlay down, and de-evolution reads "returned to". Runs in an isolated host (not scene-driven), so it is fast and deterministic on the GPU-less box. |
 | `mechanics.mjs` | The layered battle systems against the live engine: data-driven melee (row modifier + cover), elemental reactions (different-element follow-up detonates), break-chains (escalating bonus per link), Commune (a communable foe is pacified and leaves play), and that the injected RNG + smarter AI (grid shifts) are exposed. See [docs/SYSTEMS.md](../../docs/SYSTEMS.md) §9. |
+| `reservexp.mjs` | Reserve EXP share: souls that sit a fight out still earn **25%** of its EXP (bench **and** Sanctuary), companions (humans) earn nothing, and none of it announces a level-up. Sets every soul to Lv10 and wins one Lv10 foe, so the fielded pair bank 80 each and the reserves bank exactly `round(0.25 × 80) = 20`. See `onVictory` in `BattleScene`. |
+| `flourish.mjs` | The critical / reaction **flourish** (`BattleScene.specialFlourish`): a special hit freezes the frame, drops into slow-motion with the camera pushing in, and bursts a ring of star sprites — no text. Equips the Immortality Memento (guaranteed crits) and, via a per-frame monitor, asserts time dips to slow-mo (`hd2d.timeScale` ≤ the slow-mo value), the star burst spawns (sprite peak ≥ 12), and both time (`= 1`) and camera distance are restored afterwards. Grabs a screenshot mid-slow-mo. |
 | `stages.mjs` | World-map per-stage level recommendation and the rebalanced progression curve (The Quiet Crossing Lv1 → The Reliquary Lv3 → The Unremembered Lv7). Reads the rendered cards + reach data; no fights, so it is fast and deterministic. |
 | `flee.mjs` | The Run action escapes a non-boss fight back to the crawl without consuming the encounter. |
 | `menu.mjs` | The grid main menu (R1 / E / Start) renders Party / Gear / Soularium / Sanctuary, and the formation editor repositions a fielded soul from the front line onto the Rear row (editing `game.formation`, not the party order). |
@@ -57,11 +95,24 @@ Environment variables:
 | `lastlight.mjs` | The Last Light grief encounter: Comfort → Let Go releases the soul, granting the next Immortality poem piece and a 20× EXP boon; twelve pieces unlock the Immortality Memento. |
 | `midpoint.mjs` | The Act-II midpoint: clearing all three reaches triggers the unanswerable death (Halden) once — the Keeping fails, the player authors the farewell, and every philosophy hardens. |
 | `jungle.mjs` | The Overgrowth's aftermath: clearing the jungle brings Liora Fen to the Everwake to cross; the player names the truth of her keeping and receives Liora's Step (a Memento). Fires once and does not trigger the midpoint. |
+| `recruits.mjs` | In-dungeon recruits (`src/data/recruits.ts` + the `recruit` FloorEvent): Sena Vale is **met inside the Reliquary** (her story told before you fight her as its warden), and **Kade — the 4th — is found and joined deep in the Unremembered**, in the dark, not at the hub. Navigates both floors (robust step-until-tile-changes to beat software-render input drops) and asserts the Sena meeting fires and Kade joins (companion aboard, field cap 2→3, `kadeJoined`). |
 | `companions.mjs` | The keepers who join — and that they are field slots, not fighters. Wren joins at the Everwake, Sena Vale after the Reliquary, Kade after the Unremembered. Verifies each join fires; that `humanCount`/`fieldCap` climbs 2→3→4 as they join; that a launched battle fields souls only (no companion takes the field); the final roster is the four (starter + three companions); and a companion cannot be benched to the Sanctuary. |
 | `finale.mjs` | The finale reach (The Last Lantern): gated on the midpoint (`actTwo`), its climax is a choice not a fight. Drives the 'let them cross' ending and asserts `ending:cross` / `gameComplete` / `lastLanternCleared`. |
 | `cutscene.mjs` | The prologue cutscene (`src/ui/Cutscene.ts` + `src/data/cutscenes.ts`): after naming the keeper, a letterboxed 'how they lived' memory plays over the title diorama. Asserts the overlay mounts with the first beat's prose, is skippable (one button tears it down), and the New Game flow proceeds to partner select afterwards. |
+| `lpboss.mjs` | The warden LP reward (`LP_PER_BOSS`): returning to the Quiet Crossing's warden floor with a victory on the boss event deepens the lantern for good — asserts +20 max LP (refilled), `lightBonus`/`lpBoss:crossing` set, a second victory does **not** double-grant (per-reach guard), and the bonus rides on top of a later reach's `startingLight`. |
 | `anchored.mjs` | The Anchored (`src/data/anchored.ts`) — optional element super-encounters. Walks the crossing crawl onto The Unquenched's fire mass and proves the three guarantees: engaging does **not** consume the event (re-fightable after a loss/flee), the enemy roster is element-pure, victory consumes it once + grants its Memento + sets `anchored:crossing`, and a non-victory return consumes nothing. |
 | `cries.mjs` | Monster battle cries (`audio.cry`): instruments the Web Audio graph to confirm each authored species voice (the starter trio plus every monster in The Quiet Crossing — Mitebug, Sprigling, Scrapmite, Gloomote, Dropletta and the warden Regalion) builds its oscillator layers and pitch glides, and that a species with no cry stays silent. Headless has no speakers, but the synth graph still schedules, so it is fast and deterministic. |
+
+## Running in CI
+
+A **reliable subset** now runs in CI as a required gate before the Pages deploy
+(`.github/workflows/ci.yml`, the `smoke` job → `node tools/smoke/ci.mjs`). The
+subset (`transcend`, `transcend-fx`, `terrain`, `cries`, `equip`) is the scripts
+that either never render a crawl scene or seed state directly and strip the FX
+stack, so they stay deterministic on the GPU-less runner. Grow the list in
+`ci.mjs` as more scripts move to the `_harness.mjs` `startInHub` entry point and
+their crawl navigation is made frame-rate-independent. The full 40-script suite
+is still local/on-demand until that migration lands.
 
 ## Two environment traps that cost real time
 
@@ -97,3 +148,24 @@ two at the Quiet Crossing: you + Wren). A test that launches a fight and expects
 three or four souls on the field must first recruit the extra keepers, e.g.
 `g.game.joinCompanion({ ...clone, speciesId: 'senaVale', companion: true })`.
 `grid.mjs` and `mechanics.mjs` do exactly this before launching.
+
+**4. The prologue cutscene sits inside the New Game start flow.** After you name
+the keeper and press **OK**, a letterboxed memory beat (`src/ui/Cutscene.ts`)
+plays *before* the partner-select cards appear. It is not a `#dialogue`, so the
+old "advance only when a dialogue is up" start loops stalled on it forever. The
+shared start loop now presses **Enter** every tick until the Emberling card is
+present, which both tears the cutscene down and confirms nothing (the card check
+runs before the press):
+
+```js
+for (let i = 0; i < 40; i++) {
+  if (await page.locator('.card', { hasText: 'Emberling' }).count()) break;
+  await page.keyboard.press('Enter'); /* press through the prologue cutscene */
+  await page.waitForTimeout(200);
+}
+```
+
+`cutscene.mjs` asserts the cutscene itself; every other test just presses
+through it. Reach cards are matched by their title heading
+(`.card` with `has: h3` = name) — a locked reach's note ("clear The Quiet
+Crossing first") otherwise makes a bare `hasText` ambiguous.

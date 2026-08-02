@@ -7,8 +7,9 @@ import { audio } from '../engine/Audio';
 import { toast } from './Toast';
 
 /**
- * Vendor screen (plan §2.7). Buying is wired up (obols are deducted and the
- * item lands in the bag); *using* items is deliberately still a stub.
+ * Vendor screen (plan §2.7). Buying deducts obols and files the item into the
+ * bag; the bought consumables are then used from the Items menu
+ * (`ui/ItemsScreen.ts`).
  */
 export async function openShop(parent: HTMLElement): Promise<void> {
   const root = el('div', 'screen');

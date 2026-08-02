@@ -329,3 +329,33 @@ export class Portal {
     }
   }
 }
+
+/**
+ * A soft dark ellipse laid flat on the floor to ground a billboard sprite. The
+ * single dynamic key light casts one real shadow, but small props read as
+ * floating cards without a contact shadow of their own — this is the cheap fake
+ * that seats them on the ground. Reuses the cached `radialTexture` blob (one
+ * shared texture for every decal), unlit so it looks the same under any floor
+ * light. Must live as a scene sibling of the sprite, NOT a child of the
+ * billboard — `Billboard.update()` rewrites rotation each frame (camera yaw +
+ * pitch lean) and would tilt a parented decal off the floor.
+ *
+ * `depthWrite: false` + `polygonOffset` (plus a small y-lift by the caller)
+ * keep it from z-fighting the floor plane.
+ */
+export function contactShadow(width: number, opacity = 0.32): THREE.Mesh {
+  const geo = new THREE.PlaneGeometry(width, width * 0.6);
+  geo.rotateX(-Math.PI / 2);
+  const mat = new THREE.MeshBasicMaterial({
+    map: radialTexture('contact', '#000000'),
+    transparent: true,
+    opacity,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  });
+  const m = new THREE.Mesh(geo, mat);
+  m.renderOrder = 1;
+  return m;
+}

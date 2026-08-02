@@ -12,11 +12,13 @@ https://victor-palacios.github.io/d2/
 
 ## 1. What this is
 
-A browser dungeon-crawler RPG vertical slice built to a supplied plan
+A browser dungeon-crawler RPG built to a supplied plan
 (the owner's uploaded plan doc — **not in the repo**, ask them
-for it). It reproduces the shape of a PS1-era dungeon-crawler's opening hour in
+for it). It reproduces the shape of a PS1-era dungeon-crawler in
 the Square-Enix "HD-2D" style: pixel-art billboards inside a real 3D world, one
-shadow-casting point light, bloom + DOF + tilt-shift post stack.
+shadow-casting point light, bloom + DOF + tilt-shift post stack. It has grown
+past the original one-reach slice into five reaches, a three-act story,
+companions and a transcendence system.
 
 `README.md` covers how to run it, the controls, the HD-2D recipe and where to
 swap assets. Read that first; this file is only the delta.

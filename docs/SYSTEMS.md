@@ -317,11 +317,31 @@ makes the dungeon a place you can lose:
 
 | Thing | Value | Where |
 |---|---|---|
-| Starting / max LP | **120** | `QUIET_CROSSING.startingLight` |
+| Starting / max LP | **per reach** | `<reach>.startingLight` |
+| Warden bonus (permanent) | **+20 per reach** | `LP_PER_BOSS`; granted once per reach in `DungeonScene.afterBattle`, added to `game.lightBonus` |
+| Oilwright bonus (permanent) | **`20 + level*2` per soul rendered** | `src/ui/Oilwright.ts`, added to `game.lightBonus` |
 | Drain per step | **1** | `LIGHT_PER_STEP`, `DungeonScene` |
 | Light shard pickup | **+40** | `DungeonScene` (crawl `$` tiles) |
 | Shop Light Shard item | **+40 LP** | `data/items.ts` |
 | Hit 0 LP | **lantern gutters, returned to The Everwake** | `DungeonScene` |
+| Capacity applied | **`maxLight = startingLight + lightBonus`** | `WorldMapScene`, on entry |
+
+The LP pool is **sized per reach and spans all its floors** — it does *not*
+refill between floors, only on entering/exiting a crawl. So `startingLight`
+must scale with a reach's floor count: the Crossing (3 floors) starts at 120,
+and the deeper reaches step up with their length — Reliquary 175 (4), Overgrowth
+215 (5), Unremembered 255 (6), Last Lantern 300 (7) — plus one `$` shard per
+mid-floor. Rule of thumb: **~40 LP per floor** of budget, since a floor is ~25
+steps to clear plus exploration.
+
+**The Oilwright** (hub NPC, `src/ui/Oilwright.ts`) is the release valve for a
+crawl that keeps guttering: render a spare captured soul to lamp-oil and it is
+**consumed and lost** in exchange for a permanent capacity bonus
+(`20 + level*2`). It feeds the same `game.lightBonus` the wardens do — the LP
+field that survives the per-reach reset, because `WorldMapScene` sets
+`maxLight = reach.startingLight + game.lightBonus` on every descent. It is
+persisted in saves. `game.consumeSoul(uid)` does the removal, guarding
+companions and the last fighting soul.
 
 LP is why suspend-saves are consumed on load (see `HANDOFF.md` / README): if you
 could reload a suspend save, running out of light would cost nothing. Autosave, by

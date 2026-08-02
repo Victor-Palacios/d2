@@ -29,7 +29,7 @@ await page.waitForSelector('.title-press', { timeout: 4000 }).catch(() => {});
 if (await page.locator('.title-press').count()) { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
 await page.keyboard.press('Enter'); await page.waitForTimeout(700);
 await page.locator('.keyboard button', { hasText: /^OK$/ }).click(); await page.waitForTimeout(600);
-for (let i = 0; i < 40; i++) { if (await page.locator('.card', { hasText: 'Emberling' }).count()) break; if (await dlg()) await page.keyboard.press('Enter'); await page.waitForTimeout(200); }
+for (let i = 0; i < 40; i++) { if (await page.locator('.card', { hasText: 'Emberling' }).count()) break; await page.keyboard.press('Enter'); /* press through the prologue cutscene */ await page.waitForTimeout(200); }
 await page.locator('.card', { hasText: 'Emberling' }).click();
 await waitScene('hub'); await page.waitForTimeout(500); for (let i = 0; i < 20; i++) { if (await dlg()) await page.keyboard.press('Enter'); await page.waitForTimeout(120); }
 
@@ -39,7 +39,7 @@ const check = (name, cond, extra = '') => { results.push({ name, ok: !!cond, ext
 // Stock the bag, hurt the lead soul, and dim the lantern so every item does something.
 const setup = await page.evaluate(() => {
   const g = window.hd2dGame;
-  g.game.addItem('repairChip'); g.game.addItem('bufferCell'); g.game.addItem('fuelCanister'); g.game.addItem('towBeacon');
+  g.game.addItem('mendingBalm'); g.game.addItem('focusDraught'); g.game.addItem('lightShard'); g.game.addItem('homingEmber');
   const c = g.game.party[0]; c.hp = Math.max(1, Math.floor(c.maxHp / 2));
   g.game.light = Math.max(0, g.game.maxLight - 40);
   return { uid: c.uid, hp: c.hp, maxHp: c.maxHp, light: g.game.light, maxLight: g.game.maxLight };
@@ -73,7 +73,7 @@ await waitSel('#items-screen .menu li'); // target list now showing party
 await page.locator('#items-screen .menu li').first().click(); await page.waitForTimeout(300);
 const afterHeal = await page.evaluate((uid) => {
   const g = window.hd2dGame; const c = g.game.party.find((m) => m.uid === uid);
-  return { hp: c.hp, balm: g.game.itemCount('repairChip') };
+  return { hp: c.hp, balm: g.game.itemCount('mendingBalm') };
 }, setup.uid);
 check('Mending Balm heals the soul', afterHeal.hp > setup.hp, `${setup.hp} -> ${afterHeal.hp}`);
 check('Mending Balm is consumed', afterHeal.balm === 0, `count=${afterHeal.balm}`);
@@ -81,7 +81,7 @@ check('Mending Balm is consumed', afterHeal.balm === 0, `count=${afterHeal.balm}
 // Use the Light Shard — refills the lantern, no target needed.
 await page.locator('#items-screen .menu li', { hasText: 'Light Shard' }).click(); await page.waitForTimeout(300);
 const afterLight = await page.evaluate(() => {
-  const g = window.hd2dGame; return { light: g.game.light, shard: g.game.itemCount('fuelCanister') };
+  const g = window.hd2dGame; return { light: g.game.light, shard: g.game.itemCount('lightShard') };
 });
 check('Light Shard refills the lantern', afterLight.light > setup.light, `${setup.light} -> ${afterLight.light}`);
 check('Light Shard is consumed', afterLight.shard === 0, `count=${afterLight.shard}`);

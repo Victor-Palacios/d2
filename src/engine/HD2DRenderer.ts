@@ -123,6 +123,13 @@ export class HD2DRenderer {
   readonly camera: THREE.PerspectiveCamera;
   readonly params: HD2DParams;
 
+  /**
+   * Global time multiplier applied to the frame `dt` (see `main.ts`). 1 is
+   * normal; a scene drops it toward 0 for a hitstop / slow-motion flourish and
+   * must restore it. Only affects simulation/animation time, not real-time UI.
+   */
+  timeScale = 1;
+
   /** Point the camera rig orbits/looks at. Scenes move this, not the camera. */
   readonly cameraTarget = new THREE.Vector3();
   /** Where the key light wants to be (usually the party). */

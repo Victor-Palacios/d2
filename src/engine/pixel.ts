@@ -500,3 +500,98 @@ export function radialTexture(id: string, color: string, res = 64): THREE.Textur
   texCache.set(`radial:${id}`, tex);
   return tex;
 }
+
+/**
+ * A soft flame/teardrop glow — pointed at the top, bulbous at the base — with a
+ * hot pale core fading through orange to transparent. Used as the shape of the
+ * lantern-flame occlusion reveal (see `Billboard`'s `reveal` option), so a
+ * player hidden behind a wall shows through as a flame rather than a plain disc.
+ * Smooth-sampled (not the pixel-art nearest filter) so the glow reads clean.
+ */
+export function flameTexture(id = 'default', res = 128): THREE.Texture {
+  const key = `flame:${id}`;
+  const hit = texCache.get(key);
+  if (hit) return hit;
+  const [c, ctx] = canvas(res, res);
+  const cx = res / 2;
+  const wide = res * 0.3;
+
+  const flamePath = () => {
+    ctx.beginPath();
+    ctx.moveTo(cx, res * 0.08); // hot tip
+    ctx.bezierCurveTo(cx + wide * 0.7, res * 0.28, cx + wide, res * 0.6, cx + wide * 0.5, res * 0.82);
+    ctx.quadraticCurveTo(cx + wide * 0.28, res * 0.92, cx, res * 0.92);
+    ctx.quadraticCurveTo(cx - wide * 0.28, res * 0.92, cx - wide * 0.5, res * 0.82);
+    ctx.bezierCurveTo(cx - wide, res * 0.6, cx - wide * 0.7, res * 0.28, cx, res * 0.08);
+    ctx.closePath();
+  };
+
+  // Soft outer halo so the flame bleeds a little warmth past its edge.
+  const halo = ctx.createRadialGradient(cx, res * 0.62, 0, cx, res * 0.62, res * 0.5);
+  halo.addColorStop(0, 'rgba(255,180,90,0.45)');
+  halo.addColorStop(0.5, 'rgba(255,120,40,0.15)');
+  halo.addColorStop(1, 'rgba(255,120,40,0)');
+  ctx.fillStyle = halo;
+  ctx.fillRect(0, 0, res, res);
+
+  // The flame body, clipped to the silhouette.
+  ctx.save();
+  flamePath();
+  ctx.clip();
+  const body = ctx.createLinearGradient(0, res * 0.08, 0, res * 0.92);
+  body.addColorStop(0, 'rgba(255,244,210,0.98)');
+  body.addColorStop(0.35, 'rgba(255,190,90,0.96)');
+  body.addColorStop(0.7, 'rgba(255,120,40,0.92)');
+  body.addColorStop(1, 'rgba(200,60,20,0.72)');
+  ctx.fillStyle = body;
+  ctx.fillRect(0, 0, res, res);
+  const core = ctx.createRadialGradient(cx, res * 0.6, 0, cx, res * 0.6, res * 0.22);
+  core.addColorStop(0, 'rgba(255,255,238,0.95)');
+  core.addColorStop(1, 'rgba(255,255,238,0)');
+  ctx.fillStyle = core;
+  ctx.fillRect(0, 0, res, res);
+  ctx.restore();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  texCache.set(key, tex);
+  return tex;
+}
+
+/**
+ * A five-pointed star with a soft glowing core — the sprite that bursts out on a
+ * critical/reaction flourish (additive-blended, so any tint reads). Cached by id.
+ */
+export function starTexture(id: string, color = '#ffffff', res = 64): THREE.Texture {
+  const key = `star:${id}`;
+  const cached = texCache.get(key);
+  if (cached) return cached;
+  const [c, ctx] = canvas(res, res);
+  const cx = res / 2;
+  const cy = res / 2;
+  const outer = res * 0.46;
+  const inner = outer * 0.42;
+  // Soft glow behind the star so it doesn't read as a hard sticker.
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, outer);
+  glow.addColorStop(0, color);
+  glow.addColorStop(0.5, 'rgba(255,255,255,0.25)');
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, res, res);
+  // The star itself.
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? outer : inner;
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    const x = cx + Math.cos(a) * r;
+    const y = cy + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  texCache.set(key, tex);
+  return tex;
+}

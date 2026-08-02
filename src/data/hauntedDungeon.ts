@@ -25,14 +25,14 @@ const THEME_UPPER: TileTheme = {
 };
 
 const THEME_DEEP: TileTheme = {
-  floor: '#231d1a',
-  floorAlt: '#1a1512',
-  wall: '#332a22',
-  wallTop: '#120d0a',
-  accentWall: '#4a3a28',
-  terrain: 'cave',
+  floor: '#231e2e',
+  floorAlt: '#1a1624',
+  wall: '#322a44',
+  wallTop: '#130e1c',
+  accentWall: '#4d3a60',
+  terrain: 'crypt',
   wallHeight: 3.1,
-  fogColor: '#0e0a10',
+  fogColor: '#0d0913',
 };
 
 const THEME_BOSS: TileTheme = {
@@ -76,17 +76,17 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'wispling', level: 7 },
-          { species: 'gravemaw', level: 7 },
+          { species: 'palefire', level: 7 },
+          { species: 'nullmancer', level: 7 },
         ],
         intro: narrate('Something cold passes through you. It leaves a shape behind.'),
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'gravemaw', level: 7 },
-          { species: 'wispling', level: 7 },
-          { species: 'cryptguard', level: 7 },
+          { species: 'nullmancer', level: 7 },
+          { species: 'palefire', level: 7 },
+          { species: 'hexshade', level: 7 },
         ],
       },
       // The Unwitnessed — an Anchored crowded into a mass of packed dark. Well
@@ -100,15 +100,15 @@ const FLOORS: DungeonFloor[] = [
     encounters: [
       { weight: 1, enemies: [{ species: 'lastlight', level: 7 }] }, // rare: a soul about to move on
       { weight: 3, enemies: [{ species: 'wispling', level: 7 }] },
-      { weight: 2, enemies: [{ species: 'gravemaw', level: 7 }] },
+      { weight: 2, enemies: [{ species: 'gravecant', level: 7 }] },
       {
         weight: 2,
         enemies: [
           { species: 'wispling', level: 7 },
-          { species: 'gravemaw', level: 7 },
+          { species: 'direwisp', level: 7 },
         ],
       },
-      { weight: 1, enemies: [{ species: 'cryptguard', level: 7 }] },
+      { weight: 1, enemies: [{ species: 'hexshade', level: 7 }] },
     ],
   },
 
@@ -118,7 +118,7 @@ const FLOORS: DungeonFloor[] = [
     theme: THEME_DEEP,
     fog: 1.7,
     decor: [
-      { x: 2, z: 3, kind: 'rockPile', height: 0.9 },
+      { x: 2, z: 3, kind: 'boneheap', height: 0.8 },
       { x: 13, z: 4, kind: 'roots', height: 0.8 },
       { x: 13, z: 6, kind: 'roots', height: 0.8 },
       { x: 3, z: 8, kind: 'mushroomCluster', height: 0.7, emissive: 0.3 },
@@ -132,7 +132,7 @@ const FLOORS: DungeonFloor[] = [
       '#....1....###...#',
       '#.........#.#...#',
       '#..N...D..#.#...#',
-      '#.........#2#...#',
+      '#....3....#2#...#',
       '#....>.........##',
       '#...............#',
       '#################',
@@ -141,19 +141,23 @@ const FLOORS: DungeonFloor[] = [
       '1': {
         kind: 'battle',
         enemies: [
-          { species: 'cryptguard', level: 7 },
+          { species: 'hexshade', level: 7 },
           { species: 'wispling', level: 7 },
         ],
       },
       '2': {
         kind: 'battle',
         enemies: [
-          { species: 'gravemaw', level: 7 },
-          { species: 'cryptguard', level: 7 },
+          { species: 'direwisp', level: 7 },
+          { species: 'hexshade', level: 7 },
           { species: 'wispling', level: 7 },
         ],
         intro: narrate('The nave breathes out. The dark at the far end is thicker than dark should be.'),
       },
+      // The surprise: Kade — the rival who was always a reach ahead — found here,
+      // stopped cold near the descent, and joining you in the dark itself (not
+      // back at the hub). The hub `kadeJoin` remains a fallback if this is missed.
+      '3': { kind: 'recruit', id: 'kade' },
     },
     chests: {
       '15,2': { obols: 340, note: 'A reliquary, long since looted of everything but obols.' },
@@ -161,20 +165,20 @@ const FLOORS: DungeonFloor[] = [
     encounterRate: 0.08,
     encounters: [
       { weight: 1, enemies: [{ species: 'lastlight', level: 7 }] }, // rare: a soul about to move on
-      { weight: 3, enemies: [{ species: 'gravemaw', level: 7 }] },
+      { weight: 3, enemies: [{ species: 'direwisp', level: 7 }] },
       { weight: 3, enemies: [{ species: 'wispling', level: 7 }] },
       {
         weight: 2,
         enemies: [
-          { species: 'cryptguard', level: 7 },
+          { species: 'hexshade', level: 7 },
           { species: 'wispling', level: 7 },
         ],
       },
       {
         weight: 1,
         enemies: [
-          { species: 'cryptguard', level: 7 },
-          { species: 'gravemaw', level: 7 },
+          { species: 'hexshade', level: 7 },
+          { species: 'direwisp', level: 7 },
         ],
       },
     ],
@@ -182,6 +186,183 @@ const FLOORS: DungeonFloor[] = [
 
   {
     id: 'haunted-3',
+    name: 'The Unremembered — Ossuary Walk',
+    theme: THEME_DEEP,
+    fog: 1.6,
+    decor: [
+      { x: 2, z: 2, kind: 'gravestone' },
+      { x: 14, z: 3, kind: 'deadTree', height: 1.6 },
+      { x: 2, z: 8, kind: 'boneheap', height: 0.7 },
+    ],
+    rows: [
+      '#################',
+      '#.S.....#......$#',
+      '#.......#.......#',
+      '#...1...#...2...#',
+      '#.......#.......#',
+      '#####.###.#####.#',
+      '#...............#',
+      '#...D...#...N...#',
+      '#.......#.....C.#',
+      '#...>...#.......#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'wispling', level: 7 },
+          { species: 'palefire', level: 7 },
+        ],
+        intro: narrate('Bone is stacked wall-high on both sides, sorted, catalogued. Someone still keeps this place.'),
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'nullmancer', level: 7 },
+          { species: 'wispling', level: 7 },
+        ],
+      },
+    },
+    chests: {
+      '14,8': { obols: 320, item: 'mendingBalm', note: 'A grave-warden’s satchel, the buckle green with age.' },
+    },
+    encounterRate: 0.08,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'wispling', level: 7 }] },
+      { weight: 2, enemies: [{ species: 'palefire', level: 7 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'nullmancer', level: 7 },
+          { species: 'wispling', level: 7 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'hexshade', level: 7 }] },
+    ],
+  },
+
+  {
+    id: 'haunted-4',
+    name: 'The Unremembered — Weeping Cloister',
+    theme: THEME_DEEP,
+    fog: 1.7,
+    decor: [
+      { x: 1, z: 1, kind: 'gravestone' },
+      { x: 15, z: 1, kind: 'gravestone' },
+      { x: 1, z: 9, kind: 'boneheap', height: 0.7 },
+    ],
+    rows: [
+      '#################',
+      '#......S........#',
+      '#.....#...#.....#',
+      '#....#.....#....#',
+      '#...#..1.2..#...#',
+      '#..#.D.....N.#..#',
+      '#...#.......#...#',
+      '#....#.....#....#',
+      '#.....#.$.#....C#',
+      '#......>........#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'palefire', level: 8 },
+          { species: 'nullmancer', level: 7 },
+        ],
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'hexshade', level: 8 },
+          { species: 'wispling', level: 7 },
+        ],
+        intro: narrate(
+          'The cloister runs in a ring, and the ring is weeping — water, or something like it, beading on every stone.',
+        ),
+      },
+    },
+    chests: {
+      '15,8': { obols: 360, note: 'An alms-box, its lock long since rusted through.' },
+    },
+    encounterRate: 0.09,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'nullmancer', level: 7 }] },
+      { weight: 2, enemies: [{ species: 'palefire', level: 8 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'wispling', level: 7 },
+          { species: 'hexshade', level: 7 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'hexshade', level: 8 }] },
+    ],
+  },
+
+  {
+    id: 'haunted-5',
+    name: 'The Unremembered — Sunken Reliquary',
+    theme: THEME_DEEP,
+    fog: 1.8,
+    decor: [
+      { x: 3, z: 3, kind: 'deadTree', height: 1.6 },
+      { x: 13, z: 3, kind: 'gravestone' },
+      { x: 2, z: 8, kind: 'boneheap', height: 0.7 },
+      { x: 14, z: 8, kind: 'mushroomCluster', height: 0.7, emissive: 0.3 },
+    ],
+    rows: [
+      '#################',
+      '#...............#',
+      '#.S.........2..C#',
+      '#.....#####.....#',
+      '#.....#...#.....#',
+      '#..D..#.1.#..N..#',
+      '#.....#...#.....#',
+      '#.....##.##....$#',
+      '#...............#',
+      '#......>........#',
+      '#################',
+    ],
+    events: {
+      '1': {
+        kind: 'battle',
+        enemies: [
+          { species: 'hexshade', level: 8 },
+          { species: 'nullmancer', level: 8 },
+        ],
+        intro: narrate('Reliquaries line the vault, each holding a single kept thing. Most are empty. Most.'),
+      },
+      '2': {
+        kind: 'battle',
+        enemies: [
+          { species: 'palefire', level: 8 },
+          { species: 'hexshade', level: 8 },
+        ],
+      },
+    },
+    chests: {
+      '15,2': { obols: 420, item: 'lightShard', note: 'A reliquary that still holds something useful.' },
+    },
+    encounterRate: 0.09,
+    encounters: [
+      { weight: 3, enemies: [{ species: 'palefire', level: 8 }] },
+      { weight: 2, enemies: [{ species: 'hexshade', level: 8 }] },
+      {
+        weight: 2,
+        enemies: [
+          { species: 'nullmancer', level: 8 },
+          { species: 'palefire', level: 8 },
+        ],
+      },
+      { weight: 1, enemies: [{ species: 'hexshade', level: 8 }] },
+    ],
+  },
+
+  {
+    id: 'haunted-6',
     name: 'The Unremembered — The Deletion',
     theme: THEME_BOSS,
     fog: 1.9,
@@ -234,8 +415,8 @@ const FLOORS: DungeonFloor[] = [
       {
         weight: 1,
         enemies: [
-          { species: 'cryptguard', level: 7 },
-          { species: 'gravemaw', level: 7 },
+          { species: 'hexshade', level: 7 },
+          { species: 'direwisp', level: 7 },
         ],
       },
     ],
@@ -250,7 +431,7 @@ export const HAUNTED_DUNGEON: Reach = {
   color: '#b48cff',
   recommendedLevel: 7,
   floors: FLOORS,
-  startingLight: 150,
+  startingLight: 255,
   music: 'haunted',
   onClear: { flag: 'hauntedCleared' },
   requires: 'crystalCleared',

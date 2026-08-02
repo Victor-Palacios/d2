@@ -96,7 +96,7 @@ await waitScene('dungeon');
 await page.waitForTimeout(1200);
 console.log('DUNGEON:', JSON.stringify(await state()));
 
-// --- floor 1: cross the gateway — a radio tip fires, then the first fight ----
+// --- floor 1: cross the gateway — a lantern-voice tip fires, then the first fight ----
 await press('ArrowDown', 4);            // down to the gateway row
 for (let i = 0; i < 8 && (await state()).scene === 'dungeon'; i++) {
   await page.keyboard.press('ArrowRight'); // into the gate: tip, then the fight

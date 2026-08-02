@@ -1,11 +1,15 @@
 name: Deploy to GitHub Pages
 
-# `main` is the trunk: work lands there directly and every push publishes.
-# Also accepts the repository's default branch, so the deploy keeps working
-# during a branch rename. `workflow_dispatch` allows a manual run from the
+# Publishes `main` to Pages — but only after the CI workflow (checks + unit tests
+# + naming guard + build + the reliable smoke subset) has SUCCEEDED for that
+# commit. `workflow_run` fires when "CI" completes; we then build and deploy only
+# when it passed on `main`. This is the gate: a commit that fails any check never
+# publishes. `workflow_dispatch` still allows a manual deploy of `main` from the
 # Actions tab.
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -20,10 +24,18 @@ concurrency:
 
 jobs:
   build:
-    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || github.ref_name == github.event.repository.default_branch
+    # Manual dispatch, or a successful CI run on main.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     steps:
+      # For a workflow_run trigger, build the exact commit CI validated; for a
+      # manual dispatch, build the branch it was launched from.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -33,23 +45,19 @@ jobs:
       - name: Install
         run: npm ci
 
-      # `npm run build` is `tsc --noEmit && vite build`, so a type error fails
-      # the deploy instead of publishing a broken bundle.
+      # `npm run build` is `tsc --noEmit && vite build`. CI already validated this
+      # commit; this rebuild only produces the artifact to publish.
       - name: Build
         run: npm run build
 
-      # No `actions/configure-pages` step on purpose. Its only real job is to
-      # inject the published base path into the build, and vite.config.ts already
-      # uses a relative base ('./') that works from any subpath. It also cannot
-      # create the Pages site from here: the workflow token gets "Resource not
-      # accessible by integration" on that API, so Pages has to be switched on
-      # once by hand (Settings -> Pages -> Source: "GitHub Actions").
+      # No `actions/configure-pages` step on purpose — vite.config.ts uses a
+      # relative base ('./') that works from any subpath, and Pages has to be
+      # switched on once by hand (Settings -> Pages -> Source: "GitHub Actions").
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
-    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || github.ref_name == github.event.repository.default_branch
     needs: build
     runs-on: ubuntu-latest
     environment:

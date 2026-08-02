@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeObject3D } from '../engine/dispose';
 import { GameScene, sleep } from '../engine/SceneManager';
 import { Billboard } from '../engine/Billboard';
 import { ParticleField, Torch } from '../engine/fx';
@@ -7,7 +8,6 @@ import { HUMANS } from '../assets/art';
 import { audio } from '../engine/Audio';
 import { input } from '../engine/Input';
 import { game } from '../systems/party/gameState';
-import { makeCreature } from '../systems/party/creature';
 import { species, speciesArt } from '../data/creatures';
 import { ATTRIBUTES, ELEMENTS } from '../data/elements';
 import { el, esc, remove } from '../ui/dom';
@@ -24,8 +24,6 @@ import { narrate, say } from '../systems/dialogue/script';
 
 /** The three partner monsters offered at the start — one per class. */
 const PARTNER_CHOICES = ['emberling', 'glidefang', 'nightnip'];
-/** Level a starting partner begins at. */
-const PARTNER_LEVEL = 1;
 
 /**
  * A spectral wisp drifting through the title diorama — a "lost soul" the game
@@ -303,7 +301,7 @@ export class IntroScene extends GameScene {
 
     await this.partnerSelect();
 
-    game.set('prologueDone');
+    // `prologueDone` is set inside `startNewGame` (called from partnerSelect).
     await this.ctx.go('hub', { arrival: 'first' });
   }
 
@@ -331,14 +329,10 @@ export class IntroScene extends GameScene {
     select.destroy();
     if (this.disposed) return;
 
+    // The single source of truth for a started run: party, team attribute, the
+    // keeper's kit, and the prologue-done flag (see GameState.startNewGame).
     const s = species(choice);
-    game.party = [makeCreature(choice, PARTNER_LEVEL)];
-    game.teamAttribute = s.attribute;
-
-    // A keeper's kit: the dead leave things behind, and a keeper carries them.
-    game.addItem('cinderEdge');
-    game.addItem('paleShroud');
-    game.addItem('quickLocket');
+    game.startNewGame(choice);
 
     await this.dialogue.play([
       ...say(
@@ -400,6 +394,7 @@ export class IntroScene extends GameScene {
     for (const b of this.billboards) b.dispose();
     for (const w of this.wisps) w.bb.dispose();
     this.particles.dispose();
+    disposeObject3D(this.scene);
     this.scene.clear();
   }
 }
