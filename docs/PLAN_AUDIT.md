@@ -31,7 +31,7 @@ Pokémon × Digimon hybrid. Nothing tracked is silently missing.
 |---|---|---|---|
 | §1 | DOM-overlay UI, no framework | ✅ Implemented | `src/ui/dom.ts` tiny helpers; all HUDs/menus/dialogue in `src/ui/`; `src/style.css` header cites §1. |
 
-## §2 — The first-hour flow
+## §2 — The opening flow
 
 | Ref | Requirement | Status | Evidence |
 |---|---|---|---|
@@ -39,9 +39,9 @@ Pokémon × Digimon hybrid. Nothing tracked is silently missing.
 | §2.2 | The Everwake hub | ✅ | `HubScene.ts` (M4/M5). *(hub autosave bug — see below.)* |
 | §2.3 | World map / reach select | ✅ | `WorldMapScene.ts`, two-node picker via `ui/CardSelect.ts`. |
 | §2.4 | The Quiet Crossing crawl | ✅ | `DungeonScene.ts` (M1/M3). |
-| §2.5 | *(not referenced by any code marker)* | ❔ Unconfirmed | No `plan §2.5` marker exists. Likely the rival-intro / Mission-2 hook, which **is** built (end of `HubScene`), but the mapping can't be confirmed without the plan text. |
-| §2.6 | Guard Team choice | ✅ | `CardSelect.ts` cites §2.6; `data/teams.ts` — three teams set class + starter. |
-| §2.7 | Shop / vendor | ✅ (buying only) | `ui/ShopScreen.ts`, `data/items.ts`. Obols deduct, item enters bag; **using** items is an intentional stub (below). |
+| §2.5 | *(not referenced by any code marker)* | ➖ Cut | No `plan §2.5` marker exists. It mapped to the old rival-intro / Mission-2 hook, which was **removed** in the narrative pivot (pre-pivot sci-fi scaffolding, gated on a value dispatched nowhere). |
+| §2.6 | Guard Team choice | ➖ Cut | Removed in the opening rework: New Game now picks a single partner (`IntroScene.ts`), not one of three sci-fi teams. `data/teams.ts` is deleted. |
+| §2.7 | Shop / vendor | ✅ | `ui/ShopScreen.ts`, `data/items.ts`. Obols deduct, item enters bag; consumables are then used from the Items menu (`ui/ItemsScreen.ts`). |
 
 ## §3 — HD-2D rendering rig
 
@@ -62,7 +62,7 @@ Pokémon × Digimon hybrid. Nothing tracked is silently missing.
 | §5.1 | Attributes (class triangle) + elements | ✅ | `data/elements.ts` — Assassin>Mage>Hero, five elements. |
 | §5.2 | Damage / heal maths, speed order | ✅ | `systems/battle/formula.ts`, turn order in `engine.ts`. See `docs/SYSTEMS.md`. |
 | §5.3 | Headless 3v3 battle model + enemy AI | ✅ | `systems/battle/engine.ts` (rules-only, no Three.js/DOM), driven by `BattleScene.ts` (M2). |
-| §5.4 | Three Guard Teams, each setting class + starter | ✅ | `data/teams.ts`. |
+| §5.4 | Three Guard Teams, each setting class + starter | ➖ Cut | Removed in the narrative pivot. Replaced by the single-partner pick at New Game (`IntroScene.ts`), which sets the player's class from the chosen starter. |
 | §5.5 | The Quiet Crossing tutorial dungeon + lantern LP | ✅ | `data/quietCrossing.ts` (3 floors, borrowed party, boss), LP drain in `DungeonScene.ts`. |
 | §5.6 | Evolution / transcendence | ✅ **Implemented (Pokémon × Digimon hybrid)** | `evolutions` tree on `Species` (`data/creatures.ts`); headless `systems/party/evolve.ts` (`evolve`/`devolve`); **Transcend** screen (`ui/TranscendScreen.ts`). Level-gated, branching, reversible. Ships alongside the magick pass (Mag/Res) and level 1–20 learnsets. Covered by `tools/smoke/transcend.mjs`; see `docs/SYSTEMS.md §7`. DNA-merge remains a future branch condition. |
 
@@ -101,8 +101,10 @@ demonstrable:
 
 ## Deliberate stubs (complete-as-specified, not gaps)
 
-1. **In-battle item use** — the **Item** action exists but is disabled; buying
-   works, using does not (`data/items.ts` notes "Battle use not wired up yet").
+1. **In-battle item use** — there is no **Item** action in the battle menu
+   (Invoke / Move / Swap / Run only). Items are used from the town Items menu
+   (`ui/ItemsScreen.ts`); wiring an in-battle Item action is a tracked roadmap
+   item (M11).
 2. **Auto-battle uses only the free Attack** — intentional, so it can't spend MP
    you were saving (`HANDOFF.md` §5).
 
@@ -125,8 +127,10 @@ than fulfilling a numbered requirement.
 
 ## Bottom line
 
-Implemented: **everything section-marked (§0.2, §1, §2.1–2.7, §3, §4, §5.1–5.6,
-§6) and every milestone M0–M6.** Two items are intentional stubs; one (§2.5) and
-§7 can't be pinned to code without the plan text and are flagged above; one
-autosave bug is open and documented. No requirement is missing without a reason
+Implemented: **everything section-marked (§0.2, §1, §2.1–2.4, §2.7, §3, §4,
+§5.1–5.3, §5.5–5.6, §6) and every milestone M0–M6.** The three sci-fi team /
+rival hooks (§2.5, §2.6, §5.4) were **cut** in the narrative pivot and their dead
+code removed. In-battle item use is an intentional stub; §7 can't be pinned to
+code without the plan text and is flagged above; one autosave bug is open and
+documented. No requirement is missing without a reason
 recorded next to it.

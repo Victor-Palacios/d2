@@ -198,6 +198,510 @@ const CRIES: Record<string, CryLayer[]> = {
     { f0: 90, f1: 130, time: 0.02, dur: 0.34, type: 'square', gain: 0.09, vibrato: [20, 14] },
     { f0: 220, f1: 180, time: 0.3, dur: 0.22, type: 'sawtooth', gain: 0.15, vibrato: [18, 30] },
   ],
+
+  // ================= Full roster voices =====================================
+  // Every remaining species gets a voice so nothing is silent. Cries are themed
+  // by element — fire: rough sawtooth growls; water: sine bloops & airy coos;
+  // nature: organic warbles + dry insect clicks; machine: stepped metallic beeps
+  // & motor whirs; dark: hollow moans & rising screeches — and pitched by size,
+  // so a 2.4-tall boss reads far lower and longer than a 1.0 rookie.
+
+  // --- Machine line (bots, knights, golems): stepped beeps + motor whir -----
+  // Cogling: two chirpy beeps then a rising servo whir.
+  cogling: [
+    { f0: 520, time: 0, dur: 0.06, type: 'square', gain: 0.12 },
+    { f0: 400, time: 0.07, dur: 0.06, type: 'square', gain: 0.12 },
+    { f0: 460, f1: 720, time: 0.14, dur: 0.12, type: 'sawtooth', gain: 0.1, glide: 'lin', vibrato: [60, 14] },
+  ],
+  // Bulwarq: a heavy clank over a low idling motor hum.
+  bulwarq: [
+    { f0: 180, time: 0, dur: 0.1, type: 'square', gain: 0.13 },
+    { f0: 120, f1: 150, time: 0.02, dur: 0.28, type: 'sawtooth', gain: 0.09, glide: 'lin', vibrato: [30, 8] },
+    { f0: 300, time: 0.12, dur: 0.06, type: 'square', gain: 0.08 },
+  ],
+  // Geodon: a deep grinding rumble with a rock crack.
+  geodon: [
+    { f0: 110, f1: 90, time: 0, dur: 0.3, type: 'sawtooth', gain: 0.14, glide: 'lin', vibrato: [22, 6] },
+    { f0: 220, time: 0.14, dur: 0.05, type: 'square', gain: 0.08 },
+    { f0: 70, time: 0.02, dur: 0.28, type: 'square', gain: 0.06 },
+  ],
+  // Cogknight: a big servo roar with a metal clank on top.
+  cogknight: [
+    { f0: 140, f1: 170, time: 0, dur: 0.3, type: 'sawtooth', gain: 0.14, glide: 'lin', vibrato: [26, 10] },
+    { f0: 280, time: 0, dur: 0.08, type: 'square', gain: 0.1 },
+    { f0: 90, time: 0.14, dur: 0.16, type: 'square', gain: 0.07 },
+  ],
+  // Aegisaur: a massive grinding groan, lower and slower than Geodon.
+  aegisaur: [
+    { f0: 90, f1: 74, time: 0, dur: 0.34, type: 'sawtooth', gain: 0.15, glide: 'lin', vibrato: [18, 6] },
+    { f0: 180, time: 0.14, dur: 0.06, type: 'square', gain: 0.08 },
+    { f0: 60, time: 0.02, dur: 0.3, type: 'square', gain: 0.06 },
+  ],
+  // Boltframe: a crackling electric zap between two beeps.
+  boltframe: [
+    { f0: 700, time: 0, dur: 0.05, type: 'square', gain: 0.11 },
+    { f0: 1050, f1: 700, time: 0.05, dur: 0.08, type: 'sawtooth', gain: 0.09, glide: 'lin', vibrato: [120, 30] },
+    { f0: 520, time: 0.14, dur: 0.05, type: 'square', gain: 0.08 },
+  ],
+  // Dynamo: a motor spinning up — a fast linear rise in pitch.
+  dynamo: [
+    { f0: 300, f1: 720, time: 0, dur: 0.2, type: 'sawtooth', gain: 0.12, glide: 'lin', vibrato: [40, 12] },
+    { f0: 600, f1: 1440, time: 0.04, dur: 0.18, type: 'square', gain: 0.05, glide: 'lin' },
+  ],
+
+  // --- Fire line (lizards, wolves, forge-beasts): rough rising snarls -------
+  // Cinderfang: a searing snarl-howl, bigger and lower than a rookie.
+  cinderfang: [
+    { f0: 260, f1: 420, time: 0, dur: 0.14, type: 'sawtooth', gain: 0.16, vibrato: [30, 26] },
+    { f0: 420, f1: 340, time: 0.14, dur: 0.2, type: 'sawtooth', gain: 0.13, vibrato: [18, 44] },
+    { f0: 620, f1: 820, time: 0.16, dur: 0.1, type: 'sawtooth', gain: 0.08 },
+  ],
+  // Emberforge: a molten forge-snarl with a metallic edge.
+  emberforge: [
+    { f0: 200, f1: 320, time: 0, dur: 0.16, type: 'sawtooth', gain: 0.16, vibrato: [30, 24] },
+    { f0: 160, f1: 240, time: 0.02, dur: 0.14, type: 'square', gain: 0.07, vibrato: [40, 16] },
+    { f0: 480, f1: 700, time: 0.15, dur: 0.1, type: 'sawtooth', gain: 0.11 },
+  ],
+  // Ashwarden: a deeper smoldering roar.
+  ashwarden: [
+    { f0: 170, f1: 250, time: 0, dur: 0.2, type: 'sawtooth', gain: 0.16, vibrato: [26, 26] },
+    { f0: 110, f1: 150, time: 0.02, dur: 0.28, type: 'square', gain: 0.08, vibrato: [22, 14] },
+    { f0: 320, f1: 420, time: 0.2, dur: 0.14, type: 'sawtooth', gain: 0.09 },
+  ],
+  // Pyrelord: a towering inferno roar.
+  pyrelord: [
+    { f0: 140, f1: 210, time: 0, dur: 0.32, type: 'sawtooth', gain: 0.17, vibrato: [22, 28] },
+    { f0: 90, f1: 130, time: 0.02, dur: 0.32, type: 'square', gain: 0.09, vibrato: [18, 16] },
+    { f0: 260, f1: 360, time: 0.28, dur: 0.18, type: 'sawtooth', gain: 0.12, vibrato: [16, 34] },
+  ],
+
+  // --- Water line (slimes, fliers, wardens): bloops, coos & swells ----------
+  // Shardling: glassy bloops with a crystalline ring.
+  shardling: [
+    { f0: 660, f1: 900, time: 0, dur: 0.08, type: 'sine', gain: 0.12 },
+    { f0: 1320, time: 0.02, dur: 0.14, type: 'sine', gain: 0.05, vibrato: [10, 8] },
+    { f0: 900, f1: 1200, time: 0.1, dur: 0.08, type: 'triangle', gain: 0.08 },
+  ],
+  // Prismoth: a fluttery shimmering trill.
+  prismoth: [
+    { f0: 780, f1: 960, time: 0, dur: 0.18, type: 'triangle', gain: 0.12, vibrato: [40, 44] },
+    { f0: 1560, time: 0.04, dur: 0.14, type: 'sine', gain: 0.04, vibrato: [40, 30] },
+  ],
+  // Boggle: a low wet double croak.
+  boggle: [
+    { f0: 200, f1: 260, time: 0, dur: 0.1, type: 'sawtooth', gain: 0.13, vibrato: [40, 30] },
+    { f0: 200, f1: 260, time: 0.14, dur: 0.12, type: 'sawtooth', gain: 0.12, vibrato: [40, 34] },
+  ],
+  // Stratoth: a deeper shimmering hum than Prismoth.
+  stratoth: [
+    { f0: 420, f1: 560, time: 0, dur: 0.24, type: 'triangle', gain: 0.13, vibrato: [24, 40] },
+    { f0: 840, time: 0.04, dur: 0.2, type: 'sine', gain: 0.05, vibrato: [20, 24] },
+  ],
+  // Tidecaller: a resonant deep bell-toll over a water swell.
+  tidecaller: [
+    { f0: 196, f1: 262, time: 0, dur: 0.3, type: 'sine', gain: 0.14, vibrato: [10, 20] },
+    { f0: 392, time: 0.02, dur: 0.26, type: 'sine', gain: 0.06, vibrato: [8, 12] },
+    { f0: 588, time: 0.04, dur: 0.18, type: 'triangle', gain: 0.04 },
+  ],
+  // Prismatide: a slicing crystalline chime-run.
+  prismatide: [
+    { f0: 520, f1: 780, time: 0, dur: 0.1, type: 'triangle', gain: 0.13, vibrato: [20, 20] },
+    { f0: 1040, time: 0.06, dur: 0.16, type: 'sine', gain: 0.06, vibrato: [16, 16] },
+    { f0: 780, f1: 1170, time: 0.12, dur: 0.1, type: 'sine', gain: 0.06 },
+  ],
+  // Boggart: a big gloopy gulp, lower than Shardling.
+  boggart: [
+    { f0: 220, f1: 460, time: 0, dur: 0.1, type: 'sine', gain: 0.14 },
+    { f0: 300, f1: 620, time: 0.11, dur: 0.1, type: 'sine', gain: 0.11 },
+    { f0: 700, time: 0.02, dur: 0.16, type: 'triangle', gain: 0.04 },
+  ],
+  // Glaciark: a deep glacial groan with an ice crack.
+  glaciark: [
+    { f0: 150, f1: 120, time: 0, dur: 0.34, type: 'sine', gain: 0.14, vibrato: [6, 18] },
+    { f0: 300, time: 0.12, dur: 0.06, type: 'square', gain: 0.06 },
+    { f0: 450, f1: 380, time: 0.04, dur: 0.24, type: 'triangle', gain: 0.05, vibrato: [8, 12] },
+  ],
+  // Gustwing: a rushing airy cry that lifts then falls away.
+  gustwing: [
+    { f0: 620, f1: 900, time: 0, dur: 0.14, type: 'sine', gain: 0.13, vibrato: [14, 20] },
+    { f0: 900, f1: 560, time: 0.13, dur: 0.24, type: 'triangle', gain: 0.11, vibrato: [12, 30] },
+    { f0: 1240, time: 0.04, dur: 0.14, type: 'sine', gain: 0.03 },
+  ],
+  // Tempestrix: a keening storm-shriek.
+  tempestrix: [
+    { f0: 520, f1: 820, time: 0, dur: 0.2, type: 'sawtooth', gain: 0.12, vibrato: [18, 34] },
+    { f0: 820, f1: 640, time: 0.18, dur: 0.18, type: 'triangle', gain: 0.09, vibrato: [16, 26] },
+  ],
+  // Wellspring: a clear rising bubble-chime.
+  wellspring: [
+    { f0: 440, f1: 660, time: 0, dur: 0.1, type: 'sine', gain: 0.13 },
+    { f0: 660, f1: 880, time: 0.1, dur: 0.12, type: 'sine', gain: 0.11 },
+    { f0: 1100, time: 0.04, dur: 0.14, type: 'triangle', gain: 0.04, vibrato: [8, 8] },
+  ],
+  // Tidalby: a rolling watery warble.
+  tidalby: [
+    { f0: 340, f1: 520, time: 0, dur: 0.14, type: 'sine', gain: 0.13, vibrato: [12, 22] },
+    { f0: 520, f1: 400, time: 0.13, dur: 0.16, type: 'triangle', gain: 0.1, vibrato: [14, 26] },
+  ],
+  // Maelstrom: a churning roar-swell.
+  maelstrom: [
+    { f0: 220, f1: 340, time: 0, dur: 0.2, type: 'sawtooth', gain: 0.13, vibrato: [16, 30] },
+    { f0: 340, f1: 260, time: 0.18, dur: 0.18, type: 'triangle', gain: 0.09, vibrato: [12, 24] },
+    { f0: 500, time: 0.04, dur: 0.16, type: 'sine', gain: 0.04 },
+  ],
+
+  // --- Nature line (beasts, insects, plants): warbles, roars & clicks -------
+  // Fenrix: a sharp yipping howl that rises then holds.
+  fenrix: [
+    { f0: 420, f1: 620, time: 0, dur: 0.1, type: 'sawtooth', gain: 0.14, vibrato: [30, 20] },
+    { f0: 620, f1: 560, time: 0.1, dur: 0.22, type: 'sawtooth', gain: 0.12, vibrato: [16, 40] },
+    { f0: 300, time: 0.02, dur: 0.2, type: 'triangle', gain: 0.06 },
+  ],
+  // Gravemaw: a gnashing chitter-hiss.
+  gravemaw: [
+    { f0: 240, f1: 200, time: 0, dur: 0.16, type: 'sawtooth', gain: 0.13, vibrato: [50, 30] },
+    { f0: 700, f1: 500, time: 0.08, dur: 0.1, type: 'square', gain: 0.06, vibrato: [80, 40] },
+  ],
+  // Frondle: a leafy rustling warble.
+  frondle: [
+    { f0: 320, f1: 480, time: 0, dur: 0.14, type: 'triangle', gain: 0.13, vibrato: [26, 34] },
+    { f0: 480, f1: 400, time: 0.13, dur: 0.14, type: 'triangle', gain: 0.1, vibrato: [20, 24] },
+  ],
+  // Thorncat: a snarling yowl.
+  thorncat: [
+    { f0: 460, f1: 600, time: 0, dur: 0.12, type: 'sawtooth', gain: 0.14, vibrato: [28, 30] },
+    { f0: 600, f1: 380, time: 0.12, dur: 0.18, type: 'sawtooth', gain: 0.11, vibrato: [22, 40] },
+  ],
+  // Chitter: rapid dry clicks.
+  chitter: [
+    { f0: 1100, time: 0, dur: 0.04, type: 'square', gain: 0.1, vibrato: [110, 50] },
+    { f0: 1300, time: 0.05, dur: 0.04, type: 'square', gain: 0.1, vibrato: [110, 50] },
+    { f0: 1000, f1: 1250, time: 0.1, dur: 0.06, type: 'square', gain: 0.08, vibrato: [130, 40] },
+  ],
+  // Grovelord: a booming beastly roar.
+  grovelord: [
+    { f0: 130, f1: 190, time: 0, dur: 0.32, type: 'sawtooth', gain: 0.17, vibrato: [20, 24] },
+    { f0: 84, f1: 120, time: 0.02, dur: 0.32, type: 'square', gain: 0.08, vibrato: [16, 12] },
+    { f0: 200, f1: 160, time: 0.28, dur: 0.2, type: 'sawtooth', gain: 0.12, vibrato: [16, 30] },
+  ],
+  // Direfang: a vicious lower roar-snarl.
+  direfang: [
+    { f0: 150, f1: 220, time: 0, dur: 0.16, type: 'sawtooth', gain: 0.16, vibrato: [26, 30] },
+    { f0: 220, f1: 160, time: 0.16, dur: 0.22, type: 'sawtooth', gain: 0.13, vibrato: [18, 44] },
+    { f0: 96, time: 0.02, dur: 0.3, type: 'square', gain: 0.07 },
+  ],
+  // Mantiscar: a bigger gnashing hiss-click.
+  mantiscar: [
+    { f0: 200, f1: 170, time: 0, dur: 0.16, type: 'sawtooth', gain: 0.13, vibrato: [46, 28] },
+    { f0: 560, f1: 760, time: 0.06, dur: 0.12, type: 'square', gain: 0.07, vibrato: [90, 44] },
+  ],
+  // Gravestalker: a low predatory growl-howl.
+  gravestalker: [
+    { f0: 200, f1: 300, time: 0, dur: 0.12, type: 'sawtooth', gain: 0.15, vibrato: [24, 22] },
+    { f0: 300, f1: 240, time: 0.12, dur: 0.22, type: 'sawtooth', gain: 0.12, vibrato: [16, 40] },
+  ],
+  // Thornpanther: a coiled snarl breaking into a scream.
+  thornpanther: [
+    { f0: 220, f1: 300, time: 0, dur: 0.1, type: 'sawtooth', gain: 0.14, vibrato: [30, 24] },
+    { f0: 300, f1: 520, time: 0.1, dur: 0.2, type: 'sawtooth', gain: 0.12, vibrato: [22, 40] },
+  ],
+  // Verdanox: a towering wooden groan-roar.
+  verdanox: [
+    { f0: 120, f1: 170, time: 0, dur: 0.32, type: 'sawtooth', gain: 0.15, vibrato: [18, 22] },
+    { f0: 78, time: 0.02, dur: 0.3, type: 'square', gain: 0.08 },
+    { f0: 300, f1: 240, time: 0.24, dur: 0.16, type: 'triangle', gain: 0.06, vibrato: [16, 30] },
+  ],
+  // Chitterling: a fast insect trill.
+  chitterling: [
+    { f0: 1000, f1: 1200, time: 0, dur: 0.05, type: 'square', gain: 0.1, vibrato: [100, 50] },
+    { f0: 1200, f1: 900, time: 0.06, dur: 0.05, type: 'square', gain: 0.1, vibrato: [100, 50] },
+    { f0: 1100, f1: 1400, time: 0.12, dur: 0.07, type: 'square', gain: 0.08, vibrato: [120, 40] },
+  ],
+  // Carapex: a heavier chitinous rattle.
+  carapex: [
+    { f0: 300, f1: 260, time: 0, dur: 0.1, type: 'sawtooth', gain: 0.12, vibrato: [70, 30] },
+    { f0: 820, time: 0.06, dur: 0.06, type: 'square', gain: 0.07, vibrato: [110, 50] },
+    { f0: 700, f1: 900, time: 0.12, dur: 0.06, type: 'square', gain: 0.06 },
+  ],
+  // Bloomkin: a bright blooming warble.
+  bloomkin: [
+    { f0: 360, f1: 540, time: 0, dur: 0.14, type: 'triangle', gain: 0.14, vibrato: [24, 34] },
+    { f0: 540, f1: 480, time: 0.13, dur: 0.16, type: 'sine', gain: 0.1, vibrato: [18, 22] },
+    { f0: 720, time: 0.05, dur: 0.1, type: 'sine', gain: 0.04 },
+  ],
+  // Thornward: a woody bark-warble, lower.
+  thornward: [
+    { f0: 260, f1: 400, time: 0, dur: 0.14, type: 'triangle', gain: 0.14, vibrato: [22, 30] },
+    { f0: 400, f1: 320, time: 0.13, dur: 0.16, type: 'sawtooth', gain: 0.08, vibrato: [18, 24] },
+  ],
+  // Verdammon: a resonant grove-groan.
+  verdammon: [
+    { f0: 170, f1: 240, time: 0, dur: 0.26, type: 'sawtooth', gain: 0.14, vibrato: [18, 24] },
+    { f0: 110, time: 0.02, dur: 0.24, type: 'square', gain: 0.07 },
+    { f0: 360, f1: 300, time: 0.2, dur: 0.14, type: 'triangle', gain: 0.06, vibrato: [16, 26] },
+  ],
+
+  // --- Dark line (wisps, wraiths, shades): hollow moans & rising screeches --
+  // Wispling: a thin ghostly whine that sinks.
+  wispling: [
+    { f0: 620, f1: 440, time: 0, dur: 0.26, type: 'sine', gain: 0.13, vibrato: [8, 26] },
+    { f0: 820, f1: 560, time: 0.05, dur: 0.22, type: 'triangle', gain: 0.05, vibrato: [11, 20] },
+  ],
+  // Cryptguard: a hollow armored groan with a metallic ring.
+  cryptguard: [
+    { f0: 160, f1: 130, time: 0, dur: 0.3, type: 'sawtooth', gain: 0.13, vibrato: [14, 18] },
+    { f0: 320, time: 0.12, dur: 0.08, type: 'square', gain: 0.06 },
+    { f0: 240, f1: 180, time: 0.2, dur: 0.16, type: 'sine', gain: 0.07, vibrato: [9, 24] },
+  ],
+  // Nocturne: a low sweeping wail.
+  nocturne: [
+    { f0: 340, f1: 240, time: 0, dur: 0.3, type: 'sine', gain: 0.14, vibrato: [7, 34] },
+    { f0: 520, f1: 300, time: 0.06, dur: 0.24, type: 'sawtooth', gain: 0.05, vibrato: [10, 26] },
+  ],
+  // Banshade: a wailing shriek that rises.
+  banshade: [
+    { f0: 360, f1: 640, time: 0, dur: 0.26, type: 'sawtooth', gain: 0.13, vibrato: [12, 40] },
+    { f0: 540, f1: 900, time: 0.06, dur: 0.24, type: 'sine', gain: 0.06, vibrato: [14, 30] },
+  ],
+  // Duskfang: a sinister low screech.
+  duskfang: [
+    { f0: 300, f1: 520, time: 0, dur: 0.12, type: 'sawtooth', gain: 0.14, vibrato: [40, 30] },
+    { f0: 520, f1: 380, time: 0.12, dur: 0.16, type: 'square', gain: 0.08, vibrato: [30, 40] },
+  ],
+  // Nightmaw: a guttural devouring growl.
+  nightmaw: [
+    { f0: 180, f1: 260, time: 0, dur: 0.16, type: 'sawtooth', gain: 0.15, vibrato: [34, 26] },
+    { f0: 120, f1: 90, time: 0.14, dur: 0.18, type: 'square', gain: 0.08, vibrato: [20, 14] },
+  ],
+  // Umbranox: a deep hollow void-moan with a bite.
+  umbranox: [
+    { f0: 160, f1: 110, time: 0, dur: 0.3, type: 'sine', gain: 0.14, vibrato: [7, 30] },
+    { f0: 320, f1: 220, time: 0.04, dur: 0.16, type: 'sawtooth', gain: 0.07, vibrato: [24, 30] },
+  ],
+  // Gloomshade: a creeping shadowy moan.
+  gloomshade: [
+    { f0: 380, f1: 260, time: 0, dur: 0.28, type: 'sine', gain: 0.13, vibrato: [8, 26] },
+    { f0: 300, f1: 200, time: 0.06, dur: 0.24, type: 'triangle', gain: 0.06, vibrato: [11, 18] },
+  ],
+  // Oblivion: a swallowing void-drone.
+  oblivion: [
+    { f0: 200, f1: 130, time: 0, dur: 0.32, type: 'sine', gain: 0.14, vibrato: [6, 28] },
+    { f0: 400, f1: 260, time: 0.04, dur: 0.2, type: 'sawtooth', gain: 0.05, vibrato: [9, 22] },
+  ],
+  // Revenance (the Unnamed — final boss): a vast forgotten wail, lower and
+  // longer than anything else so it reads as dread itself.
+  revenance: [
+    { f0: 120, f1: 90, time: 0, dur: 0.4, type: 'sawtooth', gain: 0.16, vibrato: [6, 30] },
+    { f0: 240, f1: 150, time: 0.04, dur: 0.36, type: 'sine', gain: 0.08, vibrato: [8, 24] },
+    { f0: 360, f1: 200, time: 0.1, dur: 0.28, type: 'sawtooth', gain: 0.05, vibrato: [10, 34] },
+  ],
+
+  // --- The Last Light & story souls: gentle, fading voices ------------------
+  // The Last Light (a soul about to cross): a fragile, fading chime-sigh.
+  lastlight: [
+    { f0: 880, f1: 660, time: 0, dur: 0.3, type: 'sine', gain: 0.1, vibrato: [5, 10] },
+    { f0: 1320, f1: 990, time: 0.06, dur: 0.28, type: 'sine', gain: 0.04, vibrato: [4, 8] },
+  ],
+  // Grievewisp: a small sorrowful whimper-moan.
+  grievewisp: [
+    { f0: 520, f1: 380, time: 0, dur: 0.24, type: 'sine', gain: 0.12, vibrato: [7, 22] },
+    { f0: 700, f1: 500, time: 0.05, dur: 0.2, type: 'triangle', gain: 0.05, vibrato: [9, 16] },
+  ],
+  // Mournlight: a grieving low wail.
+  mournlight: [
+    { f0: 340, f1: 240, time: 0, dur: 0.3, type: 'sine', gain: 0.13, vibrato: [6, 28] },
+    { f0: 460, f1: 320, time: 0.06, dur: 0.24, type: 'triangle', gain: 0.06, vibrato: [8, 20] },
+  ],
+  // Keptsoul: a held, aching hum that steadies.
+  keptsoul: [
+    { f0: 240, f1: 300, time: 0, dur: 0.28, type: 'triangle', gain: 0.13, vibrato: [8, 18] },
+    { f0: 180, time: 0.02, dur: 0.26, type: 'sine', gain: 0.07, vibrato: [6, 12] },
+  ],
+  // Heldshade: a deep clung-to sorrow-drone.
+  heldshade: [
+    { f0: 150, f1: 110, time: 0, dur: 0.34, type: 'sine', gain: 0.14, vibrato: [6, 24] },
+    { f0: 300, f1: 220, time: 0.04, dur: 0.24, type: 'sawtooth', gain: 0.05, vibrato: [9, 20] },
+    { f0: 90, time: 0.02, dur: 0.3, type: 'square', gain: 0.06 },
+  ],
+
+  // --- The Last Lantern (fire-flame beings): warm, flickering voices --------
+  // Emberkeep: a soft flickering flame-flutter.
+  emberkeep: [
+    { f0: 340, f1: 460, time: 0, dur: 0.16, type: 'triangle', gain: 0.13, vibrato: [26, 30] },
+    { f0: 680, time: 0.04, dur: 0.12, type: 'sine', gain: 0.05, vibrato: [30, 20] },
+  ],
+  // Lanternwake: a warm rising flame-hum.
+  lanternwake: [
+    { f0: 280, f1: 420, time: 0, dur: 0.18, type: 'triangle', gain: 0.14, vibrato: [22, 28] },
+    { f0: 420, f1: 360, time: 0.16, dur: 0.16, type: 'sine', gain: 0.08, vibrato: [18, 20] },
+  ],
+  // Everember: a deep resonant furnace-glow tone.
+  everember: [
+    { f0: 160, f1: 220, time: 0, dur: 0.3, type: 'sawtooth', gain: 0.14, vibrato: [18, 22] },
+    { f0: 320, f1: 400, time: 0.04, dur: 0.24, type: 'triangle', gain: 0.07, vibrato: [16, 26] },
+    { f0: 100, time: 0.02, dur: 0.26, type: 'square', gain: 0.06 },
+  ],
+  // Ashmoth: a smoky fluttering hiss.
+  ashmoth: [
+    { f0: 520, f1: 700, time: 0, dur: 0.14, type: 'triangle', gain: 0.12, vibrato: [44, 40] },
+    { f0: 900, f1: 620, time: 0.06, dur: 0.12, type: 'square', gain: 0.05, vibrato: [60, 34] },
+  ],
+  // Cindershroud: a low shrouded rasp.
+  cindershroud: [
+    { f0: 220, f1: 300, time: 0, dur: 0.16, type: 'sawtooth', gain: 0.14, vibrato: [30, 26] },
+    { f0: 160, f1: 120, time: 0.14, dur: 0.18, type: 'sine', gain: 0.07, vibrato: [10, 20] },
+  ],
+  // Wardling: a bright dutiful flame-call.
+  wardling: [
+    { f0: 320, f1: 480, time: 0, dur: 0.14, type: 'triangle', gain: 0.14, vibrato: [24, 26] },
+    { f0: 480, f1: 420, time: 0.13, dur: 0.16, type: 'sine', gain: 0.09, vibrato: [18, 18] },
+  ],
+  // Reliquary: a solemn deep bell-toll of flame.
+  reliquary: [
+    { f0: 174, f1: 232, time: 0, dur: 0.3, type: 'sine', gain: 0.14, vibrato: [10, 18] },
+    { f0: 348, time: 0.02, dur: 0.24, type: 'triangle', gain: 0.06, vibrato: [12, 16] },
+    { f0: 130, time: 0.04, dur: 0.24, type: 'sawtooth', gain: 0.05 },
+  ],
+  // Lanternlord: a vast roaring beacon-flame.
+  lanternlord: [
+    { f0: 130, f1: 190, time: 0, dur: 0.34, type: 'sawtooth', gain: 0.16, vibrato: [18, 26] },
+    { f0: 84, f1: 120, time: 0.02, dur: 0.32, type: 'square', gain: 0.09, vibrato: [16, 14] },
+    { f0: 260, f1: 340, time: 0.28, dur: 0.18, type: 'triangle', gain: 0.09, vibrato: [16, 30] },
+  ],
+
+  // --- Named companions: brief, more "voiced" hums --------------------------
+  // Wren: a wary, quiet two-note hum.
+  wren: [
+    { f0: 300, f1: 340, time: 0, dur: 0.12, type: 'triangle', gain: 0.11, vibrato: [10, 12] },
+    { f0: 260, f1: 300, time: 0.13, dur: 0.16, type: 'sine', gain: 0.09, vibrato: [8, 10] },
+  ],
+  // Sena Vale: a warm, bright hum-lilt.
+  senaVale: [
+    { f0: 420, f1: 520, time: 0, dur: 0.12, type: 'triangle', gain: 0.11, vibrato: [9, 12] },
+    { f0: 520, f1: 470, time: 0.13, dur: 0.16, type: 'sine', gain: 0.09, vibrato: [7, 10] },
+  ],
+  // Kade: a cocky rising whistle-note.
+  kade: [
+    { f0: 380, f1: 560, time: 0, dur: 0.12, type: 'triangle', gain: 0.11, vibrato: [12, 16] },
+    { f0: 560, f1: 620, time: 0.12, dur: 0.14, type: 'sine', gain: 0.08 },
+  ],
+
+  // --- Expanded roster: reach mid-tiers & wardens (same element recipes) ----
+  // Water: misty coos & cold wails.
+  // Mistling: a soft misty coo that lifts then fades.
+  mistling: [
+    { f0: 560, f1: 760, time: 0, dur: 0.16, type: 'sine', gain: 0.12, vibrato: [10, 16] },
+    { f0: 760, f1: 600, time: 0.15, dur: 0.18, type: 'sine', gain: 0.08, vibrato: [12, 20] },
+  ],
+  // Bloomstalker: a sly watery warble breaking into a hiss.
+  bloomstalker: [
+    { f0: 420, f1: 560, time: 0, dur: 0.14, type: 'triangle', gain: 0.13, vibrato: [22, 28] },
+    { f0: 780, f1: 620, time: 0.08, dur: 0.12, type: 'square', gain: 0.05, vibrato: [40, 26] },
+  ],
+  // Direwisp: a cold rising water-wail.
+  direwisp: [
+    { f0: 360, f1: 560, time: 0, dur: 0.24, type: 'sine', gain: 0.13, vibrato: [9, 26] },
+    { f0: 540, f1: 760, time: 0.06, dur: 0.2, type: 'triangle', gain: 0.05, vibrato: [12, 22] },
+  ],
+  // Stillguard: a calm, deep water-hum.
+  stillguard: [
+    { f0: 220, f1: 280, time: 0, dur: 0.28, type: 'sine', gain: 0.14, vibrato: [8, 16] },
+    { f0: 330, time: 0.04, dur: 0.2, type: 'triangle', gain: 0.06, vibrato: [10, 12] },
+  ],
+
+  // Fire: rough snarls, chants & solemn tolls.
+  // Cindermage: a crackling ember-chant with a high spark.
+  cindermage: [
+    { f0: 260, f1: 360, time: 0, dur: 0.16, type: 'sawtooth', gain: 0.13, vibrato: [30, 24] },
+    { f0: 720, f1: 960, time: 0.1, dur: 0.1, type: 'square', gain: 0.05, vibrato: [50, 20] },
+  ],
+  // Palefire: a pale, flickering flame-wail.
+  palefire: [
+    { f0: 380, f1: 300, time: 0, dur: 0.24, type: 'triangle', gain: 0.12, vibrato: [16, 26] },
+    { f0: 560, f1: 460, time: 0.06, dur: 0.18, type: 'sine', gain: 0.05, vibrato: [22, 20] },
+  ],
+  // Sporefang: a hissing spark-snarl.
+  sporefang: [
+    { f0: 300, f1: 460, time: 0, dur: 0.12, type: 'sawtooth', gain: 0.14, vibrato: [36, 28] },
+    { f0: 620, f1: 820, time: 0.1, dur: 0.12, type: 'square', gain: 0.06, vibrato: [50, 30] },
+  ],
+  // Vineraptor: a screeching fiery raptor call.
+  vineraptor: [
+    { f0: 380, f1: 640, time: 0, dur: 0.12, type: 'sawtooth', gain: 0.15, vibrato: [28, 30] },
+    { f0: 640, f1: 500, time: 0.12, dur: 0.18, type: 'sawtooth', gain: 0.11, vibrato: [20, 44] },
+  ],
+  // Gravecant: a chanting low flame-drone with a dark edge.
+  gravecant: [
+    { f0: 180, f1: 240, time: 0, dur: 0.28, type: 'sawtooth', gain: 0.13, vibrato: [16, 22] },
+    { f0: 360, f1: 300, time: 0.06, dur: 0.2, type: 'sine', gain: 0.05, vibrato: [10, 24] },
+  ],
+  // Emberward: a warm, steadfast flame-call, lower.
+  emberward: [
+    { f0: 240, f1: 360, time: 0, dur: 0.2, type: 'sawtooth', gain: 0.15, vibrato: [22, 24] },
+    { f0: 150, f1: 200, time: 0.02, dur: 0.24, type: 'square', gain: 0.07, vibrato: [18, 12] },
+  ],
+  // Vowkeeper: a solemn oath-toll of flame.
+  vowkeeper: [
+    { f0: 196, f1: 262, time: 0, dur: 0.3, type: 'sine', gain: 0.14, vibrato: [10, 16] },
+    { f0: 392, time: 0.02, dur: 0.22, type: 'triangle', gain: 0.06, vibrato: [12, 14] },
+    { f0: 147, time: 0.04, dur: 0.24, type: 'sawtooth', gain: 0.05 },
+  ],
+
+  // Machine: stepped beeps, motor whirs & arcane drones.
+  // Geomote: a grinding pebble-rattle between two beeps.
+  geomote: [
+    { f0: 200, f1: 160, time: 0, dur: 0.14, type: 'sawtooth', gain: 0.12, glide: 'lin', vibrato: [40, 10] },
+    { f0: 340, time: 0.08, dur: 0.05, type: 'square', gain: 0.08 },
+    { f0: 260, time: 0.14, dur: 0.05, type: 'square', gain: 0.07 },
+  ],
+  // Shieldshard: a metallic clang over a short motor.
+  shieldshard: [
+    { f0: 260, time: 0, dur: 0.08, type: 'square', gain: 0.12 },
+    { f0: 150, f1: 180, time: 0.02, dur: 0.22, type: 'sawtooth', gain: 0.09, glide: 'lin', vibrato: [28, 8] },
+    { f0: 420, time: 0.1, dur: 0.05, type: 'square', gain: 0.07 },
+  ],
+  // Prismguard: a resonant crystalline-metal tone with a beep.
+  prismguard: [
+    { f0: 180, f1: 220, time: 0, dur: 0.24, type: 'sawtooth', gain: 0.12, glide: 'lin', vibrato: [20, 8] },
+    { f0: 660, time: 0.06, dur: 0.16, type: 'sine', gain: 0.05, vibrato: [12, 10] },
+    { f0: 990, time: 0.12, dur: 0.1, type: 'triangle', gain: 0.04 },
+  ],
+  // Hexshade: a glitchy arcane-machine warble.
+  hexshade: [
+    { f0: 300, f1: 220, time: 0, dur: 0.24, type: 'sawtooth', gain: 0.12, glide: 'lin', vibrato: [26, 24] },
+    { f0: 600, f1: 460, time: 0.06, dur: 0.16, type: 'square', gain: 0.05, vibrato: [40, 20] },
+  ],
+  // Nullmancer: a droning, detuned null-tone that sinks.
+  nullmancer: [
+    { f0: 200, f1: 150, time: 0, dur: 0.3, type: 'square', gain: 0.12, glide: 'lin', vibrato: [8, 12] },
+    { f0: 202, f1: 152, time: 0.02, dur: 0.28, type: 'sawtooth', gain: 0.06, glide: 'lin', vibrato: [6, 10] },
+  ],
+  // Sigilwarden: a deep rune-drone under a metallic chime.
+  sigilwarden: [
+    { f0: 130, f1: 110, time: 0, dur: 0.32, type: 'sawtooth', gain: 0.14, glide: 'lin', vibrato: [14, 8] },
+    { f0: 520, time: 0.1, dur: 0.14, type: 'sine', gain: 0.06, vibrato: [10, 10] },
+    { f0: 780, time: 0.16, dur: 0.1, type: 'triangle', gain: 0.04 },
+  ],
+  // Vaultwarden: a massive vault-door groan, the lowest machine of all.
+  vaultwarden: [
+    { f0: 80, f1: 66, time: 0, dur: 0.36, type: 'sawtooth', gain: 0.15, glide: 'lin', vibrato: [16, 5] },
+    { f0: 160, time: 0.16, dur: 0.06, type: 'square', gain: 0.08 },
+    { f0: 54, time: 0.02, dur: 0.32, type: 'square', gain: 0.06 },
+  ],
+
+  // Nature: big grove-groans & scything rasps.
+  // Ashkeeper: a big ashen grove-groan.
+  ashkeeper: [
+    { f0: 150, f1: 210, time: 0, dur: 0.3, type: 'sawtooth', gain: 0.15, vibrato: [18, 22] },
+    { f0: 96, time: 0.02, dur: 0.28, type: 'square', gain: 0.08 },
+    { f0: 320, f1: 260, time: 0.24, dur: 0.14, type: 'triangle', gain: 0.06, vibrato: [16, 26] },
+  ],
+  // Thornreaper: a huge scything roar-rasp.
+  thornreaper: [
+    { f0: 130, f1: 200, time: 0, dur: 0.18, type: 'sawtooth', gain: 0.16, vibrato: [24, 28] },
+    { f0: 200, f1: 150, time: 0.16, dur: 0.22, type: 'sawtooth', gain: 0.12, vibrato: [16, 40] },
+    { f0: 84, time: 0.02, dur: 0.3, type: 'square', gain: 0.07 },
+  ],
 };
 
 export type MusicTrack = 'hub' | 'dungeon' | 'battle' | 'boss' | 'finalboss' | 'crystal' | 'haunted' | 'jungle' | null;

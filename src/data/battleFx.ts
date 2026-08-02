@@ -1,3 +1,5 @@
+import type { AttributeId, ElementId } from './elements';
+
 /**
  * Per-monster battle visual effects (the polish pass, plan §6 flavour).
  *
@@ -8,11 +10,11 @@
  * continuous signature it wears the whole fight: emberling smoulders, the
  * dark wisps trail violet smoke, the boss burns with a warm glow.
  *
- * It is deliberately data — one entry per species — so extending it to the
- * later reaches, or swapping a look, is an edit here and nothing else. Only
- * **The Quiet Crossing** roster is populated for now (the three starters that
- * ride the player's lantern, the five echoes met on its floors, and the
- * Warden). A species with no entry simply has no aura, which is a valid state.
+ * It is deliberately data. **Every** species has an aura: a handful of
+ * hand-tuned entries in `BATTLE_AURAS` (the starters, the Crossing echoes and
+ * the Warden), and — for everyone else — an element-keyed default from
+ * `ELEMENT_AURAS`, lightly modulated by the creature's class. So the roster is
+ * fully covered while a bespoke entry stays an easy per-species override.
  *
  * All colours are additive so they land in the bloom threshold and read as
  * "HD", matching the torch / portal / element-plate flair.
@@ -164,6 +166,121 @@ export const BATTLE_AURAS: Record<string, BattleAura> = {
   },
 };
 
-export function battleAura(speciesId: string): BattleAura | undefined {
-  return BATTLE_AURAS[speciesId];
+/**
+ * The default aura every species falls back to, keyed by its **element**. Each
+ * has its own motion signature so a fire monster never reads like a water one:
+ * embers curl up, droplets settle, spores drift, sparks flick and die, dark
+ * smoke rises slow. Colours are seeded from the shared element palette
+ * (`ELEMENTS[e].light`) so the auras stay in step with the floor plates and UI
+ * chips. None carries a `light` — the per-fighter glow stays a warden privilege.
+ */
+export const ELEMENT_AURAS: Record<ElementId, BattleAura> = {
+  fire: {
+    color: 0xff8a3d,
+    rate: 6,
+    originY: 0.45,
+    originSpread: 0.26,
+    speed: 0.55,
+    spread: 0.5,
+    upBias: 0.9,
+    gravity: 0.45,
+    life: 0.85,
+    size: 0.08,
+  },
+  water: {
+    color: 0x4ad6ff,
+    rate: 4,
+    originY: 0.5,
+    originSpread: 0.3,
+    speed: 0.4,
+    spread: 0.9,
+    upBias: 0.35,
+    gravity: 0.6,
+    life: 1.2,
+    size: 0.08,
+  },
+  nature: {
+    color: 0x7bdc8a,
+    rate: 3,
+    originY: 0.5,
+    originSpread: 0.3,
+    speed: 0.25,
+    spread: 0.6,
+    upBias: 0.6,
+    gravity: 0.08,
+    life: 1.5,
+    size: 0.07,
+  },
+  machine: {
+    color: 0xc9d4e8,
+    rate: 5,
+    originY: 0.4,
+    originSpread: 0.24,
+    speed: 0.85,
+    spread: 0.6,
+    upBias: 0.7,
+    gravity: -1.8,
+    life: 0.55,
+    size: 0.06,
+  },
+  dark: {
+    color: 0xc77dff,
+    rate: 4,
+    originY: 0.55,
+    originSpread: 0.32,
+    speed: 0.3,
+    spread: 0.6,
+    upBias: 0.45,
+    gravity: 0.12,
+    life: 1.35,
+    size: 0.1,
+  },
+};
+
+/**
+ * A light per-class overlay on top of an element default, so the three
+ * attributes read subtly different without authoring 15 combos. Element stays
+ * the dominant signal — this only nudges density and motion:
+ *   - **assassin** — sharper and quicker (a touch more rate + speed, tighter).
+ *   - **hero** — steadier and heavier (bigger motes, a hair slower).
+ *   - **mage** — wispier (fewer, longer-lived, floatier motes).
+ * Pure: returns a new object, never mutates the shared default.
+ */
+function withAttribute(base: BattleAura, attribute: AttributeId): BattleAura {
+  switch (attribute) {
+    case 'assassin':
+      return {
+        ...base,
+        rate: base.rate * 1.25,
+        speed: (base.speed ?? 0.4) * 1.2,
+        size: (base.size ?? 0.08) * 0.9,
+      };
+    case 'hero':
+      return {
+        ...base,
+        rate: base.rate * 0.9,
+        speed: (base.speed ?? 0.4) * 0.9,
+        size: (base.size ?? 0.08) * 1.2,
+      };
+    case 'mage':
+      return {
+        ...base,
+        rate: base.rate * 0.8,
+        life: (base.life ?? 1) * 1.3,
+        upBias: (base.upBias ?? 0.5) + 0.15,
+      };
+  }
+}
+
+/**
+ * The aura a fielded creature wears. A hand-tuned `BATTLE_AURAS` entry wins;
+ * otherwise the creature gets its element's default, nudged by its class. Never
+ * undefined for a real species — every species has an element, so every species
+ * has an aura.
+ */
+export function battleAura(speciesId: string, element: ElementId, attribute?: AttributeId): BattleAura {
+  const bespoke = BATTLE_AURAS[speciesId];
+  if (bespoke) return bespoke;
+  const base = ELEMENT_AURAS[element];
+  return attribute ? withAttribute(base, attribute) : base;
 }

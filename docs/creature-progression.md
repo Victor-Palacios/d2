@@ -12,10 +12,11 @@ companion; the runtime maths and worked examples live in
 > when to evolve or de-evolve), without Digimon's "any starter reaches any top
 > form" criticism. See the header comment in `systems/party/evolve.ts`.
 
-> **⚠ Debug evolution levels.** Evolution gates are currently set to a temporary
-> debug schedule so any line can be walked quickly: **base → 2nd form at Lv2,
-> 3rd form at Lv3, 4th form at Lv4**. These are placeholders — re-tune per line
-> before shipping. The gate is just the `level` field on each `EvolutionOption`.
+> **Evolution schedule.** Gates climb by stage: **base → 2nd form at Lv 3,
+> 3rd form at Lv 7, 4th form at Lv 10**. Deeper lines evolve a touch later — a
+> branch that leads into a full 4-stage line opens its first gate at **Lv 4**
+> instead of 3, and the early-bloomer Scrapmite line takes its first gate a rung
+> early at **Lv 2**. The gate is just the `level` field on each `EvolutionOption`.
 
 ---
 
@@ -34,7 +35,7 @@ companion; the runtime maths and worked examples live in
 | Evolution fanfare (cinematic) | `src/ui/TranscendCinematic.ts` + `audio.transcend()` |
 | **Move-loadout UI** (toggle the ≤5 active) | `src/ui/MovesScreen.ts` (R1 → menu → Moves) |
 | Save migration for new stats/loadout | `src/systems/party/saveGame.ts` |
-| Tests | `src/systems/party/evolve.test.ts` (class purity, debug levels, loadout) · `tools/smoke/transcend.mjs` · `tools/smoke/transcend-fx.mjs` |
+| Tests | `src/systems/party/evolve.test.ts` (class purity, level schedule, loadout) · `tools/smoke/transcend.mjs` · `tools/smoke/transcend-fx.mjs` |
 
 ---
 
@@ -97,8 +98,8 @@ evolutions?: { to: string; level: number; branch?: string }[]
 ```
 
 - **Level-triggered:** a branch is eligible once `creature.level >= level`.
-  Currently a temporary debug schedule (Lv2/3/4 per stage — see the banner
-  above); many forms are terminal (no `evolutions`).
+  The schedule is 3 / 7 / 10 by stage (deepest lines a rung later — see the
+  banner above); many forms are terminal (no `evolutions`).
 - **Branching (Digimon-style, cross-line):** a species may list more than one
   option, and an option can point at a form in a *different line* — so a soul
   can cross families the way a Digimon does, not just walk one fixed chain.
@@ -232,5 +233,3 @@ is fast and deterministic — the model to copy for further creature-system test
 - **Melee capstones** — the new single-target physical capstones (Ember Rend,
   Savage Bite, …) are ranged today; mark them `melee: true` if you want them to
   take cover/row modifiers like Ember Fang.
-- **Element rebalance** — the wild roster is Nature-heavy and Fire-thin; worth
-  fixing before the roadmap's "make element a real mechanic" step.

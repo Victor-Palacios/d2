@@ -1,6 +1,7 @@
-# The Everwake — a "first hour" HD-2D dungeon-crawler RPG (browser)
+# The Everwake — an HD-2D dungeon-crawler RPG (browser)
 
-A playable vertical slice of a PS1-era dungeon-crawler RPG, rendered in the
+A PS1-era dungeon-crawler RPG — five reaches, a three-act story, companions and a
+transcendence system — rendered in the
 Square-Enix-style **HD-2D** look: pixel-art billboard sprites standing inside a
 real 3D environment, lit by a shadow-casting point light, finished with a
 bloom + depth-of-field + tilt-shift + grade post stack.
@@ -335,7 +336,6 @@ Everything is behind a data layer, so swapping art is a data edit:
 | NPCs and human sprites | `HUMANS` in `src/assets/art.ts` |
 | A whole new dungeon | a new `src/data/<name>.ts` exporting a `Reach`, registered in `src/data/reaches.ts` |
 | Dungeon layouts, encounters, dialogue | `src/data/quietCrossing.ts`, `crystalCavern.ts`, `hauntedDungeon.ts` |
-| Guard teams and starters | `src/data/teams.ts` |
 | Shop stock | `src/data/items.ts` |
 | Tile / wall textures | the generators in `src/engine/pixel.ts` (one per `TerrainStyle`) |
 | A reach's terrain look | `terrain` / `wallHeight` / `fogColor` on each floor's `TileTheme` |

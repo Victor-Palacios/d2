@@ -23,7 +23,7 @@ import { defaultFormation } from '../battle/engine';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 /**
  * Oldest save this build can still read. Normally we keep this at 1 because
  * changes are additive, but v5/v6 renamed the tutorial reach's id and clear
@@ -37,7 +37,9 @@ export const SAVE_VERSION = 12;
  * so anything older is dropped and started fresh. v11 adds the saved battle
  * formation, which `applySave` defaults to the front line — so a v10 loads.
  * v12 adds `lightBonus` (permanent LP won from wardens), back-filled to 0 — so a
- * v11 save still loads.
+ * v11 save still loads. v13 drops the retired `teamId` (the cut Guard Team
+ * system) — a shrinking schema, so an older save's extra field is simply ignored
+ * and still loads.
  */
 export const MIN_SAVE_VERSION = 10;
 
@@ -63,7 +65,6 @@ export interface SaveData {
     maxLight: number;
     lightBonus: number;
     hasLeave: boolean;
-    teamId: string | null;
     teamAttribute: AttributeId | null;
     activeReachId: string;
     floorIndex: number;
@@ -105,7 +106,6 @@ export function snapshot(kind: SaveKind, scene: SaveData['scene'], label: string
       maxLight: game.maxLight,
       lightBonus: game.lightBonus,
       hasLeave: game.hasLeave,
-      teamId: game.teamId,
       teamAttribute: game.teamAttribute,
       activeReachId: game.activeReachId,
       floorIndex: game.floorIndex,
@@ -197,7 +197,6 @@ export function applySave(data: SaveData) {
   game.maxLight = s.maxLight;
   game.lightBonus = s.lightBonus ?? 0;
   game.hasLeave = s.hasLeave;
-  game.teamId = s.teamId;
   game.teamAttribute = s.teamAttribute;
   game.activeReachId = s.activeReachId ?? 'crossing';
   game.floorIndex = s.floorIndex;

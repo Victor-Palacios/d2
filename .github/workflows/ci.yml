@@ -1,9 +1,10 @@
 name: CI
 
-# The quality gate: typecheck, lint, unit tests and a production build on every
-# push and pull request. The deploy workflow publishes to Pages only after its
-# own build succeeds; this runs the same checks on branches and PRs too, so a
-# regression is caught before it can reach `main`.
+# The quality gate: typecheck, lint, unit tests, the naming guard and a
+# production build, plus a reliable subset of the Playwright smoke tests, on
+# every push and pull request. The Pages deploy (deploy-pages.yml) is gated on
+# this workflow succeeding on `main` — so a regression is caught before it can
+# publish.
 on:
   push:
   pull_request:
@@ -36,13 +37,45 @@ jobs:
       - name: Lint & format check
         run: npm run lint
 
+      - name: Naming guard
+        run: node tools/check-naming.mjs
+
       - name: Unit tests
         run: npm run test
 
       - name: Build
         run: npm run build
 
-# Note: the Playwright smoke tests (tools/smoke) are intentionally not run here.
-# CI has no GPU, so the HD-2D post stack falls back to a software rasterizer at
-# ~0.3 fps (see HANDOFF.md §7). They are pinned as a devDependency and run
-# locally / on demand against a real GPU instead.
+  # Behavioural guard: drive the built game in a real (headless) browser. The
+  # runner has no GPU, so Chromium falls back to SwiftShader (~1fps with the full
+  # post stack) — the subset in `tools/smoke/ci.mjs` is the scripts that either
+  # never render a crawl scene or seed state directly and strip the FX stack, so
+  # they stay fast and deterministic here. Grow that list as more scripts are
+  # migrated to the `_harness.mjs` entry point (see tools/smoke/README.md).
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      - name: Run reliable smoke subset
+        run: |
+          npm run preview &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:4173/ >/dev/null && break
+            sleep 1
+          done
+          URL=http://localhost:4173/ node tools/smoke/ci.mjs

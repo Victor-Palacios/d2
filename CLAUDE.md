@@ -10,10 +10,12 @@ Guidance for AI agents (and humans) working in this repo. Read
   branch and what GitHub Pages deploys from. Commit and push straight to
   `main`; do not open feature branches or PRs unless the owner explicitly asks.
 - Push with `git push -u origin main`.
-- Every push to `main` triggers the Pages deploy
-  (`.github/workflows/deploy-pages.yml`). Keep `main` green: `npm run build`
-  runs `tsc --noEmit` first, so a type error fails the deploy rather than
-  shipping a broken bundle. Build before you push.
+- **The Pages deploy is now gated on CI.** A push to `main` runs the `CI`
+  workflow (typecheck · lint · unit tests · naming guard · build · a reliable
+  smoke subset); `deploy-pages.yml` only publishes a commit for which CI
+  **succeeded** (`workflow_run`). So a lint/test/smoke failure no longer ships —
+  but it does land on `main` (the deployed branch) until the next green push, so
+  still keep `main` green: run the full local gate before every push.
 
 ## Naming — IMPORTANT
 

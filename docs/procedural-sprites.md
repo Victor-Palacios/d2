@@ -276,7 +276,7 @@ reversible transform). Bosses (Regalion, etc.) stay standalone, not evo targets.
   Everember (mage/fire), Ashmoth → Cindershroud (assassin/dark), Wardling →
   Reliquary → Lanternlord (hero/fire, boss line), Grievewisp → Mournlight
   (mage/dark), Keptsoul → Heldshade (hero/dark). All class-pure; evolutions on
-  the current debug schedule (Lv2/3). `integrate-lantern.mjs` inserts the 12 art
+  the 3 / 7 / 10 schedule (these lines gate at Lv3/Lv7). `integrate-lantern.mjs` inserts the 12 art
   keys and generates the 12 species from `LANTERN_SPECIES` (evolved stats scale
   by `LANTERN_FAC`); `lastLantern.ts` encounters were repointed off the borrowed
   gloomote/dropletta/shardling/revenance/glaciark onto the new roster. Verified

@@ -67,13 +67,11 @@ await page.waitForTimeout(400);
 const state = await page.evaluate(() => window.hd2dGame?.audio ? 'ok' : 'no-audio-hook');
 console.log('audio hook :', state);
 
-const SPECIES = [
-  // starter trio
-  'emberling', 'glidefang', 'nightnip',
-  // The Quiet Crossing (first dungeon): wild roster + the warden boss
-  'mitebug', 'sprigling', 'scrapmite', 'gloomote', 'dropletta', 'regalion',
-];
-const NEGATIVE = 'bulwarq'; // a monster with no authored cry — must stay silent.
+// Derive the full roster from the running game so this stays correct as species
+// are added — every species must now have a voice (none silent).
+const SPECIES = await page.evaluate(() => Object.keys(window.hd2dGame.roster.SPECIES));
+console.log('roster size :', SPECIES.length);
+const NEGATIVE = '__not_a_species__'; // an unknown id — must stay silent.
 
 const measure = async (id) => page.evaluate((sp) => {
   const a = window.hd2dGame.audio;
@@ -99,7 +97,7 @@ for (const id of SPECIES) {
   const ok = m.has && m.oscs >= 2 && m.gains >= 2 && m.ramps >= 1;
   pass = pass && ok;
   console.log(
-    `${ok ? 'PASS' : 'FAIL'}  ${id.padEnd(10)}  hasCry=${m.has}  oscillators=${m.oscs}  gains=${m.gains}  pitch-glides=${m.ramps}  vibrato-LFOs=${m.vibrato}`,
+    `${ok ? 'PASS' : 'FAIL'}  ${id.padEnd(14)}  hasCry=${m.has}  oscillators=${m.oscs}  gains=${m.gains}  pitch-glides=${m.ramps}  vibrato-LFOs=${m.vibrato}`,
   );
   await page.waitForTimeout(150);
 }
@@ -107,7 +105,7 @@ for (const id of SPECIES) {
 const neg = await measure(NEGATIVE);
 const negOk = !neg.has && neg.oscs === 0;
 pass = pass && negOk;
-console.log(`${negOk ? 'PASS' : 'FAIL'}  ${NEGATIVE.padEnd(10)}  hasCry=${neg.has}  oscillators=${neg.oscs}   (expected silent)`);
+console.log(`${negOk ? 'PASS' : 'FAIL'}  ${NEGATIVE.padEnd(14)}  hasCry=${neg.has}  oscillators=${neg.oscs}   (expected silent)`);
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 console.log('RESULT:', pass && !errs.length ? 'ALL PASS' : 'FAILURES');

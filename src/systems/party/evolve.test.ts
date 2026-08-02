@@ -30,7 +30,7 @@ describe('evolution — class purity (the house rule)', () => {
 
 describe('evolution — Digimon-style branching (cross-line, same class)', () => {
   it('emberling offers two same-class paths and refuses an ambiguous evolve', () => {
-    const c = makeCreature('emberling', 2);
+    const c = makeCreature('emberling', 4); // both gates open (grovelord Lv3, emberforge Lv4)
     const opts = evolutionOptions(c).map((o) => o.to);
     expect(opts).toContain('emberforge'); // its own line
     expect(opts).toContain('grovelord'); // a different line, still Hero
@@ -41,7 +41,7 @@ describe('evolution — Digimon-style branching (cross-line, same class)', () =>
   });
 
   it('takes the chosen branch into another line', () => {
-    const c = makeCreature('emberling', 2);
+    const c = makeCreature('emberling', 3); // grovelord's Lv3 gate
     expect(evolve(c, 'grovelord')?.toId).toBe('grovelord');
     expect(c.speciesId).toBe('grovelord');
     expect(c.attribute).toBe('hero'); // class preserved across the crossing
@@ -50,7 +50,7 @@ describe('evolution — Digimon-style branching (cross-line, same class)', () =>
   it('de-evolves to the exact base even when the form is shared by other lines', () => {
     // duskfang is reachable from nightnip, prismoth and ashmoth. A prismoth that
     // crosses into duskfang must return to *prismoth*, not the canonical nightnip.
-    const c = makeCreature('prismoth', 2);
+    const c = makeCreature('prismoth', 4); // prismoth → duskfang crosses at Lv4
     evolve(c, 'duskfang');
     expect(c.speciesId).toBe('duskfang');
     expect(devolveTargetId(c)).toBe('prismoth'); // ancestry, not the static tree
@@ -59,9 +59,9 @@ describe('evolution — Digimon-style branching (cross-line, same class)', () =>
   });
 
   it('walks a cross-line path several steps up and back down exactly', () => {
-    const c = makeCreature('prismoth', 4);
-    evolve(c, 'duskfang'); // cross-line branch (Lv2)
-    expect(evolve(c)?.toId).toBe('nightmaw'); // duskfang's own line (Lv3)
+    const c = makeCreature('prismoth', 7);
+    evolve(c, 'duskfang'); // cross-line branch (Lv4)
+    expect(evolve(c)?.toId).toBe('nightmaw'); // duskfang's own line (Lv7)
     expect(c.speciesId).toBe('nightmaw');
     expect(devolve(c)?.toId).toBe('duskfang');
     expect(devolve(c)?.toId).toBe('prismoth'); // all the way home
@@ -69,21 +69,36 @@ describe('evolution — Digimon-style branching (cross-line, same class)', () =>
   });
 });
 
-describe('evolution — debug level schedule (2 / 3 / 4)', () => {
-  it('emberling evolves at Lv2, not Lv1', () => {
-    expect(canEvolve(makeCreature('emberling', 1))).toBe(false);
-    const c = makeCreature('emberling', 2);
+describe('evolution — level schedule (3 / 7 / 10)', () => {
+  it('emberling opens its first gate at Lv3, not Lv2', () => {
+    expect(canEvolve(makeCreature('emberling', 2))).toBe(false);
+    const c = makeCreature('emberling', 3);
     expect(canEvolve(c)).toBe(true);
-    expect(evolve(c, 'emberforge')?.toId).toBe('emberforge');
-    expect(c.speciesId).toBe('emberforge');
+    expect(evolve(c, 'grovelord')?.toId).toBe('grovelord'); // grovelord's Lv3 branch
+    expect(c.speciesId).toBe('grovelord');
   });
 
-  it('walks a full 4-stage line one level at a time', () => {
-    const c = makeCreature('emberling', 4);
-    expect(evolve(c, 'emberforge')?.toId).toBe('emberforge'); // Lv2 gate (branch chosen)
-    expect(evolve(c)?.toId).toBe('ashwarden'); // Lv3 gate (single branch)
-    expect(evolve(c)?.toId).toBe('pyrelord'); // Lv4 gate (single branch)
+  it('walks a full 4-stage line by its 4 / 7 / 10 gates', () => {
+    // The Fire line runs one rung later than the norm because it is the deepest.
+    const c = makeCreature('emberling', 10);
+    expect(evolve(c, 'emberforge')?.toId).toBe('emberforge'); // Lv4 gate (branch chosen)
+    expect(evolve(c)?.toId).toBe('ashwarden'); // Lv7 gate (single branch)
+    expect(evolve(c)?.toId).toBe('pyrelord'); // Lv10 gate (single branch)
     expect(canEvolve(c)).toBe(false); // terminal
+  });
+
+  it('the deepest lines gate one level later than the shallow ones', () => {
+    // A base whose branch enters a 4-stage line waits until Lv4; a shallower
+    // branch on the same base is ready at Lv3. Scrapmite, an early bloomer, at Lv2.
+    expect(canEvolve(makeCreature('scrapmite', 2))).toBe(true); // Lv2 (a rung early)
+    const emberling3 = makeCreature('emberling', 3);
+    expect(evolutionOptions(emberling3).map((o) => o.to)).toEqual(['grovelord']); // only the Lv3 branch
+    const emberling4 = makeCreature('emberling', 4);
+    expect(
+      evolutionOptions(emberling4)
+        .map((o) => o.to)
+        .sort(),
+    ).toEqual(['emberforge', 'grovelord']);
   });
 });
 

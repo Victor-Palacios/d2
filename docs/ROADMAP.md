@@ -1,12 +1,12 @@
-# Roadmap — from the first hour to the first five
+# Roadmap
 
-Where this goes next. The current build is a complete **first-hour vertical
-slice** (see `docs/PLAN_AUDIT.md`); this charts the path toward reproducing the
-*shape* of a **classic monster-collecting dungeon-crawler**'s first ~5 hours —
-multiple reaches, a real progression loop, DNA-merge evolution, and recruiting —
-without breaking the two
-things that make the slice good: it is **fully procedural** (no binary assets)
-and its **battle model is headless** (pure rules, no renderer).
+Where this goes next. The current build has grown well past its original
+one-reach starting point (see `docs/PLAN_AUDIT.md`): five reaches, a three-act
+story, companions and a transcendence system all ship today. This charts the
+path toward deepening the **classic monster-collecting dungeon-crawler** loop —
+DNA-merge evolution, procedural floors, more story missions — without breaking
+the two things that keep the codebase good: it is **fully procedural** (no
+binary assets) and its **battle model is headless** (pure rules, no renderer).
 
 Milestones continue the existing `M0–M6` numbering. Each is sized to be a
 shippable increment, not a release.
@@ -15,8 +15,8 @@ shippable increment, not a release.
 
 ## Guiding principles (don't regress these)
 
-1. **Data-driven, not code-driven.** New content is a data edit. Reachs,
-   creatures, techniques, teams all already live in `src/data/`. Keep it there.
+1. **Data-driven, not code-driven.** New content is a data edit. Reaches,
+   creatures and techniques all already live in `src/data/`. Keep it there.
 2. **No binary assets** (plan §0.2). Every new creature is a pixel map in
    `art.ts`; every new sound is an oscillator in `Audio.ts`.
 3. **The battle model stays headless.** `systems/battle/engine.ts` has no
@@ -143,14 +143,17 @@ One tutorial dungeon becomes several servers/reaches.
   (emit the same `rows` format `TileGrid` parses; hand-author boss floors), and
   a difficulty curve tied to the M7 level math.
 
-## M11 — Story + tamer battles across missions
+## M11 — Story + tamer battles
 
-- Extend the `dialogue/script.ts` + `HubScene` mission-hook pattern (Mission 2 is
-  already stubbed) into a Mission 2–5 chain with flag-gated NPCs.
+- The three-act main line (the between-reach `HubScene` beats — the Vigil's
+  leave, the companion joins, the Overgrowth aftermath, the midpoint) is in
+  place; extend the same flag-gated dialogue pattern into more side-beats and
+  reach-specific hooks.
 - **Tamer battles**: enemy *parties* with fixed rosters and simple scripted AI
   variants (the enemy AI in `engine.ts` already takes a party, not just mobs).
-- Wire **in-battle item use** (the disabled **Item** action) — small, high-value,
-  and it makes the shop matter.
+- Wire **in-battle item use** (there is no **Item** action in the battle menu
+  yet — town item use is done, `ui/ItemsScreen.ts`) — small, high-value, and it
+  makes the shop matter mid-fight.
 
 ## M12 — Systems depth + economy pass
 
