@@ -6,7 +6,10 @@ import { chromium } from 'playwright';
 //   - scatter: extra passable decor was auto-placed (and none blocks a tile).
 //   - hazard: a '^' tile parses as kind 'hazard', is walkable, and stepping onto
 //     it drains HAZARD_LP extra light.
-//   - validator still passes over every floor (hazard portal-safety included).
+// And, on crystal-2: keys & locked doors — a '+' blocks while closed, a 'k'
+// pickup sets keysHeld, spending a key opens the door (passable + persisted),
+// and the validator's key-aware reachability accepts a keyed floor but flags a
+// door with no reachable key.
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROME,
@@ -78,6 +81,70 @@ const drain = await page.evaluate(async ({ haz }) => {
 
 check('hazard: entering it drains extra light',
   drain.after <= drain.before - 8, `${drain.before} -> ${drain.after}`);
+
+// --- keys & locked doors (crystal-2) ----------------------------------------
+const kd = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  g.game.openedDoors.clear();
+  g.game.takenPickups.clear();
+  g.game.activeReachId = 'crystal';
+  g.game.floorIndex = 1; // crystal-2
+  g.game.crawl.initialized = false;
+  await g.manager.go('dungeon');
+  await new Promise((r) => setTimeout(r, 400));
+  const s = g.manager.activeScene;
+  const floor = g.reaches.crystal.floors[1];
+  const find = (ch) => { for (let z = 0; z < floor.rows.length; z++) { const x = floor.rows[z].indexOf(ch); if (x >= 0) return { x, z }; } return null; };
+  const door = find('+');
+  const keyT = find('k');
+  const out = {
+    door, keyT,
+    doorKind: door && s.grid.at(door.x, door.z).kind,
+    doorClosed: door && s.grid.isDoorClosed(door.x, door.z),
+    doorPassableClosed: door && s.grid.passable(door.x, door.z),
+    keyKind: keyT && s.grid.at(keyT.x, keyT.z).kind,
+  };
+  // Pick up the key (resolve its tile-entry directly).
+  s.busy = false; s.moving = false; s.leaving = false;
+  await s.onTileEntered(s.grid.at(keyT.x, keyT.z));
+  out.keysAfterPickup = s.keysHeld;
+  // Open the door: stand on a passable neighbour and step into it.
+  const nb = [[0, 1], [0, -1], [1, 0], [-1, 0]]
+    .map(([dx, dz]) => ({ x: door.x + dx, z: door.z + dz }))
+    .find((c) => s.grid.passable(c.x, c.z));
+  const dir = nb.z < door.z ? 'down' : nb.z > door.z ? 'up' : nb.x < door.x ? 'right' : 'left';
+  s.tileX = nb.x; s.tileZ = nb.z; s.placePlayer();
+  s.tryStep(dir);
+  out.doorClosedAfter = s.grid.isDoorClosed(door.x, door.z);
+  out.doorOpenedPersisted = g.game.openedDoors.has(`${floor.id}:${door.x},${door.z}`);
+  out.keysAfterOpen = s.keysHeld;
+  return out;
+});
+
+check('door: \'+\' parses as a door that blocks while closed',
+  kd.doorKind === 'door' && kd.doorClosed === true && kd.doorPassableClosed === false, JSON.stringify(kd));
+check('key: \'k\' parses as a key; pickup sets keysHeld',
+  kd.keyKind === 'key' && kd.keysAfterPickup === 1, `keysHeld=${kd.keysAfterPickup}`);
+check('door: spending a key opens it (passable + persisted, key consumed)',
+  kd.doorClosedAfter === false && kd.doorOpenedPersisted === true && kd.keysAfterOpen === 0, JSON.stringify(kd));
+
+// --- validator: key-aware reachability (positive + negative) ----------------
+const val = await page.evaluate(() => {
+  const base = { id: 't', name: 't', theme: {}, events: {}, encounterRate: 0, encounters: [] };
+  const noKey = window.hd2dGame.validateFloor({
+    ...base, chests: { '3,1': { note: 'x' } },
+    rows: ['#######', '#S+C>.#', '#######'],
+  });
+  const withKey = window.hd2dGame.validateFloor({
+    ...base, chests: { '4,1': { note: 'x' } },
+    rows: ['#######', '#Sk+C>#', '#######'],
+  });
+  return { noKey, withKey };
+});
+check('validator flags a door with no reachable key',
+  val.noKey.some((e) => /locked|unreachable/.test(e)), val.noKey.join(' | '));
+check('validator accepts a door whose key is reachable',
+  !val.withKey.some((e) => /locked|unreachable/.test(e)), val.withKey.join(' | '));
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 if (errs.length) failures += errs.length;

@@ -18,6 +18,8 @@ export type TileKind =
   | 'light'
   | 'element'
   | 'hazard'
+  | 'key'
+  | 'door'
   | 'event';
 
 export interface Tile {
@@ -76,6 +78,7 @@ export const DEFAULT_THEME: TileTheme = {
  *   '<'  exit portal             'C'  treasure chest
  *   '$'  light shard             'W F N M D'  element floor tiles
  *   '^'  hazard tile (drains lantern light on entry — a glowing warning plate)
+ *   'k'  key pickup              '+'  locked door (blocks until a key is spent)
  *   '1'-'9'  scripted event tile (looked up in the floor's `events` map)
  * ```
  */
@@ -99,6 +102,9 @@ export class TileGrid {
 
   /** Walkable tiles blocked by solid decor — impassable, but still floor. */
   private blocked = new Set<string>();
+
+  /** Door tiles that have been unlocked — a closed door blocks like a wall. */
+  private doorsOpen = new Set<string>();
 
   /** Per-tile height offset in world units, keyed `"x,z"` (purely visual). */
   private elevation: Record<string, number>;
@@ -135,6 +141,8 @@ export class TileGrid {
     if (ch === 'C') return { x, z, kind: 'chest' };
     if (ch === '$') return { x, z, kind: 'light' };
     if (ch === '^') return { x, z, kind: 'hazard' };
+    if (ch === 'k') return { x, z, kind: 'key' };
+    if (ch === '+') return { x, z, kind: 'door' };
     if (ELEMENT_CHARS[ch]) return { x, z, kind: 'element', element: ELEMENT_CHARS[ch] };
     if (ch >= '1' && ch <= '9') return { x, z, kind: 'event', eventId: ch };
     return { x, z, kind: 'floor' };
@@ -155,12 +163,25 @@ export class TileGrid {
     this.blocked.add(`${x},${z}`);
   }
 
+  /** Unlocks a door tile (spent a key) so it becomes passable. */
+  openDoor(x: number, z: number) {
+    this.doorsOpen.add(`${x},${z}`);
+  }
+
+  /** Whether a door tile at (x, z) is still locked (closed). */
+  isDoorClosed(x: number, z: number): boolean {
+    const t = this.at(x, z);
+    return t?.kind === 'door' && !this.doorsOpen.has(`${x},${z}`);
+  }
+
   /**
    * Whether the party can step onto (x, z): a walkable tile not occupied by
-   * solid decor. Use this for movement; `walkable()` is pure grid geometry.
+   * solid decor and not a still-locked door. Use this for movement;
+   * `walkable()` is pure grid geometry.
    */
   passable(x: number, z: number): boolean {
-    return this.walkable(x, z) && !this.blocked.has(`${x},${z}`);
+    const k = `${x},${z}`;
+    return this.walkable(x, z) && !this.blocked.has(k) && !this.isDoorClosed(x, z);
   }
 
   worldPos(x: number, z: number, y = 0): THREE.Vector3 {

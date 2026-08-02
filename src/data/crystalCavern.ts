@@ -163,9 +163,9 @@ const FLOORS: DungeonFloor[] = [
       '#################',
       '#...............#',
       '#..S...W.M.....C#',
-      '#......###.###..#',
-      '#..1...#.....#..#',
-      '#......#.....#..#',
+      '#......###+###..#',
+      '#..1...#.....#k.#',
+      '#......#..C..#..#',
       '#..W...#..2..#..#',
       '#..M...#######..#',
       '#..........>....#',
@@ -189,8 +189,11 @@ const FLOORS: DungeonFloor[] = [
         intro: narrate('The vault hums. Something big is keeping the cold in here.'),
       },
     },
+    // The inner vault is sealed behind a locked door ('+' at 10,3); its key
+    // ('k' at 14,4) sits out in the open, so the reward inside is optional.
     chests: {
       '15,2': { obols: 300, note: 'A frozen cache, obols still legible under the frost.' },
+      '10,5': { obols: 260, item: 'mendingBalm', note: 'The sealed vault kept one thing worth the key.' },
     },
     encounterRate: 0.07,
     encounters: [

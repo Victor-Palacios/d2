@@ -23,7 +23,7 @@ import { defaultFormation } from '../battle/engine';
  * a future schema change discards stale saves instead of crashing on them.
  */
 
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 /**
  * Oldest save this build can still read. Normally we keep this at 1 because
  * changes are additive, but v5/v6 renamed the tutorial reach's id and clear
@@ -39,7 +39,8 @@ export const SAVE_VERSION = 13;
  * v12 adds `lightBonus` (permanent LP won from wardens), back-filled to 0 — so a
  * v11 save still loads. v13 drops the retired `teamId` (the cut Guard Team
  * system) — a shrinking schema, so an older save's extra field is simply ignored
- * and still loads.
+ * and still loads. v14 adds `openedDoors` (unlocked doors), back-filled to empty
+ * — so a v13 save still loads.
  */
 export const MIN_SAVE_VERSION = 10;
 
@@ -72,6 +73,7 @@ export interface SaveData {
     usedEvents: string[];
     openedChests: string[];
     takenPickups: string[];
+    openedDoors?: string[];
     soularium: typeof game.soularium;
     partyCap: number;
     sanctuary: CreatureInstance[];
@@ -113,6 +115,7 @@ export function snapshot(kind: SaveKind, scene: SaveData['scene'], label: string
       usedEvents: [...game.usedEvents],
       openedChests: [...game.openedChests],
       takenPickups: [...game.takenPickups],
+      openedDoors: [...game.openedDoors],
       soularium: JSON.parse(JSON.stringify(game.soularium)),
       partyCap: game.partyCap,
       sanctuary: JSON.parse(JSON.stringify(game.sanctuary)) as CreatureInstance[],
@@ -204,6 +207,7 @@ export function applySave(data: SaveData) {
   game.usedEvents = new Set(s.usedEvents);
   game.openedChests = new Set(s.openedChests);
   game.takenPickups = new Set(s.takenPickups);
+  game.openedDoors = new Set(s.openedDoors ?? []);
   game.soularium = s.soularium ?? {};
   game.partyCap = s.partyCap ?? START_PARTY_CAP;
   game.sanctuary = s.sanctuary ?? [];

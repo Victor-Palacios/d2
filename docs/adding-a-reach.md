@@ -144,6 +144,7 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
 '.' floor     'S' start       '>' portal down     '<' exit portal
 'C' chest     '$' light       W F N M D  element floor tiles
 '^' hazard tile (gutters extra lantern light on entry — a glowing warning plate)
+'k' key pickup          '+' locked door (spend a key to open; blocks until then)
 '1'-'9'  scripted event tile (looked up in that floor's `events` map)
 ```
 
@@ -152,6 +153,14 @@ Preview any floor (grid + live `validateFloor`, with elevation/hazard badges) at
 instead of eyeballing coordinates. A hazard must never be the *only* way to the
 descent portal (the validator enforces this so you're never forced to take
 damage to progress).
+
+**Keys & doors.** A `+` door blocks like a wall until the party spends a `k` key
+(keys are fungible — any key opens any door — and persist across suspend/resume
+via `game.openedDoors`). Gate an *optional* reward behind a door, not the way
+down: the validator runs lock-and-key reachability (open any affordable reachable
+door, re-flood, repeat) and flags a target that no reachable key can unlock. Put
+`N` keys for `N` doors you want openable; a key sealed behind the only door it
+opens is (correctly) a soft-lock.
 
 **Invariants the validator checks** (`src/data/validateReaches.ts`):
 - rows are all the same width; exactly one `S`.

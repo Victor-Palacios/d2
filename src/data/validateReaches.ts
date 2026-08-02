@@ -99,20 +99,25 @@ export function validateFloor(floor: DungeonFloor): string[] {
   for (const d of floor.decor ?? []) {
     if (decorIsSolid(d)) solidDecor.add(`${d.x},${d.z}`);
   }
-  const traversable = (x: number, z: number): boolean => walkable(x, z) && !solidDecor.has(`${x},${z}`);
+  const DIRS = [
+    [0, 1],
+    [0, -1],
+    [1, 0],
+    [-1, 0],
+  ];
+  // A closed door ('+') blocks like a wall until a key is spent on it. Keys ('k')
+  // are fungible, so `opened` tracks doors we've paid for; a tile is traversable
+  // if it's walkable, not solid-decor-blocked, and (if a door) already opened.
+  const opened = new Set<string>();
+  const traversable = (x: number, z: number): boolean =>
+    walkable(x, z) && !solidDecor.has(`${x},${z}`) && (at(x, z) !== '+' || opened.has(`${x},${z}`));
 
-  // reachability: flood-fill traversable tiles from the start
-  if (start) {
-    const seen = new Set<string>([`${start.x},${start.z}`]);
-    const stack: Coord[] = [start];
+  const flood = (from: Coord): Set<string> => {
+    const seen = new Set<string>([`${from.x},${from.z}`]);
+    const stack: Coord[] = [from];
     while (stack.length) {
       const { x, z } = stack.pop()!;
-      for (const [dx, dz] of [
-        [0, 1],
-        [0, -1],
-        [1, 0],
-        [-1, 0],
-      ]) {
+      for (const [dx, dz] of DIRS) {
         const nx = x + dx;
         const nz = z + dz;
         const k = `${nx},${nz}`;
@@ -122,9 +127,39 @@ export function validateFloor(floor: DungeonFloor): string[] {
         }
       }
     }
+    return seen;
+  };
+
+  // reachability: lock-and-key flood-fill from the start. Flood, count reachable
+  // keys, open any affordable door adjacent to the reachable region, re-flood —
+  // until no progress. Then every target must be reachable (else a soft-lock).
+  if (start) {
+    let seen = flood(start);
+    for (;;) {
+      let keysReachable = 0;
+      for (const c of seen) {
+        const [x, z] = c.split(',').map(Number);
+        if (at(x, z) === 'k') keysReachable++;
+      }
+      if (keysReachable - opened.size <= 0) break; // no spare key to spend
+      let toOpen: string | null = null;
+      for (let z = 0; z < rows.length && !toOpen; z++) {
+        for (let x = 0; x < rows[z].length && !toOpen; x++) {
+          if (at(x, z) !== '+' || opened.has(`${x},${z}`)) continue;
+          if (DIRS.some(([dx, dz]) => seen.has(`${x + dx},${z + dz}`))) toOpen = `${x},${z}`;
+        }
+      }
+      if (!toOpen) break; // no reachable closed door left to open
+      opened.add(toOpen);
+      seen = flood(start);
+    }
     for (const t of reachTargets) {
       if (!seen.has(`${t.x},${t.z}`)) {
-        errs.push(`tile at ${t.x},${t.z} ('${at(t.x, t.z)}') is unreachable from the start`);
+        const locked = rows.some((r) => r.includes('+'));
+        errs.push(
+          `tile at ${t.x},${t.z} ('${at(t.x, t.z)}') is unreachable from the start` +
+            (locked ? ' (locked: not enough keys)' : ''),
+        );
       }
     }
 
@@ -153,7 +188,10 @@ export function validateFloor(floor: DungeonFloor): string[] {
     for (let z = 0; z < rows.length; z++) {
       for (let x = 0; x < rows[z].length; x++) {
         const ch = at(x, z);
-        if ((ch === '>' || ch === '<') && !safe.has(`${x},${z}`)) {
+        // Only flag a portal that IS reachable overall (in `seen`) but not
+        // without a hazard — a portal unreachable for other reasons (e.g. a
+        // locked door) is already reported by the reachability check above.
+        if ((ch === '>' || ch === '<') && seen.has(`${x},${z}`) && !safe.has(`${x},${z}`)) {
           errs.push(`descent portal at ${x},${z} is only reachable by crossing a hazard`);
         }
       }
@@ -163,7 +201,7 @@ export function validateFloor(floor: DungeonFloor): string[] {
   // decor: in bounds, on a walkable tile, and a known kind. Solid decor must
   // also stay off tiles the party has to stand on (start + interactive tiles),
   // or that tile becomes impossible to use.
-  const standTiles = new Set(['S', 'C', '$', '>', '<']);
+  const standTiles = new Set(['S', 'C', '$', '>', '<', 'k', '+', '^']);
   for (const d of floor.decor ?? []) {
     const ch = at(d.x, d.z);
     if (d.z < 0 || d.z >= rows.length || d.x < 0 || d.x >= width) {

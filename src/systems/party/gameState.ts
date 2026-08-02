@@ -112,6 +112,8 @@ export class GameState {
   openedChests = new Set<string>();
   /** Collected light shards, keyed `floorId:x,z`. */
   takenPickups = new Set<string>();
+  /** Unlocked doors, keyed `floorId:x,z` — stays open on revisit/resume. */
+  openedDoors = new Set<string>();
 
   /** The Soularium — per-species capture progress (the game's "pokedex"). */
   soularium: Record<string, SoulEntry> = {};
@@ -401,6 +403,7 @@ export class GameState {
     this.usedEvents.clear();
     this.openedChests.clear();
     this.takenPickups.clear();
+    this.openedDoors.clear();
     this.crawl.initialized = false;
   }
 

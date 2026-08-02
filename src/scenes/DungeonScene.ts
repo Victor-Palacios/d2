@@ -81,6 +81,8 @@ export class DungeonScene extends GameScene {
   private moveFrom = new THREE.Vector3();
   private moveTo = new THREE.Vector3();
   private moveT = 0;
+  /** Keys in hand on this floor (picked up minus doors already spent them). */
+  private keysHeld = 0;
   /** Direction pressed while a step was in flight (input buffering). */
   private buffered: Facing | null = null;
 
@@ -258,6 +260,31 @@ export class DungeonScene extends GameScene {
         cs.position.set(world.x, world.y + 0.02, world.z);
         this.scene.add(cs);
         this.propShadows.set(key, cs);
+      } else if (t.kind === 'key') {
+        if (game.takenPickups.has(`${this.floor.id}:${key}`)) return;
+        const b = new Billboard(PROPS.key, 'prop:key', { height: 0.7, emissive: 0.35 });
+        b.bob = 0.06;
+        b.object.position.copy(world);
+        this.scene.add(b.object);
+        this.props.set(key, b);
+        const cs = contactShadow(0.7 * artAspect(PROPS.key), 0.22);
+        cs.position.set(world.x, world.y + 0.02, world.z);
+        this.scene.add(cs);
+        this.propShadows.set(key, cs);
+      } else if (t.kind === 'door') {
+        if (game.openedDoors.has(`${this.floor.id}:${key}`)) {
+          this.grid.openDoor(t.x, t.z); // already unlocked on a prior visit
+          return;
+        }
+        const b = new Billboard(PROPS.door, 'prop:door', { height: 1.7, emissive: 0.08 });
+        b.bob = 0;
+        b.object.position.copy(world);
+        this.scene.add(b.object);
+        this.props.set(key, b);
+        const cs = contactShadow(1.7 * artAspect(PROPS.door), 0.28);
+        cs.position.set(world.x, world.y + 0.02, world.z);
+        this.scene.add(cs);
+        this.propShadows.set(key, cs);
       } else if (t.kind === 'portal') {
         const portal = new Portal(this.particles, 0x6fd3ff, false);
         portal.object.position.copy(world);
@@ -272,6 +299,18 @@ export class DungeonScene extends GameScene {
       // Dialogue events are voices in the lantern now — no on-screen NPC to drive into.
       // They fire when the player crosses the tile (placed at map chokepoints).
     });
+
+    // Keys in hand = keys collected minus doors already spent them on this floor.
+    // Recomputed from persisted sets, so it survives suspend/resume with no extra
+    // saved field.
+    let collected = 0;
+    let spent = 0;
+    this.grid.forEach((t) => {
+      const id = `${this.floor.id}:${t.x},${t.z}`;
+      if (t.kind === 'key' && game.takenPickups.has(id)) collected++;
+      if (t.kind === 'door' && game.openedDoors.has(id)) spent++;
+    });
+    this.keysHeld = Math.max(0, collected - spent);
 
     this.placeTorches();
     this.placeDecor();
@@ -473,6 +512,20 @@ export class DungeonScene extends GameScene {
       this.facing = dir;
       this.updateFacingArt();
     }
+    // A locked door: spend a key to open it (then step through), or it blocks.
+    if (this.grid.isDoorClosed(nx, nz)) {
+      if (this.keysHeld <= 0) {
+        audio.sfx('bump');
+        toast(this.ctx.ui, '<span class="danger">Locked — you need a key</span>', 1400);
+        return;
+      }
+      this.keysHeld--;
+      game.openedDoors.add(`${this.floor.id}:${nx},${nz}`);
+      this.grid.openDoor(nx, nz);
+      this.clearProp(`${nx},${nz}`);
+      audio.sfx('confirm');
+      toast(this.ctx.ui, '<span class="ok">Unlocked</span>', 1200);
+    }
     if (!this.grid.passable(nx, nz)) {
       audio.sfx('bump');
       return;
@@ -498,6 +551,23 @@ export class DungeonScene extends GameScene {
   }
 
   // --- tile interactions ---------------------------------------------------
+
+  /** Removes a tracked prop billboard and its contact-shadow decal at a tile. */
+  private clearProp(key: string) {
+    const b = this.props.get(key);
+    if (b) {
+      this.scene.remove(b.object);
+      b.dispose();
+      this.props.delete(key);
+    }
+    const cs = this.propShadows.get(key);
+    if (cs) {
+      this.scene.remove(cs);
+      cs.geometry.dispose();
+      (cs.material as THREE.Material).dispose();
+      this.propShadows.delete(key);
+    }
+  }
 
   private async onTileEntered(tile: Tile) {
     // Reaching the way home is honored even if this very step emptied the
@@ -550,23 +620,23 @@ export class DungeonScene extends GameScene {
       const id = `${this.floor.id}:${key}`;
       if (!game.takenPickups.has(id)) {
         game.takenPickups.add(id);
-        const b = this.props.get(key);
-        if (b) {
-          this.scene.remove(b.object);
-          b.dispose();
-          this.props.delete(key);
-        }
-        const cs = this.propShadows.get(key);
-        if (cs) {
-          this.scene.remove(cs);
-          cs.geometry.dispose();
-          (cs.material as THREE.Material).dispose();
-          this.propShadows.delete(key);
-        }
+        this.clearProp(key);
         game.light = Math.min(game.maxLight, game.light + 40);
         audio.sfx('pickup');
         toast(this.ctx.ui, '<span class="ok">+40 LP</span>', 1600);
         this.hud.update(game.souls());
+      }
+      return;
+    }
+
+    if (tile.kind === 'key') {
+      const id = `${this.floor.id}:${key}`;
+      if (!game.takenPickups.has(id)) {
+        game.takenPickups.add(id);
+        this.clearProp(key);
+        this.keysHeld++;
+        audio.sfx('pickup');
+        toast(this.ctx.ui, `<span class="ok">Picked up a key</span> · ${this.keysHeld} held`, 1600);
       }
       return;
     }
