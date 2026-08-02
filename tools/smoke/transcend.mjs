@@ -1,6 +1,6 @@
 // Transcendence + learnset smoke test. Drives the headless evolve/creature APIs
-// exposed on window.hd2dGame to prove: level-gated learnsets, level-10 branching
-// evolution, the physical/magical stat split, and reversible de-evolution.
+// exposed on window.hd2dGame to prove: level-gated learnsets, the 3 / 7 / 10
+// branching schedule, the physical/magical stat split, and reversible de-evolution.
 import { chromium } from 'playwright';
 
 const URL = process.env.URL ?? 'http://localhost:5199/';
@@ -40,19 +40,20 @@ const r = await page.evaluate(() => {
   out.bruiserOffBeatsMag = bruiser.off > bruiser.mag;
   out.statsPresent = [mage, bruiser].every((c) => typeof c.mag === 'number' && typeof c.res === 'number');
 
-  // --- Evolution: not before the (debug) level, eligible at it ----------
-  // Debug schedule: base→2nd at Lv2, →3rd at Lv3, →4th at Lv4.
-  const young = makeCreature('emberling', 1);
+  // --- Evolution: not before the gate level, eligible at it -------------
+  // Schedule: base→2nd at Lv3 (Lv4 for the deepest lines), →3rd at Lv7, →4th
+  // at Lv10. Emberling is the deepest (Fire) line, so emberforge gates at Lv4.
+  const young = makeCreature('emberling', 2);
   out.tooYoung = evolve.evolutionOptions(young).length === 0 && !evolve.canEvolve(young);
 
-  const ready = makeCreature('emberling', 2);
+  const ready = makeCreature('emberling', 4);
   const opts = evolve.evolutionOptions(ready).map((o) => o.to);
   out.eligibleAtLevel = evolve.canEvolve(ready) && opts.includes('emberforge');
 
   // Digimon-style branching: two same-class paths (its own line + another
   // Hero line), and evolve() with no chosen target refuses the ambiguity.
   out.branches = opts.includes('emberforge') && opts.includes('grovelord') && opts.length >= 2;
-  const ambiguous = makeCreature('emberling', 2);
+  const ambiguous = makeCreature('emberling', 4); // both gates open → genuinely ambiguous
   out.refusesAmbiguous = evolve.evolve(ambiguous) === null && ambiguous.speciesId === 'emberling';
 
   // Take a chosen branch: species/moves change, class/uid/level preserved.
@@ -73,17 +74,17 @@ const r = await page.evaluate(() => {
     evolvedKnown.every((m) => ready.techniques.includes(m)); // nothing forgotten
 
   // --- Multi-stage line: emberling → emberforge → ashwarden → pyrelord ---
-  const line = makeCreature('emberling', 4);
-  const s1 = evolve.evolve(line, 'emberforge'); // → emberforge (Lv2, branch chosen)
-  const s2 = evolve.evolve(line); // → ashwarden  (Lv3, single branch)
-  const s3 = evolve.evolve(line); // → pyrelord   (Lv4, single branch)
+  const line = makeCreature('emberling', 10);
+  const s1 = evolve.evolve(line, 'emberforge'); // → emberforge (Lv4, branch chosen)
+  const s2 = evolve.evolve(line); // → ashwarden  (Lv7, single branch)
+  const s3 = evolve.evolve(line); // → pyrelord   (Lv10, single branch)
   out.multiStage = !!s1 && !!s2 && !!s3 && line.speciesId === 'pyrelord' &&
     !evolve.canEvolve(line) && evolve.devolveTargetId(line) === 'ashwarden';
 
   // --- Cross-line de-evolution is exact (ancestry, not the static tree) ---
   // duskfang is shared by nightnip / prismoth / ashmoth; a prismoth that
   // crosses into it must return to prismoth, not the canonical nightnip.
-  const crosser = makeCreature('prismoth', 2);
+  const crosser = makeCreature('prismoth', 4); // prismoth → duskfang crosses at Lv4
   evolve.evolve(crosser, 'duskfang');
   out.crossLineDevolve =
     crosser.speciesId === 'duskfang' &&
@@ -173,7 +174,7 @@ line('mage MAG > OFF', r.mageMagBeatsOff);
 line('bruiser OFF > MAG', r.bruiserOffBeatsMag);
 line('mag/res present on instances', r.statsPresent);
 line('cannot evolve before level', r.tooYoung);
-line('eligible at the debug gate (Lv2)', r.eligibleAtLevel);
+line('eligible at its first gate (Lv4)', r.eligibleAtLevel);
 line('offers two same-class branches', r.branches);
 line('refuses an ambiguous evolve', r.refusesAmbiguous);
 line('evolves along a chosen branch', r.evolved);

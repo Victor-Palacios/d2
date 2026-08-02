@@ -62,7 +62,7 @@ console.log('city has no rec    :', cityHasNoRec);
 const ordered = crossing != null && crystal != null && haunted != null && crossing < crystal && crystal < haunted;
 console.log('progression rises  :', ordered, `(${crossing} < ${crystal} < ${haunted})`);
 
-const ok = ordered && crossing === 1 && crystal === 5 && haunted === 10 && cityHasNoRec;
+const ok = ordered && crossing === 1 && crystal === 3 && haunted === 7 && cityHasNoRec;
 console.log('\nSTAGES OK :', ok);
 console.log('ERRORS:', errs.length ? errs.join('\n') : '(none)');
 await browser.close();

@@ -209,8 +209,8 @@ export const REACH_ORDER = ['crossing', 'crystal', 'jungle', 'haunted', /* yours
 **That's the only wiring.** `WorldMapScene` builds its nodes and cards from
 `REACH_ORDER`; the stages/readiness cues come from `recommendedLevel`. No scene
 code changes. Order + `recommendedLevel` set where it slots in the progression
-(The Overgrowth sits at Lv 7, between The Reliquary at 5 and The Unremembered at
-10).
+(the ladder climbs by two: The Quiet Crossing 1, The Reliquary 3, The Overgrowth
+5, The Unremembered 7, The Last Lantern 9).
 
 ## 7. Validate, build, smoke-test
 

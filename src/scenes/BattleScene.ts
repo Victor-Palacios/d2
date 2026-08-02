@@ -18,6 +18,7 @@ import { Battle } from '../systems/battle/engine';
 import type { BattleAction, Battler, TurnResult } from '../systems/battle/engine';
 import { makeCreature, isUp, reviveFainted, grantXp, xpFromEnemy } from '../systems/party/creature';
 import type { CreatureInstance } from '../systems/party/creature';
+import { canEvolve } from '../systems/party/evolve';
 import { game, MAX_FIELDED } from '../systems/party/gameState';
 import { BattleHUD } from '../ui/BattleHUD';
 import { DialogueBox } from '../ui/DialogueBox';
@@ -1032,12 +1033,17 @@ export class BattleScene extends GameScene {
     // independently by its own level gap (under-levelled gain more).
     const enemies = this.battle.side('enemy');
     const levelUps: string[] = [];
+    const readyToTranscend: string[] = [];
     for (const b of this.battle.side('party')) {
       const c = b.creature;
       let gained = 0;
       for (const e of enemies) gained += xpFromEnemy(c.level, e.creature.level);
+      // A soul newly clears a transcendence gate only on the level-up that
+      // crosses it — snapshot eligibility before and after so we announce once.
+      const couldTranscend = canEvolve(c);
       const nl = grantXp(c, gained);
       if (nl !== null) levelUps.push(`${c.name} → Lv${nl}`);
+      if (!couldTranscend && canEvolve(c)) readyToTranscend.push(c.name);
     }
 
     this.hud.setLog(`The echo is quieted. +${reward} obols.`);
@@ -1049,6 +1055,19 @@ export class BattleScene extends GameScene {
       // One announcement only — the battle log carries it (no extra toast).
       this.hud.setLog(`Level up! ${msg}`);
       await sleep(1400);
+    }
+
+    // A soul that just crossed a transcendence gate: tell the player it can now
+    // evolve (it happens out of battle, from the Soul menu — R1 → Transcend).
+    for (const name of readyToTranscend) {
+      audio.sfx('chest');
+      this.hud.setLog(`✦ ${name} is ready to Transcend.`);
+      toast(
+        this.ctx.ui,
+        `<span class="accent">✦ ${name} can Transcend</span> — open the Soul menu (R1) → Transcend`,
+        3000,
+      );
+      await sleep(1700);
     }
 
     // Claim any souls drained to 100% this fight (victory only).
@@ -1149,9 +1168,13 @@ export class BattleScene extends GameScene {
     // A huge EXP boon: twenty times what a foe of its level would normally give.
     const enemyLevel = light.creature.level;
     const levelUps: string[] = [];
+    const readyToTranscend: string[] = [];
     for (const b of this.battle.side('party')) {
-      const nl = grantXp(b.creature, xpFromEnemy(b.creature.level, enemyLevel) * 20);
-      if (nl !== null) levelUps.push(`${b.creature.name} → Lv${nl}`);
+      const c = b.creature;
+      const couldTranscend = canEvolve(c);
+      const nl = grantXp(c, xpFromEnemy(c.level, enemyLevel) * 20);
+      if (nl !== null) levelUps.push(`${c.name} → Lv${nl}`);
+      if (!couldTranscend && canEvolve(c)) readyToTranscend.push(c.name);
     }
     this.hud.setLog('Something it carried passes to you — a great, quiet understanding.');
     await sleep(1500);
@@ -1159,6 +1182,15 @@ export class BattleScene extends GameScene {
       audio.sfx('heal');
       toast(this.ctx.ui, `<span class="accent">Level up!</span> ${msg}`, 2200);
       await sleep(1200);
+    }
+    for (const name of readyToTranscend) {
+      audio.sfx('chest');
+      toast(
+        this.ctx.ui,
+        `<span class="accent">✦ ${name} can Transcend</span> — open the Soul menu (R1) → Transcend`,
+        3000,
+      );
+      await sleep(1500);
     }
 
     // A piece of the Immortality elegy, in order — the set completes at twelve.

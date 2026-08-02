@@ -233,19 +233,20 @@ export const LANTERN = {
 };
 
 // Evolution lines: base species id → [ [artKey, Name, evolveLevel], ... ] in
-// stage order. Levels follow the current debug schedule (2 / 3).
+// stage order. Levels follow the 3 / 7 / 10 schedule (these are all 3-stage or
+// shorter lines, so their gates are base→2nd at Lv3, 2nd→3rd at Lv7).
 export const LANTERN_LINES = {
-  emberkeep: [['llLanternwake', 'Lanternwake', 2], ['llEverember', 'Everember', 3]],
-  ashmoth: [['llCindershroud', 'Cindershroud', 2]],
-  wardling: [['llReliquary', 'Reliquary', 2], ['llLanternlord', 'Lanternlord', 3]],
-  grievewisp: [['llMournlight', 'Mournlight', 2]],
-  keptsoul: [['llHeldshade', 'Heldshade', 2]],
+  emberkeep: [['llLanternwake', 'Lanternwake', 3], ['llEverember', 'Everember', 7]],
+  ashmoth: [['llCindershroud', 'Cindershroud', 3]],
+  wardling: [['llReliquary', 'Reliquary', 3], ['llLanternlord', 'Lanternlord', 7]],
+  grievewisp: [['llMournlight', 'Mournlight', 3]],
+  keptsoul: [['llHeldshade', 'Heldshade', 3]],
 };
 
 // Species data for the 5 lines, consumed by integrate-lantern.mjs. Base stats
 // are authored; evolved-stage stats are the base scaled by FAC[stage]. `growth`
 // names a role constant already in creatures.ts. Every line is class-pure. Evo
-// gate levels follow the current debug schedule (base→2 at Lv2, →3 at Lv3).
+// gate levels follow the 3 / 7 / 10 schedule (base→2nd at Lv3, 2nd→3rd at Lv7).
 export const LANTERN_FAC = [0, 1, 1.35, 1.72]; // indexed by stage (1..3)
 export const LANTERN_SPECIES = [
   {
