@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Floor preview + validator</title>
+  <style>
+    body { background: #12141c; color: #cdd3e0; font-family: ui-monospace, monospace; margin: 0; padding: 16px; }
+    h1 { font-size: 15px; color: #8fa5d8; margin: 0 0 4px; }
+    p.hint { color: #6b7488; font-size: 12px; margin: 0 0 14px; }
+    .reach { margin-bottom: 22px; }
+    .reach > h2 { font-size: 13px; color: #7fdcff; margin: 0 0 8px; border-bottom: 1px solid #2a3040; padding-bottom: 4px; }
+    .floors { display: flex; flex-wrap: wrap; gap: 16px; }
+    .floor { background: #1a1e2a; border: 1px solid #2a3040; border-radius: 8px; padding: 10px; }
+    .floor h3 { font-size: 12px; margin: 0 0 6px; color: #cdd3e0; }
+    .floor canvas { image-rendering: pixelated; display: block; background: #0a0c12; border-radius: 4px; }
+    .ok { color: #7bdc8a; font-size: 11px; margin-top: 6px; }
+    .bad { color: #ff6b6b; font-size: 11px; margin-top: 6px; white-space: pre-wrap; }
+    .legend { color: #6b7488; font-size: 11px; margin: 10px 0 0; }
+    .legend b { color: #cdd3e0; }
+  </style>
+</head>
+<body>
+  <h1>Floor preview + live validator</h1>
+  <p class="hint">Dev tool. Renders every floor of every reach as a colour-coded grid and runs
+    <code>validateFloor</code> on each — author with instant feedback instead of eyeballing ASCII.
+    Elevation is shown as a ▲ (raised) / ▼ (sunken) badge; a red border = validator errors.</p>
+  <p class="legend">
+    <b>#</b> wall · <b>=</b> accent · <b>.</b> floor · <span style="color:#7bdc8a">S start</span> ·
+    <span style="color:#6fd3ff">&gt; portal</span> · <span style="color:#ffd166">&lt; exit / C chest</span> ·
+    <span style="color:#8fe4ff">$ light</span> · <span style="color:#ff4a2a">^ hazard</span> ·
+    <span style="color:#e0b23a">k key</span> · <span style="color:#c89050">+ door</span> ·
+    <span style="color:#7bdc8a">* switch</span> · <span style="color:#5fd8ff">% toggle-wall</span> ·
+    <span style="color:#c88">1-9 event</span> · W F N M D element
+  </p>
+  <div id="root"></div>
+
+  <script type="module">
+    import { REACHES, REACH_ORDER } from '/src/data/reaches.ts';
+    import { validateFloor } from '/src/data/validateReaches.ts';
+    import { ROOMS } from '/src/data/roomTemplates.ts';
+
+    const CELL = 16;
+    const COLORS = {
+      '#': '#2a3040', '=': '#5c3b6e', ' ': '#0a0c12', '.': '#3a3f57',
+      S: '#2f7a4a', '>': '#2a6f96', '<': '#8a6a2a', C: '#8a6a2a', $: '#2a6f8a',
+      '^': '#7a2a1a', k: '#8a6a1a', '+': '#5a3a1a', '*': '#2f6a4a', '%': '#2a5a6a',
+      W: '#2a5a7a', F: '#7a3a2a', N: '#3a6a2a', M: '#5a5a6a', D: '#4a2a5a',
+    };
+    const glyphColor = (ch) => (ch >= '1' && ch <= '9' ? '#7a5a3a' : COLORS[ch] ?? '#3a3f57');
+
+    const root = document.getElementById('root');
+
+    // Reusable room stamps (src/data/roomTemplates.ts) — compose floors from
+    // these known-good, pre-walled pieces instead of hand-drawing every wall.
+    const gallery = document.createElement('div');
+    gallery.className = 'reach';
+    gallery.innerHTML = `<h2>Room templates — ${Object.keys(ROOMS).length} stamps · compose() building blocks</h2>`;
+    const glist = document.createElement('div');
+    glist.className = 'floors';
+    for (const [name, rows] of Object.entries(ROOMS)) {
+      const cell = document.createElement('div');
+      cell.className = 'floor';
+      cell.innerHTML = `<h3>${name}</h3>`;
+      const w = Math.max(...rows.map((r) => r.length));
+      const h = rows.length;
+      const cv = document.createElement('canvas');
+      cv.width = w * CELL; cv.height = h * CELL;
+      const ctx = cv.getContext('2d');
+      ctx.font = '10px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (let z = 0; z < h; z++) {
+        for (let x = 0; x < rows[z].length; x++) {
+          const ch = rows[z][x];
+          // '~' is the see-through footprint cell — render it as empty space.
+          ctx.fillStyle = ch === '~' ? '#12151f' : glyphColor(ch);
+          ctx.fillRect(x * CELL, z * CELL, CELL - 1, CELL - 1);
+          if (ch !== '.' && ch !== '#' && ch !== ' ' && ch !== '~') {
+            ctx.fillStyle = '#f0f2f8';
+            ctx.fillText(ch, x * CELL + CELL / 2, z * CELL + CELL / 2);
+          }
+        }
+      }
+      cell.appendChild(cv);
+      list_status(cell, `${w}×${h}`);
+      glist.appendChild(cell);
+    }
+    gallery.appendChild(glist);
+    root.appendChild(gallery);
+
+    function list_status(cell, text) {
+      const s = document.createElement('div');
+      s.className = 'ok'; s.textContent = text;
+      cell.appendChild(s);
+    }
+
+    for (const id of REACH_ORDER) {
+      const reach = REACHES[id];
+      const sec = document.createElement('div');
+      sec.className = 'reach';
+      sec.innerHTML = `<h2>${reach.name} — ${reach.floors.length} floors · LP ${reach.startingLight}</h2>`;
+      const list = document.createElement('div');
+      list.className = 'floors';
+      for (const floor of reach.floors) {
+        const errs = validateFloor(floor);
+        const cell = document.createElement('div');
+        cell.className = 'floor';
+        if (errs.length) cell.style.borderColor = '#ff6b6b';
+        cell.innerHTML = `<h3>${floor.id} — ${floor.name}</h3>`;
+        const w = Math.max(...floor.rows.map((r) => r.length));
+        const h = floor.rows.length;
+        const cv = document.createElement('canvas');
+        cv.width = w * CELL; cv.height = h * CELL;
+        const ctx = cv.getContext('2d');
+        ctx.font = '10px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        for (let z = 0; z < h; z++) {
+          for (let x = 0; x < floor.rows[z].length; x++) {
+            const ch = floor.rows[z][x];
+            ctx.fillStyle = glyphColor(ch);
+            ctx.fillRect(x * CELL, z * CELL, CELL - 1, CELL - 1);
+            if (ch !== '.' && ch !== '#' && ch !== ' ') {
+              ctx.fillStyle = '#f0f2f8';
+              ctx.fillText(ch, x * CELL + CELL / 2, z * CELL + CELL / 2);
+            }
+            const e = (floor.elevation ?? {})[`${x},${z}`];
+            if (e) {
+              ctx.fillStyle = e > 0 ? '#ffd166' : '#6fd3ff';
+              ctx.fillText(e > 0 ? '▲' : '▼', x * CELL + CELL / 2, z * CELL + CELL / 2 + (ch === '.' ? 0 : 5));
+            }
+          }
+        }
+        cell.appendChild(cv);
+        const status = document.createElement('div');
+        if (errs.length) { status.className = 'bad'; status.textContent = '✗ ' + errs.join('\n✗ '); }
+        else { status.className = 'ok'; status.textContent = `✓ valid${floor.scatter ? ' · scatter on' : ''}`; }
+        cell.appendChild(status);
+        list.appendChild(cell);
+      }
+      sec.appendChild(list);
+      root.appendChild(sec);
+    }
+    window.__ready = true;
+  </script>
+</body>
+</html>

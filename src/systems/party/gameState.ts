@@ -108,10 +108,12 @@ export class GameState {
   };
   /** Event ids already consumed, keyed `floorId:eventId`. */
   usedEvents = new Set<string>();
-  /** Opened chests, keyed `floorId:x,z`. */
+  /** Opened chests, keyed `floorId:x,z`. Permanent — see `resetCrawl`. */
   openedChests = new Set<string>();
   /** Collected light shards, keyed `floorId:x,z`. */
   takenPickups = new Set<string>();
+  /** Unlocked doors, keyed `floorId:x,z` — stays open on revisit/resume. */
+  openedDoors = new Set<string>();
 
   /** The Soularium — per-species capture progress (the game's "pokedex"). */
   soularium: Record<string, SoulEntry> = {};
@@ -399,8 +401,14 @@ export class GameState {
     this.light = this.maxLight;
     this.floorIndex = 0;
     this.usedEvents.clear();
-    this.openedChests.clear();
+    // NOTE: openedChests is deliberately NOT cleared. A chest's treasure is a
+    // one-time reward: once looted it stays empty for good, even after leaving
+    // and re-entering the reach — otherwise obols could be farmed by re-running
+    // a floor. It rides in every autosave (via `snapshot`), so the emptied state
+    // persists across sessions. Events, light shards and doors do repeat per
+    // crawl (re-fight, re-collect light, re-open the way through), so they reset.
     this.takenPickups.clear();
+    this.openedDoors.clear();
     this.crawl.initialized = false;
   }
 

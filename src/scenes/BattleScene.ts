@@ -46,6 +46,12 @@ export interface BattleSceneParams {
   eventId?: string;
   partyTiles?: (ElementId | undefined)[];
   enemyTiles?: (ElementId | undefined)[];
+  /**
+   * The element of the terrain the fight is on, if any. Tints the whole arena
+   * (floor, walls, fog) that element's colour so the player can see at a glance
+   * the battle is on elemental ground — where plates buff and reactions land.
+   */
+  fieldElement?: ElementId;
   intro?: DialogueScript;
   /** Scene to return to on victory. */
   returnTo: string;
@@ -176,7 +182,12 @@ export class BattleScene extends GameScene {
     this.dialogue = new DialogueBox(this.ctx.ui);
 
     this.ctx.hd2d.setScene(this.scene);
-    this.ctx.hd2d.applyFog(this.scene, 1.6);
+    // On elemental terrain, tint the fog/backdrop that element too, so the whole
+    // scene — not just the floor — carries the colour.
+    const fogTint = this.params.fieldElement
+      ? `#${new THREE.Color('#0a0d1c').lerp(new THREE.Color(ELEMENTS[this.params.fieldElement].color), 0.35).getHexString()}`
+      : undefined;
+    this.ctx.hd2d.applyFog(this.scene, 1.6, fogTint);
     this.ctx.hd2d.cameraTarget.set(0, 0, CAMERA_BIAS_Z);
     this.ctx.hd2d.lightTarget.set(0, 0, 0.5);
     this.ctx.hd2d.focusTarget.set(0, 0.9, 0.4);
@@ -227,14 +238,27 @@ export class BattleScene extends GameScene {
     this.particles = new ParticleField(600);
     this.scene.add(this.particles.points);
 
+    // On elemental terrain, wash the whole arena in that element's colour so the
+    // player reads at a glance that the ground is special. A blend toward white
+    // keeps the floor/wall textures legible under the tint.
+    const field = this.params.fieldElement ? ELEMENTS[this.params.fieldElement] : null;
+    const floorTint = field ? new THREE.Color(field.color).lerp(new THREE.Color(0xffffff), 0.4) : null;
+    const wallTint = field ? new THREE.Color(field.color).lerp(new THREE.Color(0xffffff), 0.5) : null;
+
     const floorGeo = new THREE.PlaneGeometry(2, 2);
     floorGeo.rotateX(-Math.PI / 2);
     const matA = new THREE.MeshStandardMaterial({
       map: floorTexture('arenaA', '#3d3550', 5),
+      color: floorTint ?? undefined,
+      emissive: field ? new THREE.Color(field.color) : undefined,
+      emissiveIntensity: field ? 0.12 : 0,
       roughness: 0.9,
     });
     const matB = new THREE.MeshStandardMaterial({
       map: floorTexture('arenaB', '#332c46', 11),
+      color: floorTint ? floorTint.clone() : undefined,
+      emissive: field ? new THREE.Color(field.color) : undefined,
+      emissiveIntensity: field ? 0.12 : 0,
       roughness: 0.9,
     });
 
@@ -271,6 +295,7 @@ export class BattleScene extends GameScene {
     // A low perimeter wall gives the arena depth and catches the key light.
     const wallMat = new THREE.MeshStandardMaterial({
       map: wallTexture('arena', '#463a5c', 23),
+      color: wallTint ?? undefined,
       roughness: 0.95,
     });
     const wallGeo = new THREE.BoxGeometry(2, 2.2, 2);

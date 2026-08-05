@@ -47,6 +47,19 @@ levers on top of its colours:
 terrain?: TerrainStyle;  // surface generator; default 'stone'
 wallHeight?: number;     // world units, default 2.6 — taller = cavern/canopy
 fogColor?: string;       // tints the whole air for this floor
+ambientColor?: string;   // per-floor mood: tints the ambient light
+hemiSky?: string;        // per-floor mood: hemisphere sky tint
+hemiGround?: string;     // per-floor mood: hemisphere ground tint
+```
+
+And on the `DungeonFloor` itself, two more purely-visual levers:
+
+```ts
+elevation?: Record<'x,z', number>;  // per-tile height: +raises a dais, -sinks a
+                                     // pit (elevated tiles render as solid
+                                     // plinths; movement is unchanged)
+scatter?: boolean | number;          // auto-strew flat, passable ground decor
+                                     // across empty floor (never blocks)
 ```
 
 `TerrainStyle` (in `src/engine/pixel.ts`) currently has six skins:
@@ -130,8 +143,57 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
 ' ' void      '#' wall        '=' accent wall (boss approach)
 '.' floor     'S' start       '>' portal down     '<' exit portal
 'C' chest     '$' light       W F N M D  element floor tiles
+'^' hazard tile (gutters extra lantern light on entry — a glowing warning plate)
+'k' key pickup          '+' locked door (spend a key to open; blocks until then)
+'*' switch              '%' toggle-wall barrier (starts solid; a switch flips it)
 '1'-'9'  scripted event tile (looked up in that floor's `events` map)
 ```
+
+**Composing from room templates (optional).** Hand-drawing every wall is where
+one-off soft-locks and off-by-one row widths creep in. `src/data/roomTemplates.ts`
+ships a small library of pre-walled, rectangular room *stamps* (`hall`, `pillars`,
+`alcove`, `cross`, `vault`) and a composer that keeps the grid tidy:
+
+```ts
+import { compose, carve, put } from './roomTemplates';
+
+let rows = compose(9, 5, [
+  { room: 'hall', x: 0, z: 0 },
+  { room: 'hall', x: 4, z: 0 },   // shares the middle wall column
+]);
+rows = carve(rows, 4, 2);         // open a doorway between the rooms
+rows = put(rows, 1, 2, 'S');      // start in the left room
+rows = put(rows, 7, 2, '>');      // descent in the right room
+```
+
+`compose` always returns rectangular rows; you carve the doorways and drop the
+`S`/`>`/`C`/`k` yourself. Rooms ship *closed* so no stamp punches an accidental
+opening — and `validateFloor` still has the final say on reachability, so a
+doorway you forget to carve is caught as a soft-lock. Browse the stamp gallery at
+the top of `tools/floor-preview.html`. You can always write raw `rows` instead.
+
+Preview any floor (grid + live `validateFloor`, with elevation/hazard badges) at
+`tools/floor-preview.html` under `npm run dev` — author with instant feedback
+instead of eyeballing coordinates. A hazard must never be the *only* way to the
+descent portal (the validator enforces this so you're never forced to take
+damage to progress).
+
+**Keys & doors.** A `+` door blocks like a wall until the party spends a `k` key
+(keys are fungible — any key opens any door — and persist across suspend/resume
+via `game.openedDoors`). Gate an *optional* reward behind a door, not the way
+down: the validator runs lock-and-key reachability (open any affordable reachable
+door, re-flood, repeat) and flags a target that no reachable key can unlock. Put
+`N` keys for `N` doors you want openable; a key sealed behind the only door it
+opens is (correctly) a soft-lock.
+
+**Switches & toggle-walls.** A `%` barrier starts solid and blocks like a wall;
+stepping any `*` switch flips *every* `%` on the floor between solid and open
+(the switch is a global toggle, not a per-door key). Toggle state is transient —
+it resets to solid on suspend/resume, and a resume standing on a `%` re-flips so
+you're never entombed. Like doors, gate an *optional* reward, not the descent:
+the validator runs a toggle-aware search over `(tile, toggleState)` and flags a
+target that no reachable switch can open. crystal-3 is the worked example — a
+corner chest walled off behind a `%` that a `*` across the gallery grinds aside.
 
 **Invariants the validator checks** (`src/data/validateReaches.ts`):
 - rows are all the same width; exactly one `S`.

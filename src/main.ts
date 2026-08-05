@@ -20,7 +20,7 @@ import { playTranscend } from './ui/TranscendCinematic';
 import { technique } from './data/techniques';
 import * as roster from './data/creatures';
 import { REACHES } from './data/reaches';
-import { validateReaches } from './data/validateReaches';
+import { validateReaches, validateFloor } from './data/validateReaches';
 import { decorIsSolid } from './data/dungeon';
 
 const canvas = document.getElementById('gl') as HTMLCanvasElement;
@@ -80,6 +80,7 @@ const stats = { frames: 0, fps: 0 };
   audio,
   reaches: REACHES,
   validateReaches,
+  validateFloor,
   decorIsSolid,
 };
 

@@ -22,6 +22,9 @@ const THEME_UPPER: TileTheme = {
   terrain: 'crystal',
   wallHeight: 3.0,
   fogColor: '#0c2530',
+  ambientColor: '#6fc6e6',
+  hemiSky: '#7fdcff',
+  hemiGround: '#12303a',
 };
 
 const THEME_DEEP: TileTheme = {
@@ -51,18 +54,35 @@ const FLOORS: DungeonFloor[] = [
     id: 'crystal-1',
     name: 'The Reliquary — Glimmer Shelf',
     theme: THEME_UPPER,
+    scatter: true,
     decor: [
       { x: 8, z: 3, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
       { x: 8, z: 5, kind: 'crystalPillar', height: 1.6, emissive: 0.5 },
       { x: 14, z: 6, kind: 'crystalCluster', emissive: 0.6 },
       { x: 13, z: 7, kind: 'iceShard', height: 0.8, emissive: 0.4 },
     ],
+    // A raised reliquary shelf the treasure sits on, and a sunken meltwater
+    // basin — purely visual depth (movement is unchanged).
+    elevation: {
+      '13,1': 0.55,
+      '14,1': 0.55,
+      '15,1': 0.55,
+      '13,2': 0.55,
+      '14,2': 0.55,
+      '15,2': 0.55,
+      '11,8': -0.5,
+      '12,8': -0.5,
+      '13,8': -0.5,
+      '11,9': -0.5,
+      '12,9': -0.5,
+      '13,9': -0.5,
+    },
     rows: [
       '#################',
       '#...............#',
       '#..S........2..C#',
       '#.....##.##.....#',
-      '#....1..4.......#',
+      '#....1..4..^^...#',
       '#.....##.##.....#',
       '#WWWW...........#',
       '#W3WW..$........#',
@@ -151,9 +171,9 @@ const FLOORS: DungeonFloor[] = [
       '#################',
       '#...............#',
       '#..S...W.M.....C#',
-      '#......###.###..#',
-      '#..1...#.....#..#',
-      '#......#.....#..#',
+      '#......###+###..#',
+      '#..1...#.....#k.#',
+      '#......#..C..#..#',
       '#..W...#..2..#..#',
       '#..M...#######..#',
       '#..........>....#',
@@ -177,8 +197,11 @@ const FLOORS: DungeonFloor[] = [
         intro: narrate('The vault hums. Something big is keeping the cold in here.'),
       },
     },
+    // The inner vault is sealed behind a locked door ('+' at 10,3); its key
+    // ('k' at 14,4) sits out in the open, so the reward inside is optional.
     chests: {
       '15,2': { obols: 300, note: 'A frozen cache, obols still legible under the frost.' },
+      '10,5': { obols: 260, item: 'mendingBalm', note: 'The sealed vault kept one thing worth the key.' },
     },
     encounterRate: 0.07,
     encounters: [
@@ -214,14 +237,14 @@ const FLOORS: DungeonFloor[] = [
     ],
     rows: [
       '#################',
-      '#...............#',
-      '#.S.........2..C#',
-      '#.....#####.....#',
+      '#..............##',
+      '#.S.........2.%C#',
+      '#.....#####....##',
       '#.....#...#.....#',
       '#..W..#.1.#..M..#',
       '#.....#...#.....#',
       '#.....##.##....$#',
-      '#...............#',
+      '#...*..3........#',
       '#......>........#',
       '#################',
     ],
@@ -241,9 +264,36 @@ const FLOORS: DungeonFloor[] = [
           { species: 'geodon', level: 4 },
         ],
       },
+      // A quiet beat between the Sena meeting and the Sena boss: Wren, who keeps
+      // names so no one is forgotten twice, walks the frozen gallery and finds
+      // her own reflex looking back at her. Wren is aboard from the opening.
+      '3': {
+        kind: 'dialogue',
+        once: true,
+        script: [
+          ...narrate(
+            'Frost holds a hundred small shapes in the gallery walls — a laugh, a hand half-raised, a face turned to someone just out of the ice.',
+          ),
+          ...say(
+            'Wren',
+            'She caught each of them at their warmest and stopped the clock, so they would never have to end.',
+          ),
+          ...say(
+            'Wren',
+            'I keep names so no one is forgotten twice. She keeps the whole moment. ...I am no longer sure the two of us stand as far apart as I thought.',
+          ),
+        ],
+      },
     },
+    // The corner cache sits behind a shifting crystal barrier ('%' at 14,2); the
+    // switch that grinds it aside ('*' at 4,8) is across the gallery, so the loot
+    // is an optional detour, not on the path to the descent.
     chests: {
-      '15,2': { obols: 260, item: 'mendingBalm', note: 'A surveyor’s cache, sealed in a rind of frost.' },
+      '15,2': {
+        obols: 260,
+        item: 'mendingBalm',
+        note: 'A surveyor’s cache, walled off until the barrier grinds aside.',
+      },
     },
     encounterRate: 0.07,
     encounters: [
@@ -300,6 +350,7 @@ const FLOORS: DungeonFloor[] = [
         ],
         outro: [
           ...say('Sena Vale', "She was already gone, wasn't she. I only kept the shape."),
+          ...say('Wren', 'She kept the shape. I keep the name. ...I had never seen how thin the wall is between us.'),
           ...narrate(
             'The ice loosens its grip. Somewhere, at last, a soul is allowed to move on — and a portal home glimmers open behind you.',
           ),

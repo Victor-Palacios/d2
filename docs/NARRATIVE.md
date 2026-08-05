@@ -477,9 +477,12 @@ rest. Wired generically in `DungeonScene.runEvent`/`afterBattle` via the
 - **Act III wardens borrowing from opponents** is written into the finale
   descent as companion beats; a fuller Act-III could give each *former warden*
   (Sena, the Unnamed, Liora) an on-screen return.
-- Optional extra texture — companion banter *inside* the crawl (not just the
-  hub), reactive lines to specific wardens, and a proper epilogue after the
-  ending (currently it returns to the Everwake with `gameComplete` set).
+- Companion banter *inside* the crawl now exists — arrival, mid-descent and
+  post-boss beats woven through the Reliquary, the Overgrowth, the Unremembered
+  and the Last Lantern's descent, including lines reactive to specific wardens
+  (Wren answering Sena's frozen hall, Sena answering Liora and the Unnamed). A
+  proper epilogue scene after the ending is still ahead (there is now a quiet
+  post-`gameComplete` hub beat, but not a dedicated cutscene).
 
 > **Closing test (framework closing principle):** every change above was made
 > against one question — *what does this reveal about living that could only be

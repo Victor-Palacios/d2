@@ -65,7 +65,7 @@ const FLOORS: DungeonFloor[] = [
       '#################',
       '#...............#',
       '#..S....#....C..#',
-      '#.....#.....#...#',
+      '#..4..#.....#...#',
       '#..1......N....2#',
       '#NNNN..#....#...#',
       '#N3NN.....#....W#',
@@ -95,6 +95,22 @@ const FLOORS: DungeonFloor[] = [
       // The Unyielding — an Anchored knotted into a mass of grasping green. Far
       // above the Overgrowth's level; come back matched to nature. Re-fightable.
       '3': { kind: 'anchored', id: 'jungleAnchored' },
+      // Arrival beat. The Overgrowth requires the Reliquary cleared, so Wren and
+      // Sena are both aboard — Sena names the danger of a place this gentle.
+      '4': {
+        kind: 'dialogue',
+        once: true,
+        script: [
+          ...narrate(
+            'The green closes warm and close behind you. It does not feel like a threat. It feels like an invitation to stop walking.',
+          ),
+          ...say(
+            'Sena Vale',
+            'Careful. A place this gentle is the kind that keeps you. I know the feeling — I built a whole room out of it.',
+          ),
+          ...say('Wren', 'Then we keep moving. Whatever roots the souls in here, it started out being kind to them.'),
+        ],
+      },
     },
     chests: {
       '13,2': { obols: 260, item: 'mendingBalm', note: "A ranger's pack, half-swallowed by roots." },
@@ -202,7 +218,7 @@ const FLOORS: DungeonFloor[] = [
       '#..#.W..2..N.#..#',
       '#..#.........#..#',
       '#..###.....###..#',
-      '#.C.....$.......#',
+      '#.C.....$.3.....#',
       '#.........>.....#',
       '#################',
     ],
@@ -220,6 +236,21 @@ const FLOORS: DungeonFloor[] = [
         enemies: [
           { species: 'vineraptor', level: 5 },
           { species: 'bloomstalker', level: 5 },
+        ],
+      },
+      // Mid-descent beat — the green has quietly kept the ones who rested here.
+      '3': {
+        kind: 'dialogue',
+        once: true,
+        script: [
+          ...narrate(
+            'The ferns have grown over old shapes — a pack, a walking-staff, a pair of boots — all still where someone set them down to rest a moment.',
+          ),
+          ...say('Wren', 'They meant to get up again. Every one of them meant to get up again.'),
+          ...say(
+            'Sena Vale',
+            'That is how it takes you. Not all at once. One more quiet moment, and then another, until moving seems like the cruel thing.',
+          ),
         ],
       },
     },
@@ -343,6 +374,10 @@ const FLOORS: DungeonFloor[] = [
           ...say(
             'Liora Fen',
             'Oh. They were never keeping me company. I was keeping them. Go on — undo my knots. Let them all go, me last.',
+          ),
+          ...say(
+            'Sena Vale',
+            'She rooted them so she would not be alone. I froze Lire so I would not be. ...We are not so different, the ones who cannot let go.',
           ),
           ...narrate('The roots loosen and let go, one soul at a time. A way home opens in the parting leaves.'),
         ],

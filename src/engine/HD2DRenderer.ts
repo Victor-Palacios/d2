@@ -27,6 +27,11 @@ import {
  * panel (see `DebugPanel.ts`).
  */
 
+/** Neutral light-rig tints — the default a floor's `applyMood` resets toward. */
+const BASE_AMBIENT = 0x8fa5d8;
+const BASE_HEMI_SKY = 0x9db8ff;
+const BASE_HEMI_GROUND = 0x241d33;
+
 export interface HD2DParams {
   // camera
   fov: number;
@@ -194,8 +199,8 @@ export class HD2DRenderer {
     key.shadow.radius = this.params.shadowRadius;
     key.shadow.normalBias = 0.02;
 
-    const ambient = new THREE.AmbientLight(0x8fa5d8, this.params.ambientIntensity);
-    const hemi = new THREE.HemisphereLight(0x9db8ff, 0x241d33, this.params.hemiIntensity);
+    const ambient = new THREE.AmbientLight(BASE_AMBIENT, this.params.ambientIntensity);
+    const hemi = new THREE.HemisphereLight(BASE_HEMI_SKY, BASE_HEMI_GROUND, this.params.hemiIntensity);
     // A dim, shadowless back light so billboards never silhouette into mush.
     const rim = new THREE.DirectionalLight(0xbfd4ff, this.params.rimIntensity);
     rim.position.set(-6, 9, -7);
@@ -281,6 +286,21 @@ export class HD2DRenderer {
     this.attachLights(scene);
     this.renderPass.mainScene = scene;
     this.targetInitialised = false;
+    // Clear any prior floor's mood tint so a new scene starts neutral; the
+    // dungeon re-applies its own via applyMood() right after.
+    this.applyMood();
+  }
+
+  /**
+   * Tints the shared ambient/hemisphere lights for a floor's mood (or resets to
+   * the neutral defaults when called with no argument). Colours only — intensity
+   * stays under the debug params. Called after `setScene`.
+   */
+  applyMood(mood?: { ambientColor?: string; hemiSky?: string; hemiGround?: string }) {
+    const { ambient, hemi } = this.lights;
+    ambient.color.set(mood?.ambientColor ?? BASE_AMBIENT);
+    hemi.color.set(mood?.hemiSky ?? BASE_HEMI_SKY);
+    hemi.groundColor.set(mood?.hemiGround ?? BASE_HEMI_GROUND);
   }
 
   get currentScene(): THREE.Scene {

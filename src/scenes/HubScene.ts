@@ -201,12 +201,20 @@ export class HubScene extends GameScene {
         ...narrate('The south portal leads out to the reaches.'),
       ]);
     } else if (kind === 'guttered') {
+      // After the midpoint Halden is gone; Wren, who now carries the light-lore,
+      // meets you at the door instead. Same words — she learned them from him.
       await this.dialogue.play(
-        say(
-          'Halden',
-          'A guttered lantern is not a failure. It is a debt to the dark, and the dark is patient.',
-          'Refill your light, take the map again, and spend it carefully this time.',
-        ),
+        game.has('haldenGone')
+          ? say(
+              'Wren',
+              'A guttered lantern is not a failure. It is a debt to the dark, and the dark is patient.',
+              'Refill your light, take the map again, and spend it carefully this time.',
+            )
+          : say(
+              'Halden',
+              'A guttered lantern is not a failure. It is a debt to the dark, and the dark is patient.',
+              'Refill your light, take the map again, and spend it carefully this time.',
+            ),
       );
       game.resetCrawl();
       fullRestore(game.party);
@@ -399,6 +407,18 @@ export class HubScene extends GameScene {
         ],
       },
       {
+        id: 'overgrowthWake',
+        when: has('jungleWakeDone') && has('senaJoined') && !has('midpointDone'),
+        lines: [
+          ...say('Wren', 'The woman in the green rooted the ones who came after her, so she would never sit alone.'),
+          ...say(
+            'Sena Vale',
+            'I know that reach in my own hands. It is the same cold that froze Lire — loneliness, wearing love as a coat.',
+          ),
+          ...say('Wren', 'Then it is good none of us is walking this alone.'),
+        ],
+      },
+      {
         id: 'threeTogether',
         when: has('kadeJoined') && !has('midpointDone'),
         lines: [
@@ -419,6 +439,23 @@ export class HubScene extends GameScene {
           ...say(
             'Wren',
             `Tonight we say his name. And when you are ready, ${game.playerName}: the road still has one soul left on it. The one you came here looking for.`,
+          ),
+        ],
+      },
+      {
+        id: 'afterEnd',
+        when: has('gameComplete'),
+        lines: [
+          ...narrate(
+            'The Everwake is quiet. The lantern on the wall burns steady — yours now, and lit by your own hand.',
+          ),
+          ...say(
+            'Wren',
+            `You found them, ${game.playerName}. Whatever you chose at the flame, you did not have to choose it alone.`,
+          ),
+          ...say(
+            'Sena Vale',
+            'That is the whole of what Halden meant. Not keeping, and not letting go. Only — never being the last one holding the light.',
           ),
         ],
       },

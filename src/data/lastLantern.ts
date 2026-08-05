@@ -8,10 +8,11 @@ import type { Reach, DungeonFloor } from './dungeon';
  * the souls keepers refused to release are still held — and where the one you
  * have searched for since the prologue waits.
  *
- * Floors 1–2 are the descent, carrying the companions' Act-III beats (each
- * borrows from the opponent they used to be). Floor 3 is not a fight but the
- * finale **choice** — keep the soul, or let it cross — handled by
- * `DungeonScene.runFinale`. See docs/NARRATIVE.md §11c.
+ * Floors 1–2 carry the companions' Act-III beats (each borrows from the opponent
+ * they used to be); floors 3–6 are the long descent, voiced by short companion
+ * beats as the dark deepens. Floor 7 is not a fight but the finale **choice** —
+ * keep the soul, or let it cross — handled by `DungeonScene.runFinale`. See
+ * docs/NARRATIVE.md §11c.
  */
 
 const THEME_UPPER: TileTheme = {
@@ -224,7 +225,7 @@ const FLOORS: DungeonFloor[] = [
       '#..#....2....#..#',
       '#..#.........#..#',
       '#..###.....###..#',
-      '#.C.....$.......#',
+      '#.C.....$.3.....#',
       '#.........>.....#',
       '#################',
     ],
@@ -244,6 +245,24 @@ const FLOORS: DungeonFloor[] = [
         enemies: [
           { species: 'keptsoul', level: 9 },
           { species: 'emberward', level: 9 },
+        ],
+      },
+      // Descent beat. Act III — all three companions are aboard by now.
+      '3': {
+        kind: 'dialogue',
+        once: true,
+        script: [
+          ...narrate(
+            'The lantern-glow is gone. There is only the small light you carry, and the sound of four sets of footsteps keeping time.',
+          ),
+          ...say(
+            'Wren',
+            'I could read a name aloud. For the warmth of it. To have a voice down here that is not the dark.',
+          ),
+          ...say(
+            'Kade',
+            'Leave it. Let the dark be dark. We did not come this far to fill it with noise — we came to walk through it.',
+          ),
         ],
       },
     },
@@ -288,7 +307,7 @@ const FLOORS: DungeonFloor[] = [
       '#....1.....#....#',
       '#...#...#...#...#',
       '#.......$.......#',
-      '#..#...#...#..C.#',
+      '#..#...#..3#..C.#',
       '#.........>.....#',
       '#################',
     ],
@@ -309,6 +328,22 @@ const FLOORS: DungeonFloor[] = [
         intro: narrate(
           'The stair goes down and down, every lamp along it long since drowned. You count the steps to keep from counting the quiet.',
         ),
+      },
+      // Descent beat — Kade, who always turned back at this dark, keeps walking.
+      '3': {
+        kind: 'dialogue',
+        once: true,
+        script: [
+          ...narrate('Kade counts the steps under his breath, and does not stop counting, and does not stop walking.'),
+          ...say(
+            'Kade',
+            'This is the part I always ran from. Where it stops feeling like a rescue and starts feeling like a grave.',
+          ),
+          ...say(
+            'Sena Vale',
+            'Then it is good you are not walking it alone this time. None of us is. Keep counting. We are right behind you.',
+          ),
+        ],
       },
     },
     chests: {
@@ -408,7 +443,7 @@ const FLOORS: DungeonFloor[] = [
       '#..#.........#..#',
       '#...#.......#...#',
       '#....#.....#....#',
-      '#.....#.$.#....C#',
+      '#.....#3$.#....C#',
       '#......>........#',
       '#################',
     ],
@@ -428,6 +463,22 @@ const FLOORS: DungeonFloor[] = [
         enemies: [
           { species: 'reliquary', level: 9 },
           { species: 'stillguard', level: 9 },
+        ],
+      },
+      // Threshold beat — the last words before the finale choice on the floor below.
+      '3': {
+        kind: 'dialogue',
+        once: true,
+        script: [
+          ...narrate(
+            'One door left, and a light beneath it — steady, unhidden, burning the way a light burns when no one is holding it too tightly.',
+          ),
+          ...say('Wren', 'Whoever you have looked for since the beginning — they are just beyond that door.'),
+          ...say(
+            'Sena Vale',
+            'Halden taught you both endings. Keep them, or open your hands. Whichever you choose in there, choose it — do not let the reach choose for you.',
+          ),
+          ...say('Kade', 'We will be right here when you come back out. However you come back out.'),
         ],
       },
     },

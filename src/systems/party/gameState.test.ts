@@ -30,3 +30,26 @@ describe('startNewGame', () => {
     expect(g.teamAttribute).toBe(species('glidefang').attribute);
   });
 });
+
+// A chest's treasure is a one-time reward: once opened it must stay empty for
+// good, even after leaving and re-entering the reach (`resetCrawl`), or obols
+// could be farmed by re-running a floor. Per-crawl state (events, light shards,
+// doors) does reset.
+describe('resetCrawl', () => {
+  it('keeps opened chests but resets per-crawl progress', () => {
+    const g = new GameState();
+    g.openedChests.add('crystal-1:15,2');
+    g.usedEvents.add('crystal-1:1');
+    g.takenPickups.add('crystal-1:7,7');
+    g.openedDoors.add('crystal-2:10,3');
+    g.floorIndex = 2;
+
+    g.resetCrawl();
+
+    expect(g.openedChests.has('crystal-1:15,2'), 'opened chest persists').toBe(true);
+    expect(g.usedEvents.size, 'events reset').toBe(0);
+    expect(g.takenPickups.size, 'light shards reset').toBe(0);
+    expect(g.openedDoors.size, 'doors reset').toBe(0);
+    expect(g.floorIndex, 'rewinds to the first floor').toBe(0);
+  });
+});

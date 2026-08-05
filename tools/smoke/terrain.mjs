@@ -126,6 +126,7 @@ for (const [dom, idx] of floorList) {
       gridMatches: s.grid.width === floor.rows[0].length && s.grid.depth === floor.rows.length,
       decorPlaced: s.decor.length,
       decorSpecs: specs.length,
+      scatter: !!floor.scatter,
       solidCount: specs.filter((d) => g.decorIsSolid(d)).length,
       onWall,
       badSolid,
@@ -134,7 +135,13 @@ for (const [dom, idx] of floorList) {
   });
   console.log(`\n=== ${info.id} (${info.terrain}) ===`);
   check('grid built at the data\'s size', info.gridMatches);
-  check('all decor billboards placed', info.decorPlaced === info.decorSpecs, `${info.decorPlaced}/${info.decorSpecs}`);
+  // Scatter floors auto-add passable decor, so the count only grows; every
+  // authored spec is still placed first (checked structurally below).
+  check(
+    'all decor billboards placed',
+    info.scatter ? info.decorPlaced >= info.decorSpecs : info.decorPlaced === info.decorSpecs,
+    `${info.decorPlaced}/${info.decorSpecs}${info.scatter ? ' (+scatter)' : ''}`,
+  );
   check('no decor on a wall/void tile', info.onWall.length === 0, info.onWall.join(', '));
   check(`solid decor blocks its tile (${info.solidCount} solid)`, info.badSolid.length === 0, info.badSolid.join(', '));
   check('passable decor stays walkable', info.badPassable.length === 0, info.badPassable.join(', '));

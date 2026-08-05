@@ -5,7 +5,7 @@ import { TILE, TileGrid } from '../engine/TileGrid';
 import type { Tile } from '../engine/TileGrid';
 import { Billboard } from '../engine/Billboard';
 import { artAspect } from '../engine/pixel';
-import { ParticleField, Portal, Torch, contactShadow } from '../engine/fx';
+import { DustMotes, ParticleField, Portal, Torch, contactShadow } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { DECOR, PROPS, HUMANS } from '../assets/art';
@@ -35,6 +35,22 @@ type Facing = 'up' | 'down' | 'left' | 'right';
 
 const STEP_TIME = 0.19;
 const LIGHT_PER_STEP = 1;
+/** Extra lantern light a hazard tile gutters on entry, beyond the per-step 1. */
+const HAZARD_LP = 8;
+
+/**
+ * Flat, low ground-dressing decor scattered per terrain skin when a floor opts
+ * in with `scatter`. Always placed passable (never blocks) so it can go anywhere
+ * without a soft-lock — it's texture, not an obstacle.
+ */
+const SCATTER_KINDS: Record<string, string[]> = {
+  stone: ['rubble'],
+  crystal: ['iceShard'],
+  crypt: ['mushroomGlow'],
+  cave: ['mushroomGlow'],
+  jungle: ['jungleFlower'],
+  metal: ['rubble'],
+};
 
 export interface DungeonSceneParams {
   /** Set when returning from a battle so the crawl resumes in place. */
@@ -65,12 +81,15 @@ export class DungeonScene extends GameScene {
   private moveFrom = new THREE.Vector3();
   private moveTo = new THREE.Vector3();
   private moveT = 0;
+  /** Keys in hand on this floor (picked up minus doors already spent them). */
+  private keysHeld = 0;
   /** Direction pressed while a step was in flight (input buffering). */
   private buffered: Facing | null = null;
 
   private hud!: DungeonHUD;
   private dialogue!: DialogueBox;
   private particles!: ParticleField;
+  private dust: DustMotes | null = null;
   private torches: Torch[] = [];
   private portals: { portal: Portal; x: number; z: number }[] = [];
   private props = new Map<string, Billboard>();
@@ -81,6 +100,8 @@ export class DungeonScene extends GameScene {
   private playerShadow: THREE.Mesh | null = null;
   private elementLights: THREE.PointLight[] = [];
   private elementMeshes = new Map<string, THREE.Mesh>();
+  /** Toggle-wall barrier meshes, keyed by tile — visibility flips with switches. */
+  private toggleMeshes = new Map<string, THREE.Mesh>();
 
   /** Blocks input while a scripted beat is running. */
   private busy = false;
@@ -95,7 +116,7 @@ export class DungeonScene extends GameScene {
 
     const dom = reach(game.activeReachId);
     this.floor = dom.floors[game.floorIndex];
-    this.grid = new TileGrid(this.floor.rows, this.floor.theme);
+    this.grid = new TileGrid(this.floor.rows, this.floor.theme, this.floor.elevation);
 
     this.buildScene();
     this.buildUI();
@@ -110,11 +131,19 @@ export class DungeonScene extends GameScene {
       this.facing = 'down';
       game.crawl.initialized = true;
     }
+    // Toggle-wall state is transient (resets to solid on rebuild). If the player
+    // suspended standing on an open barrier, re-open the group so they don't
+    // resume embedded in a re-solidified wall.
+    if (p.resume && this.grid.at(this.tileX, this.tileZ)?.kind === 'toggleWall') {
+      this.grid.flipToggles();
+      this.syncToggleMeshes();
+    }
     this.placePlayer();
     this.updateFacingArt();
     this.saveCrawl();
 
     this.ctx.hd2d.setScene(this.scene);
+    this.ctx.hd2d.applyMood(this.floor.theme);
     this.ctx.hd2d.applyFog(this.scene, this.floor.fog ?? 1, this.floor.theme.fogColor);
     this.ctx.hd2d.snapCamera();
     this.syncCamera();
@@ -191,9 +220,32 @@ export class DungeonScene extends GameScene {
     const built = this.grid.build();
     this.scene.add(built.group);
     this.elementMeshes = built.elementMeshes;
+    this.toggleMeshes = built.toggleMeshes;
 
     this.particles = new ParticleField(500);
     this.scene.add(this.particles.points);
+
+    // Ambient dust motes fill the play volume so the key light has *air* to rake
+    // across. Sized to the floor's footprint and tinted from its mood (the same
+    // ambient/hemisphere colour the rig uses), so each reach's haze matches its
+    // atmosphere; falls back to a pale lift of the floor palette.
+    const theme = this.floor.theme;
+    const lo = this.grid.worldPos(0, 0);
+    const hi = this.grid.worldPos(this.grid.width - 1, this.grid.depth - 1);
+    const dustSrc = theme.ambientColor ?? theme.hemiSky ?? theme.floorAlt;
+    const dustColor = new THREE.Color(dustSrc).lerp(new THREE.Color('#ffffff'), theme.ambientColor ? 0.25 : 0.55);
+    this.dust = new DustMotes(
+      {
+        minX: Math.min(lo.x, hi.x) - TILE,
+        maxX: Math.max(lo.x, hi.x) + TILE,
+        minZ: Math.min(lo.z, hi.z) - TILE,
+        maxZ: Math.max(lo.z, hi.z) + TILE,
+        minY: 0.1,
+        maxY: (theme.wallHeight ?? 2.6) * 0.95,
+      },
+      `#${dustColor.getHexString()}`,
+    );
+    this.scene.add(this.dust.points);
 
     // The player, lantern in hand, on foot.
     this.player = new Billboard(HUMANS.hero, 'player', { height: 1.7, reveal: true });
@@ -211,7 +263,7 @@ export class DungeonScene extends GameScene {
     // Props, portals and torches.
     this.grid.forEach((t) => {
       const key = `${t.x},${t.z}`;
-      const world = this.grid.worldPos(t.x, t.z);
+      const world = this.grid.worldPos(t.x, t.z, this.grid.floorY(t.x, t.z));
       if (t.kind === 'chest') {
         const opened = game.openedChests.has(`${this.floor.id}:${key}`);
         const b = new Billboard(
@@ -227,7 +279,7 @@ export class DungeonScene extends GameScene {
         this.scene.add(b.object);
         this.props.set(key, b);
         const cs = contactShadow(0.85 * artAspect(opened ? PROPS.chestOpen : PROPS.chestClosed));
-        cs.position.set(world.x, 0.02, world.z);
+        cs.position.set(world.x, world.y + 0.02, world.z);
         this.scene.add(cs);
       } else if (t.kind === 'light') {
         if (game.takenPickups.has(`${this.floor.id}:${key}`)) return;
@@ -238,7 +290,32 @@ export class DungeonScene extends GameScene {
         this.props.set(key, b);
         // Tracked: the shard is removed on pickup, so its decal must go too.
         const cs = contactShadow(0.7 * artAspect(PROPS.lightShard), 0.22);
-        cs.position.set(world.x, 0.02, world.z);
+        cs.position.set(world.x, world.y + 0.02, world.z);
+        this.scene.add(cs);
+        this.propShadows.set(key, cs);
+      } else if (t.kind === 'key') {
+        if (game.takenPickups.has(`${this.floor.id}:${key}`)) return;
+        const b = new Billboard(PROPS.key, 'prop:key', { height: 0.7, emissive: 0.35 });
+        b.bob = 0.06;
+        b.object.position.copy(world);
+        this.scene.add(b.object);
+        this.props.set(key, b);
+        const cs = contactShadow(0.7 * artAspect(PROPS.key), 0.22);
+        cs.position.set(world.x, world.y + 0.02, world.z);
+        this.scene.add(cs);
+        this.propShadows.set(key, cs);
+      } else if (t.kind === 'door') {
+        if (game.openedDoors.has(`${this.floor.id}:${key}`)) {
+          this.grid.openDoor(t.x, t.z); // already unlocked on a prior visit
+          return;
+        }
+        const b = new Billboard(PROPS.door, 'prop:door', { height: 1.7, emissive: 0.08 });
+        b.bob = 0;
+        b.object.position.copy(world);
+        this.scene.add(b.object);
+        this.props.set(key, b);
+        const cs = contactShadow(1.7 * artAspect(PROPS.door), 0.28);
+        cs.position.set(world.x, world.y + 0.02, world.z);
         this.scene.add(cs);
         this.propShadows.set(key, cs);
       } else if (t.kind === 'portal') {
@@ -255,6 +332,18 @@ export class DungeonScene extends GameScene {
       // Dialogue events are voices in the lantern now — no on-screen NPC to drive into.
       // They fire when the player crosses the tile (placed at map chokepoints).
     });
+
+    // Keys in hand = keys collected minus doors already spent them on this floor.
+    // Recomputed from persisted sets, so it survives suspend/resume with no extra
+    // saved field.
+    let collected = 0;
+    let spent = 0;
+    this.grid.forEach((t) => {
+      const id = `${this.floor.id}:${t.x},${t.z}`;
+      if (t.kind === 'key' && game.takenPickups.has(id)) collected++;
+      if (t.kind === 'door' && game.openedDoors.has(id)) spent++;
+    });
+    this.keysHeld = Math.max(0, collected - spent);
 
     this.placeTorches();
     this.placeDecor();
@@ -285,17 +374,53 @@ export class DungeonScene extends GameScene {
         emissive: d.emissive ?? 0.1,
       });
       b.bob = 0;
-      const world = this.grid.worldPos(d.x, d.z);
+      const world = this.grid.worldPos(d.x, d.z, this.grid.floorY(d.x, d.z));
       b.object.position.copy(world);
       this.scene.add(b.object);
       this.decor.push(b);
       // Ground it: a soft contact-shadow decal footprint under the sprite. Not
       // tracked — decor is never removed mid-scene, so teardown disposes it.
       const cs = contactShadow((d.height ?? 1.1) * artAspect(art));
-      cs.position.set(world.x, 0.02, world.z);
+      cs.position.set(world.x, world.y + 0.02, world.z);
       this.scene.add(cs);
       if (decorIsSolid(d)) this.grid.blockTile(d.x, d.z);
     }
+    this.scatterDecor();
+  }
+
+  /**
+   * Deterministically scatter flat, passable ground-dressing across plain floor
+   * tiles so rooms don't read as bare (opt-in via `floor.scatter`). Never touches
+   * interactive tiles (only `kind === 'floor'`), never lands on authored decor,
+   * and never blocks — the scatter is always passable, so it can't create a
+   * soft-lock. Deterministic in (x,z), so it's identical every run.
+   */
+  private scatterDecor() {
+    const s = this.floor.scatter;
+    if (!s) return;
+    const every = Math.max(2, typeof s === 'number' ? s : 7);
+    const kinds = SCATTER_KINDS[this.floor.theme.terrain ?? 'stone'] ?? [];
+    if (!kinds.length) return;
+    const taken = new Set<string>((this.floor.decor ?? []).map((d) => `${d.x},${d.z}`));
+    this.grid.forEach((t) => {
+      if (t.kind !== 'floor') return;
+      const key = `${t.x},${t.z}`;
+      if (taken.has(key)) return;
+      if ((t.x * 7 + t.z * 13) % every !== 0) return;
+      const kind = kinds[(t.x + t.z) % kinds.length];
+      const art = DECOR[kind];
+      if (!art) return;
+      const b = new Billboard(art, `decor:${kind}`, { height: 0.5, emissive: 0.14 });
+      b.bob = 0;
+      const world = this.grid.worldPos(t.x, t.z, this.grid.floorY(t.x, t.z));
+      b.object.position.copy(world);
+      this.scene.add(b.object);
+      this.decor.push(b);
+      const cs = contactShadow(0.5 * artAspect(art), 0.18);
+      cs.position.set(world.x, world.y + 0.02, world.z);
+      this.scene.add(cs);
+      // Deliberately no blockTile: scatter is passable ground detail.
+    });
   }
 
   private placeTorches() {
@@ -309,7 +434,7 @@ export class DungeonScene extends GameScene {
       if (n++ % 5 !== 0) return;
       const torch = new Torch(this.particles);
       const p = this.grid.worldPos(t.x, t.z);
-      torch.object.position.set(p.x, 1.05, p.z - TILE * 0.42);
+      torch.object.position.set(p.x, 1.05 + this.grid.floorY(t.x, t.z), p.z - TILE * 0.42);
       this.scene.add(torch.object);
       this.torches.push(torch);
     });
@@ -394,7 +519,7 @@ export class DungeonScene extends GameScene {
   // --- movement ------------------------------------------------------------
 
   private placePlayer() {
-    const p = this.grid.worldPos(this.tileX, this.tileZ);
+    const p = this.grid.worldPos(this.tileX, this.tileZ, this.grid.floorY(this.tileX, this.tileZ));
     this.player.object.position.copy(p);
   }
 
@@ -420,12 +545,26 @@ export class DungeonScene extends GameScene {
       this.facing = dir;
       this.updateFacingArt();
     }
+    // A locked door: spend a key to open it (then step through), or it blocks.
+    if (this.grid.isDoorClosed(nx, nz)) {
+      if (this.keysHeld <= 0) {
+        audio.sfx('bump');
+        toast(this.ctx.ui, '<span class="danger">Locked — you need a key</span>', 1400);
+        return;
+      }
+      this.keysHeld--;
+      game.openedDoors.add(`${this.floor.id}:${nx},${nz}`);
+      this.grid.openDoor(nx, nz);
+      this.clearProp(`${nx},${nz}`);
+      audio.sfx('confirm');
+      toast(this.ctx.ui, '<span class="ok">Unlocked</span>', 1200);
+    }
     if (!this.grid.passable(nx, nz)) {
       audio.sfx('bump');
       return;
     }
     this.moveFrom.copy(this.player.object.position);
-    this.moveTo.copy(this.grid.worldPos(nx, nz));
+    this.moveTo.copy(this.grid.worldPos(nx, nz, this.grid.floorY(nx, nz)));
     this.tileX = nx;
     this.tileZ = nz;
     this.moving = true;
@@ -445,6 +584,31 @@ export class DungeonScene extends GameScene {
   }
 
   // --- tile interactions ---------------------------------------------------
+
+  /** Removes a tracked prop billboard and its contact-shadow decal at a tile. */
+  private clearProp(key: string) {
+    const b = this.props.get(key);
+    if (b) {
+      this.scene.remove(b.object);
+      b.dispose();
+      this.props.delete(key);
+    }
+    const cs = this.propShadows.get(key);
+    if (cs) {
+      this.scene.remove(cs);
+      cs.geometry.dispose();
+      (cs.material as THREE.Material).dispose();
+      this.propShadows.delete(key);
+    }
+  }
+
+  /** Reflects the grid's toggle-wall state onto the barrier meshes' visibility. */
+  private syncToggleMeshes() {
+    for (const [k, mesh] of this.toggleMeshes) {
+      const [x, z] = k.split(',').map(Number);
+      mesh.visible = this.grid.isToggleSolid(x, z);
+    }
+  }
 
   private async onTileEntered(tile: Tile) {
     // Reaching the way home is honored even if this very step emptied the
@@ -472,7 +636,7 @@ export class DungeonScene extends GameScene {
         b?.setArt(PROPS.chestOpen, 'prop:chestOpen');
         if (b) b.mesh.material.emissiveIntensity = 0.5;
         audio.sfx('chest');
-        this.particles.emit(this.grid.worldPos(tile.x, tile.z, 0.6), {
+        this.particles.emit(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z) + 0.6), {
           count: 22,
           color: 0xffd166,
           speed: 2.4,
@@ -497,19 +661,7 @@ export class DungeonScene extends GameScene {
       const id = `${this.floor.id}:${key}`;
       if (!game.takenPickups.has(id)) {
         game.takenPickups.add(id);
-        const b = this.props.get(key);
-        if (b) {
-          this.scene.remove(b.object);
-          b.dispose();
-          this.props.delete(key);
-        }
-        const cs = this.propShadows.get(key);
-        if (cs) {
-          this.scene.remove(cs);
-          cs.geometry.dispose();
-          (cs.material as THREE.Material).dispose();
-          this.propShadows.delete(key);
-        }
+        this.clearProp(key);
         game.light = Math.min(game.maxLight, game.light + 40);
         audio.sfx('pickup');
         toast(this.ctx.ui, '<span class="ok">+40 LP</span>', 1600);
@@ -518,10 +670,62 @@ export class DungeonScene extends GameScene {
       return;
     }
 
+    if (tile.kind === 'key') {
+      const id = `${this.floor.id}:${key}`;
+      if (!game.takenPickups.has(id)) {
+        game.takenPickups.add(id);
+        this.clearProp(key);
+        this.keysHeld++;
+        audio.sfx('pickup');
+        toast(this.ctx.ui, `<span class="ok">Picked up a key</span> · ${this.keysHeld} held`, 1600);
+      }
+      return;
+    }
+
+    if (tile.kind === 'hazard') {
+      // A trap: it gutters the lantern extra on every entry (not one-time), so
+      // routing around it matters. A hot red burst + hurt sfx sell the sting.
+      game.light = Math.max(0, game.light - HAZARD_LP);
+      audio.sfx('bump');
+      this.particles.emit(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z) + 0.3), {
+        count: 14,
+        color: 0xff4a2a,
+        speed: 2.2,
+        life: 0.7,
+        gravity: -3,
+        upBias: 0.7,
+      });
+      this.ctx.hd2d.addShake(0.35);
+      toast(this.ctx.ui, `<span class="danger">-${HAZARD_LP} LP</span>`, 1400);
+      this.hud.update(game.souls());
+      if (game.light <= 0) {
+        await this.outOfLight();
+        return;
+      }
+      return;
+    }
+
+    if (tile.kind === 'switch') {
+      // Flip the floor's toggle-wall group: every '%' barrier appears/vanishes.
+      this.grid.flipToggles();
+      this.syncToggleMeshes();
+      audio.sfx('confirm');
+      this.particles.emit(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z) + 0.3), {
+        count: 12,
+        color: 0x7bdc8a,
+        speed: 1.8,
+        life: 0.7,
+        gravity: -2,
+        upBias: 0.8,
+      });
+      toast(this.ctx.ui, '<span class="accent">The mechanism grinds — barriers shift.</span>', 1600);
+      return;
+    }
+
     if (tile.kind === 'element') {
       const mesh = this.elementMeshes.get(key);
       if (mesh) {
-        this.particles.emit(this.grid.worldPos(tile.x, tile.z, 0.2), {
+        this.particles.emit(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z) + 0.2), {
           count: 6,
           color: ELEMENTS[tile.element!].color,
           speed: 1,
@@ -774,6 +978,8 @@ export class DungeonScene extends GameScene {
       finalBoss,
       eventId,
       partyTiles: [tileElement, tileElement, tileElement],
+      // Tint the whole arena when the ground is elemental (see BattleScene).
+      fieldElement: tileElement,
       returnTo: 'dungeon',
     };
     await this.ctx.go('battle', params);
@@ -805,7 +1011,7 @@ export class DungeonScene extends GameScene {
     if (!tile) return;
     tile.kind = 'exit';
     const portal = new Portal(this.particles, 0xffd166, true);
-    portal.object.position.copy(this.grid.worldPos(tile.x, tile.z));
+    portal.object.position.copy(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z)));
     this.scene.add(portal.object);
     this.portals.push({ portal, x: tile.x, z: tile.z });
     audio.sfx('portal');
@@ -853,12 +1059,21 @@ export class DungeonScene extends GameScene {
     if (this.leaving) return;
     this.leaving = true;
     this.busy = true;
+    // Halden dies at the midpoint, but the Last Lantern (only reachable after) can
+    // gutter you out too — so once he is gone, Wren walks you home by the Book's
+    // light instead. Without this he would speak from beyond the grave.
     await this.dialogue.play(
-      say(
-        'Halden',
-        'Your lantern guttered out. Sit tight — I am walking you back by the last of mine.',
-        'Nothing lost but time. Gather more light and go again.',
-      ),
+      game.has('haldenGone')
+        ? say(
+            'Wren',
+            'Your lantern guttered out. We have you — I am walking you back by the light of the Book.',
+            'Nothing lost but time. Gather more light and go again.',
+          )
+        : say(
+            'Halden',
+            'Your lantern guttered out. Sit tight — I am walking you back by the last of mine.',
+            'Nothing lost but time. Gather more light and go again.',
+          ),
     );
     game.resetCrawl();
     game.crawl.initialized = false;
@@ -930,6 +1145,7 @@ export class DungeonScene extends GameScene {
     if (this.playerShadow) {
       // Track x/z only — keep it flat on the floor, ignoring the walk-bob.
       this.playerShadow.position.x = this.player.object.position.x;
+      this.playerShadow.position.y = this.player.object.position.y + 0.02;
       this.playerShadow.position.z = this.player.object.position.z;
     }
     for (const t of this.torches) t.update(dt, this.ctx.hd2d.camera, time);
@@ -937,6 +1153,7 @@ export class DungeonScene extends GameScene {
     for (const b of this.props.values()) b.update(dt, this.ctx.hd2d.camera, time);
     for (const b of this.decor) b.update(dt, this.ctx.hd2d.camera, time);
     this.particles.update(dt);
+    this.dust?.update(dt, time);
     this.updateElementLights();
     this.syncCamera();
   }
@@ -951,6 +1168,8 @@ export class DungeonScene extends GameScene {
     for (const b of this.props.values()) b.dispose();
     for (const b of this.decor) b.dispose();
     this.particles.dispose();
+    this.dust?.dispose();
+    this.dust = null;
     // Contact-shadow decals are plain scene children; disposeObject3D frees
     // their geometry+material (the shared radial texture is intentionally kept).
     this.propShadows.clear();

@@ -63,7 +63,7 @@ const FLOORS: DungeonFloor[] = [
       '#################',
       '#..........#....#',
       '#..S......C#....#',
-      '#..........#....#',
+      '#..4.......#....#',
       '#....1.........2#',
       '#..........DDDD.#',
       '#.$....###.D3DD.#',
@@ -92,6 +92,23 @@ const FLOORS: DungeonFloor[] = [
       // The Unwitnessed — an Anchored crowded into a mass of packed dark. Well
       // above the Unremembered's level; come back matched to dark. Re-fightable.
       '3': { kind: 'anchored', id: 'hauntedAnchored' },
+      // Arrival beat. This reach requires the Reliquary cleared, so Wren and Sena
+      // are both aboard — and this is the reach where saying names aloud matters.
+      '4': {
+        kind: 'dialogue',
+        once: true,
+        script: [
+          ...narrate('The cold here does not bite. It erases. You feel a name you were sure of go soft at the edges.'),
+          ...say(
+            'Wren',
+            'Hold on to who you walked in as. This is the reach that forgets you — not all at once. A letter at a time.',
+          ),
+          ...say(
+            'Sena Vale',
+            'Say their names as we go, Wren. Out loud. It is the one thing that keeps a soul from thinning here.',
+          ),
+        ],
+      },
     },
     chests: {
       '10,2': { obols: 260, item: 'mendingBalm', note: 'A traveller who did not leave. Their pack remains.' },
@@ -261,7 +278,7 @@ const FLOORS: DungeonFloor[] = [
       '#..#.D.....N.#..#',
       '#...#.......#...#',
       '#....#.....#....#',
-      '#.....#.$.#....C#',
+      '#.....#3$.#....C#',
       '#......>........#',
       '#################',
     ],
@@ -282,6 +299,24 @@ const FLOORS: DungeonFloor[] = [
         intro: narrate(
           'The cloister runs in a ring, and the ring is weeping — water, or something like it, beading on every stone.',
         ),
+      },
+      // Mid-reach beat — the forgotten being rinsed thinner, and Wren's answer to it.
+      '3': {
+        kind: 'dialogue',
+        once: true,
+        script: [
+          ...narrate(
+            'In the runnels between the stones, faces surface for a moment — almost recognisable — and are washed smooth again.',
+          ),
+          ...say(
+            'Sena Vale',
+            'They are not drowning. They are being rinsed away. A little more of each of them, every time the water passes.',
+          ),
+          ...say(
+            'Wren',
+            'Then I write down what I can of them. It is not much against all this. But a name on a page is a hand held out.',
+          ),
+        ],
       },
     },
     chests: {
@@ -404,6 +439,14 @@ const FLOORS: DungeonFloor[] = [
             'You cannot give back what the world let go. But you can give it something: a name of your own choosing, or the mercy of none.',
           ),
           ...say('the Unnamed', 'Oh. That will do. That will do.'),
+          ...say(
+            'Wren',
+            'No name left in the whole world to give it — and it crossed anyway. I did not know a soul was allowed to go without one.',
+          ),
+          ...say(
+            'Sena Vale',
+            'That is the lesson neither of us wanted. That they can leave whole, even when we have nothing left to hold them by.',
+          ),
           ...narrate('The last of it unravels, quiet now. A way home opens in the settling dark.'),
         ],
       },

@@ -94,6 +94,20 @@ export interface DungeonFloor {
   fog?: number;
   /** Decorative billboards dressing this floor's terrain (solid by default). */
   decor?: DecorSpec[];
+  /**
+   * Per-tile height offset in world units, keyed `"x,z"` — purely visual, never
+   * changes how the grid is walked. A positive value raises a floor tile into a
+   * dais (and props/party riding it rise too); a negative value sinks it into a
+   * pit. On a wall tile it raises the wall's top, so a boss room's back wall can
+   * tower while corridors stay tight. Absent tiles sit flat at 0.
+   */
+  elevation?: Record<string, number>;
+  /**
+   * Auto-scatter a light dressing of passable terrain decor across empty floor
+   * tiles (deterministic, never blocking) so rooms don't read as bare. `true`
+   * uses a sensible density; a number sets it (every Nth eligible tile).
+   */
+  scatter?: boolean | number;
 }
 
 /** What happens when the player drives into a reach's exit portal. */
