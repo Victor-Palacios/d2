@@ -14,8 +14,9 @@ import { chromium } from 'playwright';
 // toggleWall (not passable, mesh visible), stepping a '*' switch flips it open
 // (passable, mesh hidden), and the toggle-aware validator accepts a
 // switch-solvable floor but flags a barrier with no reachable switch.
-// Finally: ambient dust motes — a persistent in-bounds mote cloud that drifts
-// each frame (visual-depth atmosphere).
+// Finally, visual-depth atmosphere: ambient dust motes — a persistent in-bounds
+// mote cloud that drifts each frame — and torch god-rays — every torch group
+// carries an additive light-shaft cone.
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROME,
@@ -246,6 +247,28 @@ check('dust: an ambient mote cloud exists with points', dust.present && dust.n >
 check('dust: motes sit inside the floor footprint and above the ground',
   dust.present && dust.inBounds === dust.n && dust.minY >= 0, JSON.stringify(dust));
 check('dust: motes drift when the scene updates', dust.present && dust.moved > 0, `${dust.moved}/8 moved`);
+
+// --- torch light shafts (god-rays) ------------------------------------------
+// Each torch hangs an additive cone of light. Verify the torch-lit floor has
+// torches and that each torch group carries an additive-blended cone mesh.
+const shafts = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  const s = g.manager.activeScene; // crystal-3
+  const torches = s.torches.length;
+  let withShaft = 0;
+  for (const t of s.torches) {
+    let found = false;
+    t.object.traverse((o) => {
+      // AdditiveBlending === 2; the shaft is the only additive cone in the group.
+      if (o.isMesh && o.geometry?.type === 'ConeGeometry' && o.material?.blending === 2) found = true;
+    });
+    if (found) withShaft++;
+  }
+  return { torches, withShaft };
+});
+check('god-rays: the floor is torch-lit', shafts.torches > 0, `${shafts.torches} torches`);
+check('god-rays: every torch carries an additive light-shaft cone',
+  shafts.torches > 0 && shafts.withShaft === shafts.torches, JSON.stringify(shafts));
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 if (errs.length) failures += errs.length;

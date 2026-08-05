@@ -332,11 +332,78 @@ export class DustMotes {
   }
 }
 
+/**
+ * A soft volumetric light shaft — the cone of glow a torch throws into hazy air.
+ * A cheap stand-in for screen-space god-rays (which the software renderer can't
+ * afford): an open cone, apex at the flame, widening as it falls, additively
+ * blended and faded to nothing at the base via vertex colour (additive = black
+ * reads as transparent). Leans slightly into the room and drinks the same dust
+ * the motes fill the air with. One extra transparent draw per torch, no post
+ * pass. `setOpacity` lets the torch pulse it in sync with its flicker.
+ */
+export class LightShaft {
+  readonly mesh: THREE.Mesh;
+  private mat: THREE.MeshBasicMaterial;
+  private baseOpacity: number;
+
+  constructor(color: THREE.ColorRepresentation = 0xffb066, height = 2.1, topR = 0.28, botR = 1.15, opacity = 0.14) {
+    const geo = new THREE.ConeGeometry(botR, height, 12, 1, true);
+    // ConeGeometry apex is at +h/2, base ring at -h/2. Shift so the apex sits at
+    // the origin (the flame) and the cone hangs straight down from there.
+    geo.translate(0, -height / 2, 0);
+    // Narrow the apex toward a point of light: pull the top ring inward.
+    const pos = geo.getAttribute('position');
+    const warm = new THREE.Color(color);
+    const colors = new Float32Array(pos.count * 3);
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i); // 0 at apex, -height at base
+      const tTop = y > -0.001; // apex ring
+      if (tTop) {
+        pos.setX(i, pos.getX(i) * (topR / botR));
+        pos.setZ(i, pos.getZ(i) * (topR / botR));
+      }
+      // Bright at the flame, fading to black (→ invisible) at the floor.
+      const k = 1 - Math.min(1, -y / height);
+      colors[i * 3] = warm.r * k;
+      colors[i * 3 + 1] = warm.g * k;
+      colors[i * 3 + 2] = warm.b * k;
+    }
+    pos.needsUpdate = true;
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    this.baseOpacity = opacity;
+    this.mat = new THREE.MeshBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      toneMapped: false,
+    });
+    this.mesh = new THREE.Mesh(geo, this.mat);
+    this.mesh.frustumCulled = false;
+    this.mesh.renderOrder = 3;
+    // A slight forward lean so the shaft spills into the room, not down the wall.
+    this.mesh.rotation.x = 0.32;
+  }
+
+  /** Scale the shaft's glow by the torch's live flicker (1 = base opacity). */
+  setOpacity(flicker: number) {
+    this.mat.opacity = this.baseOpacity * flicker;
+  }
+
+  dispose() {
+    this.mesh.geometry.dispose();
+    this.mat.dispose();
+  }
+}
+
 /** A wall torch: emissive sprite + flickering point light + rising embers. */
 export class Torch {
   readonly object = new THREE.Group();
   readonly light: THREE.PointLight;
   private billboard: Billboard;
+  private shaft: LightShaft;
   private phase = Math.random() * 10;
   private emitAccum = 0;
 
@@ -354,6 +421,10 @@ export class Torch {
     this.light = new THREE.PointLight(0xffa64d, intensity, 8.5, 1.8);
     this.light.position.y = 0.75;
     this.object.add(this.light);
+    // The visible cone of light hanging off the flame, drinking the haze.
+    this.shaft = new LightShaft();
+    this.shaft.mesh.position.y = 0.7;
+    this.object.add(this.shaft.mesh);
   }
 
   update(dt: number, camera: THREE.Camera, time: number) {
@@ -361,6 +432,7 @@ export class Torch {
     const f = 0.72 + Math.sin(time * 11 + this.phase) * 0.14 + Math.sin(time * 23.3 + this.phase) * 0.1;
     this.light.intensity = 6 * f;
     this.billboard.mesh.material.emissiveIntensity = 1.4 + f * 0.6;
+    this.shaft.setOpacity(f);
     this.emitAccum += dt;
     if (this.emitAccum > 0.14) {
       this.emitAccum = 0;
