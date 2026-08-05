@@ -447,7 +447,11 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'overload' },
       { level: 20, tech: 'railvolt' },
     ],
-    // Terminal — already a heavy, later-game bruiser.
+    evolutions: [
+      { to: 'aegisaur', level: 3 },
+      { to: 'cogknight', level: 3 },
+    ],
+    // A heavy machine bruiser that hardens on into a Warden-class guardian.
     blurb: 'A geode that grew a temper around its glowing core.',
   },
 
@@ -608,7 +612,11 @@ export const SPECIES: Record<string, Species> = {
       { level: 13, tech: 'savageBite' },
       { level: 17, tech: 'thornspell' },
     ],
-    // Terminal — small, quick, and content to stay that way.
+    evolutions: [
+      { to: 'chitterling', level: 3 },
+      { to: 'mantiscar', level: 3 },
+    ],
+    // The runt that finally molts — up the Chitterling → Carapex line.
     blurb: 'The small remainder of something that only ever wanted to keep moving.',
   },
 
@@ -1725,6 +1733,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'glacierSpire' },
       { level: 20, tech: 'renewingTide' },
     ],
+    evolutions: [
+      { to: 'wellspring', level: 3 },
+      { to: 'gustwing', level: 3 },
+    ],
     blurb: 'A soul that dissolved into fog on the crossing. It drifts, gentle and unsure which way is home.',
   },
   cindermage: {
@@ -1745,6 +1757,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'infernoCore' },
     ],
+    evolutions: [
+      { to: 'lanternwake', level: 3 },
+      { to: 'emberkeep', level: 3 },
+    ],
     blurb: 'A hooded echo cupping the last warm coal of a life. It hoards the heat, and studies you from the dark.',
   },
   sigilwarden: {
@@ -1764,6 +1780,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 12, tech: 'dirge' },
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'voidNova' },
+    ],
+    evolutions: [
+      { to: 'gloomshade', level: 3 },
+      { to: 'gustwing', level: 3 },
     ],
     blurb: 'The Vigil of the Warden Hall — a great eye of wards that keeps the crossing. Nothing passes it unread.',
   },
@@ -1786,6 +1806,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'overload' },
       { level: 20, tech: 'railvolt' },
     ],
+    evolutions: [
+      { to: 'boltframe', level: 3 },
+      { to: 'aegisaur', level: 3 },
+    ],
     blurb: 'A guard hewn from cavern-stone, a slab of gemglass bound to its arm. It plants itself and does not yield.',
   },
   geomote: {
@@ -1804,6 +1828,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 12, tech: 'wildgrowth' },
       { level: 16, tech: 'thornspell' },
       { level: 20, tech: 'lifebloom' },
+    ],
+    evolutions: [
+      { to: 'cogknight', level: 3 },
+      { to: 'boltframe', level: 3 },
     ],
     blurb: 'A boulder the moss claimed and a soul moved into. Slow, patient, and impossibly hard to knock over.',
   },
@@ -1824,6 +1852,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'prismStorm' },
       { level: 20, tech: 'renewingTide' },
     ],
+    evolutions: [
+      { to: 'aegisaur', level: 3 },
+      { to: 'cogknight', level: 3 },
+    ],
     blurb:
       'An ice-crystal sentinel with a spear of frozen light. It guards the deep vaults where the cold never breaks.',
   },
@@ -1843,6 +1875,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 12, tech: 'quakeCore' },
       { level: 16, tech: 'overload' },
       { level: 20, tech: 'maelstrom' },
+    ],
+    evolutions: [
+      { to: 'boltframe', level: 3 },
+      { to: 'aegisaur', level: 3 },
     ],
     blurb:
       'The keeper of the Warden Vault — a mountain of stone around a burning amethyst heart. It has turned back every thief but grief.',
@@ -1866,6 +1902,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'gustWing' },
       { level: 20, tech: 'wildgrowth' },
     ],
+    evolutions: [
+      { to: 'cinderfang', level: 3 },
+      { to: 'duskfang', level: 3 },
+    ],
     blurb: 'A low, fanged hunter that seeds the air with spores and waits in the murk for something to breathe them.',
   },
   vineraptor: {
@@ -1884,6 +1924,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 12, tech: 'thornspell' },
       { level: 16, tech: 'seedVolley' },
       { level: 20, tech: 'wildgrowth' },
+    ],
+    evolutions: [
+      { to: 'cinderfang', level: 3 },
+      { to: 'direfang', level: 3 },
     ],
     blurb: 'A raptor grown of grasping vine, one sickle claw raised. It runs down anything the canopy lets flee.',
   },
@@ -1904,6 +1948,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'thornspell' },
       { level: 20, tech: 'wildgrowth' },
     ],
+    evolutions: [
+      { to: 'prismatide', level: 3 },
+      { to: 'duskfang', level: 3 },
+    ],
     blurb:
       'A patient cat that grows a false flower on its tail — the last pretty thing many a smaller soul ever chases.',
   },
@@ -1923,6 +1971,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 12, tech: 'gustWing' },
       { level: 16, tech: 'wildgrowth' },
       { level: 20, tech: 'lifebloom' },
+    ],
+    evolutions: [
+      { to: 'chitterling', level: 3 },
+      { to: 'thornpanther', level: 3 },
     ],
     blurb:
       'The apex of the Overgrowth — a thorn-maned reaper that hunts the hunters. Nothing that walks the Heartwood is above it on the list.',
@@ -1947,6 +1999,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'voidNova' },
     ],
+    evolutions: [
+      { to: 'gloomshade', level: 3 },
+      { to: 'banshade', level: 3 },
+    ],
     blurb: 'A cowl with nothing in it but three uneven lights and a hex it will not stop turning over in its hands.',
   },
   palefire: {
@@ -1967,6 +2023,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'infernoCore' },
     ],
+    evolutions: [
+      { to: 'emberkeep', level: 3 },
+      { to: 'lanternwake', level: 3 },
+    ],
     blurb: 'A ghost carrying a cold flame that gives no warmth. It flinches from its own light and casts anyway.',
   },
   direwisp: {
@@ -1986,6 +2046,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 12, tech: 'prismStorm' },
       { level: 16, tech: 'glacierSpire' },
       { level: 20, tech: 'renewingTide' },
+    ],
+    evolutions: [
+      { to: 'gustwing', level: 3 },
+      { to: 'wellspring', level: 3 },
     ],
     blurb:
       'A soul the deep water kept, weed-draped and dripping cold light. It casts in a voice full of swallowed river.',
@@ -2008,6 +2072,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'voidNova' },
     ],
+    evolutions: [
+      { to: 'banshade', level: 3 },
+      { to: 'gloomshade', level: 3 },
+    ],
     blurb: 'A caster who opens a small nothing between its hands and asks you, very politely, to step into it.',
   },
 
@@ -2029,6 +2097,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'pyreLance' },
       { level: 20, tech: 'infernoCore' },
     ],
+    evolutions: [
+      { to: 'emberforge', level: 3 },
+      { to: 'reliquary', level: 3 },
+    ],
     blurb:
       'A keeper of leaded glass around a flame it swore never to let die. It has kept that vow far past when it should have.',
   },
@@ -2049,6 +2121,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'voidNova' },
     ],
+    evolutions: [
+      { to: 'reliquary', level: 3 },
+      { to: 'emberforge', level: 3 },
+    ],
     blurb: 'A guardian that holds a single held soul behind violet glass, and a promise it will not explain to anyone.',
   },
   stillguard: {
@@ -2067,6 +2143,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 12, tech: 'quakeCore' },
       { level: 16, tech: 'prismStorm' },
       { level: 20, tech: 'renewingTide' },
+    ],
+    evolutions: [
+      { to: 'aegisaur', level: 3 },
+      { to: 'cogknight', level: 3 },
     ],
     blurb:
       'It keeps a still, cold light that never ripples. To pass, you must convince it that stillness is not the same as safe.',
@@ -2091,6 +2171,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 16, tech: 'abyssalBolt' },
       { level: 20, tech: 'voidNova' },
     ],
+    evolutions: [
+      { to: 'lanternwake', level: 3 },
+      { to: 'emberkeep', level: 3 },
+    ],
     blurb:
       'A stooped chanter swinging a censer of green soul-smoke. It sings the dead to sleep — and will not stop for the living.',
   },
@@ -2110,6 +2194,10 @@ export const SPECIES: Record<string, Species> = {
       { level: 12, tech: 'quakeCore' },
       { level: 16, tech: 'thornspell' },
       { level: 20, tech: 'lifebloom' },
+    ],
+    evolutions: [
+      { to: 'bloomkin', level: 3 },
+      { to: 'grovelord', level: 3 },
     ],
     blurb: 'A grey-glass warden that keeps the ash itself, so that even what burned away is not wholly lost.',
   },

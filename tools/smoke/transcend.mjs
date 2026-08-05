@@ -109,9 +109,9 @@ const r = await page.evaluate(() => {
     activeMoves(loaded).length <= MAX_ACTIVE_MOVES &&
     loaded.loadout.every((m) => loaded.techniques.includes(m));
 
-  // Terminal forms offer nothing.
-  const geodon = makeCreature('geodon', 20);
-  out.terminal = !evolve.canEvolve(geodon);
+  // Terminal forms offer nothing (pyrelord is the top of the Fire line).
+  const pyrelord = makeCreature('pyrelord', 20);
+  out.terminal = !evolve.canEvolve(pyrelord);
 
   // --- Damage channel: physical rides Off/Def, magical rides Mag/Res -----
   const { computeDamage, computeHeal } = window.hd2dGame.formula;
