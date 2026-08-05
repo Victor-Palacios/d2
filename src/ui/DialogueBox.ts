@@ -4,6 +4,14 @@ import type { DialogueScript } from '../systems/dialogue/script';
 import { el, esc, remove } from './dom';
 
 /**
+ * How long a fully-revealed line withholds an *advance* after it appears. Long
+ * enough to swallow a burst of leaked/mashed confirm presses (so a fresh line is
+ * never revealed-and-skipped in one frame), short enough to be invisible to
+ * ordinary reading-paced tapping.
+ */
+const ADVANCE_GUARD_MS = 200;
+
+/**
  * Text box with a typewriter reveal. Confirm skips to the full line, then
  * advances. `play()` resolves when the script is exhausted.
  *
@@ -107,20 +115,34 @@ export class DialogueBox {
   async play(script: DialogueScript): Promise<void> {
     if (!script.length) return;
     this.root.style.display = '';
-    for (const line of script) {
+    for (let i = 0; i < script.length; i++) {
+      const line = script[i];
       this.speakerEl.textContent = line.speaker ?? '';
       this.speakerEl.style.display = line.speaker ? '' : 'none';
-      await this.typeLine(line.text);
+      // Only the first line of a box guards its advance: that is where a leaked
+      // burst of presses from the previous dialogue (or across a scene change)
+      // lands, and where it would otherwise flash by unread. Later lines advance
+      // instantly on confirm, so paced reading is never slowed.
+      await this.typeLine(line.text, i === 0);
     }
     this.root.style.display = 'none';
   }
 
-  private typeLine(text: string): Promise<void> {
+  private typeLine(text: string, guardAdvance: boolean): Promise<void> {
     return new Promise((resolve) => {
       let shown = 0;
       let done = false;
       let alive = true;
       let last = performance.now();
+      // When a line finished revealing, so an *advance* can be briefly withheld
+      // right after. A burst of confirm presses meant for the PREVIOUS line or box
+      // — e.g. tapping through the tutorial and "An echo" just as the first battle
+      // (and its mechanic lesson) loads — would otherwise reveal-and-skip a fresh
+      // line in a single frame, flashing it past unread. Revealing early is fine;
+      // only skipping an unread line is not. Normal reading taps land well past
+      // this window, so it is invisible outside of mashing / cross-scene leaks.
+      let revealedAt = 0;
+      const canAdvance = () => !guardAdvance || (revealedAt > 0 && performance.now() - revealedAt >= ADVANCE_GUARD_MS);
       this.moreEl.style.visibility = 'hidden';
       this.clearAutoTimer();
 
@@ -141,6 +163,7 @@ export class DialogueBox {
         shown = text.length;
         this.bodyEl.innerHTML = esc(text);
         this.moreEl.style.visibility = '';
+        revealedAt = performance.now();
         if (this.auto) this.armAuto(controller);
       };
 
@@ -159,8 +182,10 @@ export class DialogueBox {
           return;
         }
         if (a !== 'confirm' && a !== 'cancel' && a !== 'start') return;
+        // Not yet fully shown → reveal it. Fully shown → advance, but only once it
+        // has held past the guard window (so a leaked/mashed press can't skip it).
         if (!done) complete();
-        else {
+        else if (canAdvance()) {
           audio.sfx('blip');
           finish();
         }
@@ -169,7 +194,7 @@ export class DialogueBox {
       this.root.onclick = (e) => {
         if (e.target === this.autoBtn) return;
         if (!done) complete();
-        else finish();
+        else if (canAdvance()) finish();
       };
 
       const tick = () => {
