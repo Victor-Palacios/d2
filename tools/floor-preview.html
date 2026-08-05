@@ -37,6 +37,7 @@
   <script type="module">
     import { REACHES, REACH_ORDER } from '/src/data/reaches.ts';
     import { validateFloor } from '/src/data/validateReaches.ts';
+    import { ROOMS } from '/src/data/roomTemplates.ts';
 
     const CELL = 16;
     const COLORS = {
@@ -48,6 +49,49 @@
     const glyphColor = (ch) => (ch >= '1' && ch <= '9' ? '#7a5a3a' : COLORS[ch] ?? '#3a3f57');
 
     const root = document.getElementById('root');
+
+    // Reusable room stamps (src/data/roomTemplates.ts) — compose floors from
+    // these known-good, pre-walled pieces instead of hand-drawing every wall.
+    const gallery = document.createElement('div');
+    gallery.className = 'reach';
+    gallery.innerHTML = `<h2>Room templates — ${Object.keys(ROOMS).length} stamps · compose() building blocks</h2>`;
+    const glist = document.createElement('div');
+    glist.className = 'floors';
+    for (const [name, rows] of Object.entries(ROOMS)) {
+      const cell = document.createElement('div');
+      cell.className = 'floor';
+      cell.innerHTML = `<h3>${name}</h3>`;
+      const w = Math.max(...rows.map((r) => r.length));
+      const h = rows.length;
+      const cv = document.createElement('canvas');
+      cv.width = w * CELL; cv.height = h * CELL;
+      const ctx = cv.getContext('2d');
+      ctx.font = '10px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (let z = 0; z < h; z++) {
+        for (let x = 0; x < rows[z].length; x++) {
+          const ch = rows[z][x];
+          // '~' is the see-through footprint cell — render it as empty space.
+          ctx.fillStyle = ch === '~' ? '#12151f' : glyphColor(ch);
+          ctx.fillRect(x * CELL, z * CELL, CELL - 1, CELL - 1);
+          if (ch !== '.' && ch !== '#' && ch !== ' ' && ch !== '~') {
+            ctx.fillStyle = '#f0f2f8';
+            ctx.fillText(ch, x * CELL + CELL / 2, z * CELL + CELL / 2);
+          }
+        }
+      }
+      cell.appendChild(cv);
+      list_status(cell, `${w}×${h}`);
+      glist.appendChild(cell);
+    }
+    gallery.appendChild(glist);
+    root.appendChild(gallery);
+
+    function list_status(cell, text) {
+      const s = document.createElement('div');
+      s.className = 'ok'; s.textContent = text;
+      cell.appendChild(s);
+    }
+
     for (const id of REACH_ORDER) {
       const reach = REACHES[id];
       const sec = document.createElement('div');

@@ -149,6 +149,29 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
 '1'-'9'  scripted event tile (looked up in that floor's `events` map)
 ```
 
+**Composing from room templates (optional).** Hand-drawing every wall is where
+one-off soft-locks and off-by-one row widths creep in. `src/data/roomTemplates.ts`
+ships a small library of pre-walled, rectangular room *stamps* (`hall`, `pillars`,
+`alcove`, `cross`, `vault`) and a composer that keeps the grid tidy:
+
+```ts
+import { compose, carve, put } from './roomTemplates';
+
+let rows = compose(9, 5, [
+  { room: 'hall', x: 0, z: 0 },
+  { room: 'hall', x: 4, z: 0 },   // shares the middle wall column
+]);
+rows = carve(rows, 4, 2);         // open a doorway between the rooms
+rows = put(rows, 1, 2, 'S');      // start in the left room
+rows = put(rows, 7, 2, '>');      // descent in the right room
+```
+
+`compose` always returns rectangular rows; you carve the doorways and drop the
+`S`/`>`/`C`/`k` yourself. Rooms ship *closed* so no stamp punches an accidental
+opening — and `validateFloor` still has the final say on reachability, so a
+doorway you forget to carve is caught as a soft-lock. Browse the stamp gallery at
+the top of `tools/floor-preview.html`. You can always write raw `rows` instead.
+
 Preview any floor (grid + live `validateFloor`, with elevation/hazard badges) at
 `tools/floor-preview.html` under `npm run dev` — author with instant feedback
 instead of eyeballing coordinates. A hazard must never be the *only* way to the
