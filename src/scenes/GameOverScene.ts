@@ -6,8 +6,8 @@ import { Menu } from '../ui/Menu';
 import { el, remove } from '../ui/dom';
 
 /**
- * Defeat screen (plan M3). Losing costs the run, not the session: the party is
- * repaired and the crawl restarts from the reach entrance.
+ * Defeat screen (plan M3). Losing costs the run, not the session: your souls are
+ * tended, the lantern is relit, and the crawl restarts from the reach entrance.
  */
 export class GameOverScene extends GameScene {
   private screen: HTMLElement | null = null;
@@ -33,7 +33,7 @@ export class GameOverScene extends GameScene {
     this.ctx.ui.appendChild(this.screen);
 
     this.menu = new Menu(host, [
-      { value: 'retry', label: 'Repair and try again' },
+      { value: 'retry', label: 'Relight the lantern and press on' },
       { value: 'hub', label: 'Return to The Everwake' },
     ]);
   }
