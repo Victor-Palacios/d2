@@ -252,7 +252,12 @@ export class DustMotes {
   private min: { x: number; y: number; z: number };
   private span: { x: number; y: number; z: number };
 
-  constructor(bounds: DustBounds, color: THREE.ColorRepresentation = '#bfe6ff', readonly count = 130, size = 0.07) {
+  constructor(
+    bounds: DustBounds,
+    color: THREE.ColorRepresentation = '#bfe6ff',
+    readonly count = 130,
+    size = 0.07,
+  ) {
     this.base = new THREE.Color(color);
     this.min = { x: bounds.minX, y: bounds.minY, z: bounds.minZ };
     this.span = {

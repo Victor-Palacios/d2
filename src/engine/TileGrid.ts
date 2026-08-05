@@ -204,9 +204,7 @@ export class TileGrid {
    */
   passable(x: number, z: number): boolean {
     const k = `${x},${z}`;
-    return (
-      this.walkable(x, z) && !this.blocked.has(k) && !this.isDoorClosed(x, z) && !this.isToggleSolid(x, z)
-    );
+    return this.walkable(x, z) && !this.blocked.has(k) && !this.isDoorClosed(x, z) && !this.isToggleSolid(x, z);
   }
 
   worldPos(x: number, z: number, y = 0): THREE.Vector3 {

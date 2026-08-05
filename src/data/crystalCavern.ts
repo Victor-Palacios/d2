@@ -64,10 +64,18 @@ const FLOORS: DungeonFloor[] = [
     // A raised reliquary shelf the treasure sits on, and a sunken meltwater
     // basin — purely visual depth (movement is unchanged).
     elevation: {
-      '13,1': 0.55, '14,1': 0.55, '15,1': 0.55,
-      '13,2': 0.55, '14,2': 0.55, '15,2': 0.55,
-      '11,8': -0.5, '12,8': -0.5, '13,8': -0.5,
-      '11,9': -0.5, '12,9': -0.5, '13,9': -0.5,
+      '13,1': 0.55,
+      '14,1': 0.55,
+      '15,1': 0.55,
+      '13,2': 0.55,
+      '14,2': 0.55,
+      '15,2': 0.55,
+      '11,8': -0.5,
+      '12,8': -0.5,
+      '13,8': -0.5,
+      '11,9': -0.5,
+      '12,9': -0.5,
+      '13,9': -0.5,
     },
     rows: [
       '#################',
@@ -281,7 +289,11 @@ const FLOORS: DungeonFloor[] = [
     // switch that grinds it aside ('*' at 4,8) is across the gallery, so the loot
     // is an optional detour, not on the path to the descent.
     chests: {
-      '15,2': { obols: 260, item: 'mendingBalm', note: 'A surveyor’s cache, walled off until the barrier grinds aside.' },
+      '15,2': {
+        obols: 260,
+        item: 'mendingBalm',
+        note: 'A surveyor’s cache, walled off until the barrier grinds aside.',
+      },
     },
     encounterRate: 0.07,
     encounters: [

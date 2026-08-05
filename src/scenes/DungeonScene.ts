@@ -978,6 +978,8 @@ export class DungeonScene extends GameScene {
       finalBoss,
       eventId,
       partyTiles: [tileElement, tileElement, tileElement],
+      // Tint the whole arena when the ground is elemental (see BattleScene).
+      fieldElement: tileElement,
       returnTo: 'dungeon',
     };
     await this.ctx.go('battle', params);
