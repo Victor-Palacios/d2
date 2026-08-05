@@ -157,8 +157,7 @@ export function validateFloor(floor: DungeonFloor): string[] {
     // blocks in state 0 and is open in state 1; stepping a '*' switch flips the
     // state. Doors already resolved via `opened`. Reduces to the plain flood when
     // a floor has no switches/toggle-walls, so existing floors are unaffected.
-    const stateTrav = (x: number, z: number, s: number): boolean =>
-      traversable(x, z) && (at(x, z) !== '%' || s === 1);
+    const stateTrav = (x: number, z: number, s: number): boolean => traversable(x, z) && (at(x, z) !== '%' || s === 1);
     const reach = new Set<string>([`${start.x},${start.z}`]);
     const visited = new Set<string>([`${start.x},${start.z},0`]);
     const bfs: { x: number; z: number; s: number }[] = [{ x: start.x, z: start.z, s: 0 }];
