@@ -661,7 +661,10 @@ export function backdropTexture(id: string, accent = '#ff8a3d'): THREE.Texture {
   // Faint motes / stars in the upper dark (deterministic scatter).
   ctx.fillStyle = 'rgba(200,214,255,0.5)';
   let seed = 7;
-  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  const rnd = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
   for (let i = 0; i < 60; i++) {
     const x = rnd() * w;
     const y = rnd() * horizon * 0.9;
