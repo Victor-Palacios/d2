@@ -26,6 +26,13 @@ export interface BillboardOptions {
   castShadow?: boolean;
   /** Lifts the sprite off the floor (floating creatures). */
   hover?: number;
+  /**
+   * Occlusion reveal (the player). When set, the sprite is *also* drawn as a
+   * warm see-through silhouette wherever geometry is in front of it, so a wall
+   * between the camera and the player never fully hides them. Steady — no glow,
+   * no flicker. Off by default; only the crawl/hub player uses it.
+   */
+  reveal?: boolean;
 }
 
 export class Billboard {
@@ -38,6 +45,8 @@ export class Billboard {
   private flash = 0;
   private hoverAmount: number;
   private height: number;
+  /** Warm see-through silhouette for the occlusion reveal (players only). */
+  private ghost: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> | null = null;
 
   /** Vertical bob amplitude (0 disables). */
   bob = 0.03;
@@ -90,6 +99,41 @@ export class Billboard {
     this.mesh.receiveShadow = false;
     this.mesh.position.y = this.hoverAmount;
     this.object.add(this.mesh);
+
+    if (opts.reveal) {
+      // A warm see-through silhouette drawn only where an occluder is in front
+      // (depthFunc GreaterDepth). It shares the sprite's geometry, so it would
+      // z-fight the base sprite at the exact same depth — a constant negative
+      // `polygonOffset` biases the whole coplanar quad slightly toward the
+      // camera, so the depth test resolves uniformly: it always *fails* against
+      // its own body (invisible, no per-pixel speckle) but still *passes*
+      // against farther walls (visible when the player is hidden). No flicker.
+      const ghostMat = new THREE.MeshBasicMaterial({
+        map: tex,
+        alphaTest: 0.5,
+        transparent: true,
+        opacity: 0.9,
+        color: new THREE.Color(0xffc27a),
+        depthWrite: false,
+        depthFunc: THREE.GreaterDepth,
+        // The ghost shares the base sprite's geometry, so at equal depth the
+        // GreaterDepth test is a tie — and different GPUs break that tie
+        // differently (some pass, painting a full-body warm speckle that reads
+        // as a flame flickering over the player). A constant negative offset
+        // biases the coplanar quad a few depth-quanta toward the camera so the
+        // test resolves the same everywhere: it always *fails* against its own
+        // body (no speckle) but still *passes* against far-closer walls (the
+        // reveal). Units are in per-GPU depth quanta, so this is portable.
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -8,
+        side: THREE.DoubleSide,
+      });
+      this.ghost = new THREE.Mesh(geo, ghostMat);
+      this.ghost.renderOrder = 20;
+      this.ghost.castShadow = false;
+      this.mesh.add(this.ghost);
+    }
   }
 
   /** Swaps the displayed art (facing changes, chest open/closed, ...). */
@@ -98,6 +142,10 @@ export class Billboard {
     this.mesh.material.map = map;
     this.mesh.material.emissiveMap = map;
     this.mesh.material.needsUpdate = true;
+    if (this.ghost) {
+      this.ghost.material.map = map;
+      this.ghost.material.needsUpdate = true;
+    }
   }
 
   get position(): THREE.Vector3 {
@@ -189,5 +237,7 @@ export class Billboard {
   dispose() {
     this.mesh.geometry.dispose();
     this.mesh.material.dispose();
+    // The ghost shares the sprite geometry (disposed above) — only its material.
+    this.ghost?.material.dispose();
   }
 }
