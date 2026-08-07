@@ -9,7 +9,10 @@
 import { chromium } from 'playwright';
 
 const browser = await chromium.launch({
-  executablePath: process.env.CHROME ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+  // CHROME points at a specific binary when set; unset (as in CI) falls back to
+  // Playwright's own bundled Chromium — never a hardcoded container path, which
+  // does not exist on the CI runner and fails the smoke gate.
+  executablePath: process.env.CHROME,
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox', '--autoplay-policy=no-user-gesture-required'],
 });
 const ctx = await browser.newContext({ viewport: { width: 800, height: 450 } });
