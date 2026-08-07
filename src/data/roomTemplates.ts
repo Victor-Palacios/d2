@@ -62,6 +62,19 @@ export function carve(canvas: string[], x: number, z: number): string[] {
   return put(canvas, x, z, '.');
 }
 
+/**
+ * An arbitrary `w × h` walled box: a border of `wall` around a `.` interior —
+ * the general case the fixed `ROOMS` are specialisations of. Handy for the outer
+ * shell of a whole floor, or a room the presets don't size to. Degenerate sizes
+ * (< 2) fall back to a solid fill.
+ */
+export function room(w: number, h: number, wall = '#'): string[] {
+  if (w < 2 || h < 2) return blankCanvas(w, h, wall);
+  const edge = wall.repeat(w);
+  const mid = wall + '.'.repeat(w - 2) + wall;
+  return Array.from({ length: h }, (_, z) => (z === 0 || z === h - 1 ? edge : mid));
+}
+
 interface Placement {
   room: string;
   x: number;

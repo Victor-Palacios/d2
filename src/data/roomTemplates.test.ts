@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { DungeonFloor } from './dungeon';
 import { validateFloor } from './validateReaches';
-import { ROOMS, TRANSPARENT, blankCanvas, carve, compose, put, stamp } from './roomTemplates';
+import { ROOMS, TRANSPARENT, blankCanvas, carve, compose, put, room, stamp } from './roomTemplates';
+import { REACHES } from './reaches';
 
 // The composer is an authoring aid: it must keep grids rectangular and lay rooms
 // down predictably, and a floor built from it must pass the same `validateFloor`
@@ -39,8 +40,38 @@ describe('roomTemplates primitives', () => {
     expect(c[2][1]).toBe('.');
   });
 
+  it('room builds an arbitrary walled box', () => {
+    expect(room(4, 3)).toEqual(['####', '#..#', '####']);
+    expect(room(5, 4, '=')).toEqual(['=====', '=...=', '=...=', '=====']);
+  });
+
   it('compose throws on an unknown room name', () => {
     expect(() => compose(5, 5, [{ room: 'nope', x: 0, z: 0 }])).toThrow(/unknown room template/);
+  });
+});
+
+describe('template composition in production', () => {
+  it("reproduces the shipped Warden Hall (crossing-3) byte-for-byte", () => {
+    // crossing-3's rows are built by wardenHall() via the composer. This locks
+    // that output to the exact grid it replaced, so a template change that would
+    // silently alter a shipped floor is caught.
+    const expected = [
+      '=================',
+      '=...............=',
+      '=...............=',
+      '=...=========...=',
+      '=...=F.....F=...=',
+      '=...=.......=...=',
+      '=...=..D.D..=...=',
+      '=...=.......=...=',
+      '=...=...1...=...=',
+      '=...=...2...=...=',
+      '=...====.====...=',
+      '=......S........=',
+      '=================',
+    ];
+    const crossing3 = REACHES.crossing.floors.find((f) => f.id === 'crossing-3')!;
+    expect(crossing3.rows).toEqual(expected);
   });
 });
 

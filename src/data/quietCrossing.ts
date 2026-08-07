@@ -1,6 +1,30 @@
 import type { TileTheme } from '../engine/TileGrid';
 import { narrate, say } from '../systems/dialogue/script';
 import type { Reach, DungeonFloor } from './dungeon';
+import { carve, put, room, stamp } from './roomTemplates';
+
+/**
+ * The Warden Hall (crossing-3) is authored with the room-template composer
+ * (`roomTemplates.ts`) instead of a raw ASCII literal: an accent-walled outer
+ * shell with an inner sanctum stamped inside, one door carved, and the elements,
+ * fight tiles and start dropped in. Proves the composer on real, shipped content
+ * — its output is byte-identical to the hand-drawn grid it replaced (locked by a
+ * test in `roomTemplates.test.ts`).
+ */
+function wardenHall(): string[] {
+  let g = room(17, 13, '='); // accent-walled boss approach
+  g = stamp(g, room(9, 8, '='), 4, 3); // the Vigil's inner sanctum
+  g = carve(g, 8, 10); // its single doorway
+  // Ward-flames flanking the sanctum, the Vigil's dark plates, the fight beats.
+  g = put(g, 5, 4, 'F');
+  g = put(g, 11, 4, 'F');
+  g = put(g, 7, 6, 'D');
+  g = put(g, 9, 6, 'D');
+  g = put(g, 8, 8, '1');
+  g = put(g, 8, 9, '2');
+  g = put(g, 7, 11, 'S'); // start, out in the hall before the sanctum
+  return g;
+}
 
 /**
  * The Quiet Crossing — the tutorial dungeon (plan §5.5). Its id is `crossing`
@@ -185,21 +209,7 @@ export const QUIET_CROSSING_FLOORS: DungeonFloor[] = [
       { x: 2, z: 2, kind: 'rubble', height: 0.6 },
       { x: 14, z: 2, kind: 'rubble', height: 0.6 },
     ],
-    rows: [
-      '=================',
-      '=...............=',
-      '=...............=',
-      '=...=========...=',
-      '=...=F.....F=...=',
-      '=...=.......=...=',
-      '=...=..D.D..=...=',
-      '=...=.......=...=',
-      '=...=...1...=...=',
-      '=...=...2...=...=',
-      '=...====.====...=',
-      '=......S........=',
-      '=================',
-    ],
+    rows: wardenHall(),
     events: {
       '2': {
         kind: 'dialogue',
