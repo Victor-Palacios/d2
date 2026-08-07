@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { elementGlowTexture, elementTileTexture, floorTexture, wallTexture } from './pixel';
+import { elementGlowTexture, elementTileTexture, floorTexture, liquidCausticTexture, wallTexture } from './pixel';
 import type { TerrainStyle } from './pixel';
 import type { ElementId } from '../data/elements';
 import { ELEMENTS } from '../data/elements';
@@ -23,6 +23,7 @@ export type TileKind =
   | 'switch'
   | 'toggleWall'
   | 'secret'
+  | 'liquid'
   | 'event';
 
 export interface Tile {
@@ -61,6 +62,8 @@ export interface TileTheme {
   ambientColor?: string;
   hemiSky?: string;
   hemiGround?: string;
+  /** Tint of `~` liquid pools on this floor (water, meltwater, lava…). Cool default. */
+  liquidColor?: string;
 }
 
 export const DEFAULT_THEME: TileTheme = {
@@ -84,6 +87,7 @@ export const DEFAULT_THEME: TileTheme = {
  *   'k'  key pickup              '+'  locked door (blocks until a key is spent)
  *   '*'  switch (flips barriers) '%'  toggle-wall barrier (starts solid)
  *   '?'  secret wall (looks solid, is passable — crumbles when stepped into)
+ *   '~'  liquid floor (walkable pool with an animated surface — purely visual)
  *   '1'-'9'  scripted event tile (looked up in the floor's `events` map)
  * ```
  */
@@ -166,6 +170,7 @@ export class TileGrid {
     if (ch === '*') return { x, z, kind: 'switch' };
     if (ch === '%') return { x, z, kind: 'toggleWall' };
     if (ch === '?') return { x, z, kind: 'secret' };
+    if (ch === '~') return { x, z, kind: 'liquid' };
     if (ELEMENT_CHARS[ch]) return { x, z, kind: 'element', element: ELEMENT_CHARS[ch] };
     if (ch >= '1' && ch <= '9') return { x, z, kind: 'event', eventId: ch };
     return { x, z, kind: 'floor' };
@@ -252,17 +257,20 @@ export class TileGrid {
     elementMeshes: Map<string, THREE.Mesh>;
     toggleMeshes: Map<string, THREE.Mesh>;
     secretMeshes: Map<string, THREE.Mesh>;
+    liquidMeshes: Map<string, THREE.Mesh>;
   } {
     const group = new THREE.Group();
     const elementMeshes = new Map<string, THREE.Mesh>();
     const toggleMeshes = new Map<string, THREE.Mesh>();
     const secretMeshes = new Map<string, THREE.Mesh>();
+    const liquidMeshes = new Map<string, THREE.Mesh>();
 
     const floors: Tile[] = [];
     const walls: Tile[] = [];
     const accentWalls: Tile[] = [];
     const elements: Tile[] = [];
     const hazards: Tile[] = [];
+    const liquids: Tile[] = [];
 
     this.forEach((t) => {
       if (t.kind === 'void') return;
@@ -272,6 +280,9 @@ export class TileGrid {
         elements.push(t);
       } else if (t.kind === 'hazard') {
         hazards.push(t);
+      } else if (t.kind === 'liquid') {
+        // Liquid tiles get their own animated surface instead of a floor quad.
+        liquids.push(t);
       } else {
         floors.push(t);
       }
@@ -526,6 +537,34 @@ export class TileGrid {
       }
     }
 
-    return { group, elementMeshes, toggleMeshes, secretMeshes };
+    // --- liquid pools ------------------------------------------------------
+    // A '~' tile is a walkable pool: a slightly-recessed reflective plane (low
+    // roughness so it catches the key light as a sheen) lit by a scrolling
+    // caustic emissive net. One shared material across the floor's pools, so the
+    // scene can scroll/pulse them all with a single write. Purely visual.
+    if (liquids.length) {
+      const tint = new THREE.Color(this.theme.liquidColor ?? '#2f7fb8');
+      const geo = new THREE.PlaneGeometry(TILE, TILE);
+      geo.rotateX(-Math.PI / 2);
+      const mat = new THREE.MeshStandardMaterial({
+        color: tint.clone().multiplyScalar(0.5), // the still water body, darker
+        emissive: tint,
+        emissiveMap: liquidCausticTexture(),
+        emissiveIntensity: 0.8,
+        roughness: 0.18,
+        metalness: 0.5,
+      });
+      for (const t of liquids) {
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.receiveShadow = true;
+        const p = this.worldPos(t.x, t.z);
+        // A shallow dip below the tile's floor so the pool reads as recessed.
+        mesh.position.set(p.x, this.floorY(t.x, t.z) - 0.06, p.z);
+        group.add(mesh);
+        liquidMeshes.set(`${t.x},${t.z}`, mesh);
+      }
+    }
+
+    return { group, elementMeshes, toggleMeshes, secretMeshes, liquidMeshes };
   }
 }

@@ -25,6 +25,7 @@ const THEME_UPPER: TileTheme = {
   ambientColor: '#6fc6e6',
   hemiSky: '#7fdcff',
   hemiGround: '#12303a',
+  liquidColor: '#57c7e6',
 };
 
 const THEME_DEEP: TileTheme = {
@@ -61,8 +62,9 @@ const FLOORS: DungeonFloor[] = [
       { x: 14, z: 6, kind: 'crystalCluster', emissive: 0.6 },
       { x: 13, z: 7, kind: 'iceShard', height: 0.8, emissive: 0.4 },
     ],
-    // A raised reliquary shelf the treasure sits on, and a sunken meltwater
-    // basin — purely visual depth (movement is unchanged).
+    // A raised reliquary shelf the treasure sits on. (The old sunken basin is
+    // now an actual meltwater pool — the '~' tiles below — so it needs no
+    // elevation; the animated water surface carries the depth read.)
     elevation: {
       '13,1': 0.55,
       '14,1': 0.55,
@@ -70,12 +72,6 @@ const FLOORS: DungeonFloor[] = [
       '13,2': 0.55,
       '14,2': 0.55,
       '15,2': 0.55,
-      '11,8': -0.5,
-      '12,8': -0.5,
-      '13,8': -0.5,
-      '11,9': -0.5,
-      '12,9': -0.5,
-      '13,9': -0.5,
     },
     rows: [
       '#################',
@@ -86,8 +82,8 @@ const FLOORS: DungeonFloor[] = [
       '#.....##.##.....#',
       '#WWWW...........#',
       '#W3WW..$........#',
-      '#WWWW....>.....##',
-      '#WWWW.........?C#',
+      '#WWWW....>.~~~.##',
+      '#WWWW......~~~?C#',
       '#################',
     ],
     events: {

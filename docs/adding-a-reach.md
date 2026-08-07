@@ -147,6 +147,7 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
 'k' key pickup          '+' locked door (spend a key to open; blocks until then)
 '*' switch              '%' toggle-wall barrier (starts solid; a switch flips it)
 '?' secret wall (looks solid, is passable — crumbles when the party walks in)
+'~' liquid pool (walkable; an animated reflective surface — purely visual)
 '1'-'9'  scripted event tile (looked up in that floor's `events` map)
 ```
 
@@ -203,6 +204,12 @@ its only neighbour is the `?`); never gate the descent behind one, since a
 player who never probes that wall would be stuck — the validator enforces this,
 flagging a `>`/`<` reachable only through a secret. crystal-1 is the worked
 example — a corner cache behind a false wall in the bottom-right.
+
+**Liquid pools.** A `~` tile is walkable floor rendered as a recessed, reflective
+pool with a scrolling caustic surface — the party wades across; it changes no
+movement. Its tint comes from `theme.liquidColor` (cool default), so a crypt
+gets black water and a fire vault could get lava. crystal-1's meltwater basin is
+the worked example. Purely cosmetic — the validator treats it as ordinary floor.
 
 **Invariants the validator checks** (`src/data/validateReaches.ts`):
 - rows are all the same width; exactly one `S`.

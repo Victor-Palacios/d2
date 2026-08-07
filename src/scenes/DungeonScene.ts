@@ -118,6 +118,8 @@ export class DungeonScene extends GameScene {
   private toggleMeshes = new Map<string, THREE.Mesh>();
   /** Secret-wall meshes, keyed by tile — the false wall vanishes once revealed. */
   private secretMeshes = new Map<string, THREE.Mesh>();
+  /** Liquid-pool meshes, keyed by tile — their surface caustics scroll each frame. */
+  private liquidMeshes = new Map<string, THREE.Mesh>();
 
   /** Blocks input while a scripted beat is running. */
   private busy = false;
@@ -238,6 +240,7 @@ export class DungeonScene extends GameScene {
     this.elementMeshes = built.elementMeshes;
     this.toggleMeshes = built.toggleMeshes;
     this.secretMeshes = built.secretMeshes;
+    this.liquidMeshes = built.liquidMeshes;
 
     this.particles = new ParticleField(500);
     this.scene.add(this.particles.points);
@@ -1153,6 +1156,24 @@ export class DungeonScene extends GameScene {
     }
   }
 
+  /**
+   * Flows the liquid pools: scrolls the shared caustic emissive map (so the
+   * light on the water drifts) and breathes its intensity. All pools on a floor
+   * share one material, so this is a single texture-offset write per frame.
+   */
+  private animateLiquid(dt: number, time: number) {
+    const first = this.liquidMeshes.values().next().value as THREE.Mesh | undefined;
+    if (!first) return;
+    const mat = first.material as THREE.MeshStandardMaterial;
+    const caustic = mat.emissiveMap;
+    if (caustic) {
+      // Offset is a shader uniform — scrolling it needs no texture re-upload.
+      caustic.offset.x = (caustic.offset.x + dt * 0.035) % 1;
+      caustic.offset.y = (caustic.offset.y + dt * 0.02) % 1;
+    }
+    mat.emissiveIntensity = 0.65 + 0.3 * (0.5 + 0.5 * Math.sin(time * 1.4));
+  }
+
   private updateElementLights() {
     const px = this.player.object.position;
     const nearby = [...this.elementMeshes.entries()]
@@ -1219,6 +1240,7 @@ export class DungeonScene extends GameScene {
     this.particles.update(dt);
     this.dust?.update(dt, time);
     this.animateElementPlates(time);
+    this.animateLiquid(dt, time);
     this.updateElementLights();
     this.syncCamera();
   }

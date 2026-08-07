@@ -20,7 +20,7 @@ import { chromium } from 'playwright';
 // And, on crystal-1: secret walls — a '?' tile parses as a passable secret
 // disguised by a false wall; walking into it crumbles the wall and opens the
 // way to a chest walled behind it — plus living element plates whose emissive
-// glow breathes over time.
+// glow breathes over time, and a '~' liquid pool whose caustic surface scrolls.
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROME,
@@ -349,6 +349,39 @@ check('element plates: emissive glow changes over time (breathing)',
   plates.count > 0 && plates.max - plates.min > 0.05, JSON.stringify(plates.samples));
 check('element plates: glow stays in a sane, non-negative range',
   plates.count > 0 && plates.min >= 0.2 && plates.max <= 3, JSON.stringify({ min: plates.min, max: plates.max }));
+
+// --- liquid pools (crystal-1) -----------------------------------------------
+// A '~' tile is a walkable animated pool. Verify it parses as liquid, is
+// passable, the floor built pool meshes, and their shared caustic emissive map
+// scrolls when the surface animates.
+const liquid = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  g.game.activeReachId = 'crystal';
+  g.game.floorIndex = 0; // crystal-1 (Glimmer Shelf) — the meltwater pool
+  g.game.crawl.initialized = false;
+  await g.manager.go('dungeon');
+  await new Promise((r) => setTimeout(r, 300));
+  const s = g.manager.activeScene;
+  const floor = g.reaches.crystal.floors[0];
+  const find = (ch) => { for (let z = 0; z < floor.rows.length; z++) { const x = floor.rows[z].indexOf(ch); if (x >= 0) return { x, z }; } return null; };
+  const pool = find('~');
+  const mesh = pool && [...s.liquidMeshes.values()][0];
+  const off0 = mesh ? { x: mesh.material.emissiveMap.offset.x, y: mesh.material.emissiveMap.offset.y } : null;
+  // Animate a few frames and confirm the caustic map scrolled.
+  for (let f = 0; f < 5; f++) s.animateLiquid(0.2, f * 0.2);
+  const off1 = mesh ? { x: mesh.material.emissiveMap.offset.x, y: mesh.material.emissiveMap.offset.y } : null;
+  return {
+    pool,
+    poolKind: pool && s.grid.at(pool.x, pool.z).kind,
+    passable: pool && s.grid.passable(pool.x, pool.z),
+    count: s.liquidMeshes.size,
+    scrolled: off0 && off1 ? Math.abs(off1.x - off0.x) + Math.abs(off1.y - off0.y) : 0,
+  };
+});
+check('liquid: \'~\' parses as a walkable liquid tile',
+  liquid.poolKind === 'liquid' && liquid.passable === true, JSON.stringify(liquid));
+check('liquid: the floor built animated pool meshes', liquid.count > 0, `${liquid.count} pool tiles`);
+check('liquid: the caustic surface scrolls when animated', liquid.scrolled > 0.001, `Δoffset=${liquid.scrolled}`);
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 if (errs.length) failures += errs.length;

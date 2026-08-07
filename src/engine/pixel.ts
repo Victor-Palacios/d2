@@ -483,6 +483,49 @@ export function elementGlowTexture(id: string, glow: string, res = 32): THREE.Te
   });
 }
 
+/**
+ * A tileable caustic net — grayscale bright ridges on black, for animated liquid
+ * surfaces. Used as an `emissiveMap` (the tint comes from the material's emissive
+ * colour) and scrolled by offset each frame so the light on the water flows. The
+ * wave frequencies are integer multiples of the texture period, so it tiles
+ * seamlessly under `RepeatWrapping`. Smooth-sampled — water wants soft light.
+ */
+export function liquidCausticTexture(id = 'default', res = 64): THREE.Texture {
+  const key = `caustic:${id}`;
+  const hit = texCache.get(key);
+  if (hit) return hit;
+  const [c, ctx] = canvas(res, res);
+  const img = ctx.createImageData(res, res);
+  const TAU = Math.PI * 2;
+  for (let y = 0; y < res; y++) {
+    for (let x = 0; x < res; x++) {
+      const u = x / res;
+      const v = y / res;
+      let n =
+        Math.sin(TAU * u + Math.cos(TAU * 2 * v)) +
+        Math.sin(TAU * 2 * v + Math.cos(TAU * u)) +
+        Math.sin(TAU * 3 * (u + v));
+      n = (n + 3) / 6; // -3..3 → 0..1
+      const b = Math.round(255 * Math.pow(Math.max(0, n), 3)); // thin bright ridges
+      const i = (y * res + x) * 4;
+      img.data[i] = b;
+      img.data[i + 1] = b;
+      img.data[i + 2] = b;
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.magFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  texCache.set(key, tex);
+  return tex;
+}
+
 /** Soft radial dot — particles, torch glow, ground decals. */
 export function radialTexture(id: string, color: string, res = 64): THREE.Texture {
   const hit = texCache.get(`radial:${id}`);
