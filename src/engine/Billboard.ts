@@ -26,13 +26,6 @@ export interface BillboardOptions {
   castShadow?: boolean;
   /** Lifts the sprite off the floor (floating creatures). */
   hover?: number;
-  /**
-   * Occlusion reveal (the player). When set, the sprite is *also* drawn through
-   * anything in front of it — a warm see-through silhouette wreathed in a
-   * flame-shaped glow — so walls between the camera and the player never hide
-   * them. Off by default; only the crawl/hub player uses it.
-   */
-  reveal?: boolean;
 }
 
 export class Billboard {
@@ -45,8 +38,6 @@ export class Billboard {
   private flash = 0;
   private hoverAmount: number;
   private height: number;
-  /** Occlusion-reveal silhouette (drawn only where geometry is in front). */
-  private ghost: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> | null = null;
 
   /** Vertical bob amplitude (0 disables). */
   bob = 0.03;
@@ -99,26 +90,6 @@ export class Billboard {
     this.mesh.receiveShadow = false;
     this.mesh.position.y = this.hoverAmount;
     this.object.add(this.mesh);
-
-    if (opts.reveal) {
-      // A see-through silhouette that only draws where an occluder is in front
-      // (depthFunc GreaterDepth): the player's own art, warm-tinted, shown
-      // through the wall. Shares the sprite geometry so it tracks exactly.
-      const ghostMat = new THREE.MeshBasicMaterial({
-        map: tex,
-        alphaTest: 0.5,
-        transparent: true,
-        opacity: 0.92,
-        color: new THREE.Color(0xffc27a),
-        depthWrite: false,
-        depthFunc: THREE.GreaterDepth,
-        side: THREE.DoubleSide,
-      });
-      this.ghost = new THREE.Mesh(geo, ghostMat);
-      this.ghost.renderOrder = 20;
-      this.ghost.castShadow = false;
-      this.mesh.add(this.ghost);
-    }
   }
 
   /** Swaps the displayed art (facing changes, chest open/closed, ...). */
@@ -127,10 +98,6 @@ export class Billboard {
     this.mesh.material.map = map;
     this.mesh.material.emissiveMap = map;
     this.mesh.material.needsUpdate = true;
-    if (this.ghost) {
-      this.ghost.material.map = map;
-      this.ghost.material.needsUpdate = true;
-    }
   }
 
   get position(): THREE.Vector3 {
@@ -222,7 +189,5 @@ export class Billboard {
   dispose() {
     this.mesh.geometry.dispose();
     this.mesh.material.dispose();
-    // The ghost shares the sprite geometry (disposed above) — only its material.
-    this.ghost?.material.dispose();
   }
 }

@@ -326,7 +326,7 @@ export class DungeonScene extends GameScene {
     this.scene.add(this.mist.object);
 
     // The player, lantern in hand, on foot.
-    this.player = new Billboard(HUMANS.hero, 'player', { height: 1.7, reveal: true });
+    this.player = new Billboard(HUMANS.hero, 'player', { height: 1.7 });
     // A calm idle breath, and a pronounced stride while walking a tile.
     this.player.bob = 0.018;
     this.player.bobSpeed = 2.4;
