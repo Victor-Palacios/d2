@@ -69,11 +69,23 @@ const PARTY_X = 3.4;
 const ENEMY_X = -3.4;
 /** Distance the Rear row sits behind its Vanguard (further from centre). */
 const ROW_GAP = 1.7;
-/** Slight look-target bias so the near column clears the bottom HUD panels. */
-const CAMERA_BIAS_Z = 0.6;
+
+/**
+ * PROTOTYPE (Tier 2): the full FF-style presentation — the bottom command
+ * window HUD and a decluttered field (no top-down cell outlines). Flip false
+ * for the raw Tier 1 camera-only swing.
+ */
+const FF6_LAYOUT = true;
+
+/**
+ * Look-target bias toward the camera (+Z). A larger bias pulls the look-centre
+ * to the near edge, which lifts the battle line (at z≈0) into the upper frame —
+ * leaving the lower third clear for the FF-style command window in Tier 2.
+ */
+const CAMERA_BIAS_Z = FF6_LAYOUT ? 3.4 : 0.6;
 
 /** Side-view camera angle (overrides the crawl's top-down rig for the fight). */
-const SIDE_CAM = { pitch: 20, yaw: 0, distance: 15.5, height: 1.1 };
+const SIDE_CAM = { pitch: 15, yaw: 0, distance: 16.5, height: 0.2 };
 
 /**
  * World position of a formation cell. Sides split along X (party right, enemy
@@ -187,6 +199,7 @@ export class BattleScene extends GameScene {
 
     this.hud = new BattleHUD(this.ctx.ui);
     this.hud.build(this.battle);
+    if (FF6_LAYOUT) this.hud.useCommandLayout();
     this.dialogue = new DialogueBox(this.ctx.ui);
 
     this.ctx.hd2d.setScene(this.scene);
@@ -365,9 +378,10 @@ export class BattleScene extends GameScene {
 
     // Formation grid: a faint outline under every one of the 12 cells so the
     // 2×3 layout reads at a glance; occupied cells glow a little brighter.
+    // Skipped in the FF-style layout — the overhead grid reads as top-down.
     const occupied = new Set(this.battle.battlers.map((b) => `${b.side}:${b.cell.row}:${b.cell.col}`));
     const cellGeo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(1.7, 1.7));
-    for (const side of ['party', 'enemy'] as const) {
+    for (const side of FF6_LAYOUT ? [] : (['party', 'enemy'] as const)) {
       for (let row = 0; row < 2; row++) {
         for (let col = 0; col < 3; col++) {
           const p = cellPos(side, { row, col });
