@@ -84,8 +84,14 @@ const FF6_LAYOUT = true;
  */
 const CAMERA_BIAS_Z = FF6_LAYOUT ? 3.4 : 0.6;
 
-/** Side-view camera angle (overrides the crawl's top-down rig for the fight). */
-const SIDE_CAM = { pitch: 9, yaw: 0, distance: 16.5, height: 0.4 };
+/**
+ * Side-view camera angle (overrides the crawl's top-down rig for the fight).
+ * A slight yaw gives the FF-style 3/4 read: because the columns are staggered
+ * in depth, viewing the line off-axis fans the ranks out diagonally (party
+ * front-right, enemies back-left) so every fighter is visible instead of the
+ * near ones stacking in front of the far ones.
+ */
+const SIDE_CAM = { pitch: 10, yaw: 26, distance: 17, height: 0.4 };
 
 /**
  * World position of a formation cell. Sides split along X (party right, enemy
