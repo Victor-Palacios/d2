@@ -64,11 +64,11 @@ export interface BattleSceneParams {
 // at +X / screen-right) instead of near↔far along Z. Columns spread in depth (Z)
 // so the line staggers; the Vanguard/Rear rows push toward/away from centre.
 // This is only a re-layout + camera swing — the battle model is untouched.
-const COL_Z = [-2.2, 0, 2.2];
-const PARTY_X = 3.4;
-const ENEMY_X = -3.4;
+const COL_Z = [-1.8, 0, 1.8];
+const PARTY_X = 2.7;
+const ENEMY_X = -2.7;
 /** Distance the Rear row sits behind its Vanguard (further from centre). */
-const ROW_GAP = 1.7;
+const ROW_GAP = 1.5;
 
 /**
  * PROTOTYPE (Tier 2): the full FF-style presentation — the bottom command
@@ -91,7 +91,7 @@ const CAMERA_BIAS_Z = FF6_LAYOUT ? 3.4 : 0.6;
  * front-right, enemies back-left) so every fighter is visible instead of the
  * near ones stacking in front of the far ones.
  */
-const SIDE_CAM = { pitch: 10, yaw: 26, distance: 17, height: 0.4 };
+const SIDE_CAM = { pitch: 32, yaw: 30, distance: 19, height: 0.8 };
 
 /**
  * World position of a formation cell. Sides split along X (party right, enemy
