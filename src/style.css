@@ -771,6 +771,149 @@ body {
   }
 }
 
+/* ============================================================================
+   PROTOTYPE (Tier 2): FF-style bottom command window.
+   Re-homes the existing HUD panels — command menu (left) + party status rows
+   (right) — into one window bar along the bottom, with the enemy readouts as a
+   compact top-left strip. No DOM changes; this is layout only, gated on `.ff6`.
+   ============================================================================ */
+#battle-ui.ff6::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  height: 250px;
+  background: linear-gradient(160deg, var(--box-b), var(--box-a));
+  border: 2px solid var(--edge);
+  border-radius: 12px;
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 0, 0, 0.55),
+    0 8px 30px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 0;
+}
+/* A faint rule dividing the command half from the party half — reads as two
+   panes within one window, the way FF lays its battle menu out. */
+#battle-ui.ff6::after {
+  content: "";
+  position: absolute;
+  left: 54%;
+  bottom: 40px;
+  height: 194px;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, rgba(127, 147, 216, 0.35), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+/* command menu → left pane, borderless (the bar is its frame). Spans the window
+   height and vertically centres a two-column grid, so the options fill the
+   space at a comfortable size instead of a thin column against an empty middle. */
+#battle-ui.ff6 #action-menu {
+  left: 40px;
+  right: auto;
+  top: auto;
+  bottom: 12px;
+  height: 250px;
+  width: 480px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0 0 0 22px;
+  z-index: 2;
+}
+#battle-ui.ff6 #action-menu .menu {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(4, auto);
+  column-gap: 40px;
+  row-gap: 16px;
+  width: 100%;
+  font-size: 26px;
+  letter-spacing: 0.05em;
+}
+/* The small-viewport query shrinks #action-menu to 13px; keep the FF menu big. */
+#battle-ui.ff6 #action-menu {
+  font-size: 26px;
+}
+#battle-ui.ff6 #action-menu .menu li {
+  padding: 8px 14px 8px 38px;
+  border-radius: 8px;
+}
+#battle-ui.ff6 #action-menu .menu li.sel {
+  background: linear-gradient(90deg, rgba(255, 209, 102, 0.24), rgba(255, 209, 102, 0.04));
+  box-shadow: inset 0 0 0 1px rgba(255, 209, 102, 0.4);
+}
+#battle-ui.ff6 #action-menu .menu li.sel::before {
+  left: 14px;
+  font-size: 16px;
+}
+#battle-ui.ff6 #action-menu .menu .cost {
+  font-size: 20px;
+  margin-left: 22px;
+}
+/* party status → right pane, vertically centred to mirror the command block */
+#battle-ui.ff6 #party-hud {
+  left: auto;
+  right: 40px;
+  top: auto;
+  bottom: 12px;
+  height: 250px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 12px;
+  z-index: 2;
+}
+#battle-ui.ff6 #party-hud .fighter {
+  width: 376px;
+  padding: 12px 18px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+    inset 3px 0 0 0 var(--elem-color);
+}
+#battle-ui.ff6 #party-hud .fighter {
+  font-size: 16px;
+}
+#battle-ui.ff6 #party-hud .fighter .nm {
+  font-size: 21px;
+  margin-bottom: 8px;
+}
+#battle-ui.ff6 #party-hud .fighter .meter {
+  font-size: 16px;
+  margin: 7px 0;
+}
+#battle-ui.ff6 #party-hud .fighter .meter-label {
+  width: 26px;
+}
+#battle-ui.ff6 #party-hud .fighter .meter .bar {
+  height: 14px;
+}
+#battle-ui.ff6 #party-hud .fighter .meter-value {
+  min-width: 74px;
+  font-size: 15px;
+}
+/* enemy readouts → compact top-left strip (targets, not a full roster) */
+#battle-ui.ff6 #enemy-hud {
+  top: 12px;
+  right: auto;
+  left: 12px;
+  width: 230px;
+}
+#battle-ui.ff6 #enemy-hud .fighter {
+  width: 222px;
+  font-size: 12px;
+  padding: 7px 10px;
+}
+/* messages sit just above the window bar, centred */
+#battle-ui.ff6 #battle-log {
+  top: auto;
+  bottom: 274px;
+}
+
 .dmg-float {
   position: absolute;
   transform: translate(-50%, -50%);

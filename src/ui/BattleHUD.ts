@@ -99,6 +99,11 @@ export class BattleHUD {
     this.repeatChip.style.display = on ? '' : 'none';
   }
 
+  /** PROTOTYPE (Tier 2): switch to the FF-style bottom command-window layout. */
+  useCommandLayout() {
+    this.root.classList.add('ff6');
+  }
+
   build(battle: Battle) {
     this.cards.clear();
     this.enemyWrap.innerHTML = '';

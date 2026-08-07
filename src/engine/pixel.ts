@@ -680,3 +680,95 @@ export function starTexture(id: string, color = '#ffffff', res = 64): THREE.Text
   texCache.set(key, tex);
   return tex;
 }
+
+/**
+ * A painted flat battle backdrop (FF-style): a dusk threshold in the dark with a
+ * warm horizon glow, silhouetted broken arches, a fog band and drifting motes —
+ * all procedural, tinted by `accent`. Used as `scene.background` behind the
+ * fighters in the side-view prototype. Smooth-sampled (not pixel-nearest).
+ */
+export function backdropTexture(id: string, accent = '#ff8a3d'): THREE.Texture {
+  const key = `backdrop:${id}`;
+  const hit = texCache.get(key);
+  if (hit) return hit;
+  const w = 640;
+  const h = 480;
+  const horizon = h * 0.62;
+  const [c, ctx] = canvas(w, h);
+
+  // Sky: cold indigo up top easing to a warmer band at the horizon.
+  const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+  sky.addColorStop(0, '#080a18');
+  sky.addColorStop(0.55, '#141c3e');
+  sky.addColorStop(1, '#26264a');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, w, horizon);
+  // Ground: dark, fading down.
+  const ground = ctx.createLinearGradient(0, horizon, 0, h);
+  ground.addColorStop(0, '#241f39');
+  ground.addColorStop(1, '#0a0912');
+  ctx.fillStyle = ground;
+  ctx.fillRect(0, horizon, w, h - horizon);
+
+  // Warm horizon glow — a distant kept lantern.
+  const glow = ctx.createRadialGradient(w * 0.5, horizon, 0, w * 0.5, horizon, w * 0.42);
+  glow.addColorStop(0, hexA(accent, 0.5));
+  glow.addColorStop(0.4, hexA(accent, 0.16));
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, w, h);
+
+  // Silhouetted broken arches along the horizon.
+  ctx.fillStyle = '#05060e';
+  const arch = (cx: number, bw: number, bh: number) => {
+    ctx.beginPath();
+    ctx.moveTo(cx - bw / 2, horizon);
+    ctx.lineTo(cx - bw / 2, horizon - bh * 0.55);
+    ctx.quadraticCurveTo(cx, horizon - bh, cx + bw / 2, horizon - bh * 0.55);
+    ctx.lineTo(cx + bw / 2, horizon);
+    ctx.closePath();
+    ctx.fill();
+  };
+  arch(w * 0.16, 120, 150);
+  arch(w * 0.83, 150, 190);
+  arch(w * 0.33, 70, 90);
+  // A broken pillar stub.
+  ctx.fillRect(w * 0.62, horizon - 70, 26, 70);
+
+  // Soft fog band hugging the horizon.
+  const fog = ctx.createLinearGradient(0, horizon - 40, 0, horizon + 40);
+  fog.addColorStop(0, 'rgba(160,180,220,0)');
+  fog.addColorStop(0.5, 'rgba(150,170,215,0.14)');
+  fog.addColorStop(1, 'rgba(160,180,220,0)');
+  ctx.fillStyle = fog;
+  ctx.fillRect(0, horizon - 40, w, 80);
+
+  // Faint motes / stars in the upper dark (deterministic scatter).
+  ctx.fillStyle = 'rgba(200,214,255,0.5)';
+  let seed = 7;
+  const rnd = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  for (let i = 0; i < 60; i++) {
+    const x = rnd() * w;
+    const y = rnd() * horizon * 0.9;
+    const r = rnd() * 1.3 + 0.3;
+    ctx.globalAlpha = 0.25 + rnd() * 0.5;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  texCache.set(key, tex);
+  return tex;
+}
+
+/** CSS hex (#rrggbb) → rgba() string at the given alpha. */
+function hexA(hex: string, a: number): string {
+  const n = Number.parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}

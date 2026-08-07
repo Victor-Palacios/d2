@@ -7,6 +7,7 @@ import { battleAura } from '../data/battleFx';
 import { audio } from '../engine/Audio';
 import { input } from '../engine/Input';
 import {
+  backdropTexture,
   elementGlowTexture,
   elementTileTexture,
   floorTexture,
@@ -59,25 +60,59 @@ export interface BattleSceneParams {
   rng?: () => number;
 }
 
-const SLOT_X = [-2.4, 0, 2.4];
-const PARTY_Z = 2.2;
-const ENEMY_Z = -3;
-/** Depth gap between the Vanguard (front) row and the Rear (back) row. */
-const ROW_GAP = 1.6;
-/**
- * The camera looks slightly past the party so the near row sits above the
- * bottom-left HUD panels instead of behind them.
- */
-const CAMERA_BIAS_Z = 0.9;
+// --- PROTOTYPE: FF-style side view --------------------------------------------
+// The confrontation runs left↔right along X (enemies at −X / screen-left, souls
+// at +X / screen-right) instead of near↔far along Z. Columns spread in depth (Z)
+// so the line staggers; the Vanguard/Rear rows push toward/away from centre.
+// This is only a re-layout + camera swing — the battle model is untouched.
+const COL_Z = [-1.8, 0, 1.8];
+const PARTY_X = 2.7;
+const ENEMY_X = -2.7;
+/** Distance the Rear row sits behind its Vanguard (further from centre). */
+const ROW_GAP = 1.5;
 
 /**
- * World position of a formation cell. Columns spread along X; the Rear row sits
- * further from the opposing side (behind the party, deeper for enemies).
+ * PROTOTYPE (Tier 2): the full FF-style presentation — the bottom command
+ * window HUD and a decluttered field (no top-down cell outlines). Flip false
+ * for the raw Tier 1 camera-only swing.
+ */
+const FF6_LAYOUT = true;
+
+/**
+ * PROTOTYPE: swap the 3D arena walls for a flat painted backdrop (FF-style).
+ * Runtime-toggleable via `window.__painted` so the two looks can be compared
+ * without a rebuild; defaults on.
+ */
+function paintedBackdrop(): boolean {
+  const w = window as unknown as { __painted?: boolean };
+  return w.__painted ?? false;
+}
+
+/**
+ * Look-target bias toward the camera (+Z). A larger bias pulls the look-centre
+ * to the near edge, which lifts the battle line (at z≈0) into the upper frame —
+ * leaving the lower third clear for the FF-style command window in Tier 2.
+ */
+const CAMERA_BIAS_Z = FF6_LAYOUT ? 3.4 : 0.6;
+
+/**
+ * Side-view camera angle (overrides the crawl's top-down rig for the fight).
+ * A slight yaw gives the FF-style 3/4 read: because the columns are staggered
+ * in depth, viewing the line off-axis fans the ranks out diagonally (party
+ * front-right, enemies back-left) so every fighter is visible instead of the
+ * near ones stacking in front of the far ones.
+ */
+const SIDE_CAM = { pitch: 32, yaw: 30, distance: 19, height: 0.8 };
+
+/**
+ * World position of a formation cell. Sides split along X (party right, enemy
+ * left); columns spread in depth along Z; the Rear row is pushed away from the
+ * centre line so it reads behind the Vanguard from the side camera.
  */
 function cellPos(side: 'party' | 'enemy', cell: { row: number; col: number }): { x: number; z: number } {
-  const front = side === 'party' ? PARTY_Z : ENEMY_Z;
+  const front = side === 'party' ? PARTY_X : ENEMY_X;
   const dir = side === 'party' ? 1 : -1;
-  return { x: SLOT_X[cell.col], z: front + (cell.row === 1 ? dir * ROW_GAP : 0) };
+  return { x: front + (cell.row === 1 ? dir * ROW_GAP : 0), z: COL_Z[cell.col] };
 }
 
 /**
@@ -134,6 +169,8 @@ export class BattleScene extends GameScene {
   private finished = false;
   /** Set when the party successfully flees — skips victory/defeat resolution. */
   private fled = false;
+  /** Crawl camera angle saved on entry, restored on exit (side-view prototype). */
+  private savedCam: { pitch: number; yaw: number; distance: number; height: number } | null = null;
   /** Auto-battle: party members take the basic Attack until the player cancels. */
   private autoBattle = false;
   /** Repeat: party members re-issue their last player-chosen command until cancelled. */
@@ -179,6 +216,7 @@ export class BattleScene extends GameScene {
 
     this.hud = new BattleHUD(this.ctx.ui);
     this.hud.build(this.battle);
+    if (FF6_LAYOUT) this.hud.useCommandLayout();
     this.dialogue = new DialogueBox(this.ctx.ui);
 
     this.ctx.hd2d.setScene(this.scene);
@@ -187,7 +225,22 @@ export class BattleScene extends GameScene {
     const fogTint = this.params.fieldElement
       ? `#${new THREE.Color('#0a0d1c').lerp(new THREE.Color(ELEMENTS[this.params.fieldElement].color), 0.35).getHexString()}`
       : undefined;
-    this.ctx.hd2d.applyFog(this.scene, 1.6, fogTint);
+    // Lighter fog with a painted backdrop so the far floor melts into the
+    // painting rather than a flat fog wall.
+    this.ctx.hd2d.applyFog(this.scene, paintedBackdrop() ? 0.8 : 1.6, fogTint);
+    // PROTOTYPE: a flat painted scene stands in for the 3D walls (FF-style).
+    if (paintedBackdrop()) {
+      const accent = this.params.fieldElement ? ELEMENTS[this.params.fieldElement].color : '#ff8a3d';
+      this.scene.background = backdropTexture(this.params.fieldElement ?? 'crossing', accent);
+    }
+    // PROTOTYPE: swing the shared camera rig to a low side elevation for the
+    // fight, remembering the crawl's angle so `exit()` can put it back.
+    const p = this.ctx.hd2d.params;
+    this.savedCam = { pitch: p.pitch, yaw: p.yaw, distance: p.distance, height: p.height };
+    p.pitch = SIDE_CAM.pitch;
+    p.yaw = SIDE_CAM.yaw;
+    p.distance = SIDE_CAM.distance;
+    p.height = SIDE_CAM.height;
     this.ctx.hd2d.cameraTarget.set(0, 0, CAMERA_BIAS_Z);
     this.ctx.hd2d.lightTarget.set(0, 0, 0.5);
     this.ctx.hd2d.focusTarget.set(0, 0.9, 0.4);
@@ -300,8 +353,13 @@ export class BattleScene extends GameScene {
     });
     const wallGeo = new THREE.BoxGeometry(2, 2.2, 2);
     const ring: THREE.Vector3[] = [];
-    for (let x = -half - 1; x <= half + 1; x++) {
+    // A painted backdrop replaces the 3D walls entirely (they would occlude it).
+    for (let x = -half - 1; !paintedBackdrop() && x <= half + 1; x++) {
       for (let z = -half - 1; z <= half + 1; z++) {
+        // Side view: the camera sits on the +Z side, so keep only the back/side
+        // arc as a backdrop and drop the near wall that would stand in front of
+        // the fighters (between them and the viewer).
+        if (FF6_LAYOUT && z > 0) continue;
         const d = Math.hypot(x, z);
         if (d > half + 0.6 && d < half + 2.2) ring.push(new THREE.Vector3(x * 2, 1.05, z * 2));
       }
@@ -349,9 +407,10 @@ export class BattleScene extends GameScene {
 
     // Formation grid: a faint outline under every one of the 12 cells so the
     // 2×3 layout reads at a glance; occupied cells glow a little brighter.
+    // Skipped in the FF-style layout — the overhead grid reads as top-down.
     const occupied = new Set(this.battle.battlers.map((b) => `${b.side}:${b.cell.row}:${b.cell.col}`));
     const cellGeo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(1.7, 1.7));
-    for (const side of ['party', 'enemy'] as const) {
+    for (const side of FF6_LAYOUT ? [] : (['party', 'enemy'] as const)) {
       for (let row = 0; row < 2; row++) {
         for (let col = 0; col < 3; col++) {
           const p = cellPos(side, { row, col });
@@ -844,10 +903,11 @@ export class BattleScene extends GameScene {
     // so the charge itself reads; a ranged bolt stays put and fires a projectile;
     // area/heal moves gather in place.
     if (fx && bb && home && fx.delivery === 'melee') {
+      // Side view: lunge along X toward the opposing line (party →left, enemy →right).
       const dir = actor.side === 'party' ? -1 : 1;
       const trail = new THREE.Vector3();
       await this.tween(0.18, (t) => {
-        bb.object.position.z = home.z + dir * 1.4 * t;
+        bb.object.position.x = home.x + dir * 1.4 * t;
         trail.set(bb.object.position.x, bb.object.position.y + casterHeight * 0.5, bb.object.position.z);
         this.particles.emit(trail, {
           count: 3,
@@ -954,7 +1014,7 @@ export class BattleScene extends GameScene {
     if (fx && bb && home && fx.delivery === 'melee') {
       await this.tween(0.14, (t) => {
         const dir = actor.side === 'party' ? -1 : 1;
-        bb.object.position.z = home.z + dir * 1.4 * (1 - t);
+        bb.object.position.x = home.x + dir * 1.4 * (1 - t);
       });
       bb.object.position.copy(home);
     }
@@ -1418,6 +1478,12 @@ export class BattleScene extends GameScene {
 
   async exit() {
     this.finished = true;
+    // Put the shared camera rig back the way the crawl expects it.
+    if (this.savedCam) {
+      Object.assign(this.ctx.hd2d.params, this.savedCam);
+      this.savedCam = null;
+    }
+    this.ctx.hd2d.timeScale = 1; // never leave a flourish's slow-mo running
     this.unsubInput?.();
     this.unsubInput = null;
     this.hud.destroy();
