@@ -489,6 +489,41 @@ check('pressure plate: the barrier is solid until the plate is stepped',
 check('pressure plate: the barrier re-seals after the hold elapses',
   press.solidAfterHold === true, JSON.stringify(press));
 
+// --- sweep hazard (jungle-3) ------------------------------------------------
+// A ';' lane where a hot spot slides along on a timer; standing where it lands
+// drains light. Verify the lane parses, the hot index advances, and the sweep
+// biting the party's tile costs LP.
+const sweep = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  g.game.activeReachId = 'jungle';
+  g.game.floorIndex = 2; // jungle-3 (Ferngloom Tier)
+  g.game.crawl.initialized = false;
+  await g.manager.go('dungeon');
+  await new Promise((r) => setTimeout(r, 300));
+  const s = g.manager.activeScene;
+  const floor = g.reaches.jungle.floors[2];
+  const laneChars = floor.rows.join('').split('').filter((c) => c === ';').length;
+  const out = { laneChars, laneLen: s.sweepLane.length };
+  s.busy = false; s.moving = false; s.leaving = false;
+  // The hot index advances over time.
+  const idx0 = s.sweepIndex;
+  s.tickSweep(1.15 * 3);
+  out.advanced = s.sweepIndex !== idx0;
+  // Stand where the spot is about to land; the sweep should bite.
+  const target = s.sweepLane[2] ?? s.sweepLane[0];
+  s.tileX = target.x; s.tileZ = target.z;
+  s.sweepIndex = 1; s.sweepTimer = 0;
+  // Advance until the hot index reaches our tile (index 2), draining on arrival.
+  g.game.light = g.game.maxLight;
+  const before = g.game.light;
+  s.tickSweep(1.15); // 1 → 2 (our tile)
+  out.drained = before - g.game.light;
+  return out;
+});
+check('sweep hazard: the \';\' lane parses into sweep tiles', sweep.laneLen > 0 && sweep.laneLen === sweep.laneChars, JSON.stringify(sweep));
+check('sweep hazard: the hot spot advances over time', sweep.advanced === true, JSON.stringify(sweep));
+check('sweep hazard: the spot sweeping onto the party drains light', sweep.drained > 0, `-${sweep.drained} LP`);
+
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 if (errs.length) failures += errs.length;
 console.log(`\nVERDICT: ${failures ? 'FAIL (' + failures + ')' : 'PASS'}`);

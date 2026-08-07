@@ -281,7 +281,7 @@ export function validateFloor(floor: DungeonFloor): string[] {
   // decor: in bounds, on a walkable tile, and a known kind. Solid decor must
   // also stay off tiles the party has to stand on (start + interactive tiles),
   // or that tile becomes impossible to use.
-  const standTiles = new Set(['S', 'C', '$', '>', '<', 'k', '+', '^', '*', '%', '?', '~', '_']);
+  const standTiles = new Set(['S', 'C', '$', '>', '<', 'k', '+', '^', '*', '%', '?', '~', '_', ';']);
   for (const d of floor.decor ?? []) {
     const ch = at(d.x, d.z);
     if (d.z < 0 || d.z >= rows.length || d.x < 0 || d.x >= width) {

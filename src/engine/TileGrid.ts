@@ -25,6 +25,7 @@ export type TileKind =
   | 'secret'
   | 'liquid'
   | 'pressure'
+  | 'sweep'
   | 'event';
 
 export interface Tile {
@@ -90,6 +91,7 @@ export const DEFAULT_THEME: TileTheme = {
  *   '?'  secret wall (looks solid, is passable — crumbles when stepped into)
  *   '~'  liquid floor (walkable pool with an animated surface — purely visual)
  *   '_'  pressure plate (opens the toggle-walls briefly, then they re-seal)
+ *   ';'  sweep-hazard lane (a hot spot slides along it; cross when your tile is cool)
  *   '1'-'9'  scripted event tile (looked up in the floor's `events` map)
  * ```
  */
@@ -180,6 +182,7 @@ export class TileGrid {
     if (ch === '?') return { x, z, kind: 'secret' };
     if (ch === '~') return { x, z, kind: 'liquid' };
     if (ch === '_') return { x, z, kind: 'pressure' };
+    if (ch === ';') return { x, z, kind: 'sweep' };
     if (ELEMENT_CHARS[ch]) return { x, z, kind: 'element', element: ELEMENT_CHARS[ch] };
     if (ch >= '1' && ch <= '9') return { x, z, kind: 'event', eventId: ch };
     return { x, z, kind: 'floor' };
@@ -298,12 +301,14 @@ export class TileGrid {
     toggleMeshes: Map<string, THREE.Mesh>;
     secretMeshes: Map<string, THREE.Mesh>;
     liquidMeshes: Map<string, THREE.Mesh>;
+    sweepMeshes: Map<string, THREE.Mesh>;
   } {
     const group = new THREE.Group();
     const elementMeshes = new Map<string, THREE.Mesh>();
     const toggleMeshes = new Map<string, THREE.Mesh>();
     const secretMeshes = new Map<string, THREE.Mesh>();
     const liquidMeshes = new Map<string, THREE.Mesh>();
+    const sweepMeshes = new Map<string, THREE.Mesh>();
 
     const floors: Tile[] = [];
     const walls: Tile[] = [];
@@ -634,6 +639,34 @@ export class TileGrid {
       }
     }
 
-    return { group, elementMeshes, toggleMeshes, secretMeshes, liquidMeshes };
+    // --- sweep-hazard lanes ------------------------------------------------
+    // A ';' tile is walkable floor that periodically turns dangerous: the scene
+    // slides a "hot" spot along the lane, draining light if you're on it. Each
+    // gets its own mesh so the scene can brighten the current hot tile.
+    const sweeps: Tile[] = [];
+    this.forEach((t) => {
+      if (t.kind === 'sweep') sweeps.push(t);
+    });
+    if (sweeps.length) {
+      const geo = new THREE.PlaneGeometry(TILE, TILE);
+      geo.rotateX(-Math.PI / 2);
+      for (const t of sweeps) {
+        const mat = new THREE.MeshStandardMaterial({
+          map: floorTexture('sweep', this.theme.floor, 43, 32, style),
+          emissive: new THREE.Color('#ff4a2a'),
+          emissiveIntensity: 0.12, // dim (cool) by default; the scene lights the hot one
+          roughness: 0.8,
+          metalness: 0.05,
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.receiveShadow = true;
+        const p = this.worldPos(t.x, t.z);
+        mesh.position.set(p.x, this.floorY(t.x, t.z) + 0.02, p.z);
+        group.add(mesh);
+        sweepMeshes.set(`${t.x},${t.z}`, mesh);
+      }
+    }
+
+    return { group, elementMeshes, toggleMeshes, secretMeshes, liquidMeshes, sweepMeshes };
   }
 }

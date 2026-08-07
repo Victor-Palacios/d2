@@ -39,6 +39,8 @@ const LIGHT_PER_STEP = 1;
 const HAZARD_LP = 8;
 /** Seconds a pressure plate holds the toggle-walls open before they re-seal. */
 const PLATE_HOLD = 6;
+/** Seconds between advances of a sweep-hazard's hot spot along its lane. */
+const SWEEP_INTERVAL = 1.1;
 
 /**
  * Flat, low ground-dressing decor scattered per terrain skin when a floor opts
@@ -145,6 +147,12 @@ export class DungeonScene extends GameScene {
   private secretMeshes = new Map<string, THREE.Mesh>();
   /** Liquid-pool meshes, keyed by tile — their surface caustics scroll each frame. */
   private liquidMeshes = new Map<string, THREE.Mesh>();
+  /** Sweep-hazard lane meshes, keyed by tile — the hot one glows and drains. */
+  private sweepMeshes = new Map<string, THREE.Mesh>();
+  /** Sweep-lane tiles in row-major order; the hot spot cycles through them. */
+  private sweepLane: { x: number; z: number }[] = [];
+  private sweepIndex = 0;
+  private sweepTimer = 0;
 
   /** Blocks input while a scripted beat is running. */
   private busy = false;
@@ -266,7 +274,14 @@ export class DungeonScene extends GameScene {
     this.toggleMeshes = built.toggleMeshes;
     this.secretMeshes = built.secretMeshes;
     this.liquidMeshes = built.liquidMeshes;
+    this.sweepMeshes = built.sweepMeshes;
     this.plateHold = 0; // no pressure-plate hold carries across floors
+    // Order the sweep lane in row-major reading order so the hot spot slides.
+    this.sweepLane = [...this.sweepMeshes.keys()]
+      .map((k) => { const [x, z] = k.split(',').map(Number); return { x, z }; })
+      .sort((a, b) => a.z - b.z || a.x - b.x);
+    this.sweepIndex = 0;
+    this.sweepTimer = 0;
 
     this.particles = new ParticleField(500);
     this.scene.add(this.particles.points);
@@ -762,23 +777,15 @@ export class DungeonScene extends GameScene {
 
     if (tile.kind === 'hazard') {
       // A trap: it gutters the lantern extra on every entry (not one-time), so
-      // routing around it matters. A hot red burst + hurt sfx sell the sting.
-      game.light = Math.max(0, game.light - HAZARD_LP);
-      audio.sfx('bump');
-      this.particles.emit(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z) + 0.3), {
-        count: 14,
-        color: 0xff4a2a,
-        speed: 2.2,
-        life: 0.7,
-        gravity: -3,
-        upBias: 0.7,
-      });
-      this.ctx.hd2d.addShake(0.35);
-      toast(this.ctx.ui, `<span class="danger">-${HAZARD_LP} LP</span>`, 1400);
-      this.hud.update(game.souls());
-      if (game.light <= 0) {
-        await this.outOfLight();
-        return;
+      // routing around it matters.
+      if (await this.drainHazard(tile.x, tile.z)) return; // guttered out
+      return;
+    }
+
+    if (tile.kind === 'sweep') {
+      // Stepping onto the lane only hurts if this tile is the hot spot right now.
+      if (this.isSweepHot(tile.x, tile.z)) {
+        if (await this.drainHazard(tile.x, tile.z)) return;
       }
       return;
     }
@@ -1241,6 +1248,63 @@ export class DungeonScene extends GameScene {
     toast(this.ctx.ui, '<span class="accent">The plate rises — the way seals again.</span>', 1400);
   }
 
+  /**
+   * Gutters extra lantern light at (x, z) — the shared sting for a static '^'
+   * hazard and a sweep-lane's hot spot. Returns true if this drain emptied the
+   * lantern (the caller should stop, the out-of-light tow has been triggered).
+   */
+  private async drainHazard(x: number, z: number): Promise<boolean> {
+    game.light = Math.max(0, game.light - HAZARD_LP);
+    audio.sfx('bump');
+    this.particles.emit(this.grid.worldPos(x, z, this.grid.floorY(x, z) + 0.3), {
+      count: 14,
+      color: 0xff4a2a,
+      speed: 2.2,
+      life: 0.7,
+      gravity: -3,
+      upBias: 0.7,
+    });
+    this.ctx.hd2d.addShake(0.35);
+    toast(this.ctx.ui, `<span class="danger">-${HAZARD_LP} LP</span>`, 1400);
+    this.hud.update(game.souls());
+    if (game.light <= 0) {
+      await this.outOfLight();
+      return true;
+    }
+    return false;
+  }
+
+  /** Whether the sweep lane's hot spot is currently on (x, z). */
+  private isSweepHot(x: number, z: number): boolean {
+    const hot = this.sweepLane[this.sweepIndex];
+    return !!hot && hot.x === x && hot.z === z;
+  }
+
+  /**
+   * Advances the sweep-hazard hot spot along its lane on a timer, lighting the
+   * current tile hot-red and the rest cool. If the spot lands on the party's
+   * tile, it drains — so a lane read wrong bites even when you stand still.
+   */
+  private tickSweep(dt: number) {
+    if (!this.sweepLane.length) return;
+    this.sweepTimer += dt;
+    let advanced = false;
+    while (this.sweepTimer >= SWEEP_INTERVAL) {
+      this.sweepTimer -= SWEEP_INTERVAL;
+      this.sweepIndex = (this.sweepIndex + 1) % this.sweepLane.length;
+      advanced = true;
+    }
+    if (advanced) {
+      for (let i = 0; i < this.sweepLane.length; i++) {
+        const c = this.sweepLane[i];
+        const mesh = this.sweepMeshes.get(`${c.x},${c.z}`);
+        if (mesh) (mesh.material as THREE.MeshStandardMaterial).emissiveIntensity = i === this.sweepIndex ? 1.7 : 0.12;
+      }
+      // The hot spot sweeping onto a standing party bites, not just stepping in.
+      if (!this.busy && !this.moving && this.isSweepHot(this.tileX, this.tileZ)) void this.drainHazard(this.tileX, this.tileZ);
+    }
+  }
+
   private animateElementPlates(time: number) {
     for (const [key, mesh] of this.elementMeshes) {
       const [x, z] = key.split(',').map(Number);
@@ -1344,6 +1408,7 @@ export class DungeonScene extends GameScene {
     this.animateElementPlates(time);
     this.animateLiquid(dt, time);
     this.tickPressurePlate(dt);
+    this.tickSweep(dt);
     this.updateElementLights();
     this.syncCamera();
   }

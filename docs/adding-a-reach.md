@@ -149,6 +149,7 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
 '?' secret wall (looks solid, is passable — crumbles when the party walks in)
 '~' liquid pool (walkable; an animated reflective surface — purely visual)
 '_' pressure plate (opens the '%' barriers for a few seconds, then they re-seal)
+';' sweep-hazard lane (a hot spot slides along it; cross when your tile is cool)
 '1'-'9'  scripted event tile (looked up in that floor's `events` map)
 ```
 
@@ -203,6 +204,13 @@ plates (`W F N M D`) become a lock: step every one to light it, and the floor's
 `%` toggle-wall barriers open. Gate an *optional* reward behind the barrier (not
 the descent) — the validator checks every plate is reachable before the barrier,
 so the puzzle is always solvable. crystal-2 is the worked example.
+
+**Moving hazards.** A `;` tile is a sweep lane: the floor slides one "hot" spot
+along all its `;` tiles (row-major order) on a timer, draining lantern light if
+the party is on the hot tile when it lands — so a lane has to be *timed*, not
+just crossed. It's never a forced hazard (one tile is hot at a time, so you can
+always wait for the spot to pass), so the validator treats `;` as ordinary
+floor. Guard an optional room with it. jungle-3 is the worked example.
 
 **Pressure plates.** A `_` plate opens the floor's `%` barriers the instant it's
 stepped, then re-seals them a few seconds later — a timed dash, not a permanent
