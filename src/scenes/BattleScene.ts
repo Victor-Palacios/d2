@@ -7,6 +7,7 @@ import { battleAura } from '../data/battleFx';
 import { audio } from '../engine/Audio';
 import { input } from '../engine/Input';
 import {
+  backdropTexture,
   elementGlowTexture,
   elementTileTexture,
   floorTexture,
@@ -76,6 +77,16 @@ const ROW_GAP = 1.5;
  * for the raw Tier 1 camera-only swing.
  */
 const FF6_LAYOUT = true;
+
+/**
+ * PROTOTYPE: swap the 3D arena walls for a flat painted backdrop (FF-style).
+ * Runtime-toggleable via `window.__painted` so the two looks can be compared
+ * without a rebuild; defaults on.
+ */
+function paintedBackdrop(): boolean {
+  const w = window as unknown as { __painted?: boolean };
+  return w.__painted ?? true;
+}
 
 /**
  * Look-target bias toward the camera (+Z). A larger bias pulls the look-centre
@@ -214,7 +225,14 @@ export class BattleScene extends GameScene {
     const fogTint = this.params.fieldElement
       ? `#${new THREE.Color('#0a0d1c').lerp(new THREE.Color(ELEMENTS[this.params.fieldElement].color), 0.35).getHexString()}`
       : undefined;
-    this.ctx.hd2d.applyFog(this.scene, 1.6, fogTint);
+    // Lighter fog with a painted backdrop so the far floor melts into the
+    // painting rather than a flat fog wall.
+    this.ctx.hd2d.applyFog(this.scene, paintedBackdrop() ? 0.8 : 1.6, fogTint);
+    // PROTOTYPE: a flat painted scene stands in for the 3D walls (FF-style).
+    if (paintedBackdrop()) {
+      const accent = this.params.fieldElement ? ELEMENTS[this.params.fieldElement].color : '#ff8a3d';
+      this.scene.background = backdropTexture(this.params.fieldElement ?? 'crossing', accent);
+    }
     // PROTOTYPE: swing the shared camera rig to a low side elevation for the
     // fight, remembering the crawl's angle so `exit()` can put it back.
     const p = this.ctx.hd2d.params;
@@ -335,7 +353,8 @@ export class BattleScene extends GameScene {
     });
     const wallGeo = new THREE.BoxGeometry(2, 2.2, 2);
     const ring: THREE.Vector3[] = [];
-    for (let x = -half - 1; x <= half + 1; x++) {
+    // A painted backdrop replaces the 3D walls entirely (they would occlude it).
+    for (let x = -half - 1; !paintedBackdrop() && x <= half + 1; x++) {
       for (let z = -half - 1; z <= half + 1; z++) {
         // Side view: the camera sits on the +Z side, so keep only the back/side
         // arc as a backdrop and drop the near wall that would stand in front of
