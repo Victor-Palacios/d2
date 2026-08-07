@@ -138,7 +138,11 @@ const FLOORS: DungeonFloor[] = [
     // discovery, never on the way to the descent.
     chests: {
       '15,2': { obols: 220, item: 'mendingBalm', note: 'A prospector left a crate wedged in the ice.' },
-      '15,9': { obols: 180, item: 'mendingBalm', note: 'Behind the false wall, a cache no one else thought to look for.' },
+      '15,9': {
+        obols: 180,
+        item: 'mendingBalm',
+        note: 'Behind the false wall, a cache no one else thought to look for.',
+      },
     },
     encounterRate: 0.06,
     encounters: [

@@ -18,7 +18,10 @@ describe('reach balance', () => {
     // reach cannot be lit even by a perfect run — a real, must-fix imbalance.
     for (const r of analyzeReaches(REACHES)) {
       expect(r.totalSteps, `${r.id} has a reachable descent`).toBeGreaterThan(0);
-      expect(r.lightMargin, `${r.id} light margin (start ${r.startingLight} + shards vs ${r.totalSteps} steps)`).toBeGreaterThan(0);
+      expect(
+        r.lightMargin,
+        `${r.id} light margin (start ${r.startingLight} + shards vs ${r.totalSteps} steps)`,
+      ).toBeGreaterThan(0);
     }
   });
 
