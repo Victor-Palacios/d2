@@ -37,6 +37,8 @@ const STEP_TIME = 0.19;
 const LIGHT_PER_STEP = 1;
 /** Extra lantern light a hazard tile gutters on entry, beyond the per-step 1. */
 const HAZARD_LP = 8;
+/** Seconds a pressure plate holds the toggle-walls open before they re-seal. */
+const PLATE_HOLD = 6;
 
 /**
  * Flat, low ground-dressing decor scattered per terrain skin when a floor opts
@@ -125,6 +127,8 @@ export class DungeonScene extends GameScene {
   private particles!: ParticleField;
   private dust: DustMotes | null = null;
   private mist: GroundMist | null = null;
+  /** Seconds left before a pressure-plate-held toggle group re-seals (0 = sealed). */
+  private plateHold = 0;
   private torches: Torch[] = [];
   private portals: { portal: Portal; x: number; z: number }[] = [];
   private props = new Map<string, Billboard>();
@@ -262,6 +266,7 @@ export class DungeonScene extends GameScene {
     this.toggleMeshes = built.toggleMeshes;
     this.secretMeshes = built.secretMeshes;
     this.liquidMeshes = built.liquidMeshes;
+    this.plateHold = 0; // no pressure-plate hold carries across floors
 
     this.particles = new ParticleField(500);
     this.scene.add(this.particles.points);
@@ -815,6 +820,24 @@ export class DungeonScene extends GameScene {
       return;
     }
 
+    if (tile.kind === 'pressure') {
+      // The plate sinks and holds the barriers open — but only for a beat. Step
+      // it, then run through before the toggle group re-seals (see update()).
+      this.plateHold = PLATE_HOLD;
+      this.grid.setToggles(true);
+      this.syncToggleMeshes();
+      audio.sfx('confirm');
+      this.particles.emit(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z) + 0.2), {
+        count: 8,
+        color: 0xffb066,
+        speed: 1.4,
+        life: 0.6,
+        gravity: -3,
+      });
+      toast(this.ctx.ui, '<span class="accent">The plate sinks — the way opens, but not for long.</span>', 1600);
+      return;
+    }
+
     if (tile.kind === 'element') {
       const mesh = this.elementMeshes.get(key);
       if (mesh) {
@@ -1199,6 +1222,25 @@ export class DungeonScene extends GameScene {
    * stable per-tile phase, so a room of runes shimmers out of sync instead of
    * pulsing in lockstep. Cheap: a handful of meshes, one material write each.
    */
+  /**
+   * Counts down a pressure-plate hold and re-seals the toggle-walls when it
+   * expires — unless the party is still standing in the doorway (a '%' tile), in
+   * which case the timer re-arms so they're never sealed inside a wall.
+   */
+  private tickPressurePlate(dt: number) {
+    if (this.plateHold <= 0) return;
+    this.plateHold -= dt;
+    if (this.plateHold > 0) return;
+    if (this.grid.at(this.tileX, this.tileZ)?.kind === 'toggleWall') {
+      this.plateHold = 0.5; // still in the gap — hold a moment longer
+      return;
+    }
+    this.grid.setToggles(false);
+    this.syncToggleMeshes();
+    audio.sfx('cancel');
+    toast(this.ctx.ui, '<span class="accent">The plate rises — the way seals again.</span>', 1400);
+  }
+
   private animateElementPlates(time: number) {
     for (const [key, mesh] of this.elementMeshes) {
       const [x, z] = key.split(',').map(Number);
@@ -1301,6 +1343,7 @@ export class DungeonScene extends GameScene {
     this.mist?.update(dt, time);
     this.animateElementPlates(time);
     this.animateLiquid(dt, time);
+    this.tickPressurePlate(dt);
     this.updateElementLights();
     this.syncCamera();
   }

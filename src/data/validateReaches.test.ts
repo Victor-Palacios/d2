@@ -81,4 +81,19 @@ describe('reach floor data', () => {
     const floor = plateFloor(['########', '#S.W..>#', '####.###', '#F#..~##', '########']);
     expect(validateFloor(floor).some((e) => /plate puzzle: element plate at .* is unreachable/.test(e))).toBe(true);
   });
+
+  it('accepts a chest behind a pressure-plate barrier (the plate can open it)', () => {
+    // Stepping the '_' plate opens the '%' onto the chest, so it's reachable.
+    const floor = {
+      id: 'press',
+      name: 'Press',
+      theme: {} as never,
+      rows: ['########', '#S._.%C#', '#....>.#', '########'],
+      events: {},
+      chests: { '6,1': { note: 'x' } },
+      encounterRate: 0,
+      encounters: [],
+    } as unknown as DungeonFloor;
+    expect(validateFloor(floor).filter((e) => /unreachable/.test(e))).toEqual([]);
+  });
 });

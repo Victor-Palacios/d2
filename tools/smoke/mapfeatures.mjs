@@ -455,6 +455,40 @@ check('plate puzzle: lighting every plate opens the barrier',
 check('plate puzzle: the chest behind the barrier then loots',
   puzzle.chestGained > 0, `+${puzzle.chestGained} obols`);
 
+// --- pressure plate (jungle-4) ----------------------------------------------
+// Stepping the '_' plate opens the toggle-walls; they re-seal a few seconds
+// later. Verify open-on-step, then re-seal after the hold elapses.
+const press = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  g.game.activeReachId = 'jungle';
+  g.game.floorIndex = 3; // jungle-4 (Sunken Boughs)
+  g.game.crawl.initialized = false;
+  await g.manager.go('dungeon');
+  await new Promise((r) => setTimeout(r, 300));
+  const s = g.manager.activeScene;
+  const floor = g.reaches.jungle.floors[3];
+  const find = (ch) => { for (let z = 0; z < floor.rows.length; z++) { const x = floor.rows[z].indexOf(ch); if (x >= 0) return { x, z }; } return null; };
+  const plate = find('_');
+  const barrier = find('%');
+  const out = { plate, barrier, plateKind: plate && s.grid.at(plate.x, plate.z).kind };
+  s.busy = false; s.moving = false; s.leaving = false;
+  out.solidBefore = s.grid.isToggleSolid(barrier.x, barrier.z);
+  // Step the plate.
+  s.tileX = plate.x; s.tileZ = plate.z;
+  await s.onTileEntered(s.grid.at(plate.x, plate.z));
+  out.solidAfterStep = s.grid.isToggleSolid(barrier.x, barrier.z);
+  // Stand on the plate (not in the doorway) and let the hold elapse.
+  s.tileX = plate.x; s.tileZ = plate.z;
+  for (let i = 0; i < 10; i++) s.tickPressurePlate(1); // >> PLATE_HOLD seconds
+  out.solidAfterHold = s.grid.isToggleSolid(barrier.x, barrier.z);
+  return out;
+});
+check('pressure plate: \'_\' parses as a pressure tile', press.plateKind === 'pressure', JSON.stringify({ plate: press.plate, kind: press.plateKind }));
+check('pressure plate: the barrier is solid until the plate is stepped',
+  press.solidBefore === true && press.solidAfterStep === false, JSON.stringify(press));
+check('pressure plate: the barrier re-seals after the hold elapses',
+  press.solidAfterHold === true, JSON.stringify(press));
+
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 if (errs.length) failures += errs.length;
 console.log(`\nVERDICT: ${failures ? 'FAIL (' + failures + ')' : 'PASS'}`);

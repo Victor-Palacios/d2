@@ -290,9 +290,9 @@ const FLOORS: DungeonFloor[] = [
       '#..#...#...#..N.#',
       '#....1.....#....#',
       '#.W.#...#...#...#',
-      '#.......$.......#',
-      '#..#...#...#..C.#',
-      '#.........>.....#',
+      '#.......$._...###',
+      '#..#...#...#.%C.#',
+      '#.........>...###',
       '#################',
     ],
     events: {
@@ -313,6 +313,9 @@ const FLOORS: DungeonFloor[] = [
         intro: narrate('The boughs sag underfoot — you are walking on a canopy, not a floor. Below, something stirs.'),
       },
     },
+    // The corner cache ('C' at 14,8) is sealed behind a barrier ('%' at 13,8)
+    // that a pressure plate ('_' at 10,7) only holds open for a few seconds —
+    // step it, then dash through before it re-seals. An optional timed detour.
     chests: {
       '14,8': { obols: 300, note: 'Rainwater has pooled in the box; the obols beneath it are still bright.' },
     },

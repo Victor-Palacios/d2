@@ -24,6 +24,7 @@ export type TileKind =
   | 'toggleWall'
   | 'secret'
   | 'liquid'
+  | 'pressure'
   | 'event';
 
 export interface Tile {
@@ -88,6 +89,7 @@ export const DEFAULT_THEME: TileTheme = {
  *   '*'  switch (flips barriers) '%'  toggle-wall barrier (starts solid)
  *   '?'  secret wall (looks solid, is passable — crumbles when stepped into)
  *   '~'  liquid floor (walkable pool with an animated surface — purely visual)
+ *   '_'  pressure plate (opens the toggle-walls briefly, then they re-seal)
  *   '1'-'9'  scripted event tile (looked up in the floor's `events` map)
  * ```
  */
@@ -177,6 +179,7 @@ export class TileGrid {
     if (ch === '%') return { x, z, kind: 'toggleWall' };
     if (ch === '?') return { x, z, kind: 'secret' };
     if (ch === '~') return { x, z, kind: 'liquid' };
+    if (ch === '_') return { x, z, kind: 'pressure' };
     if (ELEMENT_CHARS[ch]) return { x, z, kind: 'element', element: ELEMENT_CHARS[ch] };
     if (ch >= '1' && ch <= '9') return { x, z, kind: 'event', eventId: ch };
     return { x, z, kind: 'floor' };
@@ -211,6 +214,11 @@ export class TileGrid {
   /** Flips the floor's toggle-wall group (all `%` barriers) open↔solid. */
   flipToggles() {
     this.togglesOpen = !this.togglesOpen;
+  }
+
+  /** Forces the toggle-wall group open or solid (pressure plates: open, re-seal). */
+  setToggles(open: boolean) {
+    this.togglesOpen = open;
   }
 
   /** Marks a secret wall (`?`) as discovered, so its false wall stops covering it. */
@@ -476,6 +484,35 @@ export class TileGrid {
       inst.receiveShadow = true;
       const m = new THREE.Matrix4();
       hazards.forEach((t, i) => {
+        const p = this.worldPos(t.x, t.z);
+        m.makeTranslation(p.x, this.floorY(t.x, t.z) + 0.02, p.z);
+        inst.setMatrixAt(i, m);
+      });
+      inst.instanceMatrix.needsUpdate = true;
+      group.add(inst);
+    }
+
+    // --- pressure plates ---------------------------------------------------
+    // A '_' plate: an amber-lit floor stud that opens the toggle-wall group when
+    // stepped on (briefly — the scene re-seals it after a beat). Static geometry.
+    const plates: Tile[] = [];
+    this.forEach((t) => {
+      if (t.kind === 'pressure') plates.push(t);
+    });
+    if (plates.length) {
+      const geo = new THREE.PlaneGeometry(TILE, TILE);
+      geo.rotateX(-Math.PI / 2);
+      const mat = new THREE.MeshStandardMaterial({
+        map: floorTexture('pressure', this.theme.floorAlt, 41, 32, style),
+        emissive: new THREE.Color('#ffb066'),
+        emissiveIntensity: 0.7,
+        roughness: 0.6,
+        metalness: 0.1,
+      });
+      const inst = new THREE.InstancedMesh(geo, mat, plates.length);
+      inst.receiveShadow = true;
+      const m = new THREE.Matrix4();
+      plates.forEach((t, i) => {
         const p = this.worldPos(t.x, t.z);
         m.makeTranslation(p.x, this.floorY(t.x, t.z) + 0.02, p.z);
         inst.setMatrixAt(i, m);

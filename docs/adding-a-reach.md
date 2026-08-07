@@ -148,6 +148,7 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
 '*' switch              '%' toggle-wall barrier (starts solid; a switch flips it)
 '?' secret wall (looks solid, is passable — crumbles when the party walks in)
 '~' liquid pool (walkable; an animated reflective surface — purely visual)
+'_' pressure plate (opens the '%' barriers for a few seconds, then they re-seal)
 '1'-'9'  scripted event tile (looked up in that floor's `events` map)
 ```
 
@@ -202,6 +203,13 @@ plates (`W F N M D`) become a lock: step every one to light it, and the floor's
 `%` toggle-wall barriers open. Gate an *optional* reward behind the barrier (not
 the descent) — the validator checks every plate is reachable before the barrier,
 so the puzzle is always solvable. crystal-2 is the worked example.
+
+**Pressure plates.** A `_` plate opens the floor's `%` barriers the instant it's
+stepped, then re-seals them a few seconds later — a timed dash, not a permanent
+opening. (It shares the toggle group, so a floor uses one of switch / plate-puzzle
+/ pressure, not several.) Gate an optional reward a short sprint from the plate;
+the validator treats it like a switch, so the target is provably reachable.
+jungle-4 is the worked example.
 
 **Secret walls.** A `?` tile is passable floor wearing a wall's skin — it looks
 exactly like the surrounding wall until the party walks into it, at which point
