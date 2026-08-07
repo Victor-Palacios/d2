@@ -177,8 +177,11 @@ doorway you forget to carve is caught as a soft-lock. Browse the stamp gallery a
 the top of `tools/floor-preview.html`. You can always write raw `rows` instead.
 
 Preview any floor (grid + live `validateFloor`, with elevation/hazard badges) at
-`tools/floor-preview.html` under `npm run dev` — author with instant feedback
-instead of eyeballing coordinates. A hazard must never be the *only* way to the
+`tools/floor-preview.html` under `npm run dev` — and author new ones right there
+in the **floor editor** at the top: click/drag to paint tiles from the glyph
+palette, watch `validateFloor` react live, and copy the generated `rows` literal
+straight into a reach file. Author with instant feedback instead of eyeballing
+coordinates. A hazard must never be the *only* way to the
 descent portal (the validator enforces this so you're never forced to take
 damage to progress).
 

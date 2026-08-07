@@ -17,12 +17,28 @@
     .bad { color: #ff6b6b; font-size: 11px; margin-top: 6px; white-space: pre-wrap; }
     .legend { color: #6b7488; font-size: 11px; margin: 10px 0 0; }
     .legend b { color: #cdd3e0; }
+    /* --- interactive editor --- */
+    #editor { margin-bottom: 26px; }
+    #editor h2 { font-size: 13px; color: #ffd166; margin: 0 0 8px; border-bottom: 1px solid #2a3040; padding-bottom: 4px; }
+    .ed-controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+    .ed-controls input { width: 46px; background: #0a0c12; color: #cdd3e0; border: 1px solid #2a3040; border-radius: 4px; padding: 3px 5px; font-family: inherit; }
+    .ed-controls button { background: #1a1e2a; color: #cdd3e0; border: 1px solid #2a3040; border-radius: 4px; padding: 4px 8px; font-family: inherit; cursor: pointer; font-size: 11px; }
+    .ed-controls button:hover { border-color: #4a5570; }
+    .palette { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .swatch { width: 30px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1px solid #2a3040; border-radius: 4px; cursor: pointer; font-size: 12px; color: #f0f2f8; user-select: none; }
+    .swatch.sel { outline: 2px solid #ffd166; }
+    .ed-main { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+    #ed-grid { display: grid; gap: 1px; background: #0a0c12; border-radius: 4px; padding: 3px; user-select: none; }
+    .cell { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #f0f2f8; cursor: pointer; }
+    #ed-side { min-width: 240px; }
+    #ed-status { font-size: 11px; white-space: pre-wrap; margin-bottom: 8px; }
+    #ed-export { width: 100%; height: 200px; background: #0a0c12; color: #9fb4d0; border: 1px solid #2a3040; border-radius: 4px; font-family: inherit; font-size: 11px; padding: 6px; }
   </style>
 </head>
 <body>
   <h1>Floor preview + live validator</h1>
-  <p class="hint">Dev tool. Renders every floor of every reach as a colour-coded grid and runs
-    <code>validateFloor</code> on each — author with instant feedback instead of eyeballing ASCII.
+  <p class="hint">Dev tool. Paint a floor in the editor below (live <code>validateFloor</code> + copy-paste
+    rows), browse the reusable room stamps, and see every shipped floor rendered and validated.
     Elevation is shown as a ▲ (raised) / ▼ (sunken) badge; a red border = validator errors.</p>
   <p class="legend">
     <b>#</b> wall · <b>=</b> accent · <b>.</b> floor · <span style="color:#7bdc8a">S start</span> ·
@@ -34,6 +50,7 @@
     <span style="color:#ffb066">_ pressure plate</span> · <span style="color:#ff6a3a">; sweep hazard</span> ·
     <span style="color:#c88">1-9 event</span> · W F N M D element
   </p>
+  <div id="editor"></div>
   <div id="root"></div>
 
   <script type="module">
@@ -49,6 +66,110 @@
       W: '#2a5a7a', F: '#7a3a2a', N: '#3a6a2a', M: '#5a5a6a', D: '#4a2a5a',
     };
     const glyphColor = (ch) => (ch >= '1' && ch <= '9' ? '#7a5a3a' : COLORS[ch] ?? '#3a3f57');
+
+    // --- interactive floor editor -------------------------------------------
+    // Click (or click-drag) to paint the selected glyph; validateFloor runs live
+    // and the rows literal exports for pasting into a reach file. Event/chest
+    // tiles get auto-stubbed so validation surfaces structure (reachability,
+    // start, portal), not "missing events map entry".
+    (function buildEditor() {
+      const PALETTE = ['#', '.', '=', 'S', '>', '<', 'C', '$', '^', 'k', '+', '*', '%', '?', '~', '_', ';', 'W', 'F', 'N', 'M', 'D', '1', '2', '3'];
+      const ed = document.getElementById('editor');
+      ed.innerHTML = '<h2>Floor editor — click/drag to paint, then copy the rows</h2>';
+      const controls = document.createElement('div');
+      controls.className = 'ed-controls';
+      controls.innerHTML =
+        'w <input id="ed-w" type="number" value="17" min="3" max="40"> ' +
+        'h <input id="ed-h" type="number" value="11" min="3" max="30"> ' +
+        '<button id="ed-new">New grid</button> <button id="ed-fill">Fill walls</button> <button id="ed-clear">Clear floor</button>';
+      ed.appendChild(controls);
+
+      let sel = '#';
+      const palette = document.createElement('div');
+      palette.className = 'palette';
+      for (const ch of PALETTE) {
+        const s = document.createElement('div');
+        s.className = 'swatch' + (ch === sel ? ' sel' : '');
+        s.style.background = glyphColor(ch);
+        s.textContent = ch === '.' ? '·' : ch;
+        s.title = ch;
+        s.onclick = () => { sel = ch; [...palette.children].forEach((c, i) => c.classList.toggle('sel', PALETTE[i] === sel)); };
+        palette.appendChild(s);
+      }
+      ed.appendChild(palette);
+
+      const main = document.createElement('div');
+      main.className = 'ed-main';
+      const gridEl = document.createElement('div');
+      gridEl.id = 'ed-grid';
+      const side = document.createElement('div');
+      side.id = 'ed-side';
+      side.innerHTML = '<div id="ed-status"></div><textarea id="ed-export" readonly spellcheck="false"></textarea>';
+      main.appendChild(gridEl);
+      main.appendChild(side);
+      ed.appendChild(main);
+
+      let W = 17, H = 11;
+      let cells = [];
+
+      const synthFloor = () => {
+        const rows = cells.map((r) => r.join(''));
+        const events = {}, chests = {};
+        rows.forEach((row, z) => [...row].forEach((ch, x) => {
+          if (ch >= '1' && ch <= '9') events[ch] = { kind: 'battle', enemies: [] };
+          if (ch === 'C') chests[`${x},${z}`] = { note: 'x' };
+        }));
+        return { id: 'editor', name: 'Editor', theme: {}, rows, events, chests, encounterRate: 0, encounters: [] };
+      };
+
+      const refresh = () => {
+        const rows = cells.map((r) => r.join(''));
+        document.getElementById('ed-export').value = 'rows: [\n' + rows.map((r) => `  '${r}',`).join('\n') + '\n],';
+        let errs = [];
+        try { errs = validateFloor(synthFloor()); } catch (e) { errs = ['(validator threw: ' + e.message + ')']; }
+        const st = document.getElementById('ed-status');
+        if (errs.length) { st.className = 'bad'; st.textContent = '✗ ' + errs.join('\n✗ '); }
+        else { st.className = 'ok'; st.textContent = '✓ valid'; }
+      };
+
+      const paint = (x, z) => { cells[z][x] = sel; const el = gridEl.children[z * W + x]; el.style.background = glyphColor(sel); el.textContent = sel === '.' || sel === ' ' ? '' : sel; refresh(); };
+
+      let painting = false;
+      document.addEventListener('mouseup', () => { painting = false; });
+
+      const render = () => {
+        gridEl.style.gridTemplateColumns = `repeat(${W}, 18px)`;
+        gridEl.innerHTML = '';
+        for (let z = 0; z < H; z++) {
+          for (let x = 0; x < W; x++) {
+            const ch = cells[z][x];
+            const el = document.createElement('div');
+            el.className = 'cell';
+            el.style.background = glyphColor(ch);
+            el.textContent = ch === '.' || ch === ' ' ? '' : ch;
+            el.onmousedown = (e) => { e.preventDefault(); painting = true; paint(x, z); };
+            el.onmouseenter = () => { if (painting) paint(x, z); };
+            gridEl.appendChild(el);
+          }
+        }
+        refresh();
+      };
+
+      const newGrid = (fill) => {
+        W = Math.max(3, Math.min(40, +document.getElementById('ed-w').value || 17));
+        H = Math.max(3, Math.min(30, +document.getElementById('ed-h').value || 11));
+        cells = Array.from({ length: H }, (_, z) => Array.from({ length: W }, (_, x) => {
+          if (fill === 'walls') return z === 0 || z === H - 1 || x === 0 || x === W - 1 ? '#' : '.';
+          if (fill === 'clear') return '.';
+          return z === 0 || z === H - 1 || x === 0 || x === W - 1 ? '#' : '.';
+        }));
+        render();
+      };
+      document.getElementById('ed-new').onclick = () => newGrid('walls');
+      document.getElementById('ed-fill').onclick = () => newGrid('walls');
+      document.getElementById('ed-clear').onclick = () => { for (let z = 1; z < H - 1; z++) for (let x = 1; x < W - 1; x++) cells[z][x] = '.'; render(); };
+      newGrid('walls');
+    })();
 
     const root = document.getElementById('root');
 
