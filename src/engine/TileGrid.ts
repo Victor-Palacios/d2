@@ -130,6 +130,12 @@ export class TileGrid {
    */
   private revealed = new Set<string>();
 
+  /**
+   * Element plates (`W F N M D`) the party has stepped and lit. On a plate-puzzle
+   * floor, lighting every plate opens the toggle-wall group. Transient.
+   */
+  private litPlates = new Set<string>();
+
   /** Per-tile height offset in world units, keyed `"x,z"` (purely visual). */
   private elevation: Record<string, number>;
 
@@ -222,6 +228,32 @@ export class TileGrid {
   isToggleSolid(x: number, z: number): boolean {
     const t = this.at(x, z);
     return t?.kind === 'toggleWall' && !this.togglesOpen;
+  }
+
+  /** Lights an element plate (plate-puzzle). Returns true if it was newly lit. */
+  lightPlate(x: number, z: number): boolean {
+    const k = `${x},${z}`;
+    if (this.litPlates.has(k)) return false;
+    this.litPlates.add(k);
+    return true;
+  }
+
+  /** Whether an element plate at (x, z) has been lit. */
+  isPlateLit(x: number, z: number): boolean {
+    return this.litPlates.has(`${x},${z}`);
+  }
+
+  /** Whether every element plate on the floor has been lit (plate-puzzle solved). */
+  allPlatesLit(): boolean {
+    let total = 0;
+    let lit = 0;
+    this.forEach((t) => {
+      if (t.kind === 'element') {
+        total++;
+        if (this.litPlates.has(`${t.x},${t.z}`)) lit++;
+      }
+    });
+    return total > 0 && lit === total;
   }
 
   /**

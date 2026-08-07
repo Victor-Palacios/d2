@@ -153,11 +153,44 @@ export function validateFloor(floor: DungeonFloor): string[] {
       opened.add(toOpen);
       seen = flood(start);
     }
+    // Plate-puzzle floors open their '%' barriers by lighting every element
+    // plate. Flood treating '%' as a wall (the barrier is closed during the
+    // puzzle); every plate must be reachable that way, or the barrier can never
+    // open. If they all are, the barriers count as passable below.
+    let platesOpen = false;
+    if (floor.platePuzzle) {
+      const pseen = new Set<string>([`${start.x},${start.z}`]);
+      const pstack: Coord[] = [start];
+      while (pstack.length) {
+        const { x, z } = pstack.pop()!;
+        for (const [dx, dz] of DIRS) {
+          const nx = x + dx;
+          const nz = z + dz;
+          const k = `${nx},${nz}`;
+          if (pseen.has(k) || !traversable(nx, nz) || at(nx, nz) === '%') continue;
+          pseen.add(k);
+          pstack.push({ x: nx, z: nz });
+        }
+      }
+      let plates = 0;
+      let reachablePlates = 0;
+      for (let z = 0; z < rows.length; z++) {
+        for (let x = 0; x < rows[z].length; x++) {
+          if (!ELEMENT_CHARS.has(at(x, z))) continue;
+          plates++;
+          if (pseen.has(`${x},${z}`)) reachablePlates++;
+          else errs.push(`plate puzzle: element plate at ${x},${z} is unreachable, so the barrier can never open`);
+        }
+      }
+      platesOpen = plates > 0 && reachablePlates === plates;
+    }
     // Toggle-aware reachability: expand over (x, z, toggleState). A '%' barrier
     // blocks in state 0 and is open in state 1; stepping a '*' switch flips the
-    // state. Doors already resolved via `opened`. Reduces to the plain flood when
-    // a floor has no switches/toggle-walls, so existing floors are unaffected.
-    const stateTrav = (x: number, z: number, s: number): boolean => traversable(x, z) && (at(x, z) !== '%' || s === 1);
+    // state (or, on a plate-puzzle floor, lighting every plate opens them all).
+    // Doors already resolved via `opened`. Reduces to the plain flood when a
+    // floor has no switches/toggle-walls, so existing floors are unaffected.
+    const stateTrav = (x: number, z: number, s: number): boolean =>
+      traversable(x, z) && (at(x, z) !== '%' || s === 1 || platesOpen);
     const reach = new Set<string>([`${start.x},${start.z}`]);
     const visited = new Set<string>([`${start.x},${start.z},0`]);
     const bfs: { x: number; z: number; s: number }[] = [{ x: start.x, z: start.z, s: 0 }];

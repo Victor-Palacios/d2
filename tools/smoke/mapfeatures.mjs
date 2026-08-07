@@ -413,6 +413,48 @@ check('ground mist: the mist drifts over time', atmos.mistDrift > 0.001, `Δoffs
 check('glow pools: every bright decor casts a floor light pool',
   atmos.emissiveDecor > 0 && atmos.glowPools >= atmos.emissiveDecor, JSON.stringify(atmos));
 
+// --- element-plate puzzle (crystal-2) ---------------------------------------
+// Lighting every element plate opens the floor's toggle-wall barrier onto a
+// chest. Verify the barrier is solid until the last plate, then opens + loots.
+const puzzle = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  g.game.openedChests.clear();
+  g.game.activeReachId = 'crystal';
+  g.game.floorIndex = 1; // crystal-2 (Frozen Vault) — platePuzzle:true
+  g.game.crawl.initialized = false;
+  await g.manager.go('dungeon');
+  await new Promise((r) => setTimeout(r, 300));
+  const s = g.manager.activeScene;
+  const floor = g.reaches.crystal.floors[1];
+  const barrier = (() => { for (let z = 0; z < floor.rows.length; z++) { const x = floor.rows[z].indexOf('%'); if (x >= 0) return { x, z }; } return null; })();
+  const plates = [];
+  floor.rows.forEach((row, z) => { [...row].forEach((ch, x) => { if ('WFNMD'.includes(ch)) plates.push({ x, z }); }); });
+  const out = { platePuzzle: floor.platePuzzle === true, plateCount: plates.length, barrier };
+  s.busy = false; s.moving = false; s.leaving = false;
+  out.solidBefore = s.grid.isToggleSolid(barrier.x, barrier.z);
+  // Light all but the last plate — barrier should still be solid.
+  for (let i = 0; i < plates.length - 1; i++) { s.tileX = plates[i].x; s.tileZ = plates[i].z; await s.onTileEntered(s.grid.at(plates[i].x, plates[i].z)); }
+  out.solidMidway = s.grid.isToggleSolid(barrier.x, barrier.z);
+  // Light the last plate — barrier opens.
+  const last = plates[plates.length - 1];
+  s.tileX = last.x; s.tileZ = last.z; await s.onTileEntered(s.grid.at(last.x, last.z));
+  out.solidAfter = s.grid.isToggleSolid(barrier.x, barrier.z);
+  // Loot the chest behind it.
+  const chest = { x: 15, z: 9 };
+  const before = g.game.obols;
+  s.tileX = chest.x; s.tileZ = chest.z; await s.onTileEntered(s.grid.at(chest.x, chest.z));
+  out.chestGained = g.game.obols - before;
+  return out;
+});
+check('plate puzzle: crystal-2 is a plate-puzzle floor with plates',
+  puzzle.platePuzzle && puzzle.plateCount >= 2, JSON.stringify({ platePuzzle: puzzle.platePuzzle, plates: puzzle.plateCount }));
+check('plate puzzle: the barrier stays solid until the last plate is lit',
+  puzzle.solidBefore === true && puzzle.solidMidway === true, JSON.stringify(puzzle));
+check('plate puzzle: lighting every plate opens the barrier',
+  puzzle.solidAfter === false, JSON.stringify(puzzle));
+check('plate puzzle: the chest behind the barrier then loots',
+  puzzle.chestGained > 0, `+${puzzle.chestGained} obols`);
+
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 if (errs.length) failures += errs.length;
 console.log(`\nVERDICT: ${failures ? 'FAIL (' + failures + ')' : 'PASS'}`);

@@ -113,6 +113,13 @@ export interface DungeonFloor {
    * uses a sensible density; a number sets it (every Nth eligible tile).
    */
   scatter?: boolean | number;
+  /**
+   * Turns the floor's element plates (`W F N M D`) into a puzzle: step every one
+   * to light them, and the floor's toggle-wall barriers (`%`) open. Gate an
+   * optional reward this way, not the descent — the validator checks the plates
+   * are all reachable before the barrier opens.
+   */
+  platePuzzle?: boolean;
 }
 
 /** What happens when the player drives into a reach's exit portal. */

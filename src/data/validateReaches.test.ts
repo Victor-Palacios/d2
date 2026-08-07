@@ -54,4 +54,31 @@ describe('reach floor data', () => {
     const floor = secretFloor(['######', '#S?>##', '######']);
     expect(validateFloor(floor)).toContain('descent portal at 3,1 is only reachable through a secret passage');
   });
+
+  const plateFloor = (rows: string[], chests: Record<string, { note: string }> = {}) =>
+    ({
+      id: 'plate',
+      name: 'Plate',
+      theme: {} as never,
+      rows,
+      events: {},
+      chests,
+      platePuzzle: true,
+      encounterRate: 0,
+      encounters: [],
+    }) as unknown as DungeonFloor;
+
+  it('accepts a chest behind a plate-puzzle barrier when every plate is reachable', () => {
+    // Two reachable plates (W, F); lighting them opens the '%' onto the chest.
+    const floor = plateFloor(['########', '#S.W.F.#', '#.....%C', '#.....>#', '########'].map((r) => r.padEnd(8, '#')), {
+      '7,2': { note: 'x' },
+    });
+    expect(validateFloor(floor).filter((e) => /plate|unreachable/.test(e))).toEqual([]);
+  });
+
+  it('flags a plate-puzzle whose plate is walled off (barrier can never open)', () => {
+    // The 'F' plate is sealed in its own box, so the puzzle is unsolvable.
+    const floor = plateFloor(['########', '#S.W..>#', '####.###', '#F#..~##', '########']);
+    expect(validateFloor(floor).some((e) => /plate puzzle: element plate at .* is unreachable/.test(e))).toBe(true);
+  });
 });

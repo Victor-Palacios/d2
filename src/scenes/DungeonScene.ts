@@ -827,7 +827,19 @@ export class DungeonScene extends GameScene {
           upBias: 0.8,
         });
       }
-      // No toast spam: the plate glow and the battle HUD do the talking.
+      // Plate-puzzle floors: lighting every plate opens the toggle-wall group.
+      if (this.floor.platePuzzle && this.grid.lightPlate(tile.x, tile.z)) {
+        audio.sfx('pickup');
+        if (this.grid.allPlatesLit()) {
+          this.grid.flipToggles();
+          this.syncToggleMeshes();
+          audio.sfx('confirm');
+          toast(this.ctx.ui, '<span class="accent">The runes align — a sealed way opens.</span>', 1800);
+        } else {
+          toast(this.ctx.ui, '<span class="accent">A rune kindles and holds.</span>', 1100);
+        }
+      }
+      // No toast spam otherwise: the plate glow and the battle HUD do the talking.
       return;
     }
 
@@ -1196,6 +1208,8 @@ export class DungeonScene extends GameScene {
       const phase = x * 1.3 + z * 2.7; // deterministic, decorrelates neighbours
       let v = a.base + a.amp * (0.5 + 0.5 * Math.sin(time * a.rate + phase));
       if (a.flick) v += a.flick * Math.sin(time * 23.3 + phase * 2);
+      // A lit plate (plate-puzzle) burns steady and bright to show it's set.
+      if (this.grid.isPlateLit(x, z)) v = Math.max(v, 2.2);
       const mat = mesh.material as THREE.MeshStandardMaterial;
       mat.emissiveIntensity = Math.max(0.2, v);
     }

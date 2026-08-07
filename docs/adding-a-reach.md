@@ -197,6 +197,12 @@ the validator runs a toggle-aware search over `(tile, toggleState)` and flags a
 target that no reachable switch can open. crystal-3 is the worked example — a
 corner chest walled off behind a `%` that a `*` across the gallery grinds aside.
 
+**Element-plate puzzles.** Set `platePuzzle: true` on a floor and its element
+plates (`W F N M D`) become a lock: step every one to light it, and the floor's
+`%` toggle-wall barriers open. Gate an *optional* reward behind the barrier (not
+the descent) — the validator checks every plate is reachable before the barrier,
+so the puzzle is always solvable. crystal-2 is the worked example.
+
 **Secret walls.** A `?` tile is passable floor wearing a wall's skin — it looks
 exactly like the surrounding wall until the party walks into it, at which point
 the false wall crumbles. Use it to hide an *optional* reward (wall off a `C` so

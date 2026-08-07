@@ -176,10 +176,11 @@ const FLOORS: DungeonFloor[] = [
       '#......#..C..#..#',
       '#..W...#..2..#..#',
       '#..M...#######..#',
-      '#..........>....#',
-      '#...............#',
+      '#..........>...##',
+      '#.............%C#',
       '#################',
     ],
+    platePuzzle: true,
     events: {
       '1': {
         kind: 'battle',
@@ -199,9 +200,13 @@ const FLOORS: DungeonFloor[] = [
     },
     // The inner vault is sealed behind a locked door ('+' at 10,3); its key
     // ('k' at 14,4) sits out in the open, so the reward inside is optional.
+    // The corner cache ('C' at 15,9) sits behind a rune-sealed barrier ('%' at
+    // 14,9) that only opens once every element plate on the floor is lit — an
+    // optional prize for attuning all four, off the path to the descent.
     chests: {
       '15,2': { obols: 300, note: 'A frozen cache, obols still legible under the frost.' },
       '10,5': { obols: 260, item: 'mendingBalm', note: 'The sealed vault kept one thing worth the key.' },
+      '15,9': { obols: 240, item: 'mendingBalm', note: 'The rune-seal yields, and the cache behind it with it.' },
     },
     encounterRate: 0.07,
     encounters: [
