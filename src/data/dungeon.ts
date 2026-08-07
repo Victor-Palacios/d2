@@ -60,6 +60,11 @@ export interface DecorSpec {
   /** Self-illumination for glowing decor (crystals, braziers). Default 0.1. */
   emissive?: number;
   /**
+   * Colour of the light pool a glowing prop casts on the floor. Only applies
+   * when `emissive` is bright enough to earn one; defaults per kind. Cosmetic.
+   */
+  glowColor?: string;
+  /**
    * Whether the party collides with this prop. Defaults to the kind's entry in
    * `PASSABLE_DECOR_KINDS` (most props block; flat/overhead detail does not).
    * Set explicitly to force one instance solid or passable.

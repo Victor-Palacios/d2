@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { radialTexture } from './pixel';
+import { mistTexture, radialTexture } from './pixel';
 import { Billboard } from './Billboard';
 import { PROPS } from '../assets/art';
 import type { BattleAura } from '../data/battleFx';
@@ -543,4 +543,98 @@ export function contactShadow(width: number, opacity = 0.32): THREE.Mesh {
   const m = new THREE.Mesh(geo, mat);
   m.renderOrder = 1;
   return m;
+}
+
+/**
+ * A soft coloured light pool cast on the floor under a glowing prop — the light
+ * an emissive crystal/mushroom/brazier would spill onto the ground. Additive, so
+ * it reads as light (not paint) and feeds the bloom pass. Static; laid down once
+ * beneath the decor that earns it.
+ */
+export function glowDecal(radius: number, color: THREE.ColorRepresentation, opacity = 0.55): THREE.Mesh {
+  const geo = new THREE.CircleGeometry(radius, 20);
+  geo.rotateX(-Math.PI / 2);
+  const mat = new THREE.MeshBasicMaterial({
+    map: radialTexture('contact', '#ffffff'),
+    color: new THREE.Color(color),
+    transparent: true,
+    opacity,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    polygonOffset: true,
+    polygonOffsetFactor: -3,
+    polygonOffsetUnits: -3,
+  });
+  const m = new THREE.Mesh(geo, mat);
+  m.renderOrder = 2;
+  return m;
+}
+
+/**
+ * Drifting ground mist — a small stack of soft, translucent horizontal layers
+ * hovering low over the floor, each scrolling on its own heading, so the room
+ * reads as air with depth rather than a vacuum. Distance fog (see
+ * `HD2DRenderer.applyFog`) recedes the far walls; this adds the near, low haze
+ * banding that distance fog can't. Fog-tinted, normal-blended, low opacity — a
+ * handful of transparent quads, no post pass.
+ */
+export class GroundMist {
+  readonly object = new THREE.Group();
+  private layers: { mesh: THREE.Mesh; vx: number; vz: number }[] = [];
+
+  constructor(
+    bounds: { minX: number; maxX: number; minZ: number; maxZ: number },
+    color: THREE.ColorRepresentation = '#8fa6c0',
+    count = 3,
+  ) {
+    const w = bounds.maxX - bounds.minX + 4;
+    const d = bounds.maxZ - bounds.minZ + 4;
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cz = (bounds.minZ + bounds.maxZ) / 2;
+    const tint = new THREE.Color(color);
+    for (let i = 0; i < count; i++) {
+      const geo = new THREE.PlaneGeometry(w, d);
+      geo.rotateX(-Math.PI / 2);
+      const tex = mistTexture(`layer${i}`);
+      tex.repeat.set(w / 7, d / 7);
+      tex.offset.set(i * 0.37, i * 0.61); // stagger so layers don't overlap-align
+      const mat = new THREE.MeshBasicMaterial({
+        map: tex,
+        color: tint,
+        transparent: true,
+        opacity: 0.12 - i * 0.02,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(cx, 0.22 + i * 0.3, cz);
+      mesh.renderOrder = 4;
+      mesh.frustumCulled = false;
+      this.object.add(mesh);
+      // Alternating headings give a slow parallax drift between bands.
+      const dir = i % 2 === 0 ? 1 : -1;
+      this.layers.push({ mesh, vx: 0.006 * dir, vz: 0.004 * (i % 2 === 0 ? 1 : -1) * -dir });
+    }
+  }
+
+  update(dt: number, time: number) {
+    this.layers.forEach((l, i) => {
+      const tex = (l.mesh.material as THREE.MeshBasicMaterial).map;
+      if (tex) {
+        tex.offset.x += l.vx * dt;
+        tex.offset.y += l.vz * dt;
+      }
+      // A slow, gentle breathing so the haze isn't a static film.
+      const mat = l.mesh.material as THREE.MeshBasicMaterial;
+      const base = 0.12 - i * 0.02;
+      mat.opacity = Math.max(0, base * (0.7 + 0.3 * Math.sin(time * 0.5 + i * 1.7)));
+    });
+  }
+
+  dispose() {
+    for (const l of this.layers) {
+      l.mesh.geometry.dispose();
+      (l.mesh.material as THREE.Material).dispose();
+    }
+  }
 }

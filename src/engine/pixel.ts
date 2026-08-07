@@ -484,6 +484,48 @@ export function elementGlowTexture(id: string, glow: string, res = 32): THREE.Te
 }
 
 /**
+ * A soft, tileable cloud-of-mist alpha texture — white blobs on transparent, for
+ * the drifting ground-mist layers. Each blob is drawn with its wrap-around copies
+ * (a 3×3 neighbourhood) so the texture tiles seamlessly under `RepeatWrapping`.
+ * The white carries the shape; the material's colour tints it to the fog.
+ */
+export function mistTexture(id = 'default', res = 128): THREE.Texture {
+  const key = `mist:${id}`;
+  const hit = texCache.get(key);
+  if (hit) return hit;
+  const [c, ctx] = canvas(res, res);
+  // Deterministic blob field (no Math.random — stable across builds/replays).
+  const blobs = 14;
+  for (let i = 0; i < blobs; i++) {
+    // Cheap hash-ish spread over the tile.
+    const bx = ((i * 71) % res) + ((i * 29) % 13);
+    const by = ((i * 113) % res) + ((i * 17) % 11);
+    const r = res * (0.12 + ((i * 37) % 100) / 100 * 0.16);
+    const a = 0.12 + ((i * 53) % 100) / 100 * 0.16;
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const cx = bx + dx * res;
+        const cy = by + dy * res;
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        g.addColorStop(0, `rgba(255,255,255,${a})`);
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      }
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.magFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  texCache.set(key, tex);
+  return tex;
+}
+
+/**
  * A tileable caustic net — grayscale bright ridges on black, for animated liquid
  * surfaces. Used as an `emissiveMap` (the tint comes from the material's emissive
  * colour) and scrolled by offset each frame so the light on the water flows. The

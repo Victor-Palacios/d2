@@ -5,7 +5,7 @@ import { TILE, TileGrid } from '../engine/TileGrid';
 import type { Tile } from '../engine/TileGrid';
 import { Billboard } from '../engine/Billboard';
 import { artAspect } from '../engine/pixel';
-import { DustMotes, ParticleField, Portal, Torch, contactShadow } from '../engine/fx';
+import { DustMotes, GroundMist, ParticleField, Portal, Torch, contactShadow, glowDecal } from '../engine/fx';
 import { input } from '../engine/Input';
 import { audio } from '../engine/Audio';
 import { DECOR, PROPS, HUMANS } from '../assets/art';
@@ -66,6 +66,26 @@ const ELEMENT_ANIM: Record<ElementId, { base: number; amp: number; rate: number;
   dark: { base: 1.1, amp: 0.6, rate: 0.7, flick: 0 }, // deep slow throb
 };
 
+/**
+ * Colour a glowing prop spills onto the floor as a light pool (see `glowDecal`).
+ * Keyed by decor kind; anything bright enough but unlisted falls back to a cool
+ * default. Only decor with a real self-illumination (`emissive` ≥ the threshold
+ * in `placeDecor`) earns a pool, so faint ground scatter stays unlit.
+ */
+const DECOR_GLOW: Record<string, string> = {
+  crystalPillar: '#6fd3ff',
+  crystalCluster: '#7fe0ff',
+  iceShard: '#8fe4ff',
+  mushroomGlow: '#8affa0',
+  jungleFlower: '#ff9ad8',
+  brazier: '#ffb066',
+  torch: '#ffb066',
+  crystal: '#6fd3ff',
+};
+const DECOR_GLOW_DEFAULT = '#9fb4d0';
+/** Minimum decor `emissive` that earns a floor glow pool. */
+const GLOW_EMISSIVE_MIN = 0.3;
+
 export interface DungeonSceneParams {
   /** Set when returning from a battle so the crawl resumes in place. */
   resume?: boolean;
@@ -104,6 +124,7 @@ export class DungeonScene extends GameScene {
   private dialogue!: DialogueBox;
   private particles!: ParticleField;
   private dust: DustMotes | null = null;
+  private mist: GroundMist | null = null;
   private torches: Torch[] = [];
   private portals: { portal: Portal; x: number; z: number }[] = [];
   private props = new Map<string, Billboard>();
@@ -267,6 +288,23 @@ export class DungeonScene extends GameScene {
     );
     this.scene.add(this.dust.points);
 
+    // Drifting ground mist, low over the floor. Tinted a touch above the fog
+    // colour so the near haze reads as lit air, not just more fog.
+    const mistTint = new THREE.Color(theme.fogColor ?? '#0a0d1c').lerp(
+      new THREE.Color(theme.ambientColor ?? '#8fa6c0'),
+      0.6,
+    );
+    this.mist = new GroundMist(
+      {
+        minX: Math.min(lo.x, hi.x) - TILE,
+        maxX: Math.max(lo.x, hi.x) + TILE,
+        minZ: Math.min(lo.z, hi.z) - TILE,
+        maxZ: Math.max(lo.z, hi.z) + TILE,
+      },
+      `#${mistTint.getHexString()}`,
+    );
+    this.scene.add(this.mist.object);
+
     // The player, lantern in hand, on foot.
     this.player = new Billboard(HUMANS.hero, 'player', { height: 1.7, reveal: true });
     // A calm idle breath, and a pronounced stride while walking a tile.
@@ -403,6 +441,13 @@ export class DungeonScene extends GameScene {
       const cs = contactShadow((d.height ?? 1.1) * artAspect(art));
       cs.position.set(world.x, world.y + 0.02, world.z);
       this.scene.add(cs);
+      // A glowing prop spills a soft coloured light pool on the floor.
+      const emissive = d.emissive ?? 0.1;
+      if (emissive >= GLOW_EMISSIVE_MIN) {
+        const glow = glowDecal((d.height ?? 1.1) * 0.9, d.glowColor ?? DECOR_GLOW[d.kind] ?? DECOR_GLOW_DEFAULT, Math.min(0.7, 0.35 + emissive * 0.4));
+        glow.position.set(world.x, world.y + 0.03, world.z);
+        this.scene.add(glow);
+      }
       if (decorIsSolid(d)) this.grid.blockTile(d.x, d.z);
     }
     this.scatterDecor();
@@ -1239,6 +1284,7 @@ export class DungeonScene extends GameScene {
     for (const b of this.decor) b.update(dt, this.ctx.hd2d.camera, time);
     this.particles.update(dt);
     this.dust?.update(dt, time);
+    this.mist?.update(dt, time);
     this.animateElementPlates(time);
     this.animateLiquid(dt, time);
     this.updateElementLights();
@@ -1256,6 +1302,8 @@ export class DungeonScene extends GameScene {
     for (const b of this.decor) b.dispose();
     this.particles.dispose();
     this.dust?.dispose();
+    this.mist?.dispose();
+    this.mist = null;
     this.dust = null;
     // Contact-shadow decals are plain scene children; disposeObject3D frees
     // their geometry+material (the shared radial texture is intentionally kept).

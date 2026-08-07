@@ -20,7 +20,8 @@ import { chromium } from 'playwright';
 // And, on crystal-1: secret walls — a '?' tile parses as a passable secret
 // disguised by a false wall; walking into it crumbles the wall and opens the
 // way to a chest walled behind it — plus living element plates whose emissive
-// glow breathes over time, and a '~' liquid pool whose caustic surface scrolls.
+// glow breathes over time, a '~' liquid pool whose caustic surface scrolls,
+// drifting layered ground mist, and floor light pools under emissive decor.
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROME,
@@ -382,6 +383,35 @@ check('liquid: \'~\' parses as a walkable liquid tile',
   liquid.poolKind === 'liquid' && liquid.passable === true, JSON.stringify(liquid));
 check('liquid: the floor built animated pool meshes', liquid.count > 0, `${liquid.count} pool tiles`);
 check('liquid: the caustic surface scrolls when animated', liquid.scrolled > 0.001, `Δoffset=${liquid.scrolled}`);
+
+// --- ground mist + emissive glow pools (crystal-1) --------------------------
+const atmos = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  g.game.activeReachId = 'crystal';
+  g.game.floorIndex = 0; // crystal-1 has 4 emissive decor (crystals + ice shards)
+  g.game.crawl.initialized = false;
+  await g.manager.go('dungeon');
+  await new Promise((r) => setTimeout(r, 300));
+  const s = g.manager.activeScene;
+  // Ground mist: layered drifting planes.
+  const mistLayers = s.mist ? s.mist.object.children.length : 0;
+  const layer = s.mist?.object.children[0];
+  const off0 = layer ? { x: layer.material.map.offset.x, y: layer.material.map.offset.y } : null;
+  for (let f = 0; f < 6; f++) s.mist?.update(0.3, f * 0.3);
+  const off1 = layer ? { x: layer.material.map.offset.x, y: layer.material.map.offset.y } : null;
+  const mistDrift = off0 && off1 ? Math.abs(off1.x - off0.x) + Math.abs(off1.y - off0.y) : 0;
+  // Glow pools: additive circle decals under emissive decor.
+  let glowPools = 0;
+  s.scene.traverse((o) => {
+    if (o.isMesh && o.geometry?.type === 'CircleGeometry' && o.material?.blending === 2) glowPools++;
+  });
+  const emissiveDecor = (g.reaches.crystal.floors[0].decor ?? []).filter((d) => (d.emissive ?? 0.1) >= 0.3).length;
+  return { mistLayers, mistDrift, glowPools, emissiveDecor };
+});
+check('ground mist: the floor has layered drifting mist planes', atmos.mistLayers >= 2, `${atmos.mistLayers} layers`);
+check('ground mist: the mist drifts over time', atmos.mistDrift > 0.001, `Δoffset=${atmos.mistDrift}`);
+check('glow pools: every bright decor casts a floor light pool',
+  atmos.emissiveDecor > 0 && atmos.glowPools >= atmos.emissiveDecor, JSON.stringify(atmos));
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 if (errs.length) failures += errs.length;
