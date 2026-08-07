@@ -70,9 +70,12 @@ describe('reach floor data', () => {
 
   it('accepts a chest behind a plate-puzzle barrier when every plate is reachable', () => {
     // Two reachable plates (W, F); lighting them opens the '%' onto the chest.
-    const floor = plateFloor(['########', '#S.W.F.#', '#.....%C', '#.....>#', '########'].map((r) => r.padEnd(8, '#')), {
-      '7,2': { note: 'x' },
-    });
+    const floor = plateFloor(
+      ['########', '#S.W.F.#', '#.....%C', '#.....>#', '########'].map((r) => r.padEnd(8, '#')),
+      {
+        '7,2': { note: 'x' },
+      },
+    );
     expect(validateFloor(floor).filter((e) => /plate|unreachable/.test(e))).toEqual([]);
   });
 

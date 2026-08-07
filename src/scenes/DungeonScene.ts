@@ -278,7 +278,10 @@ export class DungeonScene extends GameScene {
     this.plateHold = 0; // no pressure-plate hold carries across floors
     // Order the sweep lane in row-major reading order so the hot spot slides.
     this.sweepLane = [...this.sweepMeshes.keys()]
-      .map((k) => { const [x, z] = k.split(',').map(Number); return { x, z }; })
+      .map((k) => {
+        const [x, z] = k.split(',').map(Number);
+        return { x, z };
+      })
       .sort((a, b) => a.z - b.z || a.x - b.x);
     this.sweepIndex = 0;
     this.sweepTimer = 0;
@@ -464,7 +467,11 @@ export class DungeonScene extends GameScene {
       // A glowing prop spills a soft coloured light pool on the floor.
       const emissive = d.emissive ?? 0.1;
       if (emissive >= GLOW_EMISSIVE_MIN) {
-        const glow = glowDecal((d.height ?? 1.1) * 0.9, d.glowColor ?? DECOR_GLOW[d.kind] ?? DECOR_GLOW_DEFAULT, Math.min(0.7, 0.35 + emissive * 0.4));
+        const glow = glowDecal(
+          (d.height ?? 1.1) * 0.9,
+          d.glowColor ?? DECOR_GLOW[d.kind] ?? DECOR_GLOW_DEFAULT,
+          Math.min(0.7, 0.35 + emissive * 0.4),
+        );
         glow.position.set(world.x, world.y + 0.03, world.z);
         this.scene.add(glow);
       }
@@ -1301,7 +1308,8 @@ export class DungeonScene extends GameScene {
         if (mesh) (mesh.material as THREE.MeshStandardMaterial).emissiveIntensity = i === this.sweepIndex ? 1.7 : 0.12;
       }
       // The hot spot sweeping onto a standing party bites, not just stepping in.
-      if (!this.busy && !this.moving && this.isSweepHot(this.tileX, this.tileZ)) void this.drainHazard(this.tileX, this.tileZ);
+      if (!this.busy && !this.moving && this.isSweepHot(this.tileX, this.tileZ))
+        void this.drainHazard(this.tileX, this.tileZ);
     }
   }
 

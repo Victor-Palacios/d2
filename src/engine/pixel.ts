@@ -500,8 +500,8 @@ export function mistTexture(id = 'default', res = 128): THREE.Texture {
     // Cheap hash-ish spread over the tile.
     const bx = ((i * 71) % res) + ((i * 29) % 13);
     const by = ((i * 113) % res) + ((i * 17) % 11);
-    const r = res * (0.12 + ((i * 37) % 100) / 100 * 0.16);
-    const a = 0.12 + ((i * 53) % 100) / 100 * 0.16;
+    const r = res * (0.12 + (((i * 37) % 100) / 100) * 0.16);
+    const a = 0.12 + (((i * 53) % 100) / 100) * 0.16;
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
         const cx = bx + dx * res;
