@@ -233,6 +233,14 @@ movement. Its tint comes from `theme.liquidColor` (cool default), so a crypt
 gets black water and a fire vault could get lava. crystal-1's meltwater basin is
 the worked example. Purely cosmetic — the validator treats it as ordinary floor.
 
+**Tuning with the balance harness.** `src/data/balance.ts` reads each reach's
+light and obols economy straight off the grids — shortest-path step count vs
+`startingLight` (+ `$` shards), expected random encounters, chest income — and
+`npm test` prints a one-line-per-reach report (`balance.test.ts`). Watch the
+`margin` column: it's the light left after a perfect run, so a small or negative
+margin means a reach is too long for its lantern. The test also fails if any
+reach can't be lit end-to-end even on the shortest path.
+
 **Invariants the validator checks** (`src/data/validateReaches.ts`):
 - rows are all the same width; exactly one `S`.
 - every `'1'-'9'` tile has an entry in `events`, and vice-versa.
