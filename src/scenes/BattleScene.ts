@@ -59,25 +59,31 @@ export interface BattleSceneParams {
   rng?: () => number;
 }
 
-const SLOT_X = [-2.4, 0, 2.4];
-const PARTY_Z = 2.2;
-const ENEMY_Z = -3;
-/** Depth gap between the Vanguard (front) row and the Rear (back) row. */
-const ROW_GAP = 1.6;
-/**
- * The camera looks slightly past the party so the near row sits above the
- * bottom-left HUD panels instead of behind them.
- */
-const CAMERA_BIAS_Z = 0.9;
+// --- PROTOTYPE: FF-style side view --------------------------------------------
+// The confrontation runs left↔right along X (enemies at −X / screen-left, souls
+// at +X / screen-right) instead of near↔far along Z. Columns spread in depth (Z)
+// so the line staggers; the Vanguard/Rear rows push toward/away from centre.
+// This is only a re-layout + camera swing — the battle model is untouched.
+const COL_Z = [-2.2, 0, 2.2];
+const PARTY_X = 3.4;
+const ENEMY_X = -3.4;
+/** Distance the Rear row sits behind its Vanguard (further from centre). */
+const ROW_GAP = 1.7;
+/** Slight look-target bias so the near column clears the bottom HUD panels. */
+const CAMERA_BIAS_Z = 0.6;
+
+/** Side-view camera angle (overrides the crawl's top-down rig for the fight). */
+const SIDE_CAM = { pitch: 20, yaw: 0, distance: 15.5, height: 1.1 };
 
 /**
- * World position of a formation cell. Columns spread along X; the Rear row sits
- * further from the opposing side (behind the party, deeper for enemies).
+ * World position of a formation cell. Sides split along X (party right, enemy
+ * left); columns spread in depth along Z; the Rear row is pushed away from the
+ * centre line so it reads behind the Vanguard from the side camera.
  */
 function cellPos(side: 'party' | 'enemy', cell: { row: number; col: number }): { x: number; z: number } {
-  const front = side === 'party' ? PARTY_Z : ENEMY_Z;
+  const front = side === 'party' ? PARTY_X : ENEMY_X;
   const dir = side === 'party' ? 1 : -1;
-  return { x: SLOT_X[cell.col], z: front + (cell.row === 1 ? dir * ROW_GAP : 0) };
+  return { x: front + (cell.row === 1 ? dir * ROW_GAP : 0), z: COL_Z[cell.col] };
 }
 
 /**
@@ -134,6 +140,8 @@ export class BattleScene extends GameScene {
   private finished = false;
   /** Set when the party successfully flees — skips victory/defeat resolution. */
   private fled = false;
+  /** Crawl camera angle saved on entry, restored on exit (side-view prototype). */
+  private savedCam: { pitch: number; yaw: number; distance: number; height: number } | null = null;
   /** Auto-battle: party members take the basic Attack until the player cancels. */
   private autoBattle = false;
   /** Repeat: party members re-issue their last player-chosen command until cancelled. */
@@ -188,6 +196,14 @@ export class BattleScene extends GameScene {
       ? `#${new THREE.Color('#0a0d1c').lerp(new THREE.Color(ELEMENTS[this.params.fieldElement].color), 0.35).getHexString()}`
       : undefined;
     this.ctx.hd2d.applyFog(this.scene, 1.6, fogTint);
+    // PROTOTYPE: swing the shared camera rig to a low side elevation for the
+    // fight, remembering the crawl's angle so `exit()` can put it back.
+    const p = this.ctx.hd2d.params;
+    this.savedCam = { pitch: p.pitch, yaw: p.yaw, distance: p.distance, height: p.height };
+    p.pitch = SIDE_CAM.pitch;
+    p.yaw = SIDE_CAM.yaw;
+    p.distance = SIDE_CAM.distance;
+    p.height = SIDE_CAM.height;
     this.ctx.hd2d.cameraTarget.set(0, 0, CAMERA_BIAS_Z);
     this.ctx.hd2d.lightTarget.set(0, 0, 0.5);
     this.ctx.hd2d.focusTarget.set(0, 0.9, 0.4);
@@ -844,10 +860,11 @@ export class BattleScene extends GameScene {
     // so the charge itself reads; a ranged bolt stays put and fires a projectile;
     // area/heal moves gather in place.
     if (fx && bb && home && fx.delivery === 'melee') {
+      // Side view: lunge along X toward the opposing line (party →left, enemy →right).
       const dir = actor.side === 'party' ? -1 : 1;
       const trail = new THREE.Vector3();
       await this.tween(0.18, (t) => {
-        bb.object.position.z = home.z + dir * 1.4 * t;
+        bb.object.position.x = home.x + dir * 1.4 * t;
         trail.set(bb.object.position.x, bb.object.position.y + casterHeight * 0.5, bb.object.position.z);
         this.particles.emit(trail, {
           count: 3,
@@ -954,7 +971,7 @@ export class BattleScene extends GameScene {
     if (fx && bb && home && fx.delivery === 'melee') {
       await this.tween(0.14, (t) => {
         const dir = actor.side === 'party' ? -1 : 1;
-        bb.object.position.z = home.z + dir * 1.4 * (1 - t);
+        bb.object.position.x = home.x + dir * 1.4 * (1 - t);
       });
       bb.object.position.copy(home);
     }
@@ -1418,6 +1435,12 @@ export class BattleScene extends GameScene {
 
   async exit() {
     this.finished = true;
+    // Put the shared camera rig back the way the crawl expects it.
+    if (this.savedCam) {
+      Object.assign(this.ctx.hd2d.params, this.savedCam);
+      this.savedCam = null;
+    }
+    this.ctx.hd2d.timeScale = 1; // never leave a flourish's slow-mo running
     this.unsubInput?.();
     this.unsubInput = null;
     this.hud.destroy();
