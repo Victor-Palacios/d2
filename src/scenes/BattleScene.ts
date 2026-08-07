@@ -85,7 +85,7 @@ const FF6_LAYOUT = true;
  */
 function paintedBackdrop(): boolean {
   const w = window as unknown as { __painted?: boolean };
-  return w.__painted ?? true;
+  return w.__painted ?? false;
 }
 
 /**
