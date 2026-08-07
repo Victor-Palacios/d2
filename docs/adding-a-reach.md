@@ -146,6 +146,7 @@ Floors are hand-authored ASCII grids (`rows: string[]`). Legend
 '^' hazard tile (gutters extra lantern light on entry — a glowing warning plate)
 'k' key pickup          '+' locked door (spend a key to open; blocks until then)
 '*' switch              '%' toggle-wall barrier (starts solid; a switch flips it)
+'?' secret wall (looks solid, is passable — crumbles when the party walks in)
 '1'-'9'  scripted event tile (looked up in that floor's `events` map)
 ```
 
@@ -194,6 +195,14 @@ you're never entombed. Like doors, gate an *optional* reward, not the descent:
 the validator runs a toggle-aware search over `(tile, toggleState)` and flags a
 target that no reachable switch can open. crystal-3 is the worked example — a
 corner chest walled off behind a `%` that a `*` across the gallery grinds aside.
+
+**Secret walls.** A `?` tile is passable floor wearing a wall's skin — it looks
+exactly like the surrounding wall until the party walks into it, at which point
+the false wall crumbles. Use it to hide an *optional* reward (wall off a `C` so
+its only neighbour is the `?`); never gate the descent behind one, since a
+player who never probes that wall would be stuck — the validator enforces this,
+flagging a `>`/`<` reachable only through a secret. crystal-1 is the worked
+example — a corner cache behind a false wall in the bottom-right.
 
 **Invariants the validator checks** (`src/data/validateReaches.ts`):
 - rows are all the same width; exactly one `S`.

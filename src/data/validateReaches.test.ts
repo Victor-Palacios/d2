@@ -28,4 +28,30 @@ describe('reach floor data', () => {
     } as unknown as DungeonFloor;
     expect(validateFloor(floor)).toContain("chest '3,1' grants unknown item 'notARealItem' (not in ITEMS)");
   });
+
+  const secretFloor = (rows: string[], chests: Record<string, { note: string }> = {}) =>
+    ({
+      id: 'secret',
+      name: 'Secret',
+      theme: {} as never,
+      rows,
+      events: {},
+      chests,
+      encounterRate: 0,
+      encounters: [],
+    }) as unknown as DungeonFloor;
+
+  it('accepts a chest hidden behind a secret wall (an optional find)', () => {
+    // The chest at (4,1) is walled off except through the secret '?' at (3,1);
+    // the portal is reachable without it, so this is a fine optional reward.
+    const floor = secretFloor(['######', '#S.?C#', '#..>##', '######'], { '4,1': { note: 'x' } });
+    expect(validateFloor(floor)).toEqual([]);
+  });
+
+  it('flags a descent portal that can only be reached through a secret', () => {
+    // The only path to '>' runs through the secret '?' — a player who never
+    // finds it is stuck, so this must be caught.
+    const floor = secretFloor(['######', '#S?>##', '######']);
+    expect(validateFloor(floor)).toContain('descent portal at 3,1 is only reachable through a secret passage');
+  });
 });

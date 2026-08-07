@@ -14,9 +14,12 @@ import { chromium } from 'playwright';
 // toggleWall (not passable, mesh visible), stepping a '*' switch flips it open
 // (passable, mesh hidden), and the toggle-aware validator accepts a
 // switch-solvable floor but flags a barrier with no reachable switch.
-// Finally, visual-depth atmosphere: ambient dust motes — a persistent in-bounds
-// mote cloud that drifts each frame — and torch god-rays — every torch group
-// carries an additive light-shaft cone.
+// Visual-depth atmosphere: ambient dust motes — a persistent in-bounds mote
+// cloud that drifts each frame — and torch god-rays — every torch group carries
+// an additive light-shaft cone.
+// And, on crystal-1: secret walls — a '?' tile parses as a passable secret
+// disguised by a false wall; walking into it crumbles the wall and opens the
+// way to a chest walled behind it.
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROME,
@@ -269,6 +272,53 @@ const shafts = await page.evaluate(async () => {
 check('god-rays: the floor is torch-lit', shafts.torches > 0, `${shafts.torches} torches`);
 check('god-rays: every torch carries an additive light-shaft cone',
   shafts.torches > 0 && shafts.withShaft === shafts.torches, JSON.stringify(shafts));
+
+// --- secret walls (crystal-1) -----------------------------------------------
+// A '?' tile is passable floor disguised as a wall. Verify it parses as a
+// secret, is passable, its false-wall mesh is visible until stepped into, and
+// stepping it reveals the tile (mesh hidden) and opens the way to the chest
+// walled behind it.
+const secret = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  g.game.openedChests.clear();
+  g.game.activeReachId = 'crystal';
+  g.game.floorIndex = 0; // crystal-1 (Glimmer Shelf)
+  g.game.crawl.initialized = false;
+  await g.manager.go('dungeon');
+  await new Promise((r) => setTimeout(r, 400));
+  const s = g.manager.activeScene;
+  const floor = g.reaches.crystal.floors[0];
+  const find = (ch) => { for (let z = 0; z < floor.rows.length; z++) { const x = floor.rows[z].indexOf(ch); if (x >= 0) return { x, z }; } return null; };
+  const sec = find('?');
+  const chest = { x: 15, z: 9 };
+  const meshOf = (c) => s.secretMeshes.get(`${c.x},${c.z}`);
+  const out = {
+    sec,
+    secretKind: sec && s.grid.at(sec.x, sec.z).kind,
+    passableBefore: sec && s.grid.passable(sec.x, sec.z), // secrets are always passable
+    meshVisibleBefore: sec && !!meshOf(sec)?.visible,
+  };
+  // Walk into the false wall — it should crumble (mesh hidden).
+  s.busy = false; s.moving = false; s.leaving = false;
+  s.tileX = sec.x; s.tileZ = sec.z;
+  await s.onTileEntered(s.grid.at(sec.x, sec.z));
+  out.meshVisibleAfter = !!meshOf(sec)?.visible;
+  out.hiddenAfter = s.grid.isSecretHidden(sec.x, sec.z);
+  // The chest behind it opens as normal.
+  const before = g.game.obols;
+  s.tileX = chest.x; s.tileZ = chest.z;
+  await s.onTileEntered(s.grid.at(chest.x, chest.z));
+  out.chestGained = g.game.obols - before;
+  return out;
+});
+check('secret: \'?\' parses as a secret tile that is passable',
+  secret.secretKind === 'secret' && secret.passableBefore === true, JSON.stringify(secret));
+check('secret: its false wall is visible until discovered',
+  secret.meshVisibleBefore === true, JSON.stringify(secret));
+check('secret: walking into it crumbles the wall (mesh hidden, revealed)',
+  secret.meshVisibleAfter === false && secret.hiddenAfter === false, JSON.stringify(secret));
+check('secret: the chest walled behind it is reachable and loots',
+  secret.chestGained > 0, `+${secret.chestGained} obols`);
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 if (errs.length) failures += errs.length;

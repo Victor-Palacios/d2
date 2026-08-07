@@ -22,6 +22,7 @@ export type TileKind =
   | 'door'
   | 'switch'
   | 'toggleWall'
+  | 'secret'
   | 'event';
 
 export interface Tile {
@@ -82,6 +83,7 @@ export const DEFAULT_THEME: TileTheme = {
  *   '^'  hazard tile (drains lantern light on entry — a glowing warning plate)
  *   'k'  key pickup              '+'  locked door (blocks until a key is spent)
  *   '*'  switch (flips barriers) '%'  toggle-wall barrier (starts solid)
+ *   '?'  secret wall (looks solid, is passable — crumbles when stepped into)
  *   '1'-'9'  scripted event tile (looked up in the floor's `events` map)
  * ```
  */
@@ -115,6 +117,14 @@ export class TileGrid {
    * Transient — not saved; resets to solid when the floor is rebuilt.
    */
   private togglesOpen = false;
+
+  /**
+   * Secret walls (`?`) the party has walked into and revealed. A secret is
+   * always passable; this only tracks whether its disguising wall still covers
+   * it. Transient — not saved; a rebuilt floor re-hides its secrets (harmless,
+   * since a revealed secret is just open floor and any chest behind it persists).
+   */
+  private revealed = new Set<string>();
 
   /** Per-tile height offset in world units, keyed `"x,z"` (purely visual). */
   private elevation: Record<string, number>;
@@ -155,6 +165,7 @@ export class TileGrid {
     if (ch === '+') return { x, z, kind: 'door' };
     if (ch === '*') return { x, z, kind: 'switch' };
     if (ch === '%') return { x, z, kind: 'toggleWall' };
+    if (ch === '?') return { x, z, kind: 'secret' };
     if (ELEMENT_CHARS[ch]) return { x, z, kind: 'element', element: ELEMENT_CHARS[ch] };
     if (ch >= '1' && ch <= '9') return { x, z, kind: 'event', eventId: ch };
     return { x, z, kind: 'floor' };
@@ -189,6 +200,17 @@ export class TileGrid {
   /** Flips the floor's toggle-wall group (all `%` barriers) open↔solid. */
   flipToggles() {
     this.togglesOpen = !this.togglesOpen;
+  }
+
+  /** Marks a secret wall (`?`) as discovered, so its false wall stops covering it. */
+  revealSecret(x: number, z: number) {
+    this.revealed.add(`${x},${z}`);
+  }
+
+  /** Whether a secret tile at (x, z) is still disguised as a wall (undiscovered). */
+  isSecretHidden(x: number, z: number): boolean {
+    const t = this.at(x, z);
+    return t?.kind === 'secret' && !this.revealed.has(`${x},${z}`);
   }
 
   /** Whether a toggle-wall tile at (x, z) is currently a solid barrier. */
@@ -229,10 +251,12 @@ export class TileGrid {
     group: THREE.Group;
     elementMeshes: Map<string, THREE.Mesh>;
     toggleMeshes: Map<string, THREE.Mesh>;
+    secretMeshes: Map<string, THREE.Mesh>;
   } {
     const group = new THREE.Group();
     const elementMeshes = new Map<string, THREE.Mesh>();
     const toggleMeshes = new Map<string, THREE.Mesh>();
+    const secretMeshes = new Map<string, THREE.Mesh>();
 
     const floors: Tile[] = [];
     const walls: Tile[] = [];
@@ -469,6 +493,39 @@ export class TileGrid {
       }
     }
 
-    return { group, elementMeshes, toggleMeshes };
+    // --- secret walls ------------------------------------------------------
+    // A '?' tile is passable floor (rendered above with the other floors) hidden
+    // under a wall box that is deliberately IDENTICAL to a real wall — same skin,
+    // same height — so it can't be told apart until the party walks into it and
+    // it crumbles. One mesh per secret so its visibility can drop on reveal.
+    const secrets: Tile[] = [];
+    this.forEach((t) => {
+      if (t.kind === 'secret') secrets.push(t);
+    });
+    if (secrets.length) {
+      const sideMat = new THREE.MeshStandardMaterial({
+        map: wallTexture('std', this.theme.wall, 13, 32, style),
+        roughness: style === 'metal' ? 0.6 : 0.95,
+        metalness: style === 'metal' ? 0.35 : 0.03,
+      });
+      const topMat = new THREE.MeshStandardMaterial({
+        map: floorTexture('top-std', this.theme.wallTop, 31, 32, style),
+        roughness: 1,
+      });
+      const mats = [sideMat, sideMat, topMat, topMat, sideMat, sideMat];
+      for (const t of secrets) {
+        const h = Math.max(0.4, WALL_H + this.floorY(t.x, t.z));
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(TILE, h, TILE), mats);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        const p = this.worldPos(t.x, t.z);
+        mesh.position.set(p.x, h / 2 - 0.05, p.z);
+        mesh.visible = this.isSecretHidden(t.x, t.z);
+        group.add(mesh);
+        secretMeshes.set(`${t.x},${t.z}`, mesh);
+      }
+    }
+
+    return { group, elementMeshes, toggleMeshes, secretMeshes };
   }
 }

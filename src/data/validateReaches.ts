@@ -215,12 +215,39 @@ export function validateFloor(floor: DungeonFloor): string[] {
         }
       }
     }
+
+    // Secret safety: a secret wall ('?') is a hidden bonus, never the only way
+    // forward — a player who never finds it must still be able to descend. Flood
+    // treating secrets as walls; the portal must remain reachable (a chest behind
+    // a secret is fine, since chests aren't required).
+    const noSecret = new Set<string>([`${start.x},${start.z}`]);
+    const st3: Coord[] = [start];
+    while (st3.length) {
+      const { x, z } = st3.pop()!;
+      for (const [dx, dz] of DIRS) {
+        const nx = x + dx;
+        const nz = z + dz;
+        const k = `${nx},${nz}`;
+        if (!reach.has(k) || noSecret.has(k)) continue;
+        if (at(nx, nz) === '?') continue; // a secret is a wall for this pass
+        noSecret.add(k);
+        st3.push({ x: nx, z: nz });
+      }
+    }
+    for (let z = 0; z < rows.length; z++) {
+      for (let x = 0; x < rows[z].length; x++) {
+        const ch = at(x, z);
+        if ((ch === '>' || ch === '<') && reach.has(`${x},${z}`) && !noSecret.has(`${x},${z}`)) {
+          errs.push(`descent portal at ${x},${z} is only reachable through a secret passage`);
+        }
+      }
+    }
   }
 
   // decor: in bounds, on a walkable tile, and a known kind. Solid decor must
   // also stay off tiles the party has to stand on (start + interactive tiles),
   // or that tile becomes impossible to use.
-  const standTiles = new Set(['S', 'C', '$', '>', '<', 'k', '+', '^', '*', '%']);
+  const standTiles = new Set(['S', 'C', '$', '>', '<', 'k', '+', '^', '*', '%', '?']);
   for (const d of floor.decor ?? []) {
     const ch = at(d.x, d.z);
     if (d.z < 0 || d.z >= rows.length || d.x < 0 || d.x >= width) {

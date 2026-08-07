@@ -102,6 +102,8 @@ export class DungeonScene extends GameScene {
   private elementMeshes = new Map<string, THREE.Mesh>();
   /** Toggle-wall barrier meshes, keyed by tile — visibility flips with switches. */
   private toggleMeshes = new Map<string, THREE.Mesh>();
+  /** Secret-wall meshes, keyed by tile — the false wall vanishes once revealed. */
+  private secretMeshes = new Map<string, THREE.Mesh>();
 
   /** Blocks input while a scripted beat is running. */
   private busy = false;
@@ -221,6 +223,7 @@ export class DungeonScene extends GameScene {
     this.scene.add(built.group);
     this.elementMeshes = built.elementMeshes;
     this.toggleMeshes = built.toggleMeshes;
+    this.secretMeshes = built.secretMeshes;
 
     this.particles = new ParticleField(500);
     this.scene.add(this.particles.points);
@@ -610,6 +613,14 @@ export class DungeonScene extends GameScene {
     }
   }
 
+  /** Reflects revealed secrets onto their false-wall meshes' visibility. */
+  private syncSecretMeshes() {
+    for (const [k, mesh] of this.secretMeshes) {
+      const [x, z] = k.split(',').map(Number);
+      mesh.visible = this.grid.isSecretHidden(x, z);
+    }
+  }
+
   private async onTileEntered(tile: Tile) {
     // Reaching the way home is honored even if this very step emptied the
     // lantern: arriving at the exit supersedes running out of light, so a player
@@ -719,6 +730,26 @@ export class DungeonScene extends GameScene {
         upBias: 0.8,
       });
       toast(this.ctx.ui, '<span class="accent">The mechanism grinds — barriers shift.</span>', 1600);
+      return;
+    }
+
+    if (tile.kind === 'secret') {
+      // Only the first step into a false wall crumbles it; after that it's just
+      // open floor and re-entering does nothing.
+      if (this.grid.isSecretHidden(tile.x, tile.z)) {
+        this.grid.revealSecret(tile.x, tile.z);
+        this.syncSecretMeshes();
+        audio.sfx('chest');
+        this.particles.emit(this.grid.worldPos(tile.x, tile.z, this.grid.floorY(tile.x, tile.z) + 0.5), {
+          count: 20,
+          color: 0xb8a888,
+          speed: 2.2,
+          life: 0.8,
+          gravity: -6,
+          spread: 1.2,
+        });
+        toast(this.ctx.ui, '<span class="accent">A false wall crumbles — a hidden way opens.</span>', 1800);
+      }
       return;
     }
 
