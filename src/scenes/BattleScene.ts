@@ -85,7 +85,7 @@ const FF6_LAYOUT = true;
 const CAMERA_BIAS_Z = FF6_LAYOUT ? 3.4 : 0.6;
 
 /** Side-view camera angle (overrides the crawl's top-down rig for the fight). */
-const SIDE_CAM = { pitch: 15, yaw: 0, distance: 16.5, height: 0.2 };
+const SIDE_CAM = { pitch: 9, yaw: 0, distance: 16.5, height: 0.4 };
 
 /**
  * World position of a formation cell. Sides split along X (party right, enemy
@@ -331,6 +331,10 @@ export class BattleScene extends GameScene {
     const ring: THREE.Vector3[] = [];
     for (let x = -half - 1; x <= half + 1; x++) {
       for (let z = -half - 1; z <= half + 1; z++) {
+        // Side view: the camera sits on the +Z side, so keep only the back/side
+        // arc as a backdrop and drop the near wall that would stand in front of
+        // the fighters (between them and the viewer).
+        if (FF6_LAYOUT && z > 0) continue;
         const d = Math.hypot(x, z);
         if (d > half + 0.6 && d < half + 2.2) ring.push(new THREE.Vector3(x * 2, 1.05, z * 2));
       }
