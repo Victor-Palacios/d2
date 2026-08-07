@@ -830,10 +830,14 @@ body {
   grid-auto-flow: column;
   grid-template-rows: repeat(4, auto);
   column-gap: 40px;
-  row-gap: 14px;
+  row-gap: 16px;
   width: 100%;
-  font-size: 21px;
+  font-size: 26px;
   letter-spacing: 0.05em;
+}
+/* The small-viewport query shrinks #action-menu to 13px; keep the FF menu big. */
+#battle-ui.ff6 #action-menu {
+  font-size: 26px;
 }
 #battle-ui.ff6 #action-menu .menu li {
   padding: 8px 14px 8px 38px;
@@ -848,7 +852,7 @@ body {
   font-size: 16px;
 }
 #battle-ui.ff6 #action-menu .menu .cost {
-  font-size: 17px;
+  font-size: 20px;
   margin-left: 22px;
 }
 /* party status → right pane, vertically centred to mirror the command block */
@@ -871,23 +875,26 @@ body {
     inset 0 0 0 1px rgba(0, 0, 0, 0.4),
     inset 3px 0 0 0 var(--elem-color);
 }
+#battle-ui.ff6 #party-hud .fighter {
+  font-size: 16px;
+}
 #battle-ui.ff6 #party-hud .fighter .nm {
-  font-size: 18px;
-  margin-bottom: 7px;
+  font-size: 21px;
+  margin-bottom: 8px;
 }
 #battle-ui.ff6 #party-hud .fighter .meter {
-  font-size: 14px;
-  margin: 6px 0;
+  font-size: 16px;
+  margin: 7px 0;
 }
 #battle-ui.ff6 #party-hud .fighter .meter-label {
-  width: 24px;
+  width: 26px;
 }
 #battle-ui.ff6 #party-hud .fighter .meter .bar {
-  height: 12px;
+  height: 14px;
 }
 #battle-ui.ff6 #party-hud .fighter .meter-value {
-  min-width: 68px;
-  font-size: 13px;
+  min-width: 74px;
+  font-size: 15px;
 }
 /* enemy readouts → compact top-left strip (targets, not a full roster) */
 #battle-ui.ff6 #enemy-hud {
