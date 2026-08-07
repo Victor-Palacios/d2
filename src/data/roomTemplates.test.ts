@@ -51,7 +51,7 @@ describe('roomTemplates primitives', () => {
 });
 
 describe('template composition in production', () => {
-  it("reproduces the shipped Warden Hall (crossing-3) byte-for-byte", () => {
+  it('reproduces the shipped Warden Hall (crossing-3) byte-for-byte', () => {
     // crossing-3's rows are built by wardenHall() via the composer. This locks
     // that output to the exact grid it replaced, so a template change that would
     // silently alter a shipped floor is caught.
