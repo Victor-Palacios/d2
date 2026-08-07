@@ -52,6 +52,20 @@ const SCATTER_KINDS: Record<string, string[]> = {
   metal: ['rubble'],
 };
 
+/**
+ * How each element floor plate "breathes" — a per-element emissive animation so
+ * the runes read as living energy, not decals. `base` + `amp`·(slow sine on a
+ * per-tile phase) gives the pulse; `flick` adds a fast second harmonic for fire
+ * and machine. Purely cosmetic; feeds the bloom pass. (Static intensity was 1.6.)
+ */
+const ELEMENT_ANIM: Record<ElementId, { base: number; amp: number; rate: number; flick: number }> = {
+  water: { base: 1.3, amp: 0.5, rate: 1.6, flick: 0 }, // slow cool swell
+  fire: { base: 1.5, amp: 0.6, rate: 8.0, flick: 0.35 }, // fast hungry flicker
+  nature: { base: 1.2, amp: 0.4, rate: 1.1, flick: 0 }, // gentle breathing
+  machine: { base: 1.4, amp: 0.3, rate: 3.0, flick: 0.15 }, // steady hum + tick
+  dark: { base: 1.1, amp: 0.6, rate: 0.7, flick: 0 }, // deep slow throb
+};
+
 export interface DungeonSceneParams {
   /** Set when returning from a battle so the crawl resumes in place. */
   resume?: boolean;
@@ -1120,6 +1134,25 @@ export class DungeonScene extends GameScene {
     this.ctx.hd2d.focusTarget.set(p.x, p.y + 0.7, p.z);
   }
 
+  /**
+   * Breathes every element plate's emissive glow on a per-element rhythm and a
+   * stable per-tile phase, so a room of runes shimmers out of sync instead of
+   * pulsing in lockstep. Cheap: a handful of meshes, one material write each.
+   */
+  private animateElementPlates(time: number) {
+    for (const [key, mesh] of this.elementMeshes) {
+      const [x, z] = key.split(',').map(Number);
+      const el = this.grid.at(x, z)?.element;
+      if (!el) continue;
+      const a = ELEMENT_ANIM[el];
+      const phase = x * 1.3 + z * 2.7; // deterministic, decorrelates neighbours
+      let v = a.base + a.amp * (0.5 + 0.5 * Math.sin(time * a.rate + phase));
+      if (a.flick) v += a.flick * Math.sin(time * 23.3 + phase * 2);
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      mat.emissiveIntensity = Math.max(0.2, v);
+    }
+  }
+
   private updateElementLights() {
     const px = this.player.object.position;
     const nearby = [...this.elementMeshes.entries()]
@@ -1185,6 +1218,7 @@ export class DungeonScene extends GameScene {
     for (const b of this.decor) b.update(dt, this.ctx.hd2d.camera, time);
     this.particles.update(dt);
     this.dust?.update(dt, time);
+    this.animateElementPlates(time);
     this.updateElementLights();
     this.syncCamera();
   }

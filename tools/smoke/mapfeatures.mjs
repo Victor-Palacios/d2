@@ -19,7 +19,8 @@ import { chromium } from 'playwright';
 // an additive light-shaft cone.
 // And, on crystal-1: secret walls — a '?' tile parses as a passable secret
 // disguised by a false wall; walking into it crumbles the wall and opens the
-// way to a chest walled behind it.
+// way to a chest walled behind it — plus living element plates whose emissive
+// glow breathes over time.
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROME,
@@ -319,6 +320,35 @@ check('secret: walking into it crumbles the wall (mesh hidden, revealed)',
   secret.meshVisibleAfter === false && secret.hiddenAfter === false, JSON.stringify(secret));
 check('secret: the chest walled behind it is reachable and loots',
   secret.chestGained > 0, `+${secret.chestGained} obols`);
+
+// --- living element plates (visual depth) -----------------------------------
+// Element floor plates breathe: their emissive intensity animates on a per-tile
+// phase. Sample one plate at several times and confirm its glow moves and stays
+// in a sane range.
+const plates = await page.evaluate(async () => {
+  const g = window.hd2dGame;
+  g.game.activeReachId = 'crystal';
+  g.game.floorIndex = 0; // crystal-1 has a block of W (water) plates
+  g.game.crawl.initialized = false;
+  await g.manager.go('dungeon');
+  await new Promise((r) => setTimeout(r, 300));
+  const s = g.manager.activeScene;
+  const first = [...s.elementMeshes.values()][0];
+  if (!first) return { count: 0 };
+  const readAt = (t) => {
+    s.animateElementPlates(t);
+    return (first.material.emissiveIntensity);
+  };
+  const samples = [0, 0.25, 0.5, 0.9, 1.4].map(readAt);
+  const min = Math.min(...samples);
+  const max = Math.max(...samples);
+  return { count: s.elementMeshes.size, samples, min, max };
+});
+check('element plates: the floor has animated element meshes', plates.count > 0, `${plates.count} plates`);
+check('element plates: emissive glow changes over time (breathing)',
+  plates.count > 0 && plates.max - plates.min > 0.05, JSON.stringify(plates.samples));
+check('element plates: glow stays in a sane, non-negative range',
+  plates.count > 0 && plates.min >= 0.2 && plates.max <= 3, JSON.stringify({ min: plates.min, max: plates.max }));
 
 console.log('\nERRORS:', errs.length ? errs.join('\n') : '(none)');
 if (errs.length) failures += errs.length;
